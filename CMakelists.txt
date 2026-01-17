@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(cmakeAttempt)
+project(zip-zap-zop)
 
 # run this if using debug version
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
