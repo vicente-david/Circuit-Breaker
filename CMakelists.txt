@@ -12,14 +12,16 @@ add_executable(zip-zap-zop main.cpp)
 
 
 # PHYSX
+# add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
+
 include_directories(${PROJECT_SOURCE_DIR}/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/physx)
 
 # run this if using debug version
-set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/bin/win.x86_64.vc143.mt/debug)
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/debug)
 
 # run this if using release
-# set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/bin/win.x86_64.vc143.mt/checked)
+# set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/release)
 
 # copy required dlls
 file(COPY 
