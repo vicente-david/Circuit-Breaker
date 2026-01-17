@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(cmakeAttempt)
+
+# run this if using debug version
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# run this if using release
+# set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
+add_executable(zip-zap-zop main.cpp)
+
+
+# PHYSX
+include_directories(${PROJECT_SOURCE_DIR}/physx/include)
+set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/physx)
+
+# run this if using debug version
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/bin/win.x86_64.vc143.mt/debug)
+
+# run this if using release
+# set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/bin/win.x86_64.vc143.mt/checked)
+
+# copy required dlls
+file(COPY 
+	${PHYSX_LIB}/PhysX_64.dll
+	${PHYSX_LIB}/PhysXCommon_64.dll
+	${PHYSX_LIB}/PhysXFoundation_64.dll
+	DESTINATION ${CMAKE_BINARY_DIR} )
+
+target_link_libraries(${PROJECT_NAME} PRIVATE 
+  # physx
+  ${PHYSX_LIB}/PhysXExtensions_static_64.lib
+  ${PHYSX_LIB}/PhysX_64.lib
+  ${PHYSX_LIB}/PhysXPvdSDK_static_64.lib
+  ${PHYSX_LIB}/PhysXCommon_64.lib
+  ${PHYSX_LIB}/PhysXFoundation_64.lib
+)
+
+
