@@ -14,11 +14,11 @@ add_executable(zip-zap-zop main.cpp)
 # PHYSX
 # add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
 
-include_directories(${PROJECT_SOURCE_DIR}/physx/include)
-set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/physx)
+include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
+set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
 
 # run this if using debug version
-set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/debug)
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 
 # run this if using release
 # set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/release)
@@ -30,6 +30,20 @@ file(COPY
 	${PHYSX_LIB}/PhysXFoundation_64.dll
 	DESTINATION ${CMAKE_BINARY_DIR} )
 
+
+
+# GLAD
+add_subdirectory(dependencies/glad) 
+set(LIBRARIES ${LIBRARIES} glad)
+
+# GLFW
+add_subdirectory(dependencies/glfw-3.4)
+set(LIBRARIES ${LIBRARIES} glfw)
+
+# OPENGL
+find_package(OpenGL REQUIRED)
+set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
+
 target_link_libraries(${PROJECT_NAME} PRIVATE 
   # physx
   ${PHYSX_LIB}/PhysXExtensions_static_64.lib
@@ -37,6 +51,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   ${PHYSX_LIB}/PhysXPvdSDK_static_64.lib
   ${PHYSX_LIB}/PhysXCommon_64.lib
   ${PHYSX_LIB}/PhysXFoundation_64.lib
+  ${LIBRARIES}
 )
-
 

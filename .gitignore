@@ -1,3 +1,4 @@
-/physx
+/dependencies/physx
 /.vs
 /out
+/CMakeSettings.json
