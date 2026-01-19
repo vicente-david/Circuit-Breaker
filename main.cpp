@@ -2,8 +2,17 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
+#include "shaderProgram.h"
 
 
+void render(GLuint VBO) {
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+
+	glDrawArrays(GL_TRIANGLES, 0, 3);
+	glDisableVertexAttribArray(0);
+}
 
 int main()
 {
@@ -26,6 +35,15 @@ int main()
 	if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
 		return -1;
 	}
+
+	// Load shaders
+	std::unique_ptr<shaderProgram> shaderProg{};
+	shaderProg = std::make_unique<shaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
+
+	// Initialize and bind VAO
+	GLuint VAO;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
 
 
 	//PhysX management class instances.
@@ -106,9 +124,26 @@ int main()
 	// Window test
 	glViewport(0, 0, 800, 600);
 
+	// Triangle vectors
+	static const GLfloat vert_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		 0.0f,  1.0f, 0.0f
+	};
+
+	// Generate VBO
+	GLuint VBO;
+	glGenBuffers(1, &VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), vert_data, GL_STATIC_DRAW);
+
 	while (!glfwWindowShouldClose(window)) {
-		glfwSwapBuffers(window);
 		glfwPollEvents();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		shaderProg->use();
+		render(VBO);
+		glfwSwapBuffers(window);
+		
 	}
 	glfwTerminate();
 	
@@ -122,3 +157,4 @@ int main()
 
 	return 0;
 }
+
