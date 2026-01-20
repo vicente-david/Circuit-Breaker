@@ -3,6 +3,9 @@
 
 class shaderProgram;
 
+/*
+Handle setup of a shader (vertex or fragment)
+*/
 class shader {
 
 public:

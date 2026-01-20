@@ -1,7 +1,10 @@
 #include <glad/gl.h>
 #include <string>
-#include "shader.h"
+#include "Shader.h"
 
+/*
+Link shaders to create shader program
+*/
 class shaderProgram {
 public:
 	shaderProgram(const std::string& vertexPath, const std::string& fragmentPath);

@@ -8,7 +8,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # run this if using release
 # set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
-add_executable(zip-zap-zop main.cpp "shader.h" "shader.cpp" "shaderProgram.cpp" "shaderProgram.h")
+add_executable(zip-zap-zop main.cpp "Shader.h" "Shader.cpp" "ShaderProgram.cpp" "ShaderProgram.h")
 
 
 # PHYSX
@@ -54,5 +54,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   ${LIBRARIES}
 )
 
+# Definition for shader directory folder
 add_compile_definitions(SHADER_DIR="${CMAKE_SOURCE_DIR}/shaders")
 
