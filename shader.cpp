@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 
-shader::shader(GLenum type, const std::string& path) : type(type), path(path) {
+Shader::Shader(GLenum type, const std::string& path) : type(type), path(path) {
 
 	// Create shader
 	id = glCreateShader(type);
@@ -17,7 +17,7 @@ shader::shader(GLenum type, const std::string& path) : type(type), path(path) {
 
 }
 
-bool shader::compile() {
+bool Shader::compile() {
 	// Read from source file
 	std::string shaderString;
 	std::ifstream file(path);

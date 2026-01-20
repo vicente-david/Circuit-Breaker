@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 
-shaderProgram::shaderProgram(const std::string& vertexPath, const std::string& fragmentPath) 
+ShaderProgram::ShaderProgram(const std::string& vertexPath, const std::string& fragmentPath) 
 	: vertex(GL_VERTEX_SHADER, vertexPath), fragment(GL_FRAGMENT_SHADER, fragmentPath) {
 
 	id = glCreateProgram();
@@ -20,11 +20,11 @@ shaderProgram::shaderProgram(const std::string& vertexPath, const std::string& f
 	
 }
 
-void attachShader(shaderProgram& prog, shader& shad) {
+void attachShader(ShaderProgram& prog, Shader& shad) {
 	glAttachShader(prog.id, shad.id);
 }
 
-void shaderCleanup(shaderProgram& prog, shader& vert, shader& frag) {
+void shaderCleanup(ShaderProgram& prog, Shader& vert, Shader& frag) {
 	glDetachShader(prog.id, vert.id);
 	glDetachShader(prog.id, frag.id);
 
@@ -32,7 +32,7 @@ void shaderCleanup(shaderProgram& prog, shader& vert, shader& frag) {
 	glDeleteShader(frag.id);
 }
 
-bool shaderProgram::link() {
+bool ShaderProgram::link() {
 	GLint success;
 
 	glGetProgramiv(id, GL_LINK_STATUS, &success);

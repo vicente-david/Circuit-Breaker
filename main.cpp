@@ -2,7 +2,8 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
-#include "shaderProgram.h"
+#include "ShaderProgram.h"
+#include "RenderingSystem.h"
 
 
 void render(GLuint VBO) {
@@ -16,29 +17,11 @@ void render(GLuint VBO) {
 
 int main()
 {
-	// Instantiate GLFW window
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-	// Create window object
-	GLFWwindow* window = glfwCreateWindow(800, 600, "window!", NULL, NULL);
-	if (window == NULL)
-	{
-		glfwTerminate();
-		return -1;
-	}
-	glfwMakeContextCurrent(window);
-
-	// Initialize GLAD
-	if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
-		return -1;
-	}
+	RenderingSystem* renderer = new RenderingSystem();
 
 	// Load shaders
-	std::unique_ptr<shaderProgram> shaderProg{};
-	shaderProg = std::make_unique<shaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
+	std::unique_ptr<ShaderProgram> shaderProg{};
+	shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
 
 	// Initialize and bind VAO
 	GLuint VAO;
@@ -121,8 +104,6 @@ int main()
 	// Clean up
 	shape->release();
 
-	// Window test
-	glViewport(0, 0, 800, 600);
 
 	// Triangle vectors
 	static const GLfloat vert_data[] = {
@@ -137,12 +118,12 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), vert_data, GL_STATIC_DRAW);
 
-	while (!glfwWindowShouldClose(window)) {
+	while (!glfwWindowShouldClose(renderer->window)) {
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		shaderProg->use();
 		render(VBO);
-		glfwSwapBuffers(window);
+		glfwSwapBuffers(renderer->window);
 		
 	}
 	glfwTerminate();
