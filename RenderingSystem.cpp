@@ -31,6 +31,10 @@ RenderingSystem::RenderingSystem() : VAO(0), VBO(0), window(nullptr), shaderProg
 
 	// Create shader program
 	shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
+
+	// Generate VBO
+	glGenBuffers(1, &VBO);
+	
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
