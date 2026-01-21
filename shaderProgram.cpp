@@ -12,8 +12,12 @@ ShaderProgram::ShaderProgram(const std::string& vertexPath, const std::string& f
 	attachShader(*this, fragment);
 	glLinkProgram(id);
 
+	// Delete shaders after linking
+	shaderCleanup(vertex, fragment);
+
+
 	// Error check
-	if (!link()) {
+	if (!checkLink()) {
 		throw std::runtime_error("Shader program linking failure");
 		glDeleteProgram(id);
 	}
@@ -24,15 +28,13 @@ void attachShader(ShaderProgram& prog, Shader& shad) {
 	glAttachShader(prog.id, shad.id);
 }
 
-void shaderCleanup(ShaderProgram& prog, Shader& vert, Shader& frag) {
-	glDetachShader(prog.id, vert.id);
-	glDetachShader(prog.id, frag.id);
+void shaderCleanup(Shader& vert, Shader& frag) {
 
 	glDeleteShader(vert.id);
 	glDeleteShader(frag.id);
 }
 
-bool ShaderProgram::link() {
+bool ShaderProgram::checkLink() {
 	GLint success;
 
 	glGetProgramiv(id, GL_LINK_STATUS, &success);

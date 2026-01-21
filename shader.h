@@ -15,8 +15,7 @@ public:
 	// https://stackoverflow.com/questions/17434/when-should-you-use-friend-in-c
 	void friend attachShader(ShaderProgram& prog, Shader& shad);
 
-	// TODO: RAII cleanup (replace shaderCleanup)
-	void friend shaderCleanup(ShaderProgram& prog, Shader& vert, Shader& frag);
+	void friend shaderCleanup(Shader& vert, Shader& frag);
 
 private:
 	GLenum type;

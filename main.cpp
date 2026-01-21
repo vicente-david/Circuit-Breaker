@@ -2,7 +2,7 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
-#include "ShaderProgram.h"
+//#include "ShaderProgram.h"
 #include "RenderingSystem.h"
 
 
@@ -17,16 +17,15 @@ void render(GLuint VBO) {
 
 int main()
 {
-	RenderingSystem* renderer = new RenderingSystem();
+	auto renderer = std::make_unique<RenderingSystem>();
 
 	// Load shaders
-	std::unique_ptr<ShaderProgram> shaderProg{};
-	shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
+	//std::unique_ptr<ShaderProgram> shaderProg{};
+	//shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
 
 	// Initialize and bind VAO
-	GLuint VAO;
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO);
+	glGenVertexArrays(1, &renderer->VAO);
+	glBindVertexArray(renderer->VAO);
 
 
 	//PhysX management class instances.
@@ -113,16 +112,17 @@ int main()
 	};
 
 	// Generate VBO
-	GLuint VBO;
-	glGenBuffers(1, &VBO);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glGenBuffers(1, &renderer->VBO);
+	glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), vert_data, GL_STATIC_DRAW);
 
 	while (!glfwWindowShouldClose(renderer->window)) {
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		shaderProg->use();
-		render(VBO);
+		
+		renderer->shaderProg->use();
+		
+		render(renderer->VBO);
 		glfwSwapBuffers(renderer->window);
 		
 	}

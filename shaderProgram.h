@@ -16,8 +16,7 @@ public:
 	// Allow shader to access private members for linking shader program
 	void friend attachShader(ShaderProgram& prog, Shader& shad);
 
-	// TODO: RAII cleanup (replace shaderCleanup)
-	void friend shaderCleanup(ShaderProgram& prog, Shader& vert, Shader& frag);
+	void friend shaderCleanup(Shader& vert, Shader& frag);
 
 private:
 	GLuint id;
@@ -25,5 +24,5 @@ private:
 	Shader vertex;
 	Shader fragment;
 
-	bool link();
+	bool checkLink();
 };

@@ -4,7 +4,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); //TODO: move this
 
-RenderingSystem::RenderingSystem()
+RenderingSystem::RenderingSystem() : VAO(0), VBO(0), window(nullptr), shaderProg(nullptr)
 {
 	// Instantiate GLFW window
 	glfwInit();
@@ -27,9 +27,10 @@ RenderingSystem::RenderingSystem()
 	}
 
 	glViewport(0, 0, 800, 600);
-
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+	// Create shader program
+	shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
