@@ -2,7 +2,6 @@
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
-//#include "ShaderProgram.h"
 #include "RenderingSystem.h"
 
 
@@ -19,9 +18,6 @@ int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();
 
-	// Load shaders
-	//std::unique_ptr<ShaderProgram> shaderProg{};
-	//shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
 
 	// Initialize and bind VAO
 	glGenVertexArrays(1, &renderer->VAO);
