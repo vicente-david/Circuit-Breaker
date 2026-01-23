@@ -3,13 +3,14 @@
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
 #include "RenderingSystem.h"
+#include "glm/glm.hpp"
 
 
 int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();
 
-
+	glm::mat4(1.0f);
 	// Initialize and bind VAO
 	glGenVertexArrays(1, &renderer->VAO);
 	glBindVertexArray(renderer->VAO);
