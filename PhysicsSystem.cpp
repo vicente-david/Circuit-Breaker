@@ -1,5 +1,10 @@
 #include "PhysicsSystem.h"
 
+physx::PxVec3 PhysicsSystem::getPos(int i)
+{
+	return rigidDynamicList[i]->getGlobalPose().p; // Gets position
+}
+
 PhysicsSystem::PhysicsSystem() // Constructor
 {
 	// Initialize PhysX
@@ -7,7 +12,6 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	if (!gFoundation)
 	{
 		std::cout << "PxCreateFoundation failed!" << std::endl;
-		return;
 	}
 
 	// PVD
@@ -20,7 +24,6 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	if (!gPhysics)
 	{
 		std::cout << "PxCreatePhysics failed!" << std::endl;
-		return;
 	}
 
 	// Scene
@@ -58,6 +61,9 @@ PhysicsSystem::PhysicsSystem() // Constructor
 		{
 			physx::PxTransform localTran(physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i), physx::PxReal(i * 2 - 1), 0) * halfLen);
 			physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran.transform(localTran));
+
+			rigidDynamicList.push_back(body);
+
 			body->attachShape(*shape);
 			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
 			gScene->addActor(*body);

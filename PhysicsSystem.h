@@ -5,6 +5,9 @@
 class PhysicsSystem 
 {
 public:
+
+	std::vector<physx::PxRigidDynamic*> rigidDynamicList;
+
 	//PhysX management class instances.
 	physx::PxDefaultAllocator gAllocator;
 	physx::PxDefaultErrorCallback gErrorCallback;
@@ -16,4 +19,6 @@ public:
 	physx::PxPvd* gPvd = NULL;
 
 	PhysicsSystem(); // Constructor
+
+	physx::PxVec3 getPos(int i); // Gets position
 };
