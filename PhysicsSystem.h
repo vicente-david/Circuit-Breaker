@@ -1,4 +1,5 @@
 #include "PxPhysicsAPI.h"
+#include "Entity.h"
 #include <vector>
 #include <iostream>
 
@@ -7,6 +8,7 @@ class PhysicsSystem
 public:
 
 	std::vector<physx::PxRigidDynamic*> rigidDynamicList;
+	std::vector<Transform*> transformList;
 
 	//PhysX management class instances.
 	physx::PxDefaultAllocator gAllocator;
@@ -20,5 +22,8 @@ public:
 
 	PhysicsSystem(); // Constructor
 
-	physx::PxVec3 getPos(int i); // Gets position
+	void updateTransforms();
+
+	physx::PxVec3 getPos(int i); // Get position of id
+	physx::PxQuat getRot(int i); // Get rotation of id
 };

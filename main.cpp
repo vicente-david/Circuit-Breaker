@@ -47,12 +47,24 @@ int main()
 	}
 	glfwTerminate();
 	
+	// --Placeholder code--
+	std::vector<Entity> entityList;
+	entityList.reserve(465);
 
+	for (int i = 0; i < 465; i++)
+	{
+		entityList.emplace_back();
+		entityList.back().name = "untitled_entity";
+		entityList.back().transform = physicsSys.transformList[i];
+		entityList.back().model = NULL;
+	}
+	// --------------------
 	// Simulate at 60fps
 	while (1)
 	{
 		physicsSys.gScene->simulate(1.0f / 60.0f);
 		physicsSys.gScene->fetchResults(true);
+		physicsSys.updateTransforms();
 	}
 
 	return 0;

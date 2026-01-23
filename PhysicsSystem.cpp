@@ -1,10 +1,5 @@
 #include "PhysicsSystem.h"
 
-physx::PxVec3 PhysicsSystem::getPos(int i)
-{
-	return rigidDynamicList[i]->getGlobalPose().p; // Gets position
-}
-
 PhysicsSystem::PhysicsSystem() // Constructor
 {
 	// Initialize PhysX
@@ -63,6 +58,7 @@ PhysicsSystem::PhysicsSystem() // Constructor
 			physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran.transform(localTran));
 
 			rigidDynamicList.push_back(body);
+			transformList.push_back(new Transform);
 
 			body->attachShape(*shape);
 			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
@@ -73,3 +69,23 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	// Clean up
 	shape->release();
 }
+
+void PhysicsSystem::updateTransforms()
+{
+	for (int i = 0; i < transformList.size(); i++)
+	{
+		// Store positions
+		transformList[i]->pos.x = getPos(i).x;
+		transformList[i]->pos.y = getPos(i).y;
+		transformList[i]->pos.z = getPos(i).z;
+
+		// Store positions
+		transformList[i]->rot.x = getRot(i).x;
+		transformList[i]->rot.y = getRot(i).y;
+		transformList[i]->rot.z = getRot(i).z;
+		transformList[i]->rot.w = getRot(i).w;
+	}
+}
+
+physx::PxVec3 PhysicsSystem::getPos(int i) { return rigidDynamicList[i]->getGlobalPose().p; }
+physx::PxQuat PhysicsSystem::getRot(int i) { return rigidDynamicList[i]->getGlobalPose().q; }
