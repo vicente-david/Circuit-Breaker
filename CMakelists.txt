@@ -30,7 +30,9 @@ file(COPY
 	${PHYSX_LIB}/PhysXFoundation_64.dll
 	DESTINATION ${CMAKE_BINARY_DIR} )
 
-
+#free type
+#add_subdirectory(dependencies/freetype) 
+#set(LIBRARIES ${LIBRARIES} freetype)
 
 # GLAD
 add_subdirectory(dependencies/glad) 
@@ -39,6 +41,9 @@ set(LIBRARIES ${LIBRARIES} glad)
 # GLFW
 add_subdirectory(dependencies/glfw-3.4)
 set(LIBRARIES ${LIBRARIES} glfw)
+
+#GLM
+include_directories(SYSTEM dependencies/glm-0.9.9.7/)
 
 # OPENGL
 find_package(OpenGL REQUIRED)

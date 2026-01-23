@@ -10,7 +10,6 @@ int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();
 
-
 	// Initialize and bind VAO
 	glGenVertexArrays(1, &renderer->VAO);
 	glBindVertexArray(renderer->VAO);
