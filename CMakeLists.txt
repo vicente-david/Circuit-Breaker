@@ -33,8 +33,8 @@ set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 # 	DESTINATION ${CMAKE_BINARY_DIR} )
 
 #free type
-#add_subdirectory(dependencies/freetype) 
-#set(LIBRARIES ${LIBRARIES} freetype)
+add_subdirectory(dependencies/freetype) 
+set(LIBRARIES ${LIBRARIES} freetype)
 
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/glad/include)
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/glfw-3.4/include)
