@@ -11,9 +11,8 @@ int main()
 	auto renderer = std::make_unique<RenderingSystem>();
 
 	glm::mat4(1.0f);
-	// Initialize and bind VAO
-	glGenVertexArrays(1, &renderer->VAO);
-	glBindVertexArray(renderer->VAO);
+	renderer->initializeRenderer();
+	
 
 
 	//PhysX management class instances.
@@ -93,28 +92,29 @@ int main()
 
 
 	// Triangle vectors
-	static const GLfloat vert_data[] = {
+	float vert_data[] = {
 		-1.0f, -1.0f, 0.0f,
+		 0.5f, 0.5f, 0.5f, 
 		 1.0f, -1.0f, 0.0f,
-		 0.0f,  1.0f, 0.0f
+		 0.5f, 0.5f, 0.5f,
+		 0.0f,  1.0f, 0.0f,
+		 0.5f, 0.5f, 0.5f
 	};
 
 	// Bind and set VBO data
-	glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), vert_data, GL_STATIC_DRAW);
+	renderer->initializeShaders(vert_data, sizeof(vert_data));
+	
+	
 
 	while (!glfwWindowShouldClose(renderer->window)) {
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderer->shaderProg->use();
-		
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+		// if we use different shaders we'll need a way to know which one to use
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDisableVertexAttribArray(0);
+		
 
 		glfwSwapBuffers(renderer->window);
 	
