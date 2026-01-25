@@ -103,6 +103,11 @@ int main()
 
 	// Bind and set VBO data
 	renderer->initializeShaders(vert_data, sizeof(vert_data));
+	renderer->initializeText();
+
+	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
 	
 
@@ -111,9 +116,15 @@ int main()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderer->shaderProg->use();
+		glBindVertexArray(renderer->VBO);
 		// if we use different shaders we'll need a way to know which one to use
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		// render text
+		renderer->textProg->use();
+		
+		RenderText(*renderer->textProg, renderer->textVAO, renderer->textVBO, "hi friends", 50.f, 800.f, 5.0f, glm::vec3(1.0f), renderer->textFont);
 		
 
 		glfwSwapBuffers(renderer->window);

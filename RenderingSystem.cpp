@@ -1,10 +1,12 @@
 #include "RenderingSystem.h"
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); //TODO: move this
 
-RenderingSystem::RenderingSystem() : VAO(0), VBO(0), window(nullptr), shaderProg(nullptr)
+RenderingSystem::RenderingSystem() : VAO(0), VBO(0), textVBO(1), textVAO(1), window(nullptr), shaderProg(nullptr)
 {
 	// Instantiate GLFW window
 	glfwInit();
@@ -74,4 +76,28 @@ void RenderingSystem::initializeShaders(float* vertices, int size) {
 	// Create shader program
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
+	textProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/testText.vert", std::string(SHADER_DIR) + "/testText.frag");
+	textFont = initFont("assets/miamanueva.ttf");
+	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f, static_cast<float>(1440));
+	textProg->use();
+	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(textMat));
+
+}
+
+void RenderingSystem::initializeText() {
+	// Initialize and bind VAO
+	glGenVertexArrays(1, &textVAO);
+	glBindVertexArray(textVAO);
+	// Generate VBO
+	glGenBuffers(1, &textVBO);
+	// bind VBO
+	glBindBuffer(GL_ARRAY_BUFFER, textVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
 }

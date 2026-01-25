@@ -1,6 +1,7 @@
 #include<glm/glm.hpp>
 #include <map>
-#include "Shader.h"
+#include <glad/gl.h>
+#include "ShaderProgram.h"
 
 struct Character {
 	unsigned int textID; // ID handle of the texture
@@ -11,4 +12,4 @@ struct Character {
 
 std::map<char, Character> initFont(const char* font);
 
-void RenderText(Shader& s, unsigned int VAO, unsigned int VBO, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character> Characters);
+void RenderText(ShaderProgram& s, unsigned int VAO, unsigned int VBO, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character> Characters);
