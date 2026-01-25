@@ -24,6 +24,8 @@ public:
 
 	void updateTransforms();
 
+	void updatePhysics(double dt);
+
 	physx::PxVec3 getPos(int i); // Get position of id
 	physx::PxQuat getRot(int i); // Get rotation of id
 };

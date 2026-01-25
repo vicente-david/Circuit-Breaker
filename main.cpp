@@ -9,13 +9,30 @@
 int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();
-
-	glm::mat4(1.0f);
 	renderer->initializeRenderer();
 	
 
 
 	PhysicsSystem physicsSys;
+
+	// --Placeholder code--
+	std::vector<Entity> entityList;
+	entityList.reserve(465);
+
+	for (int i = 0; i < 465; i++)
+	{
+		entityList.emplace_back();
+		entityList.back().name = "untitled_entity";
+		entityList.back().transform = physicsSys.transformList[i];
+		entityList.back().model = NULL;
+	}
+
+
+	// time
+	double t = 0.0;
+	const double dt = 1.0 / 60.0; // simulate at 60fps
+	double currentTime = glfwGetTime();
+	double accumulator = 0.0;
 
 
 	// Triangle vectors (positions + colors)
@@ -39,45 +56,43 @@ int main()
 	
 
 	while (!glfwWindowShouldClose(renderer->window)) {
+
+		// time
+		double newTime = glfwGetTime();
+		double frameTime = newTime - currentTime;
+		currentTime = newTime;
+		accumulator += frameTime;
+
+		std::cout << t << std::endl;
+		std::string fps = std::to_string(static_cast<int>(std::round(1.0 / accumulator)));
+
+		// physics
+		while (accumulator >= dt) {
+			physicsSys.updatePhysics(dt);
+			accumulator -= dt;
+			t += dt;
+		}
+
+
+		// rendering
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderer->shaderProg->use();
 		glBindVertexArray(renderer->VBO);
 		// if we use different shaders we'll need a way to know which one to use
-
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// render text
 		renderer->textProg->use();
+		RenderText(*renderer->textProg, renderer->textVAO, renderer->textVBO, "FPS: "+fps, 50.f, 800.f, 5.0f, glm::vec3(1.0f), renderer->textFont);
 		
-		RenderText(*renderer->textProg, renderer->textVAO, renderer->textVBO, "hi friends", 50.f, 800.f, 5.0f, glm::vec3(1.0f), renderer->textFont);
-		
-
 		glfwSwapBuffers(renderer->window);
+
 	
 	}
 	glfwTerminate();
 	
-	// --Placeholder code--
-	std::vector<Entity> entityList;
-	entityList.reserve(465);
-
-	for (int i = 0; i < 465; i++)
-	{
-		entityList.emplace_back();
-		entityList.back().name = "untitled_entity";
-		entityList.back().transform = physicsSys.transformList[i];
-		entityList.back().model = NULL;
-	}
-	// --------------------
-	// Simulate at 60fps
-	while (1)
-	{
-		physicsSys.gScene->simulate(1.0f / 60.0f);
-		physicsSys.gScene->fetchResults(true);
-		physicsSys.updateTransforms();
-	}
 
 	return 0;
 }

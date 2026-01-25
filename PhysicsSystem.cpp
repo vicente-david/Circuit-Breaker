@@ -87,5 +87,12 @@ void PhysicsSystem::updateTransforms()
 	}
 }
 
+void PhysicsSystem::updatePhysics(double dt) {
+	gScene->simulate(dt);
+	gScene->fetchResults(true);
+
+	updateTransforms();
+}
+
 physx::PxVec3 PhysicsSystem::getPos(int i) { return rigidDynamicList[i]->getGlobalPose().p; }
 physx::PxQuat PhysicsSystem::getRot(int i) { return rigidDynamicList[i]->getGlobalPose().q; }
