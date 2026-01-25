@@ -91,7 +91,7 @@ int main()
 	shape->release();
 
 
-	// Triangle vectors
+	// Triangle vectors (positions + colors)
 	float vert_data[] = {
 		-1.0f, -1.0f, 0.0f,
 		 0.5f, 0.5f, 0.5f, 
