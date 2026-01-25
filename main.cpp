@@ -53,7 +53,8 @@ int main()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	
-	
+	int framesPassed = 0;
+	std::string fps = std::to_string(0);
 
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -62,15 +63,21 @@ int main()
 		double frameTime = newTime - currentTime;
 		currentTime = newTime;
 		accumulator += frameTime;
+		framesPassed++;
 
-		std::cout << t << std::endl;
-		std::string fps = std::to_string(static_cast<int>(std::round(1.0 / accumulator)));
+		
 
 		// physics
 		while (accumulator >= dt) {
 			physicsSys.updatePhysics(dt);
 			accumulator -= dt;
 			t += dt;
+		}
+
+		if (t >= 1.0) {
+			fps = std::to_string(static_cast<int>(std::round(framesPassed / t)));
+			t -= 1.0;
+			framesPassed = 0;
 		}
 
 
