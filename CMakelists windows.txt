@@ -8,8 +8,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # run this if using release
 # set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
-add_executable(zip-zap-zop main.cpp "Shader.h" "Shader.cpp" "ShaderProgram.cpp" "ShaderProgram.h" "RenderingSystem.h" "RenderingSystem.cpp" "Text.h" "Text.cpp")
-
+add_executable(zip-zap-zop main.cpp "Shader.h" "Shader.cpp" "ShaderProgram.cpp" "ShaderProgram.h" "RenderingSystem.h" "RenderingSystem.cpp" "PhysicsSystem.h" "PhysicsSystem.cpp" "Text.h" "Text.cpp")
 
 # PHYSX
 # add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
