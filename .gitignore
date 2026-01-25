@@ -1,6 +1,4 @@
 /dependencies/physx
-/dependencies/freetype
-/assets
 /.vs
 /out
 /CMakeSettings.json
