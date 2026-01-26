@@ -2,7 +2,7 @@
 
 ## Compilation instructions for Windows:
 
-## PhysX download:
+### PhysX download:
 
 - Step 1: Download PhysX from https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing
 - Step 2: Extract the folder to ```/dependencies``` 
@@ -21,7 +21,7 @@ Naturally if building the release version, it would be changed to the repective 
 
 ### As an alternative you may download the release version from the following link
 
-
+---
 ## Build Instructions For Linux
 
 1. add physX files to dependencies/physx as shown in tutorial 1.1
@@ -49,7 +49,7 @@ Naturally if building the release version, it would be changed to the repective 
 
 
 
-
+---
 ## Members
 Vicente David
 vicente.david@ucalgary.ca
