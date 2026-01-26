@@ -75,8 +75,8 @@ void RenderingSystem::initializeRenderer() {
 void RenderingSystem::initializeShaders(float* vertices, int size) {
 	// Create shader program
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-	shaderProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/basic.vert", std::string(SHADER_DIR) + "/basic.frag");
-	textProg = std::make_unique<ShaderProgram>(std::string(SHADER_DIR) + "/testText.vert", std::string(SHADER_DIR) + "/testText.frag");
+	shaderProg = std::make_unique<ShaderProgram>("shaders/basic.vert", "shaders/basic.frag");
+	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert", "shaders/testText.frag");
 	textFont = initFont("assets/miamanueva.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f, static_cast<float>(1440));
 	textProg->use();
