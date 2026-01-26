@@ -20,7 +20,7 @@ set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
 set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 
 # run this if using release
-# set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/physx/release)
+# set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
 
 # copy required dlls
 file(COPY 
@@ -28,6 +28,9 @@ file(COPY
 	${PHYSX_LIB}/PhysXCommon_64.dll
 	${PHYSX_LIB}/PhysXFoundation_64.dll
 	DESTINATION ${CMAKE_BINARY_DIR} )
+
+# copy assets
+file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
 #free type
 add_subdirectory(dependencies/freetype) 

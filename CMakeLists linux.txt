@@ -10,7 +10,7 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # add_executable(zip-zap-zop main.cpp)
 # add_executable(zip-zap-zop main.cpp )
-add_executable(zip-zap-zop main.cpp "Shader.h" "Shader.cpp" "ShaderProgram.cpp" "ShaderProgram.h" "RenderingSystem.h" "RenderingSystem.cpp")
+add_executable(zip-zap-zop main.cpp "Shader.h" "Shader.cpp" "ShaderProgram.cpp" "ShaderProgram.h" "RenderingSystem.h" "RenderingSystem.cpp" "PhysicsSystem.h" "PhysicsSystem.cpp" "Text.h" "Text.cpp")
 
 
 # PHYSX
@@ -31,6 +31,9 @@ set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 # 	${PHYSX_LIB}/libPhysXCommon_static_64.a
 # 	${PHYSX_LIB}/libPhysXFoundation_static_64.a
 # 	DESTINATION ${CMAKE_BINARY_DIR} )
+
+# copy assets
+file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 
 #free type
 add_subdirectory(dependencies/freetype) 
