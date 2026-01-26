@@ -6,7 +6,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); //TODO: move this
 
-RenderingSystem::RenderingSystem() : VAO(0), VBO(0), textVBO(1), textVAO(1), window(nullptr), shaderProg(nullptr)
+RenderingSystem::RenderingSystem() : VAO(0), VBO(0), textVBO(1), textVAO(1)
 {
 	// Instantiate GLFW window
 	glfwInit();
@@ -61,21 +61,17 @@ void RenderingSystem::initializeRenderer() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
 	glEnableVertexAttribArray(1);
 	
-
 	// texture (no texture as of right now so it is offset 6 instead of 8)
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
-	// maybe in the future normals?
-
-	// note: we don't have any data as of right now, we can pass that in later
 
 }
 
-void RenderingSystem::initializeShaders(float* vertices, int size) {
+void RenderingSystem::initializeShaders(Vertex* vertices, int size) {
 	// Create shader program
 	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
-	shaderProg = std::make_unique<ShaderProgram>("shaders/basic.vert", "shaders/basic.frag");
+	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert", "shaders/basic.frag");
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert", "shaders/testText.frag");
 	textFont = initFont("assets/miamanueva.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f, static_cast<float>(1440));

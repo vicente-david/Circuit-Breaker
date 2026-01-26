@@ -4,6 +4,7 @@
 #include "PxPhysicsAPI.h"
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
+#include "Model.h"
 
 
 int main()
@@ -36,17 +37,17 @@ int main()
 
 
 	// Triangle vectors (positions + colors)
-	float vert_data[] = {
-		-1.0f, -1.0f, 0.0f,
-		 1.0f, 0.5f, 0.5f, 
-		 1.0f, -1.0f, 0.0f,
-		 0.5f, 1.f, 0.5f,
-		 0.0f,  1.0f, 0.0f,
-		 0.5f, 0.5f, 1.f
+	Vertex triVerts[3] = {
+		{glm::vec3(-1.0f, -1.0f, 0.0f),
+		 glm::vec3(1.0f, 0.5f, 0.5f)},
+		 {glm::vec3(1.0f, -1.0f, 0.0f),
+		 glm::vec3(0.5f, 1.f, 0.5f)},
+		{glm::vec3(0.0f,  1.0f, 0.0f),
+		 glm::vec3(0.5f, 0.5f, 1.f)}
 	};
 
 	// Bind and set VBO data
-	renderer->initializeShaders(vert_data, sizeof(vert_data));
+	renderer->initializeShaders(triVerts, sizeof(triVerts));
 	renderer->initializeText();
 
 	
@@ -81,16 +82,17 @@ int main()
 		}
 
 		// Print object position for debug
-		physx::PxVec3 objPos = physicsSys.getPos(50);
-		std::cout << "PHYSX: object pos x: " << objPos.x << " y: " << objPos.y << " z: " << objPos.z << std::endl;
+		//physx::PxVec3 objPos = physicsSys.getPos(50);
+		//std::cout << "PHYSX: object pos x: " << objPos.x << " y: " << objPos.y << " z: " << objPos.z << std::endl;
 
 
 
 		// rendering
+		// TODO: create render update function in rendering system
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		renderer->shaderProg->use();
+		renderer->basicShader->use();
 		glBindVertexArray(renderer->VBO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 

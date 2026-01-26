@@ -3,18 +3,17 @@
 #include <GLFW/glfw3.h>
 
 #include "Text.h"
-
+#include "Model.h"
 
 class RenderingSystem {
 
 public:
 	RenderingSystem();
 	void initializeRenderer();
-	void initializeShaders(float* vertices, int size);
+	void initializeShaders(Vertex* vertices, int size);
 	void initializeText();
 
 	unsigned int VAO;
-	// might need multiple vaos and a bind method, or even an id system to determine which vao to bind
 	unsigned int VBO;
 
 	unsigned int textVBO;
@@ -24,8 +23,7 @@ public:
 	glm::mat4 textMat;
 
 	GLFWwindow* window;
-	std::unique_ptr<ShaderProgram> shaderProg;
-	// need a way to store multiple shaders
+	std::unique_ptr<ShaderProgram> basicShader;
 	std::unique_ptr<ShaderProgram> textProg;
 
 private:
