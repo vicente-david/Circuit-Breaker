@@ -38,11 +38,11 @@ int main()
 	// Triangle vectors (positions + colors)
 	float vert_data[] = {
 		-1.0f, -1.0f, 0.0f,
-		 0.5f, 0.5f, 0.5f, 
+		 1.0f, 0.5f, 0.5f, 
 		 1.0f, -1.0f, 0.0f,
-		 0.5f, 0.5f, 0.5f,
+		 0.5f, 1.f, 0.5f,
 		 0.0f,  1.0f, 0.0f,
-		 0.5f, 0.5f, 0.5f
+		 0.5f, 0.5f, 1.f
 	};
 
 	// Bind and set VBO data
@@ -79,6 +79,11 @@ int main()
 			t -= 1.0;
 			framesPassed = 0;
 		}
+
+		// Print object position for debug
+		physx::PxVec3 objPos = physicsSys.getPos(50);
+		std::cout << "PHYSX: object pos x: " << objPos.x << " y: " << objPos.y << " z: " << objPos.z << std::endl;
+
 
 
 		// rendering
