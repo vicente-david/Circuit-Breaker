@@ -9,7 +9,6 @@
 
 If the naming is wrong cmake will throw an error, so double check the paths.<br>
 <br>
-<br>
 ## 
 Cmake configuration will need to be changed depending on debug or release mode (more information in ```CMakelists windows.txt```) <br>
 
