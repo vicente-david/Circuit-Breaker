@@ -1,6 +1,7 @@
 /dependencies/physx
-/dependencies/freetype
 /.vs
 /out
 /CMakeSettings.json
 /.cache
+/CMakelists.txt
+/CMakeLists.txt

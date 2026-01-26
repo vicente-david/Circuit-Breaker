@@ -3,131 +3,107 @@
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
 #include "RenderingSystem.h"
-#include "glm/glm.hpp"
+#include "PhysicsSystem.h"
 
 
 int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();
-
-	glm::mat4(1.0f);
-	// Initialize and bind VAO
-	glGenVertexArrays(1, &renderer->VAO);
-	glBindVertexArray(renderer->VAO);
+	renderer->initializeRenderer();
+	
 
 
-	//PhysX management class instances.
-	physx::PxDefaultAllocator gAllocator;
-	physx::PxDefaultErrorCallback gErrorCallback;
-	physx::PxFoundation* gFoundation = NULL;
-	physx::PxPhysics* gPhysics = NULL;
-	physx::PxDefaultCpuDispatcher* gDispatcher = NULL;
-	physx::PxScene* gScene = NULL;
-	physx::PxMaterial* gMaterial = NULL;
-	physx::PxPvd* gPvd = NULL;
+	PhysicsSystem physicsSys;
 
-	// Initialize PhysX
-	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
-	if (!gFoundation)
+	// --Placeholder code--
+	std::vector<Entity> entityList;
+	entityList.reserve(465);
+
+	for (int i = 0; i < 465; i++)
 	{
-		std::cout << "PxCreateFoundation failed!" << std::endl;
-		return -1;
+		entityList.emplace_back();
+		entityList.back().name = "untitled_entity";
+		entityList.back().transform = physicsSys.transformList[i];
+		entityList.back().model = NULL;
 	}
 
-	// PVD
-	gPvd = PxCreatePvd(*gFoundation);
-	physx::PxPvdTransport* transport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
-	gPvd->connect(*transport, physx::PxPvdInstrumentationFlag::eALL);
 
-	// Physics
-	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, physx::PxTolerancesScale(), true, gPvd);
-	if (!gPhysics)
-	{
-		std::cout << "PxCreatePhysics failed!" << std::endl;
-		return -1;
-	}
-
-	// Scene
-	physx::PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-	sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
-	gDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
-	sceneDesc.cpuDispatcher = gDispatcher;
-	sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
-	gScene = gPhysics->createScene(sceneDesc);
-
-	// Prep PVD
-	physx::PxPvdSceneClient* pvdClient = gScene->getScenePvdClient();
-	if (pvdClient)
-	{
-		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
-		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
-		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
-	}
-
-	// Simulate
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
-	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
-	gScene->addActor(*groundPlane);
-
-	// Define a box
-	float halfLen = 0.5f;
-	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
-	physx::PxU32 size = 30;
-	physx::PxTransform tran(physx::PxVec3(0));
-
-	// Create a pyramid of physics-enabled boxes
-	for (physx::PxU32 i = 0; i < size; i++)
-	{
-		for (physx::PxU32 j = 0; j < size - i; j++)
-		{
-			physx::PxTransform localTran(physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i), physx::PxReal(i * 2 - 1), 0) * halfLen);
-			physx::PxRigidDynamic* body = gPhysics->createRigidDynamic(tran.transform(localTran));
-			body->attachShape(*shape);
-			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-			gScene->addActor(*body);
-		}
-	}
-
-	// Clean up
-	shape->release();
+	// time
+	double t = 0.0;
+	const double dt = 1.0 / 60.0; // simulate at 60fps
+	double currentTime = glfwGetTime();
+	double accumulator = 0.0;
 
 
-	// Triangle vectors
-	static const GLfloat vert_data[] = {
+	// Triangle vectors (positions + colors)
+	float vert_data[] = {
 		-1.0f, -1.0f, 0.0f,
+		 1.0f, 0.5f, 0.5f, 
 		 1.0f, -1.0f, 0.0f,
-		 0.0f,  1.0f, 0.0f
+		 0.5f, 1.f, 0.5f,
+		 0.0f,  1.0f, 0.0f,
+		 0.5f, 0.5f, 1.f
 	};
 
 	// Bind and set VBO data
-	glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vert_data), vert_data, GL_STATIC_DRAW);
+	renderer->initializeShaders(vert_data, sizeof(vert_data));
+	renderer->initializeText();
+
+	
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	
+	int framesPassed = 0;
+	std::string fps = std::to_string(0);
 
 	while (!glfwWindowShouldClose(renderer->window)) {
+
+		// time
+		double newTime = glfwGetTime();
+		double frameTime = newTime - currentTime;
+		currentTime = newTime;
+		accumulator += frameTime;
+		framesPassed++;
+
+		
+
+		// physics
+		while (accumulator >= dt) {
+			physicsSys.updatePhysics(dt);
+			accumulator -= dt;
+			t += dt;
+		}
+
+		if (t >= 1.0) {
+			fps = std::to_string(static_cast<int>(std::round(framesPassed / t)));
+			t -= 1.0;
+			framesPassed = 0;
+		}
+
+		// Print object position for debug
+		physx::PxVec3 objPos = physicsSys.getPos(50);
+		std::cout << "PHYSX: object pos x: " << objPos.x << " y: " << objPos.y << " z: " << objPos.z << std::endl;
+
+
+
+		// rendering
 		glfwPollEvents();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderer->shaderProg->use();
-		
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, renderer->VBO);
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
-
+		glBindVertexArray(renderer->VBO);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-		glDisableVertexAttribArray(0);
 
+		// render text
+		renderer->textProg->use();
+		RenderText(*renderer->textProg, renderer->textVAO, renderer->textVBO, "FPS: "+fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), renderer->textFont);
+		
 		glfwSwapBuffers(renderer->window);
+
 	
 	}
 	glfwTerminate();
 	
-
-	// Simulate at 60fps
-	while (1)
-	{
-		gScene->simulate(1.0f / 60.0f);
-		gScene->fetchResults(true);
-	}
 
 	return 0;
 }

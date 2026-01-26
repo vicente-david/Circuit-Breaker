@@ -18,8 +18,10 @@ public:
 
 	void friend shaderCleanup(Shader& vert, Shader& frag);
 
-private:
 	GLuint id;
+
+private:
+	
 
 	Shader vertex;
 	Shader fragment;
