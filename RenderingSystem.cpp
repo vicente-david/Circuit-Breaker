@@ -15,7 +15,7 @@ RenderingSystem::RenderingSystem() : VAO(0), VBO(0), textVBO(1), textVAO(1), win
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create window object
-	window = glfwCreateWindow(800, 600, "window!", NULL, NULL);
+	window = glfwCreateWindow(800, 600, "Circuit Breaker", NULL, NULL);
 	if (window == NULL)
 	{
 		glfwTerminate();
