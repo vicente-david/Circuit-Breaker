@@ -11,6 +11,6 @@ struct Vertex
 class Model
 {
 public:
-	std::vector<Vertex> verts;
+	Vertex* verts;
 	glm::mat4 modelMatrix;
 };

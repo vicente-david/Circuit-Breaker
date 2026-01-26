@@ -46,6 +46,11 @@ int main()
 		 glm::vec3(0.5f, 0.5f, 1.f)}
 	};
 
+	// Does the model have to contain a vector of verts? (vector doesnt work for shader init)
+
+
+	Model triangleModel = Model{ triVerts, glm::mat4(1.0f) };
+
 	// Bind and set VBO data
 	renderer->initializeShaders(triVerts, sizeof(triVerts));
 	renderer->initializeText();
