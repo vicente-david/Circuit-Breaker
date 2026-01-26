@@ -3,3 +3,5 @@
 /out
 /CMakeSettings.json
 /.cache
+/CMakelists.txt
+/CMakeLists.txt
