@@ -1,4 +1,4 @@
-# CPSC585-Games-Programming
+# Circuit Breaker
 ## Members
 Vicente David
 vicente.david@ucalgary.ca
