@@ -6,6 +6,7 @@
 #include "PhysicsSystem.h"
 #include "Model.h"
 #include "Texture.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 int main()
@@ -55,6 +56,7 @@ int main()
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
+
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -80,18 +82,19 @@ int main()
 			framesPassed = 0;
 		}
 
-		// Print object position for debug
-		//physx::PxVec3 objPos = physicsSys.getPos(50);
-		//std::cout << "PHYSX: object pos x: " << objPos.x << " y: " << objPos.y << " z: " << objPos.z << std::endl;
 
-
-
+		// Test transformation
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+		
 		// rendering
 		// TODO: create render update function in rendering system
-		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+	
 		renderer->basicShader->use();
+		unsigned int transformLoc = glGetUniformLocation(renderer->basicShader->id, "transform");
+		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
