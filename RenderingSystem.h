@@ -9,12 +9,9 @@ class RenderingSystem {
 
 public:
 	RenderingSystem();
-	void initializeRenderer();
-	void initializeShaders(Vertex* vertices, int size);
+	unsigned int initVAO(Vertex* vertices, int size);
+	void initializeShaders();
 	void initializeText();
-
-	unsigned int VAO;
-	unsigned int VBO;
 
 	unsigned int textVBO;
 	unsigned int textVAO;

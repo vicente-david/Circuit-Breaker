@@ -6,7 +6,7 @@
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height); //TODO: move this
 
-RenderingSystem::RenderingSystem() : VAO(0), VBO(0), textVBO(1), textVAO(1)
+RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1)
 {
 	// Instantiate GLFW window
 	glfwInit();
@@ -38,39 +38,49 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
+unsigned int RenderingSystem::initVAO(Vertex* vertices, int size) {
+	unsigned int VAO, VBO, EBO;
 
-// note: we can put all the data into one vbo, and then assign different vao's to different shaders
-// ex: lighting needs normals, but text doesn't, we have different shaders for them anyways
-// so just bind a different vao for lighting shader and a different vao for text shader
-void RenderingSystem::initializeRenderer() {
-	// Initialize and bind VAO
+	unsigned int indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+
 	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO);
+
 	glBindVertexArray(VAO);
 
-	// Generate VBO
-	glGenBuffers(1, &VBO);
-
-	// bind VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+	// Position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-
-	// color
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
+	// Color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	
-	// texture (no texture as of right now so it is offset 6 instead of 8)
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(6 * sizeof(float)));
+	// Texture coord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 	glEnableVertexAttribArray(2);
 
+	glBindVertexArray(0); // Unbind VAO
 
+	return VAO;
+
+	// note: we can put all the data into one vbo, and then assign different vao's to different shaders
+	// ex: lighting needs normals, but text doesn't, we have different shaders for them anyways
+	// so just bind a different vao for lighting shader and a different vao for text shader
 }
 
-void RenderingSystem::initializeShaders(Vertex* vertices, int size) {
+
+
+void RenderingSystem::initializeShaders() {
 	// Create shader program
-	glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);
 	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert", "shaders/basic.frag");
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert", "shaders/testText.frag");
 	textFont = initFont("assets/miamanueva.ttf");

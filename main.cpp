@@ -5,15 +5,12 @@
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
 #include "Model.h"
+#include "Texture.h"
 
 
 int main()
 {
-	auto renderer = std::make_unique<RenderingSystem>();
-	renderer->initializeRenderer();
-	
-
-
+	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
 
 	// --Placeholder code--
@@ -36,25 +33,21 @@ int main()
 	double accumulator = 0.0;
 
 
-	// Triangle vectors (positions + colors)
-	Vertex triVerts[3] = {
-		{glm::vec3(-1.0f, -1.0f, 0.0f),
-		 glm::vec3(1.0f, 0.5f, 0.5f)},
-		 {glm::vec3(1.0f, -1.0f, 0.0f),
-		 glm::vec3(0.5f, 1.f, 0.5f)},
-		{glm::vec3(0.0f,  1.0f, 0.0f),
-		 glm::vec3(0.5f, 0.5f, 1.f)}
+	// Vertices (pos, col, tex)
+	std::vector<Vertex> verts = {
+		{glm::vec3(0.5f,  0.5f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec2(1.0f, 1.0f)},   // top right
+		{glm::vec3(0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f)},   // bottom right
+		{glm::vec3(-0.5f, -0.5f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)},   // bottom left
+		{glm::vec3(-0.5f,  0.5f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 1.0f)}    // top left 
 	};
 
-	// Does the model have to contain a vector of verts? (vector doesnt work for shader init)
+	renderer->initializeShaders(); // Create shader programs
+	unsigned int VAO = renderer->initVAO(verts.data(), verts.size() * sizeof(Vertex)); // Initialize VAO, VBO, EBO
 
-
-	Model triangleModel = Model{ triVerts, glm::mat4(1.0f) };
-
-	// Bind and set VBO data
-	renderer->initializeShaders(triVerts, sizeof(triVerts));
+	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
+	
 	renderer->initializeText();
-
+	
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -62,6 +55,7 @@ int main()
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
+	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
 		// time
@@ -94,17 +88,19 @@ int main()
 
 		// rendering
 		// TODO: create render update function in rendering system
-		glfwPollEvents();
+		
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderer->basicShader->use();
-		glBindVertexArray(renderer->VBO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		// render text
 		renderer->textProg->use();
 		RenderText(*renderer->textProg, renderer->textVAO, renderer->textVBO, "FPS: "+fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), renderer->textFont);
 		
+		glfwPollEvents();
 		glfwSwapBuffers(renderer->window);
 
 	
