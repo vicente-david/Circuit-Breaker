@@ -83,18 +83,33 @@ int main()
 		}
 
 
-		// Test transformation
+		// Test transformations
 		glm::mat4 trans = glm::mat4(1.0f);
 		trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 		trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
 		
+		glm::mat4 model = glm::mat4(1.0f);
+		model = trans;
+		glm::mat4 view = glm::mat4(1.0f);
+		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		glm::mat4 proj;
+		proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+
 		// rendering
 		// TODO: create render update function in rendering system
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 		renderer->basicShader->use();
-		unsigned int transformLoc = glGetUniformLocation(renderer->basicShader->id, "transform");
-		glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+
+		// use transformations
+		unsigned int modelLoc = glGetUniformLocation(renderer->basicShader->id, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		unsigned int viewLoc = glGetUniformLocation(renderer->basicShader->id, "view");
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		unsigned int projLoc = glGetUniformLocation(renderer->basicShader->id, "projection");
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+		
 		glBindTexture(GL_TEXTURE_2D, texture);
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
