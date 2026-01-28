@@ -147,11 +147,10 @@ int main()
 			framesPassed = 0;
 		}
 
-		// Cube transform
-		/*glm::mat4 model = glm::mat4(1.0f);
-		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.5f, 0.5f));
-		objects[0].modelMatrix = model;*/
-
+		
+		objects[0].transform->rot = glm::quat(glm::vec3(0.7f, 0.5f, 0.1f) * (float)glfwGetTime());
+		objects[1].transform->rot = glm::quat(glm::vec3(1.0f, 0.0f, 0.0f) * (float)glfwGetTime());
+		objects[2].transform->rot = glm::quat(glm::vec3(2.0f, 1.0f, 0.0f) * (float)glfwGetTime());
 		// rendering
 		renderer->update(objects, VAO, fps);
 
