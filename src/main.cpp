@@ -85,37 +85,7 @@ int main()
 		entityList.back().model = &cube;
 	}
 
-	// Temp transform data for cubes
-	glm::vec3 cubePositions[] = {
-	glm::vec3(0.0f,  0.0f,  0.0f),
-	glm::vec3(2.0f,  5.0f, -15.0f),
-	glm::vec3(-1.5f, -2.2f, -2.5f),
-	glm::vec3(-3.8f, -2.0f, -12.3f),
-	glm::vec3(2.4f, -0.4f, -3.5f),
-	glm::vec3(-1.7f,  3.0f, -7.5f),
-	glm::vec3(1.3f, -2.0f, -2.5f),
-	glm::vec3(1.5f,  2.0f, -2.5f),
-	glm::vec3(1.5f,  0.2f, -1.5f),
-	glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
 
-	// Temp function to create list of cube entities
-	std::vector<Entity> objects{};
-	for (int i = 0; i < 10; i++) {
-
-		Transform* trans = new Transform();
-		trans->pos = cubePositions[i];
-		trans->rot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-
-		Entity entity{ "perro" + std::to_string(i), &cube, trans};
-		objects.push_back(entity);
-
-	}
-
-
-
-	
-	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
@@ -146,11 +116,6 @@ int main()
 			t -= 1.0;
 			framesPassed = 0;
 		}
-
-		// test update object transforms
-		objects[0].transform->rot = glm::quat(glm::vec3(0.7f, 0.5f, 0.1f) * (float)glfwGetTime());
-		objects[1].transform->rot = glm::quat(glm::vec3(1.0f, 0.0f, 0.0f) * (float)glfwGetTime());
-		objects[2].transform->rot = glm::quat(glm::vec3(2.0f, 1.0f, 0.0f) * (float)glfwGetTime());
 		
 		// rendering
 		renderer->update(entityList, VAO, fps);
