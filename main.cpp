@@ -18,21 +18,25 @@ class TestInput1 : public CallbackInterface {
 		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
 			std::cout << "left click" << std::endl;
 		}
-		else if (button == GLFW_MOUSE_BUTTON_2 && action == GLFW_REPEAT) {
-			std::cout << "right click held but not pressed" << std::endl;
+		else if (button == GLFW_MOUSE_BUTTON_2 && action == GLFW_RELEASE) {
+			std::cout << "right click released" << std::endl;
 		}
 	}
 
 	void cursorPositionCallback(double xpos, double ypos) {
-
+		if (xpos > 50) {
+			//std::cout << "x > 50" << std::endl;
+		}
 	}
 
 	void scrollCallback(double xoffset, double yoffset) {
-
+		if (yoffset < 0) {
+			std::cout << "scroll down" << std::endl;
+		}
 	}
 
 	void windowSizeCallback(int width, int height) {
-
+		glViewport(0, 0, width, height);
 	}
 
 };
