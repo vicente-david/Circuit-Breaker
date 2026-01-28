@@ -1,0 +1,87 @@
+cmake_minimum_required(VERSION 3.15)
+
+project(circuit-breaker)
+
+# run this if using debug version
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
+# run this if using release
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
+add_executable(circuit-breaker main.cpp "Shader.h" "Shader.cpp" "ShaderProgram.cpp" "ShaderProgram.h" "RenderingSystem.h" "RenderingSystem.cpp" "PhysicsSystem.h" "PhysicsSystem.cpp" "Text.h" "Text.cpp" "Texture.h" "Texture.cpp" "stb_image.h" "stb_image.cpp")
+
+# PHYSX
+# add folder 'phsyx' into project directory. Download from: https:S//drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
+
+include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
+set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
+
+# run this if using debug version
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
+
+# run this if using release
+#set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
+
+# copy assets
+file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
+
+#copy shaders
+file (COPY ${PROJECT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
+
+#free type
+add_subdirectory(dependencies/freetype) 
+set(LIBRARIES ${LIBRARIES} freetype)
+
+# GLAD
+add_subdirectory(dependencies/glad) 
+set(LIBRARIES ${LIBRARIES} glad)
+
+# GLFW
+add_subdirectory(dependencies/glfw-3.4)
+set(LIBRARIES ${LIBRARIES} glfw)
+
+#GLM
+include_directories(SYSTEM dependencies/glm-0.9.9.7/)
+
+# OPENGL
+find_package(OpenGL REQUIRED)
+set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
+
+if (WIN32)
+  # copy required dlls
+  file(COPY 
+    ${PHYSX_LIB}/PhysX_64.dll
+    ${PHYSX_LIB}/PhysXCommon_64.dll
+    ${PHYSX_LIB}/PhysXFoundation_64.dll
+    DESTINATION ${CMAKE_BINARY_DIR} )
+
+  target_link_libraries(${PROJECT_NAME} PRIVATE 
+    # physx
+    ${PHYSX_LIB}/PhysXExtensions_static_64.lib
+    ${PHYSX_LIB}/PhysX_64.lib
+    ${PHYSX_LIB}/PhysXPvdSDK_static_64.lib
+    ${PHYSX_LIB}/PhysXCommon_64.lib
+    ${PHYSX_LIB}/PhysXFoundation_64.lib
+    ${LIBRARIES}
+  )
+  elseif(UNIX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
+    # physx
+    ${PHYSX_LIB}/libPhysXExtensions_static_64.a
+    ${PHYSX_LIB}/libPhysX_static_64.a
+    ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
+    ${PHYSX_LIB}/libPhysXCommon_static_64.a
+    ${PHYSX_LIB}/libPhysXFoundation_static_64.a
+    ${LIBRARIES}
+  )
+endif()
+
+
+# Copy all the shaders and tell the build system to re-run CMAKE if one of them changes
+file(GLOB files shaders/*)
+foreach(file ${files})
+	get_filename_component(name ${file} NAME)
+	configure_file(${file} shaders/${name})
+endforeach()
+
+
