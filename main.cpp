@@ -78,15 +78,43 @@ int main()
 	renderer->initializeText();
 
 	// Create cube object
-	auto cube = std::make_unique<Model>();
-	cube->vertices = verts;
-	cube->indices = indices;
-	cube->textures.push_back({ texture, "diffuse" });
-	cube->modelMatrix = glm::mat4(1.0f);
+	Model cube;
+	cube.vertices = verts;
+	cube.indices = indices;
+	cube.textures.push_back({ texture, "diffuse" });
+	cube.modelMatrix = glm::mat4(1.0f);
 
-	// Create list of objects, add cube
-	std::vector<Model> objects;
-	objects.push_back(*cube);
+	// Temp transform data for cubes
+	glm::vec3 cubePositions[] = {
+	glm::vec3(0.0f,  0.0f,  0.0f),
+	glm::vec3(2.0f,  5.0f, -15.0f),
+	glm::vec3(-1.5f, -2.2f, -2.5f),
+	glm::vec3(-3.8f, -2.0f, -12.3f),
+	glm::vec3(2.4f, -0.4f, -3.5f),
+	glm::vec3(-1.7f,  3.0f, -7.5f),
+	glm::vec3(1.3f, -2.0f, -2.5f),
+	glm::vec3(1.5f,  2.0f, -2.5f),
+	glm::vec3(1.5f,  0.2f, -1.5f),
+	glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
+	// Temp function to create list of cube entities
+	std::vector<Entity> objects{};
+	for (int i = 0; i < 10; i++) {
+
+		Transform* trans = new Transform();
+		trans->pos = cubePositions[i];
+		trans->rot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+
+		Entity entity{ "perro" + std::to_string(i), &cube, trans};
+		objects.push_back(entity);
+
+		std::cout << "Created entity " << i << " at position " << cubePositions[i].x << ", " << cubePositions[i].y << ", " << cubePositions[i].z << std::endl;
+	}
+
+
+
+	
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -120,9 +148,9 @@ int main()
 		}
 
 		// Cube transform
-		glm::mat4 model = glm::mat4(1.0f);
+		/*glm::mat4 model = glm::mat4(1.0f);
 		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.5f, 0.5f));
-		objects[0].modelMatrix = model;
+		objects[0].modelMatrix = model;*/
 
 		// rendering
 		renderer->update(objects, VAO, fps);

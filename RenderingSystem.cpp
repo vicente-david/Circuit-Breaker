@@ -103,11 +103,10 @@ void RenderingSystem::initializeText() {
 
 }
 
-void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO, std::string fps) {
-	Model& object = models.front(); // Cube is the only object for now
+void RenderingSystem::update(std::vector<Entity> entities, unsigned int VAO, std::string fps) {
+	
+	basicShader->use();
 
-	// Test transformations	
-	glm::mat4 model = object.modelMatrix; 
 	glm::mat4 view = glm::mat4(1.0f);
 	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	glm::mat4 proj;
@@ -115,19 +114,26 @@ void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO, std::
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	basicShader->use();
-	// use transformations
-	unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
-	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
-	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	for (auto& entity : entities) {
+		Model object = *entity.model; // get model of entity
+		Transform transform = *entity.transform; // get transform of entity
 
-	glBindTexture(GL_TEXTURE_2D, object.textures[0].id);
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_INT, 0);
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, transform.pos);
+		model *= glm::toMat4(transform.rot);
 
+		// use transformations
+		unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+		unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+		unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
+		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+		glBindTexture(GL_TEXTURE_2D, object.textures[0].id);
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_INT, 0);
+	}
 	// render text
 	textProg->use();
 	RenderText(*textProg, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), textFont);
