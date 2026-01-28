@@ -4,6 +4,38 @@
 #include "PxPhysicsAPI.h"
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
+#include "InputSystem.h"
+
+class TestInput1 : public CallbackInterface {
+
+	void keyCallback(int key, int scancode, int action, int mods) {
+		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+			std::cout << "W pressed" << std::endl;
+		}
+	}
+
+	void mouseButtonCallback(int button, int action, int mods) {
+		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+			std::cout << "left click" << std::endl;
+		}
+		else if (button == GLFW_MOUSE_BUTTON_2 && action == GLFW_REPEAT) {
+			std::cout << "right click held but not pressed" << std::endl;
+		}
+	}
+
+	void cursorPositionCallback(double xpos, double ypos) {
+
+	}
+
+	void scrollCallback(double xoffset, double yoffset) {
+
+	}
+
+	void windowSizeCallback(int width, int height) {
+
+	}
+
+};
 
 
 int main()
@@ -14,6 +46,11 @@ int main()
 
 
 	PhysicsSystem physicsSys;
+
+	InputSystem inputSystem;
+	inputSystem.attachWindow(renderer->window);
+	TestInput1 t1;
+	inputSystem.setCallback(std::make_shared<TestInput1>(t1));
 
 	// --Placeholder code--
 	std::vector<Entity> entityList;
@@ -79,10 +116,6 @@ int main()
 			t -= 1.0;
 			framesPassed = 0;
 		}
-
-		// Print object position for debug
-		physx::PxVec3 objPos = physicsSys.getPos(50);
-		std::cout << "PHYSX: object pos x: " << objPos.x << " y: " << objPos.y << " z: " << objPos.z << std::endl;
 
 
 
