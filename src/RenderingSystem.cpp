@@ -108,11 +108,18 @@ void RenderingSystem::update(std::vector<Entity> entities, unsigned int VAO, std
 	basicShader->use();
 
 	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	view = glm::lookAt(glm::vec3(0.0f, 5.0f, 50.0f), glm::vec3(0.0f, -30.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
 
 	for (auto& entity : entities) {
 		Model object = *entity.model; // get model of entity
@@ -125,10 +132,7 @@ void RenderingSystem::update(std::vector<Entity> entities, unsigned int VAO, std
 		// use transformations
 		unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+		
 
 		glBindTexture(GL_TEXTURE_2D, object.textures[0].id);
 		glBindVertexArray(VAO);

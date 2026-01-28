@@ -22,9 +22,9 @@ public:
 
 	PhysicsSystem(); // Constructor
 
-	void updateTransforms();
+	void updateTransforms(std::vector<Entity> entityList);
 
-	void updatePhysics(double dt);
+	void updatePhysics(double dt, std::vector<Entity> entityList);
 
 	physx::PxVec3 getPos(int i); // Get position of id
 	physx::PxQuat getRot(int i); // Get rotation of id

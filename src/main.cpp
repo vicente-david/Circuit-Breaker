@@ -14,17 +14,7 @@ int main()
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
 
-	// --Placeholder code--
-	std::vector<Entity> entityList;
-	entityList.reserve(465);
-
-	for (int i = 0; i < 465; i++)
-	{
-		entityList.emplace_back();
-		entityList.back().name = "untitled_entity";
-		entityList.back().transform = physicsSys.transformList[i];
-		entityList.back().model = NULL;
-	}
+	
 
 
 	// time
@@ -82,7 +72,18 @@ int main()
 	cube.vertices = verts;
 	cube.indices = indices;
 	cube.textures.push_back({ texture, "diffuse" });
-	cube.modelMatrix = glm::mat4(1.0f);
+
+	// --Placeholder code--
+	std::vector<Entity> entityList;
+	entityList.reserve(465);
+
+	for (int i = 0; i < 465; i++)
+	{
+		entityList.emplace_back();
+		entityList.back().name = "perro cube";
+		entityList.back().transform = physicsSys.transformList[i];
+		entityList.back().model = &cube;
+	}
 
 	// Temp transform data for cubes
 	glm::vec3 cubePositions[] = {
@@ -109,7 +110,6 @@ int main()
 		Entity entity{ "perro" + std::to_string(i), &cube, trans};
 		objects.push_back(entity);
 
-		std::cout << "Created entity " << i << " at position " << cubePositions[i].x << ", " << cubePositions[i].y << ", " << cubePositions[i].z << std::endl;
 	}
 
 
@@ -136,7 +136,7 @@ int main()
 
 		// physics
 		while (accumulator >= dt) {
-			physicsSys.updatePhysics(dt);
+			physicsSys.updatePhysics(dt, entityList);
 			accumulator -= dt;
 			t += dt;
 		}
@@ -153,7 +153,7 @@ int main()
 		objects[2].transform->rot = glm::quat(glm::vec3(2.0f, 1.0f, 0.0f) * (float)glfwGetTime());
 		
 		// rendering
-		renderer->update(objects, VAO, fps);
+		renderer->update(entityList, VAO, fps);
 
 	
 	}

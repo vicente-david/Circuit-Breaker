@@ -70,28 +70,27 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	shape->release();
 }
 
-void PhysicsSystem::updateTransforms()
+void PhysicsSystem::updateTransforms(std::vector<Entity> entityList)
 {
-	for (int i = 0; i < transformList.size(); i++)
+	for (int i = 0; i < entityList.size(); i++)
 	{
-		// Store positions
-		transformList[i]->pos.x = getPos(i).x;
-		transformList[i]->pos.y = getPos(i).y;
-		transformList[i]->pos.z = getPos(i).z;
+		// Update entity transforms
+		entityList.at(i).transform->pos.x = rigidDynamicList[i]->getGlobalPose().p.x;
+		entityList.at(i).transform->pos.y = rigidDynamicList[i]->getGlobalPose().p.y;
+		entityList.at(i).transform->pos.z = rigidDynamicList[i]->getGlobalPose().p.z;
 
-		// Store positions
-		transformList[i]->rot.x = getRot(i).x;
-		transformList[i]->rot.y = getRot(i).y;
-		transformList[i]->rot.z = getRot(i).z;
-		transformList[i]->rot.w = getRot(i).w;
+		entityList.at(i).transform->rot.x = rigidDynamicList[i]->getGlobalPose().q.x;
+		entityList.at(i).transform->rot.y = rigidDynamicList[i]->getGlobalPose().q.y;
+		entityList.at(i).transform->rot.z = rigidDynamicList[i]->getGlobalPose().q.z;
+		entityList.at(i).transform->rot.w = rigidDynamicList[i]->getGlobalPose().q.w;
 	}
 }
 
-void PhysicsSystem::updatePhysics(double dt) {
+void PhysicsSystem::updatePhysics(double dt, std::vector<Entity> entityList) {
 	gScene->simulate(dt);
 	gScene->fetchResults(true);
 
-	updateTransforms();
+	updateTransforms(entityList);
 }
 
 physx::PxVec3 PhysicsSystem::getPos(int i) { return rigidDynamicList[i]->getGlobalPose().p; }
