@@ -48,7 +48,7 @@ bool ShaderProgram::checkLink() {
 		return false;
 	}
 	else {
-		std::cout << "Shader program linked successfully." << std::endl;
+		std::cout << "Shader program " << id << " linked successfully." << std::endl;
 		return true;
 	}
 }
