@@ -147,10 +147,11 @@ int main()
 			framesPassed = 0;
 		}
 
-		
+		// test update object transforms
 		objects[0].transform->rot = glm::quat(glm::vec3(0.7f, 0.5f, 0.1f) * (float)glfwGetTime());
 		objects[1].transform->rot = glm::quat(glm::vec3(1.0f, 0.0f, 0.0f) * (float)glfwGetTime());
 		objects[2].transform->rot = glm::quat(glm::vec3(2.0f, 1.0f, 0.0f) * (float)glfwGetTime());
+		
 		// rendering
 		renderer->update(objects, VAO, fps);
 

@@ -6,6 +6,7 @@
 #include "Text.h"
 #include "Model.h"
 #include "Entity.h"
+#include "Camera.h"
 
 class RenderingSystem {
 
@@ -26,6 +27,7 @@ public:
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
 	std::unique_ptr<ShaderProgram> textProg;
+
 
 private:
 	
