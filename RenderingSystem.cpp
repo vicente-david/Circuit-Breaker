@@ -103,7 +103,7 @@ void RenderingSystem::initializeText() {
 
 }
 
-void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO) {
+void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO, std::string fps) {
 	Model& object = models.front(); // Cube is the only object for now
 
 	// Test transformations	
@@ -112,6 +112,8 @@ void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO) {
 	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	basicShader->use();
 	// use transformations
@@ -126,4 +128,10 @@ void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO) {
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_INT, 0);
 
+	// render text
+	textProg->use();
+	RenderText(*textProg, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), textFont);
+
+	glfwPollEvents();
+	glfwSwapBuffers(window);
 }

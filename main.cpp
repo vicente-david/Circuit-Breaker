@@ -106,8 +106,6 @@ int main()
 		accumulator += frameTime;
 		framesPassed++;
 
-		
-
 		// physics
 		while (accumulator >= dt) {
 			physicsSys.updatePhysics(dt);
@@ -127,16 +125,7 @@ int main()
 		objects[0].modelMatrix = model;
 
 		// rendering
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-		renderer->update(objects, VAO);
-
-		// render text
-		renderer->textProg->use();
-		RenderText(*renderer->textProg, renderer->textVAO, renderer->textVBO, "FPS: "+fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), renderer->textFont);
-		
-		glfwPollEvents();
-		glfwSwapBuffers(renderer->window);
+		renderer->update(objects, VAO, fps);
 
 	
 	}
