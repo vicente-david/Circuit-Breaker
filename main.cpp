@@ -68,14 +68,25 @@ int main()
 		12, 13, 2, 2, 3, 12,
 		4, 5, 14, 14, 15, 4
 	};
-	
+
+
 	renderer->initializeShaders(); // Create shader programs
 	unsigned int VAO = renderer->initVAO(verts.data(), verts.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int)); // Initialize VAO, VBO, EBO
-
+	
 	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
 	
 	renderer->initializeText();
-	
+
+	// Create cube object
+	auto cube = std::make_unique<Model>();
+	cube->vertices = verts;
+	cube->indices = indices;
+	cube->textures.push_back({ texture, "diffuse" });
+	cube->modelMatrix = glm::mat4(1.0f);
+
+	// Create list of objects, add cube
+	std::vector<Model> objects;
+	objects.push_back(*cube);
 	
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -110,33 +121,15 @@ int main()
 			framesPassed = 0;
 		}
 
-
-		// Test transformations	
+		// Cube transform
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(1.0f, 0.5f, 0.5f));
-		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-		glm::mat4 proj;
-		proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
+		objects[0].modelMatrix = model;
 
 		// rendering
-		// TODO: create render update function in rendering system
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-		renderer->basicShader->use();
-
-		// use transformations
-		unsigned int modelLoc = glGetUniformLocation(renderer->basicShader->id, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-		unsigned int viewLoc = glGetUniformLocation(renderer->basicShader->id, "view");
-		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-		unsigned int projLoc = glGetUniformLocation(renderer->basicShader->id, "projection");
-		glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-		
-		glBindTexture(GL_TEXTURE_2D, texture);
-		glBindVertexArray(VAO);
-		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+		renderer->update(objects, VAO);
 
 		// render text
 		renderer->textProg->use();

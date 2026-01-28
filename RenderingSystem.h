@@ -1,4 +1,5 @@
 #include <memory>
+#include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
@@ -12,6 +13,8 @@ public:
 	unsigned int initVAO(Vertex* vertices, int vertSize, unsigned int* indices, int indSize);
 	void initializeShaders();
 	void initializeText();
+
+	void update(std::vector<Model>& models, unsigned int VAO); //temporarily adding VAO here
 
 	unsigned int textVBO;
 	unsigned int textVAO;

@@ -102,3 +102,28 @@ void RenderingSystem::initializeText() {
 	glBindVertexArray(0);
 
 }
+
+void RenderingSystem::update(std::vector<Model>& models, unsigned int VAO) {
+	Model& object = models.front(); // Cube is the only object for now
+
+	// Test transformations	
+	glm::mat4 model = object.modelMatrix; 
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	glm::mat4 proj;
+	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+	basicShader->use();
+	// use transformations
+	unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
+	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
+	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+
+	glBindTexture(GL_TEXTURE_2D, object.textures[0].id);
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_INT, 0);
+
+}
