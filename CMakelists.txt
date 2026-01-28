@@ -14,10 +14,12 @@ add_executable(circuit-breaker main.cpp
 "RenderingSystem.h" "RenderingSystem.cpp" 
 "PhysicsSystem.h" "PhysicsSystem.cpp" 
 "Text.h" "Text.cpp"
+"Texture.h" "Texture.cpp"
+"stb_image.h" "stb_image.cpp"
 "InputSystem.h" "InputSystem.cpp")
 
 # PHYSX
-# add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
+# add folder 'phsyx' into project directory. Download from: https:S//drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
 
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)

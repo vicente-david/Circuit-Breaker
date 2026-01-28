@@ -1,21 +1,22 @@
 #include <memory>
+#include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #include "Text.h"
-
+#include "Model.h"
+#include "Entity.h"
+#include "Camera.h"
 
 class RenderingSystem {
 
 public:
 	RenderingSystem();
-	void initializeRenderer();
-	void initializeShaders(float* vertices, int size);
+	unsigned int initVAO(Vertex* vertices, int vertSize, unsigned int* indices, int indSize);
+	void initializeShaders();
 	void initializeText();
 
-	unsigned int VAO;
-	// might need multiple vaos and a bind method, or even an id system to determine which vao to bind
-	unsigned int VBO;
+	void update(std::vector<Entity> entities, unsigned int VAO, std::string fps); //temporarily adding VAO here
 
 	unsigned int textVBO;
 	unsigned int textVAO;
@@ -24,9 +25,9 @@ public:
 	glm::mat4 textMat;
 
 	GLFWwindow* window;
-	std::unique_ptr<ShaderProgram> shaderProg;
-	// need a way to store multiple shaders
+	std::unique_ptr<ShaderProgram> basicShader;
 	std::unique_ptr<ShaderProgram> textProg;
+
 
 private:
 	
