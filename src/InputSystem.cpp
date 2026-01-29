@@ -109,10 +109,12 @@ void InputSystem::combineInputs() {
 
 void InputSystem::updateGamepad() {
 	glfwGetGamepadState(GLFW_JOYSTICK_1, &controllerState);
-	float triggerThreshold = 0.05f;
+	float triggerThreshold = 0.1f;
+	float strickTriggerThreshold = 0.3f;
 	float rightTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	float leftTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
-	// note will need floats to determine how far the trigger is pressed not just booleans
+	float rightx = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
+	float righty = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];;
 	
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
@@ -120,13 +122,27 @@ void InputSystem::updateGamepad() {
 		actions.controllerBackward = 0.0;
 	}
 
-
 	
 	if (rightTrigger >= triggerThreshold) {
 		actions.controllerForward = rightTrigger;
 	} else if (rightTrigger < triggerThreshold) {
 		actions.controllerForward = 0.0;
 	}
+
+	if (glm::abs(rightx) >= strickTriggerThreshold) {
+		actions.xRotation = rightx;
+	}
+	else if (abs(rightx) < strickTriggerThreshold) {
+		actions.xRotation = 0.0;
+	}
+
+	if (glm::abs(righty) >= strickTriggerThreshold) {
+		actions.yRotation = righty;
+	}
+	else if (abs(righty) < strickTriggerThreshold) {
+		actions.yRotation = 0.0;
+	}
+
 
 }
 

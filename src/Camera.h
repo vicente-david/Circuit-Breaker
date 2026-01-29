@@ -104,6 +104,14 @@ public:
 		if (actions.moveBackward > 0.0) {
 			ProcessKeyboard(BACKWARD, 0.1 * deltaTime*actions.moveBackward);
 		}
+
+		if (glm::abs(actions.xRotation) > 0.0) {
+			ProcessMouseMovement(actions.xRotation, 0.0);
+		}
+
+		if (glm::abs(actions.yRotation) > 0.0) {
+			ProcessMouseMovement(0.0, -actions.yRotation);
+		}
 	}
 
 private:

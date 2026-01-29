@@ -31,6 +31,9 @@ struct Actions {
 
 	float controllerForward = 0.0;
 	float controllerBackward = 0.0;
+
+	float xRotation = 0.0;
+	float yRotation = 0.0;
 };
 
 
