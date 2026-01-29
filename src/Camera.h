@@ -97,12 +97,12 @@ public:
 	}
 
 	void updateCamera(Actions actions, double deltaTime) {
-		if (actions.moveForward) {
-			ProcessKeyboard(FORWARD, 0.1 * deltaTime);
+		if (actions.moveForward > 0.0) {
+			ProcessKeyboard(FORWARD, 0.1 * deltaTime*actions.moveForward);
 		}
 
-		if (actions.moveBackward) {
-			ProcessKeyboard(BACKWARD, 0.1 * deltaTime);
+		if (actions.moveBackward > 0.0) {
+			ProcessKeyboard(BACKWARD, 0.1 * deltaTime*actions.moveBackward);
 		}
 	}
 

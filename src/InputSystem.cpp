@@ -1,5 +1,6 @@
 #include "InputSystem.h"
 #include<iostream>
+#include<glm/glm.hpp>
 
 class TestInput1 : public CallbackInterface {
 
@@ -93,38 +94,38 @@ const Actions& InputSystem::getActions() {
 }
 
 void InputSystem::combineInputs() {
-	actions.moveForward = false;
-	actions.moveBackward = false;
+	actions.moveForward = 0.0;
+	actions.moveBackward = 0.0;
 
 	if (actions.keyboardForward || actions.controllerForward) {
-		actions.moveForward = true;
+		actions.moveForward = glm::clamp((actions.keyboardForward+(float)actions.controllerForward), 0.0f, 1.0f);
 	}
 
 	if (actions.keyboardBackward || actions.controllerBackward) {
-		actions.moveBackward = true;
+		actions.moveBackward = glm::clamp((actions.keyboardBackward + (float)actions.controllerBackward), 0.0f, 1.0f);
 	}
 
 }
 
 void InputSystem::updateGamepad() {
 	glfwGetGamepadState(GLFW_JOYSTICK_1, &controllerState);
-	float triggerThreshold = 0.1f;
+	float triggerThreshold = 0.05f;
 	float rightTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	float leftTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
 	// note will need floats to determine how far the trigger is pressed not just booleans
 	
 	if (leftTrigger >= triggerThreshold) {
-		actions.controllerBackward = true;
+		actions.controllerBackward = leftTrigger;
 	}else if (leftTrigger < triggerThreshold) {
-		actions.controllerBackward = false;
+		actions.controllerBackward = 0.0;
 	}
 
 
 	
 	if (rightTrigger >= triggerThreshold) {
-		actions.controllerForward = true;
+		actions.controllerForward = rightTrigger;
 	} else if (rightTrigger < triggerThreshold) {
-		actions.controllerForward = false;
+		actions.controllerForward = 0.0;
 	}
 
 }

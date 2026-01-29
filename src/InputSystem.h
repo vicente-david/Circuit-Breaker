@@ -23,14 +23,14 @@ public:
 };
 
 struct Actions {
-	bool moveForward = false;
-	bool moveBackward = false;
+	float moveForward = 0.0;
+	float moveBackward = 0.0;
 
 	bool keyboardForward = false; 
 	bool keyboardBackward = false;
 
-	bool controllerForward = false;
-	bool controllerBackward = false;
+	float controllerForward = 0.0;
+	float controllerBackward = 0.0;
 };
 
 
