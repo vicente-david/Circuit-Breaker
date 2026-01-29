@@ -1,6 +1,51 @@
 #include "InputSystem.h"
 #include<iostream>
 
+class TestInput1 : public CallbackInterface {
+
+	void keyCallback(int key, int scancode, int action, int mods) {
+		if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+			std::cout << "W pressed" << std::endl;
+			actions->moveForward = true;
+		}
+		else {
+			actions->moveForward = false;
+		}
+	}
+
+	void mouseButtonCallback(int button, int action, int mods) {
+		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
+			std::cout << "left click" << std::endl;
+		}
+		else if (button == GLFW_MOUSE_BUTTON_2 && action == GLFW_RELEASE) {
+			std::cout << "right click released" << std::endl;
+		}
+	}
+
+	void cursorPositionCallback(double xpos, double ypos) {
+		if (xpos > 50) {
+			//std::cout << "x > 50" << std::endl;
+		}
+	}
+
+	void scrollCallback(double xoffset, double yoffset) {
+		if (yoffset < 0) {
+			std::cout << "scroll down" << std::endl;
+		}
+	}
+
+	void windowSizeCallback(int width, int height) {
+		glViewport(0, 0, width, height);
+	}
+public:
+	void setActions(Actions* actionsPtr) {
+		actions = actionsPtr;
+	}
+
+private: 
+		Actions* actions = nullptr;
+};
+
 // if we have .ini we could parse contorls here
 InputSystem::InputSystem() : window(nullptr), callbacks(nullptr){
 }
@@ -8,6 +53,10 @@ InputSystem::InputSystem() : window(nullptr), callbacks(nullptr){
 // attach a window
 void InputSystem::attachWindow(GLFWwindow* w1) {
 	window = w1;
+	TestInput1 t1;
+	t1.setActions(&actions);
+
+	setCallback(std::make_shared<TestInput1>(t1));
 }
 
 // Note: when setting a new callback, it overwrites existing callback
@@ -28,6 +77,11 @@ void InputSystem::attachCallbacks() {
 	glfwSetCursorPosCallback(window, cursorPositionMetaCallback);
 	glfwSetScrollCallback(window, scrollMetaCallback);
 	glfwSetWindowSizeCallback(window, windowSizeMetaCallback);
+}
+
+// const as to never allow modification
+const Actions& InputSystem::getActions() {
+	return actions;
 }
 
 void InputSystem::keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

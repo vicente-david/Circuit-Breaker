@@ -21,6 +21,10 @@ public:
 	virtual void windowSizeCallback(int width, int height) {};
 };
 
+struct Actions {
+	bool moveForward = false;
+};
+
 
 class InputSystem {
 
@@ -30,12 +34,15 @@ public:
 	// will abstract later to have arbitrary controls read from an external source, such as a .ini file
 	// scan code input is probably better, since it is keyboard independent, can implement later
 	void setCallback(std::shared_ptr<CallbackInterface> callbacks);
+	const Actions& getActions();
+
 
 private:
 	void attachCallbacks();
 	GLFWwindow* window;
 	std::shared_ptr<CallbackInterface> callbacks;
 
+	Actions actions;
 	// necessary for glfw 
 	static void keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonMetaCallback(GLFWwindow* window, int button, int action, int mods);

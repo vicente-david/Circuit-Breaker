@@ -9,42 +9,6 @@
 #include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
 
-class TestInput1 : public CallbackInterface {
-
-	void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-			std::cout << "W pressed" << std::endl;
-		}
-	}
-
-	void mouseButtonCallback(int button, int action, int mods) {
-		if (button == GLFW_MOUSE_BUTTON_1 && action == GLFW_PRESS) {
-			std::cout << "left click" << std::endl;
-		}
-		else if (button == GLFW_MOUSE_BUTTON_2 && action == GLFW_RELEASE) {
-			std::cout << "right click released" << std::endl;
-		}
-	}
-
-	void cursorPositionCallback(double xpos, double ypos) {
-		if (xpos > 50) {
-			//std::cout << "x > 50" << std::endl;
-		}
-	}
-
-	void scrollCallback(double xoffset, double yoffset) {
-		if (yoffset < 0) {
-			std::cout << "scroll down" << std::endl;
-		}
-	}
-
-	void windowSizeCallback(int width, int height) {
-		glViewport(0, 0, width, height);
-	}
-
-};
-
-
 
 int main()
 {
@@ -53,8 +17,6 @@ int main()
 
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
-	TestInput1 t1;
-	inputSystem.setCallback(std::make_shared<TestInput1>(t1));
 
 	// --Placeholder code--
 	std::vector<Entity> entityList;
@@ -175,6 +137,10 @@ int main()
 		currentTime = newTime;
 		accumulator += frameTime;
 		framesPassed++;
+
+
+		// input
+		Actions gameActions = inputSystem.getActions();
 
 		// physics
 		while (accumulator >= dt) {
