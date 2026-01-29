@@ -2,7 +2,7 @@
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "InputSystem.h"
+
 
 
 // Default camera values
@@ -95,16 +95,6 @@ public:
 		updateCameraVectors();
 	}
 
-	void updateCamera(Actions action, double deltaTime) {
-		if (action.moveForward) {
-			ProcessKeyboard(FORWARD, 0.1 * deltaTime);
-		}
-
-		if (action.moveBackward) {
-			ProcessKeyboard(BACKWARD, 0.1 * deltaTime);
-		}
-	}
-
 private:
 	// calculates the front vector from the Camera's (updated) Euler Angles
 	void updateCameraVectors()
@@ -119,5 +109,4 @@ private:
 		Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
 		Up = glm::normalize(glm::cross(Right, Front));
 	}
-
 };

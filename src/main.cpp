@@ -4,10 +4,10 @@
 #include "PxPhysicsAPI.h"
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
+#include "InputSystem.h"
 #include "Model.h"
 #include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
-#include "InputSystem.h"
 #include "Camera.h"
 
 int main()
@@ -143,7 +143,15 @@ int main()
 
 		// input
 		Actions gameActions = inputSystem.getActions();
-		c1.updateCamera(gameActions, accumulator);
+		if (gameActions.moveForward) {
+			c1.ProcessKeyboard(c1.FORWARD, 0.1*accumulator);
+			std::cout << "fowar" << std::endl;
+		}
+
+		if (gameActions.moveBackward) {
+			c1.ProcessKeyboard(c1.BACKWARD, 0.1 * accumulator);
+			std::cout << "back" << std::endl;
+		}
 
 		// physics
 		while (accumulator >= dt) {
