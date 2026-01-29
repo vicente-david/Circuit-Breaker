@@ -5,11 +5,17 @@ class TestInput1 : public CallbackInterface {
 
 	void keyCallback(int key, int scancode, int action, int mods) {
 		if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			std::cout << "W pressed" << std::endl;
 			actions->moveForward = true;
 		}
-		else {
+		else if(key == GLFW_KEY_W && action == GLFW_RELEASE) {
 			actions->moveForward = false;
+		}
+
+		if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+			actions->moveBackward = true;
+		}
+		else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+			actions->moveBackward = false;
 		}
 	}
 

@@ -23,6 +23,7 @@ public:
 
 struct Actions {
 	bool moveForward = false;
+	bool moveBackward = false;
 };
 
 
