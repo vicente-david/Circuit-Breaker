@@ -5,17 +5,17 @@ class TestInput1 : public CallbackInterface {
 
 	void keyCallback(int key, int scancode, int action, int mods) {
 		if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			actions->moveForward = true;
+			actions->keyboardForward = true;
 		}
 		else if(key == GLFW_KEY_W && action == GLFW_RELEASE) {
-			actions->moveForward = false;
+			actions->keyboardForward = false;
 		}
 
 		if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			actions->moveBackward = true;
+			actions->keyboardBackward = true;
 		}
 		else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-			actions->moveBackward = false;
+			actions->keyboardBackward = false;
 		}
 	}
 
@@ -61,7 +61,6 @@ void InputSystem::attachWindow(GLFWwindow* w1) {
 	window = w1;
 	TestInput1 t1;
 	t1.setActions(&actions);
-
 	setCallback(std::make_shared<TestInput1>(t1));
 }
 
@@ -86,8 +85,48 @@ void InputSystem::attachCallbacks() {
 }
 
 // const as to never allow modification
+// collect both controller and keyboard inputs
 const Actions& InputSystem::getActions() {
+	updateGamepad();
+	combineInputs();
 	return actions;
+}
+
+void InputSystem::combineInputs() {
+	actions.moveForward = false;
+	actions.moveBackward = false;
+
+	if (actions.keyboardForward || actions.controllerForward) {
+		actions.moveForward = true;
+	}
+
+	if (actions.keyboardBackward || actions.controllerBackward) {
+		actions.moveBackward = true;
+	}
+
+}
+
+void InputSystem::updateGamepad() {
+	glfwGetGamepadState(GLFW_JOYSTICK_1, &controllerState);
+	float triggerThreshold = 0.1f;
+	float rightTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
+	float leftTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
+	// note will need floats to determine how far the trigger is pressed not just booleans
+	
+	if (leftTrigger >= triggerThreshold) {
+		actions.controllerBackward = true;
+	}else if (leftTrigger < triggerThreshold) {
+		actions.controllerBackward = false;
+	}
+
+
+	
+	if (rightTrigger >= triggerThreshold) {
+		actions.controllerForward = true;
+	} else if (rightTrigger < triggerThreshold) {
+		actions.controllerForward = false;
+	}
+
 }
 
 void InputSystem::keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

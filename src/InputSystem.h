@@ -25,6 +25,12 @@ public:
 struct Actions {
 	bool moveForward = false;
 	bool moveBackward = false;
+
+	bool keyboardForward = false; 
+	bool keyboardBackward = false;
+
+	bool controllerForward = false;
+	bool controllerBackward = false;
 };
 
 
@@ -37,12 +43,15 @@ public:
 	// scan code input is probably better, since it is keyboard independent, can implement later
 	void setCallback(std::shared_ptr<CallbackInterface> callbacks);
 	const Actions& getActions();
+	void combineInputs();
+	void updateGamepad();
 
 
 private:
 	void attachCallbacks();
 	GLFWwindow* window;
 	std::shared_ptr<CallbackInterface> callbacks;
+	GLFWgamepadstate controllerState;
 
 	Actions actions;
 	// necessary for glfw 

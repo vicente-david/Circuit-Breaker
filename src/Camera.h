@@ -2,6 +2,7 @@
 #include <glad/gl.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "InputSystem.h"
 
 
 
@@ -93,6 +94,16 @@ public:
 
 		// update Front, Right and Up Vectors using the updated Euler angles
 		updateCameraVectors();
+	}
+
+	void updateCamera(Actions actions, double deltaTime) {
+		if (actions.moveForward) {
+			ProcessKeyboard(FORWARD, 0.1 * deltaTime);
+		}
+
+		if (actions.moveBackward) {
+			ProcessKeyboard(BACKWARD, 0.1 * deltaTime);
+		}
 	}
 
 private:

@@ -17,6 +17,8 @@ int main()
 
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
+
+	Actions gameActions = inputSystem.getActions();
 	Camera c1 = Camera();
 	
 
@@ -142,16 +144,9 @@ int main()
 
 
 		// input
-		Actions gameActions = inputSystem.getActions();
-		if (gameActions.moveForward) {
-			c1.ProcessKeyboard(c1.FORWARD, 0.1*accumulator);
-			std::cout << "fowar" << std::endl;
-		}
 
-		if (gameActions.moveBackward) {
-			c1.ProcessKeyboard(c1.BACKWARD, 0.1 * accumulator);
-			std::cout << "back" << std::endl;
-		}
+		gameActions = inputSystem.getActions();
+		c1.updateCamera(gameActions, accumulator);
 
 		// physics
 		while (accumulator >= dt) {
