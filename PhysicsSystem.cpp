@@ -23,7 +23,8 @@ PhysicsSystem::PhysicsSystem() // Constructor
 
 	// Scene
 	physx::PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-	sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
+	gGravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
+	sceneDesc.gravity = gGravity;
 	gDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
 	sceneDesc.cpuDispatcher = gDispatcher;
 	sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
@@ -94,5 +95,5 @@ void PhysicsSystem::updatePhysics(double dt) {
 	updateTransforms();
 }
 
-physx::PxVec3 PhysicsSystem::getPos(int i) { return rigidDynamicList[i]->getGlobalPose().p; }
-physx::PxQuat PhysicsSystem::getRot(int i) { return rigidDynamicList[i]->getGlobalPose().q; }
+physx::PxVec3 PhysicsSystem::getPos(int i) const { return rigidDynamicList[i]->getGlobalPose().p; }
+physx::PxQuat PhysicsSystem::getRot(int i) const { return rigidDynamicList[i]->getGlobalPose().q; }

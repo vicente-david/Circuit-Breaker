@@ -1,3 +1,5 @@
+#pragma once
+
 #include "PxPhysicsAPI.h"
 #include "Entity.h"
 #include <vector>
@@ -19,6 +21,7 @@ public:
 	physx::PxScene* gScene = NULL;
 	physx::PxMaterial* gMaterial = NULL;
 	physx::PxPvd* gPvd = NULL;
+	physx::PxVec3 gGravity;
 
 	PhysicsSystem(); // Constructor
 
@@ -26,6 +29,6 @@ public:
 
 	void updatePhysics(double dt);
 
-	physx::PxVec3 getPos(int i); // Get position of id
-	physx::PxQuat getRot(int i); // Get rotation of id
+	physx::PxVec3 getPos(int i) const; // Get position of id
+	physx::PxQuat getRot(int i) const; // Get rotation of id
 };
