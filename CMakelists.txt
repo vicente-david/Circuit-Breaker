@@ -11,10 +11,13 @@ file(GLOB_RECURSE SOURCES "src/*")
 add_executable(circuit-breaker ${SOURCES})
 
 # PHYSX
-# add folder 'phsyx' into project directory. Download from: https:S//drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
+# add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
 
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
+
+# RapidJSON
+# add folder 'rapidjson' into 'physx/include' project directory. Download from: https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing
 
 # run this if using debug version
 set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
