@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <string>
 #include <system_error>
+#include <unistd.h>
 #include <utility>
 
 // reference:
@@ -36,8 +37,17 @@ bool AudioSystem::init() {
 	// create buffer (holds sound data)
 	alGenBuffers((ALuint)1, &buffer);
 
-	Sound test ;
-	test.load("assets/sounds/b.wav");
+	// test
+	Sound test;
+	test.load("assets/sounds/aaa.wav");
+
+	alBufferData(buffer, AL_FORMAT_STEREO16, test.waveData, test.waveSize,
+				 44100);
+	checkALErrors("load");
+	alSourcei(source, AL_BUFFER, buffer);
+	checkALErrors("buffer2");
+	alSourcePlay(source);
+	checkALErrors("play");
 
 	return true;
 }

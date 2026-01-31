@@ -3,11 +3,24 @@
 #include <string>
 class Sound {
   public:
-
 	void load(std::string file);
 	void unload();
 	void play();
 	void stop();
+	unsigned char *waveData;
+	unsigned int waveSize;
+
+	struct FmtChunk {
+		char subChunkId[4];
+		unsigned int subChunkSize;
+		short int format;
+		short int channels;
+		unsigned int sampleRate;
+		unsigned int byteRate;
+		short int blockAlighn;
+		short int bitsPerSample;
+	};
+	struct FmtChunk formatData;
 
   private:
 	struct RiffWaveHeader {
@@ -21,16 +34,5 @@ class Sound {
 		unsigned int subChunkSize;
 	};
 
-	struct FmtChunk {
-		unsigned short audioFormat;
-		unsigned short numChannels;
-		unsigned int sampleRate;
-		unsigned int bytesPerSecond;
-		unsigned short blockAlign;
-		unsigned short bitsPerSample;
-	};
-
 	unsigned int audioBufferId, audioSourceId;
-	unsigned char *waveData;
-	unsigned int waveSize;
 };
