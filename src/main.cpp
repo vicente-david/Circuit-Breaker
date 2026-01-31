@@ -1,4 +1,5 @@
 #include <iostream>
+#include "audio/AudioSystem.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
@@ -13,6 +14,8 @@
 int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();	
+	auto audio = std::make_unique<AudioSystem>();	
+	audio->init();
 	PhysicsSystem physicsSys;
 	GameState gameState;
 
@@ -162,6 +165,7 @@ int main()
 
 
 	}
+	audio->close();
 	glfwTerminate();
 	
 
