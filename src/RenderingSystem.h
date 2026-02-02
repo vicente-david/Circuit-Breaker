@@ -12,7 +12,6 @@ class RenderingSystem {
 
 public:
 	RenderingSystem();
-	unsigned int initVAO(Vertex* vertices, int vertSize, unsigned int* indices, int indSize);
 	void initializeShaders();
 	void initializeText();
 
