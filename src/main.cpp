@@ -61,7 +61,7 @@ int main()
 
 
 	renderer->initializeShaders(); // Create shader programs
-	unsigned int VAO = renderer->initVAO(verts.data(), verts.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int)); // Initialize VAO, VBO, EBO
+	//unsigned int VAO = renderer->initVAO(verts.data(), verts.size() * sizeof(Vertex), indices.data(), indices.size() * sizeof(unsigned int)); // Initialize VAO, VBO, EBO
 	
 	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
 	
@@ -117,7 +117,7 @@ int main()
 		}
 		
 		// rendering
-		renderer->update(entityList, VAO, fps);
+		renderer->update(entityList, cube.VAO, fps);
 
 	
 	}

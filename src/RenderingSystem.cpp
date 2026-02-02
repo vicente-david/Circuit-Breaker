@@ -67,9 +67,6 @@ unsigned int RenderingSystem::initVAO(Vertex* vertices, int vertSize, unsigned i
 
 	return VAO;
 
-	// note: we can put all the data into one vbo, and then assign different vao's to different shaders
-	// ex: lighting needs normals, but text doesn't, we have different shaders for them anyways
-	// so just bind a different vao for lighting shader and a different vao for text shader
 }
 
 

@@ -21,8 +21,10 @@ public:
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 
+	unsigned int VAO;
 	Model(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-
-private:
 	void initModel();
+	
+//private:
+	//void initModel();
 };
