@@ -5,6 +5,7 @@
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
 #include "InputSystem.h"
+#include "GameState.h"
 #include "Model.h"
 #include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
@@ -14,6 +15,7 @@ int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
+	GameState gameState;
 
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
@@ -114,8 +116,11 @@ int main()
 		trans->pos = cubePositions[i];
 		trans->rot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
-		Entity entity{ "perro" + std::to_string(i), &cube, trans};
+		Entity entity{ "perro" + std::to_string(i), PhysType::None, &cube, trans};
 		objects.push_back(entity);
+
+		// push back to entityList vector
+		gameState.entityList.push_back(entity);
 
 		std::cout << "Created entity " << i << " at position " << cubePositions[i].x << ", " << cubePositions[i].y << ", " << cubePositions[i].z << std::endl;
 	}
@@ -169,7 +174,7 @@ int main()
 		// rendering
 		renderer->update(objects, VAO, fps, c1);
 
-	
+
 	}
 	glfwTerminate();
 	
