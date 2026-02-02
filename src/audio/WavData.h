@@ -1,13 +1,28 @@
 #pragma once
 
+#include <AL/al.h>
+#include <cstdio>
 #include <string>
-struct WavData {
+class WavData {
   public:
-	WavData(std::string name, std::string file);
-	std::string  name;
-	unsigned char *waveData;
-	unsigned int waveSize;
+	WavData() {
+		printf("this shouldn't be called\n");
+	}
+	WavData(std::string file);
+	// WavData(std::string name, std::string file);
+	// std::string  name;
+	// unsigned char *waveData;
+	unsigned int dataSize;
 
+	bool is3D;
+	bool loop;
+	ALenum format;
+	ALuint buffer;
+	int sampleRate;
+
+	ALuint createSource();
+
+  private:
 	struct FmtChunk {
 		char subChunkId[4];
 		unsigned int subChunkSize;
@@ -18,9 +33,7 @@ struct WavData {
 		short int blockAlighn;
 		short int bitsPerSample;
 	};
-	struct FmtChunk fmtData;
-
-  private:
+	// struct FmtChunk fmtData;
 	struct RiffWaveHeader {
 		char chunkId[4];
 		unsigned int chunkSize;
@@ -31,6 +44,4 @@ struct WavData {
 		char subChunkId[4];
 		unsigned int subChunkSize;
 	};
-
-	unsigned int audioBufferId, audioSourceId;
 };
