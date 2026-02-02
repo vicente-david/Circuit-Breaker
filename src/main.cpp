@@ -14,8 +14,6 @@ int main()
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
 
-	
-
 
 	// time
 	double t = 0.0;
@@ -61,13 +59,12 @@ int main()
 
 
 	renderer->initializeShaders(); // Create shader programs
-	
-	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
-	
+
 	renderer->initializeText();
+
+	// Create texture and cube object
+	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
 	std::vector<Texture> textures = { {texture, "diffuse"} };
-	
-	// Create cube object
 	Model cube(verts, indices, textures);
 	
 

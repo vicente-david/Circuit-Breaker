@@ -37,9 +37,7 @@ void Model::initModel() {
 
 	glBindVertexArray(0); // Unbind VAO
 
-	std::cout << "VAO made: " << VAO << std::endl;
 	this->VAO = VAO;
-	std::cout << "VAO set: " << this->VAO << std::endl;
 	this->EBO = EBO;
 	this->VBO = VBO;
 }
