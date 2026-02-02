@@ -66,12 +66,11 @@ int main()
 	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
 	
 	renderer->initializeText();
-
+	std::vector<Texture> textures = { {texture, "diffuse"} };
+	
 	// Create cube object
-	Model cube;
-	cube.vertices = verts;
-	cube.indices = indices;
-	cube.textures.push_back({ texture, "diffuse" });
+	Model cube(verts, indices, textures);
+	
 
 	// --Placeholder code--
 	std::vector<Entity> entityList;
