@@ -100,7 +100,7 @@ void RenderingSystem::initializeText() {
 
 }
 
-void RenderingSystem::update(std::vector<Entity> entities, unsigned int VAO, std::string fps) {
+void RenderingSystem::update(std::vector<Entity> entities, std::string fps) {
 	
 	basicShader->use();
 
@@ -132,7 +132,7 @@ void RenderingSystem::update(std::vector<Entity> entities, unsigned int VAO, std
 		
 
 		glBindTexture(GL_TEXTURE_2D, object.textures[0].id);
-		glBindVertexArray(VAO);
+		glBindVertexArray(object.VAO);
 		glDrawElements(GL_TRIANGLES, object.indices.size(), GL_UNSIGNED_INT, 0);
 	}
 	// render text

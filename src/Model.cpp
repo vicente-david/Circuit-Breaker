@@ -9,9 +9,7 @@ Model::Model(std::vector<Vertex> vertices, std::vector<unsigned int> indices, st
 	initModel();
 }
 
-//void Model::initModel() {
-//	std::cout << "init model" << std::endl;
-//}
+
 void Model::initModel() {
 	unsigned int VAO, VBO, EBO;
 

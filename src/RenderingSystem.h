@@ -16,7 +16,7 @@ public:
 	void initializeShaders();
 	void initializeText();
 
-	void update(std::vector<Entity> entities, unsigned int VAO, std::string fps); //temporarily adding VAO here
+	void update(std::vector<Entity> entities, std::string fps); //temporarily adding VAO here
 
 	unsigned int textVBO;
 	unsigned int textVAO;
