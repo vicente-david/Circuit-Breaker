@@ -4,24 +4,31 @@
 #include <AL/alc.h>
 #include <map>
 #include <string>
+#include <vector>
 
 
-class StaticAudio{
+class AudioEngine{
 	public:
-		bool init();
+		AudioEngine();
 		void close();
-		void playSound(std::string name);
+		void update(double dt);
+
+		ALuint playSound(std::string name);
+
 
 
 	private:
 		ALCdevice* device;
 		ALCcontext* context;
 		ALuint source;
-		// ALuint buffer;
+		float test = 0;
+
 
 		void loadSounds();
 		bool checkALErrors(std::string location);
 
-		std::map<std::string, ALuint> buffers;
+		std::map<std::string, ALuint> soundBuffs;
+		std::vector<ALuint> channels;
+
 
 };

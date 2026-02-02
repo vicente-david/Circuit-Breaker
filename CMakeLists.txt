@@ -47,6 +47,10 @@ include_directories(SYSTEM dependencies/glm-0.9.9.7/)
 find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
+# OpenAl
+find_package(OpenAL REQUIRED)
+set(LIBRARIES ${LIBRARIES} ${OPENAL_LIBRARY})
+
 if (WIN32)
   # copy required dlls
   file(COPY 

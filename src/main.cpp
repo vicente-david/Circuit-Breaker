@@ -1,5 +1,7 @@
+#include <AL/al.h>
+#include <cstdio>
 #include <iostream>
-#include "audio/AudioSystem.h"
+#include "audio/AudioEngine.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
@@ -14,8 +16,7 @@
 int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();	
-	auto audio = std::make_unique<AudioSystem>();	
-	audio->init();
+	auto audio = std::make_unique<AudioEngine>();	
 	PhysicsSystem physicsSys;
 	GameState gameState;
 
@@ -145,9 +146,11 @@ int main()
 		// physics
 		while (accumulator >= dt) {
 			physicsSys.updatePhysics(dt);
+			audio->update(dt);
 			accumulator -= dt;
 			t += dt;
 		}
+
 
 		if (t >= 1.0) {
 			fps = std::to_string(static_cast<int>(std::round(framesPassed / t)));
