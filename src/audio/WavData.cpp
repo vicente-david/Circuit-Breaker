@@ -1,13 +1,13 @@
 
-#include "Sound.h"
+#include "WavData.h"
 #include <cstdio>
 #include <cstring>
-#include <stdexcept>
+#include <string>
 
 // load wav files
 // very much taken from https://rastertek.com/gl4linuxtut56.html
-void Sound::load(std::string path) {
-
+WavData::WavData(std::string name, std::string path) {
+	this->name = name;
 	auto file = fopen(path.c_str(), "rb");
 	if (file == NULL) {
 		fprintf(stderr, "audio file at '%s' not found\n", path.c_str());
@@ -30,17 +30,19 @@ void Sound::load(std::string path) {
 				header.chunkId, path.c_str());
 		return;
 	}
-	printf("head id:%s\n", header.chunkId);
 
 	// find format chunk
-	FmtChunk fmtData;
 
 	bool foundFormat = false;
 	while (foundFormat == false) {
 		// Read in the sub chunk header.
-		fread(&fmtData, sizeof(fmtData), 1, file);
+		int count = fread(&fmtData, sizeof(fmtData), 1, file);
+		if(count!=1){
+			printf("%dcouldn't find  header in file '%s'\n", count,
+				   path.c_str());
+			return;
+		}
 
-		printf("(1)h size:%d\n", fmtData.subChunkSize);
 
 		// Determine if it is the fmt header.  If not then move to the end of
 		// the chunk and read in the next one.
@@ -52,7 +54,6 @@ void Sound::load(std::string path) {
 			// fseek(file, fmtChunk.subChunkSize, SEEK_CUR);
 		}
 	}
-	printf("id:%s size:%d\n", fmtData.subChunkId, fmtData.subChunkSize);
 
 	// read the format chunk
 	// FmtChunk fmtData;
@@ -76,8 +77,8 @@ void Sound::load(std::string path) {
 				   path.c_str());
 			return;
 		}
-		printf("id:%s\n", subHeader.subChunkId);
-		printf("h size:%d\n", subHeader.subChunkSize);
+		// printf("id:%s\n", subHeader.subChunkId);
+		// printf("h size:%d\n", subHeader.subChunkSize);
 
 		// Determine if it is the data header.  If not then move to the end of
 		// the chunk and read in the next one.

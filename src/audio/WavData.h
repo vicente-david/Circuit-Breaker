@@ -1,12 +1,10 @@
 #pragma once
 
 #include <string>
-class Sound {
+struct WavData {
   public:
-	void load(std::string file);
-	void unload();
-	void play();
-	void stop();
+	WavData(std::string name, std::string file);
+	std::string  name;
 	unsigned char *waveData;
 	unsigned int waveSize;
 
@@ -20,7 +18,7 @@ class Sound {
 		short int blockAlighn;
 		short int bitsPerSample;
 	};
-	struct FmtChunk formatData;
+	struct FmtChunk fmtData;
 
   private:
 	struct RiffWaveHeader {

@@ -1,5 +1,5 @@
-#include "AudioSystem.h"
-#include "Sound.h"
+#include "StaticSound.h"
+#include "WavData.h"
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <cstddef>
@@ -9,11 +9,16 @@
 #include <system_error>
 #include <unistd.h>
 #include <utility>
+#include <vector>
+
 
 // reference:
 // https://indiegamedev.net/2020/02/15/the-complete-guide-to-openal-with-c-part-1-playing-a-sound/
 // https://ffainelli.github.io/openal-example/
-bool AudioSystem::init() {
+//
+// This class is a global singleton, play sound from anywhere type thing. (good for UI/music and such)
+// a proper audio system for doing dopler/volume based on entity locations will probably be a seperate thing
+bool StaticAudio::init() {
 
 	// use the deafult audio device
 	device = alcOpenDevice(NULL);
@@ -34,25 +39,35 @@ bool AudioSystem::init() {
 	alSourcei(source, AL_LOOPING, AL_FALSE);
 	checkALErrors("set no looping");
 
-	// create buffer (holds sound data)
-	alGenBuffers((ALuint)1, &buffer);
+	loadSounds();
 
-	// test
-	Sound test;
-	test.load("assets/sounds/aaa.wav");
-
-	alBufferData(buffer, AL_FORMAT_STEREO16, test.waveData, test.waveSize,
-				 44100);
-	checkALErrors("load");
-	alSourcei(source, AL_BUFFER, buffer);
+	alSourcei(source, AL_BUFFER, buffers["full"]);
 	checkALErrors("buffer2");
 	alSourcePlay(source);
 	checkALErrors("play");
 
 	return true;
 }
+void StaticAudio::loadSounds() {
 
-void AudioSystem::close() {
+	std::vector<WavData> files;
+	files.push_back(WavData("hiya", "assets/sounds/hiya.wav"));
+	files.push_back(WavData("full", "assets/sounds/aaa.wav"));
+
+	for (WavData const &f : files) {
+		ALuint buf;
+		alGenBuffers((ALuint)1, &buf);
+		alBufferData(buf, AL_FORMAT_STEREO16, f.waveData, f.waveSize,
+					 f.fmtData.sampleRate);
+		checkALErrors("loading " + f.name + " (in staticSound)");
+
+		buffers[f.name]=buf;
+	}
+}
+
+void StaticAudio::playSound(std::string name) {}
+
+void StaticAudio::close() {
 	alcDestroyContext(context);
 	alcCloseDevice(device);
 }
@@ -60,7 +75,7 @@ void AudioSystem::close() {
 // checks for the last error thrown by openal
 //
 // returns true if no err, returns false if err, and prints to stderr
-bool AudioSystem::checkALErrors(std::string location) {
+bool StaticAudio::checkALErrors(std::string location) {
 	ALenum err = alGetError();
 
 	if (err == AL_NO_ERROR) {
