@@ -7,11 +7,12 @@
 #include "PxPhysicsAPI.h"
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
+#include "InputSystem.h"
 #include "GameState.h"
 #include "Model.h"
 #include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
-
+#include "Camera.h"
 
 int main()
 {
@@ -19,6 +20,13 @@ int main()
 	auto audio = std::make_unique<AudioEngine>();	
 	PhysicsSystem physicsSys;
 	GameState gameState;
+
+	InputSystem inputSystem;
+	inputSystem.attachWindow(renderer->window);
+
+	Actions gameActions = inputSystem.getActions();
+	Camera c1 = Camera();
+	
 
 	// --Placeholder code--
 	std::vector<Entity> entityList;
@@ -143,6 +151,12 @@ int main()
 		accumulator += frameTime;
 		framesPassed++;
 
+
+		// input
+
+		gameActions = inputSystem.getActions();
+		c1.updateCamera(gameActions, accumulator);
+
 		// physics
 		while (accumulator >= dt) {
 			physicsSys.updatePhysics(dt);
@@ -164,7 +178,7 @@ int main()
 		objects[2].transform->rot = glm::quat(glm::vec3(2.0f, 1.0f, 0.0f) * (float)glfwGetTime());
 		
 		// rendering
-		renderer->update(objects, VAO, fps);
+		renderer->update(objects, VAO, fps, c1);
 
 
 	}
