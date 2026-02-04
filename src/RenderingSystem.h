@@ -4,7 +4,7 @@
 #include <GLFW/glfw3.h>
 
 #include "Text.h"
-#include "Model.h"
+#include "Mesh.h"
 #include "Entity.h"
 #include "Camera.h"
 

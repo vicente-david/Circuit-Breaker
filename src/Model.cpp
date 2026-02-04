@@ -1,50 +1,10 @@
 #include "Model.h"
 #include <iostream>
-#include <glad/gl.h>
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
-Model::Model(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) {
-	this->vertices = vertices;
-	this->indices = indices;
-	this->textures = textures;
-	initModel();
-}
-
-Model::Model(char* path) {
-	// create model from .obj file
-
-}
-
-void Model::initModel() {
-	unsigned int VAO, VBO, EBO;
-
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-	glGenBuffers(1, &EBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
-
-	// Position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	// Texture coord attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, tex)));
-	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(0); // Unbind VAO
-
-	this->VAO = VAO;
-	this->EBO = EBO;
-	this->VBO = VBO;
+void Model::Draw() {
+	for (unsigned int i = 0; i < meshes.size(); i++) {
+		meshes[i].Draw();
+	}
 }
 
 void Model::loadModel(std::string path) {
@@ -56,25 +16,78 @@ void Model::loadModel(std::string path) {
 		std::cout << "ASSIMP error: " << import.GetErrorString() << std::endl;
 		return;
 	}
-	directory = path.substr(0, path.find_last_of('/'));
 
-	// Process one node and mesh (assuming we only create models with one mesh, can modify later)
-	aiMesh* mesh = scene->mMeshes[scene->mRootNode->mMeshes[0]];
+	directory = path.substr(0, path.find_last_of('/'));
+	processNode(scene->mRootNode, scene);
+}
+
+
+void Model::processNode(aiNode* node, const aiScene* scene) {
+
+	// Process meshes at this node
+	for (unsigned int i = 0; i < node->mNumMeshes; i++) {
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		meshes.push_back(processMesh(mesh, scene));
+	}
+
+	// Recurse on children of this node
+	for (unsigned int i = 0; i < node->mNumChildren; i++) {
+		processNode(node->mChildren[i], scene);
+	}
+
+}
+
+Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 
-	/*for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+	// Process vertex position and texture data
+	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex vertex;
-		glm::vec3 vector = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
-		vertex.pos = vector;
-		vector = { mesh->mColors[i].x, mesh->mColors[i].y, mesh->mColors[i].z };
-	}*/
+		glm::vec3 posVec = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
+		vertex.pos = posVec;
+
+		if (mesh->mTextureCoords[0]) {
+			// get tex coords if contained in mesh
+			glm::vec2 texVec = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+			vertex.tex = texVec;
+		}
+		else vertex.tex = glm::vec2(0.0f, 0.0f);
+
+		vertices.push_back(vertex);
+	}
+
+	// Process indices
+	for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+		aiFace face = mesh->mFaces[i];
+		for (unsigned int j = 0; j < face.mNumIndices; j++) {
+			indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	// Process materials (right now only one texture, will have to update this later)
+	if (mesh->mMaterialIndex >= 0) {
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+		std::vector<Texture> diffuseTex = loadMatTextures(material, aiTextureType_DIFFUSE, "diffuse");
+		textures.insert(textures.end(), diffuseTex.begin(), diffuseTex.end());
+
+	}
+
+	return Mesh(vertices, indices, textures);
 }
 
-void Model::Draw() {
-	glBindTexture(GL_TEXTURE_2D, textures[0].id);
-	glBindVertexArray(VAO);
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-}
+std::vector<Texture> Model::loadMatTextures(aiMaterial* mat, aiTextureType type, std::string typeName) {
+	std::vector<Texture> textures;
 
+	for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+		aiString str;
+		mat->GetTexture(type, i, &str);
+		std::string path = directory.c_str() + std::string("/") + std::string(str.C_Str()); // path of texture relative to model
+		Texture tex;
+		tex.id = GenerateTexture(path.c_str(), true);
+		tex.type = typeName.c_str();
+		textures.push_back(tex);
+	}
+	return textures;
+}

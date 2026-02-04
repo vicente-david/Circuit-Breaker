@@ -5,7 +5,6 @@
 #include "RenderingSystem.h"
 #include "PhysicsSystem.h"
 #include "Model.h"
-#include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
 
 
@@ -22,52 +21,13 @@ int main()
 	double accumulator = 0.0;
 
 
-	// Cube test vertices (pos, col, tex)
-	std::vector<Vertex> verts = {
-		{glm::vec3(-0.5f,  -0.5f, -0.5f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f, 0.5f, -0.5f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(-0.5f,  -0.5f, 0.5f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(-0.5f,  -0.5f, 0.5f), glm::vec2(1.0f, 0.0f)},
-		{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec2(1.0f, 1.0f)},
-
-		{glm::vec3(0.5f, -0.5f, 0.5f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec2(0.0f, 1.0f)},
-
-		{glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec2(0.0f, 0.0f)},
-		{glm::vec3(0.5f, 0.5f, 0.5f), glm::vec2(1.0f, 0.0f)},
-
-		{glm::vec3(0.5f, -0.5f, -0.5f), glm::vec2(1.0f, 1.0f)},
-		{glm::vec3(-0.5f,  -0.5f, -0.5f), glm::vec2(0.0f, 1.0f)},
-
-	};
-
-	std::vector<unsigned int> indices{
-		0, 1, 2, 2, 3, 0,
-		4, 5, 6, 6, 7, 4,
-		0, 8, 9, 9, 3, 0,
-		10, 1, 2, 2, 11, 10,
-		12, 13, 2, 2, 3, 12,
-		4, 5, 14, 14, 15, 4
-	};
-
-
 	renderer->initializeShaders(); // Create shader programs
 
 	renderer->initializeText();
 
-	// Create texture and cube object
-	unsigned int texture = generateTexture("assets/textures/perro.jpg", true);
-	std::vector<Texture> textures = { {texture, "diffuse"} };
-	Model cube(verts, indices, textures);
+	// Create cube object
+	Model cube("assets/cube.obj");
 	
-
 	// --Placeholder code--
 	std::vector<Entity> entityList;
 	entityList.reserve(465);
