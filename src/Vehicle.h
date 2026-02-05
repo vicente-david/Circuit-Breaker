@@ -2,9 +2,11 @@
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
 
-#include "snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
-#include "snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
-#include "snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
+#include "../snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
+#include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
+#include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
+
+#include "../snippets/snippetcommon/SnippetPVD.h"
 
 struct Command
 {
