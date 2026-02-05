@@ -8,7 +8,8 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 # run this if using release
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 file(GLOB_RECURSE SOURCES "src/*")
-add_executable(circuit-breaker ${SOURCES})
+file(GLOB_RECURSE SNIPPETS "snippets/*")
+add_executable(circuit-breaker ${SOURCES} ${SNIPPETS})
 
 # PHYSX
 # add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
@@ -56,6 +57,7 @@ if (WIN32)
     ${PHYSX_LIB}/PhysX_64.dll
     ${PHYSX_LIB}/PhysXCommon_64.dll
     ${PHYSX_LIB}/PhysXFoundation_64.dll
+    ${PHYSX_LIB}/PhysXCooking_64.dll
     DESTINATION ${CMAKE_BINARY_DIR} )
 
   target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -65,6 +67,8 @@ if (WIN32)
     ${PHYSX_LIB}/PhysXPvdSDK_static_64.lib
     ${PHYSX_LIB}/PhysXCommon_64.lib
     ${PHYSX_LIB}/PhysXFoundation_64.lib
+    ${PHYSX_LIB}/PhysXCooking_64.lib
+    ${PHYSX_LIB}/PhysXVehicle2_static_64.lib
     ${LIBRARIES}
   )
   elseif(UNIX)
@@ -75,6 +79,8 @@ if (WIN32)
     ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
     ${PHYSX_LIB}/libPhysXCommon_static_64.a
     ${PHYSX_LIB}/libPhysXFoundation_static_64.a
+    ${PHYSX_LIB}/libPhysXCooking_static_64.a
+    ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
     ${LIBRARIES}
   )
 endif()
