@@ -1,7 +1,7 @@
 #include "AudioEngine.h"
 #include "WavData.h"
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <al.h>
+#include <alc.h>
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>

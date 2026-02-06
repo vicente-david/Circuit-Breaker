@@ -1,8 +1,8 @@
 #pragma once
 
 #include "WavData.h"
-#include <AL/al.h>
-#include <AL/alc.h>
+#include <al.h>
+#include <alc.h>
 #include <map>
 #include <string>
 #include <vector>

@@ -47,9 +47,10 @@ include_directories(SYSTEM dependencies/glm-0.9.9.7/)
 find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
-# OpenAl
+
+# OPENAL
 find_package(OpenAL REQUIRED)
-set(LIBRARIES ${LIBRARIES} ${OPENAL_LIBRARY})
+set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
 
 if (WIN32)
   # copy required dlls
@@ -67,6 +68,8 @@ if (WIN32)
     ${PHYSX_LIB}/PhysXCommon_64.lib
     ${PHYSX_LIB}/PhysXFoundation_64.lib
     ${LIBRARIES}
+
+
   )
   elseif(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -77,7 +80,9 @@ if (WIN32)
     ${PHYSX_LIB}/libPhysXCommon_static_64.a
     ${PHYSX_LIB}/libPhysXFoundation_static_64.a
     ${LIBRARIES}
+
   )
+
 endif()
 
 
