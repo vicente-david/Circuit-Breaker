@@ -52,7 +52,7 @@ void PhysicsSystem::initPhysX()
 	PxU32 numWorkers = 1;
 	gDispatcher = PxDefaultCpuDispatcherCreate(numWorkers);
 	sceneDesc.cpuDispatcher = gDispatcher;
-	sceneDesc.filterShader = PxDefaultSimulationFilterShader; // Use vehicle shader instead of default
+	sceneDesc.filterShader = VehicleFilterShader;
 
 	gScene = gPhysics->createScene(sceneDesc);
 
@@ -71,21 +71,16 @@ void PhysicsSystem::initPhysX()
 
 void PhysicsSystem::initGroundPlane()
 {
-	PxPlane planeEq = PxPlane(0, 1, 0, 50); // Shared plane equation
-	PxRigidStatic* rigidBodySimPlane = PxCreatePlane(*gPhysics, planeEq, *gMaterial);
-	PxRigidStatic* vehicleQueryPlane = PxCreatePlane(*gPhysics, planeEq, *gMaterial);
+	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
 
-	gScene->addActor(*rigidBodySimPlane);
-
-	// Vehicle query-only
-	for (PxU32 i = 0; i < vehicleQueryPlane->getNbShapes(); i++) {
+	for (PxU32 i = 0; i < groundPlane->getNbShapes(); i++) {
 		PxShape* shape = nullptr;
-		vehicleQueryPlane->getShapes(&shape, 1, i);
+		groundPlane->getShapes(&shape, 1, i);
 		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
 	}
-	gScene->addActor(*vehicleQueryPlane);
+	gScene->addActor(*groundPlane);
 }
 
 void PhysicsSystem::initMaterialFrictionTable()
