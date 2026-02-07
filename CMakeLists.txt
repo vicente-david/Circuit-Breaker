@@ -49,8 +49,10 @@ set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
 
 # OPENAL
+#include_directories(SYSTEM dependencies/openal/include/)
 add_subdirectory(dependencies/openal)
-set(LIBRARIES ${LIBRARIES} openal)
+#set(LIBRARIES ${LIBRARIES} openal)
+
 
 # find_package(OpenAL REQUIRED)
 # set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
@@ -71,7 +73,7 @@ if (WIN32)
     ${PHYSX_LIB}/PhysXCommon_64.lib
     ${PHYSX_LIB}/PhysXFoundation_64.lib
     ${LIBRARIES}
-
+    OpenAL::OpenAL
 
   )
   elseif(UNIX)
