@@ -28,6 +28,7 @@
 
 
 #include <ctype.h>
+#include <iostream>
 
 #include "../snippetvehiclecommon/SnippetVehicleHelpers.h"
 
@@ -53,7 +54,17 @@ PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
 
 	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
 
-	return PxFilterFlag::eDEFAULT;
+	if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+		(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_OBSTACLE)) 
+	{
+		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+
+		std::cout << "Collision Detected" << std::endl;
+	}
+	
+	pairFlags |= PxPairFlags(PxU16(filterData0.word2 | filterData1.word2)); // Our enums are bitwise
+
+	return PxFilterFlags();
 }
 
 
@@ -64,7 +75,7 @@ bool parseVehicleDataPath(int argc, const char *const* argv, const char* snippet
 	{
 		printf("%s usage:\n"
 			"%s "
-			"--vehicleDataPath=<path to the [PHYSX_ROOT]/snippets/media/vehicledata folder containing the vehiclejson files to be loaded> \n",
+			"--vehicleDataPath=<path to the [PHYSX_ROOT]/assets/vehicledata folder containing the vehiclejson files to be loaded> \n",
 			snippetName, snippetName);
 		return false;
 	}
