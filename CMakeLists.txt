@@ -2,11 +2,13 @@ cmake_minimum_required(VERSION 3.15)
 
 project(circuit-breaker)
 
+
 # run this if using debug version
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # run this if using release
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
 file(GLOB_RECURSE SOURCES "src/*")
 add_executable(circuit-breaker ${SOURCES})
 
@@ -49,13 +51,11 @@ set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
 
 # OPENAL
-#include_directories(SYSTEM dependencies/openal/include/)
 add_subdirectory(dependencies/openal)
-#set(LIBRARIES ${LIBRARIES} openal)
+set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
 
-
-# find_package(OpenAL REQUIRED)
-# set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
+# run program once, on fail, copy openal32.dll to to executable directory
+# fits like a glove
 
 if (WIN32)
   # copy required dlls
@@ -73,9 +73,9 @@ if (WIN32)
     ${PHYSX_LIB}/PhysXCommon_64.lib
     ${PHYSX_LIB}/PhysXFoundation_64.lib
     ${LIBRARIES}
-    OpenAL::OpenAL
-
   )
+
+
   elseif(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE 
     # physx
