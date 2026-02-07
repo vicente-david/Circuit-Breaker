@@ -50,14 +50,17 @@ find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
 
-# OPENAL
-add_subdirectory(dependencies/openal)
-set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
+
 
 # run program once, on fail, copy openal32.dll to to executable directory
 # fits like a glove
 
 if (WIN32)
+
+  # OPENAL
+  add_subdirectory(dependencies/openal)
+  set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
+
   # copy required dlls
   file(COPY 
     ${PHYSX_LIB}/PhysX_64.dll
