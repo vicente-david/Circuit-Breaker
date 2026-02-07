@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
+#include <glm/fwd.hpp>
 #include <stdbool.h>
 #include <string>
 #include <unistd.h>
@@ -70,32 +71,47 @@ void AudioEngine::update(double dt) {
 	channels.erase(remIdx, channels.end());
 }
 
-void AudioEngine::updateListnerLoc(float x, float y, float z) {
-	listner.x = x;
-	listner.y = y;
-	listner.z = z;
+// void AudioEngine::updateListnerLoc(float x, float y, float z) {
+// 	listner.x = x;
+// 	listner.y = y;
+// 	listner.z = z;
+// }
+
+void AudioEngine::updateListnerFrame(glm::mat4 viewMat){
+	listner.viewMatrix = viewMat;
 }
+
 void AudioEngine::updateListnerVel(float x, float y, float z) {
 	listner.velx = x;
 	listner.vely = y;
 	listner.velz = z;
 }
-
+//
 // move a sound to a specified location, and give a velocity for dopler stuff
 void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
-	float loc[3] = {
-		x - listner.x,
-		y - listner.y,
-		z - listner.z,
-	};
-	alSourcefv(s.source, AL_POSITION, loc);
-}
+	// point for sound loc
+	auto loc = glm::vec4(x,y,z,1);
+	// convert to screen coords
 
+	auto mat = listner.viewMatrix;
+	loc = mat * loc;
+
+	// printf("mat:[%f,%f, %f, %f]\n[%f..%f]\n[%f..]\n[%f,%f%f,%f]\n",
+			// mat[0][0], mat[0][1], mat[0][2], mat[0][3],
+			// mat[1][0], mat[1][3], mat[2][0] ,mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
+	
+	// printf(" loc: [%f, %f, %f, %f]\n",loc.x, loc.y, loc.z, loc[3]);
+	float alData[3] = { loc.x,loc.y,loc.z };
+	alSourcefv(s.source, AL_POSITION, alData);
+
+	printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
+}
+//
 void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 	float vel[3] = {
-		x - listner.x,
-		y - listner.y,
-		z - listner.z,
+		x - listner.velx,
+		y - listner.vely,
+		z - listner.velz,
 	};
 	alSourcefv(s.source, AL_VELOCITY, vel);
 }

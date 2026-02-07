@@ -159,7 +159,7 @@ int main()
 
 		gameActions = inputSystem.getActions();
 		c1.updateCamera(gameActions, accumulator);
-		audio->updateListnerLoc(c1.Position.x, c1.Position.y, c1.Position.z);
+		audio->updateListnerFrame(c1.GetViewMatrix());
 
 		audio->updateSoundLoc(testSound, 0, 0, 0);
 
