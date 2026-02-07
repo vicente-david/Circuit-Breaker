@@ -194,16 +194,6 @@ int main()
 		audio->updateSoundVel(testSound, doplerVel, 0, 0);
 		audio->updateSoundLoc(testSound, doplerX, 0, 0);
 
-		audio->updateSoundVel(testSound, doplerVel, 0, 0);
-		audio->updateSoundLoc(testSound, doplerX, 0, 0);
-		audio->updateSoundVel(testSound, doplerVel, 0, 0);
-		audio->updateSoundLoc(testSound, doplerX, 0, 0);
-		audio->updateSoundVel(testSound, doplerVel, 0, 0);
-		audio->updateSoundLoc(testSound, doplerX, 0, 0);
-		audio->updateSoundVel(testSound, doplerVel, 0, 0);
-		audio->updateSoundLoc(testSound, doplerX, 0, 0);
-		audio->updateSoundVel(testSound, doplerVel, 0, 0);
-		audio->updateSoundLoc(testSound, doplerX, 0, 0);
 		// test update object transforms
 		objects[0].transform->rot = glm::quat(glm::vec3(0.7f, 0.5f, 0.1f) * (float)glfwGetTime());
 		objects[1].transform->rot = glm::quat(glm::vec3(1.0f, 0.0f, 0.0f) * (float)glfwGetTime());
