@@ -155,7 +155,7 @@ int main()
 
 		// physics
 		while (accumulator >= dt) {
-			physicsSys.updatePhysics(dt);
+			physicsSys.stepPhysics(dt);
 			accumulator -= dt;
 			t += dt;
 		}
