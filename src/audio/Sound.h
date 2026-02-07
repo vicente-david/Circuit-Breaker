@@ -8,6 +8,7 @@ class Sound {
 	Sound(ALuint source, std::string name);
 	std::string soundName;
 	ALuint source;
+	bool freed = false;
 
 	void stop();
 	void start();

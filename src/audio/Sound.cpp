@@ -7,22 +7,32 @@
 Sound::Sound(ALuint source, std::string name) {
 	this->source = source;
 	soundName = name;
+	if (source == -1) {
+		freed = true;
+	}
 }
 
+// starts the sound so it will start playing
 void Sound::start() {
+	if (freed) {
+		return;
+	}
 	alSourcePlay(source);
 	AudioEngine::checkALErrors("playing " + soundName);
 }
 
-// this should only be used on looping, or still playing sounds
-// if this is called on an already stopped sound, it may stop a
-// different sound that has traken over its channel
 void Sound::stop() {
+	if (freed) {
+		return;
+	}
 	alSourceStop(source);
 	AudioEngine::checkALErrors("playing " + soundName);
 }
 
 void Sound::setLooping(bool loop) {
+	if (freed) {
+		return;
+	}
 	if (loop) {
 		alSourcei(source, AL_LOOPING, AL_TRUE);
 		AudioEngine::checkALErrors("setting yes looping");

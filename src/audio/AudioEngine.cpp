@@ -27,7 +27,7 @@ AudioEngine::AudioEngine() {
 		fprintf(stderr, "Default audio device couldn't be opened :(\n");
 	}
 
-	// create a al context (not really sure what that actually is though_
+	// create a al context
 	context = alcCreateContext(device, NULL);
 	alcMakeContextCurrent(context);
 	checkALErrors("creating AL Context");
@@ -45,24 +45,19 @@ void AudioEngine::loadSounds() {
 	sounds.emplace("hiya", WavData("assets/sounds/hiyaMono.wav"));
 	// sounds["hiya"].loop = true;
 	sounds.emplace("full", WavData("assets/sounds/aaa.wav"));
+	sounds.emplace("muteCity", WavData("assets/sounds/muteCityMono.wav"));
 }
 
 void AudioEngine::update(double dt) {
-	// test += dt;
-	//
-	// if (test > 1) {
-	// 	Sound i = createSound("hiya");
-	// 	i.start();
-	// 	test = 0;
-	// }
 
 	// clean up channels/sources that have finished
 	auto remIdx =
-		std::remove_if(channels.begin(), channels.end(), [](ALuint source) {
+		std::remove_if(channels.begin(), channels.end(), [](Sound sound) {
 			ALint state;
-			alGetSourcei(source, AL_SOURCE_STATE, &state);
+			alGetSourcei(sound.source, AL_SOURCE_STATE, &state);
 			if (state == AL_STOPPED) {
-				alDeleteSources(1, &source);
+				alDeleteSources(1, &sound.source);
+				sound.freed = false;
 				return true;
 			}
 
@@ -71,42 +66,35 @@ void AudioEngine::update(double dt) {
 	channels.erase(remIdx, channels.end());
 }
 
-// void AudioEngine::updateListnerLoc(float x, float y, float z) {
-// 	listner.x = x;
-// 	listner.y = y;
-// 	listner.z = z;
-// }
-
-void AudioEngine::updateListnerFrame(glm::mat4 viewMat){
+// updates the location/rotation of the listner location.
+// this shold just be the view matrix from a camera
+void AudioEngine::updateListnerFrame(glm::mat4 viewMat) {
 	listner.viewMatrix = viewMat;
 }
 
+// velocity for dopler effect (not implented)
 void AudioEngine::updateListnerVel(float x, float y, float z) {
 	listner.velx = x;
 	listner.vely = y;
 	listner.velz = z;
 }
-//
-// move a sound to a specified location, and give a velocity for dopler stuff
+
+// move a sound instance to a specified location in world coordinates
 void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	// point for sound loc
-	auto loc = glm::vec4(x,y,z,1);
-	// convert to screen coords
+	auto loc = glm::vec4(x, y, z, 1);
 
+	// convert to screen coords
 	auto mat = listner.viewMatrix;
 	loc = mat * loc;
 
-	// printf("mat:[%f,%f, %f, %f]\n[%f..%f]\n[%f..]\n[%f,%f%f,%f]\n",
-			// mat[0][0], mat[0][1], mat[0][2], mat[0][3],
-			// mat[1][0], mat[1][3], mat[2][0] ,mat[3][0], mat[3][1], mat[3][2], mat[3][3]);
-	
-	// printf(" loc: [%f, %f, %f, %f]\n",loc.x, loc.y, loc.z, loc[3]);
-	float alData[3] = { loc.x,loc.y,loc.z };
+	float alData[3] = {loc.x, loc.y, loc.z};
 	alSourcefv(s.source, AL_POSITION, alData);
 
-	printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
+	// printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
 }
-//
+
+// for doppler effect
 void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 	float vel[3] = {
 		x - listner.velx,
@@ -115,7 +103,9 @@ void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 	};
 	alSourcefv(s.source, AL_VELOCITY, vel);
 }
-// create a sounds channel for the sound, but don't actually play it
+
+// create a sounds channel to play a sound. you need to call play before it will
+// play
 Sound AudioEngine::createSound(std::string name) {
 	ALuint channel = sounds[name].createSource();
 	Sound s(channel, name);
@@ -123,36 +113,10 @@ Sound AudioEngine::createSound(std::string name) {
 	return s;
 }
 
-// ALuint AudioEngine::playSound(std::string name, float x, float y, float z) {
-// 	auto source = createSound(name);
-// 	if (source == -1) {
-// 		return -1;
-// 	}
-//
-// 	if (sounds[name].is3D) {
-// 		float pos[3] = {x, y, z};
-// 		alSourcefv(source, AL_POSITION, pos);
-// 	} else {
-// 		fprintf(stderr,
-// 				"can't play stereo audio '%s' in 3D (played normally
-// instead)\n", 				name.c_str());
-// 	}
-// 	alSourcePlay(source);
-// 	checkALErrors("playing " + name);
-// 	return source;
-// }
-//
-// ALuint AudioEngine::playSound(std::string name) {
-// 	auto ch = createSound(name);
-// 	alSourcePlay(ch);
-// 	checkALErrors("playing " + name);
-//
-// 	return ch;
-// }
-
 void AudioEngine::close() {
 	for (auto ch : channels) {
-		alDeleteSources(1, &ch);
+		ch.freed = true;
+		alDeleteSources(1, &ch.source);
 	}
 	alcDestroyContext(context);
 	alcCloseDevice(device);

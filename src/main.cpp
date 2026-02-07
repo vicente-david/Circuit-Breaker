@@ -141,7 +141,7 @@ int main()
 	std::string fps = std::to_string(0);
 
 
-	Sound testSound = audio->createSound("hiya");
+	Sound testSound = audio->createSound("muteCity");
 	testSound.setLooping(true);
 	testSound.start();
 	// RENDER LOOP
