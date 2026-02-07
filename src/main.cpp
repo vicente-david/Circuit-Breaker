@@ -141,6 +141,9 @@ int main()
 	std::string fps = std::to_string(0);
 
 
+	Sound testSound = audio->createSound("hiya");
+	testSound.setLooping(true);
+	testSound.start();
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -156,6 +159,9 @@ int main()
 
 		gameActions = inputSystem.getActions();
 		c1.updateCamera(gameActions, accumulator);
+		audio->updateListnerLoc(c1.Position.x, c1.Position.y, c1.Position.z);
+
+		audio->updateSoundLoc(testSound, 0, 0, 0);
 
 		// physics
 		while (accumulator >= dt) {

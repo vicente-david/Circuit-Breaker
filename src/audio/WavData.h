@@ -33,7 +33,6 @@ class WavData {
 		short int blockAlighn;
 		short int bitsPerSample;
 	};
-	// struct FmtChunk fmtData;
 	struct RiffWaveHeader {
 		char chunkId[4];
 		unsigned int chunkSize;
