@@ -1,7 +1,6 @@
 #include "AudioEngine.h"
 #include "Sound.h"
 #include "WavData.h"
-#include "foundation/PxVec3.h"
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <algorithm>
@@ -10,7 +9,6 @@
 #include <glm/fwd.hpp>
 #include <stdbool.h>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 // reference:
@@ -32,10 +30,10 @@ AudioEngine::AudioEngine() {
 	alcMakeContextCurrent(context);
 	checkALErrors("creating AL Context");
 
-	ALfloat listnerZeroes[] = {0.0, 0.0, 0.0};
-	alListenerfv(AL_POSITION, listnerZeroes);
+	ALfloat listenerZeroes[] = {0.0, 0.0, 0.0};
+	alListenerfv(AL_POSITION, listenerZeroes);
 	checkALErrors("setting position to zero");
-	alListenerfv(AL_VELOCITY, listnerZeroes);
+	alListenerfv(AL_VELOCITY, listenerZeroes);
 	checkALErrors("setting velocity to zero");
 
 	loadSounds();
@@ -66,17 +64,19 @@ void AudioEngine::update(double dt) {
 	channels.erase(remIdx, channels.end());
 }
 
-// updates the location/rotation of the listner location.
+// updates the location/rotation of the listener location.
 // this shold just be the view matrix from a camera
-void AudioEngine::updateListnerFrame(glm::mat4 viewMat) {
-	listner.viewMatrix = viewMat;
+void AudioEngine::updateListenerFrame(glm::mat4 viewMat) {
+	listener.viewMatrix = viewMat;
 }
 
-// velocity for dopler effect (not implented)
-void AudioEngine::updateListnerVel(float x, float y, float z) {
-	listner.velx = x;
-	listner.vely = y;
-	listner.velz = z;
+// velocity for dopler effect 
+// this should be given in world coordinates
+// (not implented)
+void AudioEngine::updateListenerVel(float x, float y, float z) {
+	listener.velx = x;
+	listener.vely = y;
+	listener.velz = z;
 }
 
 // move a sound instance to a specified location in world coordinates
@@ -85,7 +85,7 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	auto loc = glm::vec4(x, y, z, 1);
 
 	// convert to screen coords
-	auto mat = listner.viewMatrix;
+	auto mat = listener.viewMatrix;
 	loc = mat * loc;
 
 	float alData[3] = {loc.x, loc.y, loc.z};
@@ -94,13 +94,15 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	// printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
 }
 
-// for doppler effect
+// update sounde velocity for dopler shifting
+// this shuold be in world coordinates
 void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 	float vel[3] = {
-		x - listner.velx,
-		y - listner.vely,
-		z - listner.velz,
+		x - listener.velx,
+		y - listener.vely,
+		z - listener.velz,
 	};
+	// printf("rel vel. [%f, %f, %f]\n", vel[0],vel[1],vel[2]);
 	alSourcefv(s.source, AL_VELOCITY, vel);
 }
 
