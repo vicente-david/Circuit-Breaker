@@ -1,6 +1,6 @@
 #pragma once
 
-#include <al.h>
+#include <AL/al.h>
 #include <cstdio>
 #include <string>
 class WavData {

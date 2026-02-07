@@ -1,7 +1,7 @@
 
 #include "Sound.h"
 #include "AudioEngine.h"
-#include <al.h>
+#include <AL/al.h>
 #include <string>
 
 Sound::Sound(ALuint source, std::string name) {

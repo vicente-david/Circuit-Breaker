@@ -4,8 +4,8 @@
 #include <glm/glm.hpp>
 #include "Sound.h"
 #include "WavData.h"
-#include <al.h>
-#include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <map>
 #include <string>
 #include <vector>

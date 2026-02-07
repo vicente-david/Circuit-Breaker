@@ -49,8 +49,11 @@ set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
 
 # OPENAL
-find_package(OpenAL REQUIRED)
-set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
+add_subdirectory(dependencies/openal)
+set(LIBRARIES ${LIBRARIES} openal)
+
+# find_package(OpenAL REQUIRED)
+# set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
 
 if (WIN32)
   # copy required dlls

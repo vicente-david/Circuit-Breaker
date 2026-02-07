@@ -2,8 +2,8 @@
 #include "Sound.h"
 #include "WavData.h"
 #include "foundation/PxVec3.h"
-#include <al.h>
-#include <alc.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 #include <algorithm>
 #include <cstddef>
 #include <cstdio>
