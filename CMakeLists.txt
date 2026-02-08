@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 3.15)
 project(circuit-breaker)
 
 
-# run this if using debug version
+# note: this release version only works if in your cmakesettings.json your release build
+# is specifically Release
+# and not RelWithDebInfo (which visual studio defaults to)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
 
 # run this if using release
