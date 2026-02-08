@@ -1,5 +1,4 @@
 #include "PhysicsSystem.h"
-#include "Callbacks.h"
 
 PhysicsSystem::PhysicsSystem() // Constructor
 {
@@ -7,7 +6,6 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	initPhysX();
 	initGroundPlane();
 	initMaterialFrictionTable();
-	initVehicles();
 
 	// Define a box
 	float halfLen = 0.5f;
@@ -100,107 +98,6 @@ void PhysicsSystem::initMaterialFrictionTable()
 	gPhysXMaterialFrictions[0].material = gMaterial;
 	gPhysXDefaultMaterialFriction = 1.0f;
 	gNbPhysXMaterialFrictions = 1;
-}
-
-bool PhysicsSystem::initVehicles()
-{
-	//Load the params from json or set directly.
-	gVehicleDataPath = "assets/vehicledata";
-	readBaseParamsFromJsonFile(gVehicleDataPath, "Base.json", gVehicle.mBaseParams);
-	setPhysXIntegrationParams(gVehicle.mBaseParams.axleDescription,
-		gPhysXMaterialFrictions, gNbPhysXMaterialFrictions, gPhysXDefaultMaterialFriction,
-		gVehicle.mPhysXParams);
-	readEngineDrivetrainParamsFromJsonFile(gVehicleDataPath, "EngineDrive.json",
-		gVehicle.mEngineDriveParams);
-
-	//Set the states to default.
-	if (!gVehicle.initialize(*gPhysics, PxCookingParams(PxTolerancesScale()), *gMaterial, EngineDriveVehicle::eDIFFTYPE_FOURWHEELDRIVE))
-	{
-		return false;
-	}
-
-	//Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(0.000000000f, -0.0500000119f, -10.59399998f), PxQuat(PxIdentity));
-	gVehicle.setUpActor(*gScene, startPose, gVehicleName);
-
-	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0); // Create vehicle filter
-
-	// Set flags
-	PxU32 shapes = gVehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
-	for (PxU32 i = 0; i < shapes; i++) {
-		PxShape* shape = NULL;
-		gVehicle.mPhysXState.physxActor.rigidBody->getShapes(&shape, 1, i);
-
-		shape->setSimulationFilterData(vehicleFilter); // Add filter data to shader
-
-		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-	}
-
-	//Set the vehicle in 1st gear.
-	gVehicle.mEngineDriveState.gearboxState.currentGear = gVehicle.mEngineDriveParams.gearBoxParams.neutralGear + 1;
-	gVehicle.mEngineDriveState.gearboxState.targetGear = gVehicle.mEngineDriveParams.gearBoxParams.neutralGear + 1;
-
-	//Set the vehicle to use the automatic gearbox.
-	gVehicle.mTransmissionCommandState.targetGear = PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
-
-	//Set up the simulation context.
-	//The snippet is set up with
-	//a) z as the longitudinal axis
-	//b) x as the lateral axis
-	//c) y as the vertical axis.
-	//d) metres  as the lengthscale.
-	gVehicleSimulationContext.setToDefault();
-	gVehicleSimulationContext.frame.lngAxis = PxVehicleAxes::ePosZ;
-	gVehicleSimulationContext.frame.latAxis = PxVehicleAxes::ePosX;
-	gVehicleSimulationContext.frame.vrtAxis = PxVehicleAxes::ePosY;
-	gVehicleSimulationContext.scale.scale = 1.0f;
-	gVehicleSimulationContext.gravity = gGravity;
-	gVehicleSimulationContext.physxScene = gScene;
-	gVehicleSimulationContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
-
-	return true;
-}
-
-void PhysicsSystem::stepPhysics(PxReal dt)
-{
-	//  VEHICLE INPUTS
-	//if (gNbCommands == gCommandProgress)
-	//	return;
-	gCommandProgress = 1;
-
-
-
-	//Apply the brake, throttle and steer to the command state of the vehicle.
-	const Command& command = gCommands[gCommandProgress];
-	gVehicle.mCommandState.brakes[0] = command.brake;
-	gVehicle.mCommandState.nbBrakes = 1;
-	gVehicle.mCommandState.throttle = command.throttle;
-	gVehicle.mCommandState.steer = command.steer;
-	gVehicle.mTransmissionCommandState.targetGear = command.gear;
-
-	// VEHICLE SCENE QUERIES
-	//Forward integrate the vehicle by a single timestep.
-	//Apply substepping at low forward speed to improve simulation fidelity.
-	const PxVec3 linVel = gVehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity();
-	const PxVec3 forwardDir = gVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-	const PxReal forwardSpeed = linVel.dot(forwardDir);
-	const PxU8 nbSubsteps = (forwardSpeed < 5.0f ? 3 : 1);
-	gVehicle.mComponentSequence.setSubsteps(gVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
-	gVehicle.step(dt, gVehicleSimulationContext);
-
-	// SIMULATION STEP
-	updatePhysics(dt);
-
-	//Increment the time spent on the current command.
-	//Move to the next command in the list if enough time has lapsed.
-	gCommandTime += dt;
-	if (gCommandTime > gCommands[gCommandProgress].duration)
-	{
-		gCommandProgress++;
-		gCommandTime = 0.0f;
-	}
 }
 
 void PhysicsSystem::updateTransforms()

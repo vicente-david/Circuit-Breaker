@@ -10,12 +10,16 @@
 #include "Texture.h"
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
+#include "Vehicle.h"
 
 int main()
 {
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
 	GameState gameState;
+
+	Vehicle car1(physicsSys);
+	car1.init();
 
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
@@ -155,7 +159,8 @@ int main()
 
 		// physics
 		while (accumulator >= dt) {
-			physicsSys.stepPhysics(dt);
+			car1.step(dt);
+			physicsSys.updatePhysics(dt);
 			accumulator -= dt;
 			t += dt;
 		}
@@ -176,6 +181,7 @@ int main()
 
 
 	}
+	car1.cleanup();
 	glfwTerminate();
 	
 
