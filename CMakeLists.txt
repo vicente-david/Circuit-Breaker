@@ -4,25 +4,32 @@ project(circuit-breaker)
 
 
 # run this if using debug version
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
 
 # run this if using release
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
+message("CMAKE_BUILD_TYPE = '${CMAKE_BUILD_TYPE}'")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  message("in debug mode rn")
+  # run this if using debug version
+  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  message("in release mode rn")
+  #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+  # run this if using release
+  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
+endif()
 
 file(GLOB_RECURSE SOURCES "src/*")
 add_executable(circuit-breaker ${SOURCES})
 
 # PHYSX
-# add folder 'phsyx' into project directory. Download from: https:S//drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
-
+# add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
 
-# run this if using debug version
-set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
-
-# run this if using release
-#set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
 
 # copy assets
 file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
@@ -78,6 +85,9 @@ if (WIN32)
     ${LIBRARIES}
   )
 
+ add_custom_command(TARGET circuit-breaker POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenAL::OpenAL> $<TARGET_FILE_DIR:circuit-breaker> 
+    )
 
   elseif(UNIX)
     target_link_libraries(${PROJECT_NAME} PRIVATE 
