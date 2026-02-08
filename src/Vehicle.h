@@ -34,6 +34,7 @@ public:
 	void step(double dt);
 
 	void applyInput(const Command& cmd);
+	void changeEngineDriveParams(const char* vehicleDataPath);
 
 private:
 	PhysicsSystem& mPhysics;

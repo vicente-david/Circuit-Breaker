@@ -20,6 +20,7 @@ int main()
 
 	Vehicle car1(physicsSys);
 	car1.init();
+	car1.changeEngineDriveParams("TestDrive.json");
 
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);

@@ -110,3 +110,9 @@ void Vehicle::applyInput(const Command& cmd)
 	mCmd.steer = cmd.steer;
 	mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
 }
+
+void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName) 
+{
+	// Changes the parameters of the engine
+	readEngineDrivetrainParamsFromJsonFile(mVehicleDataPath, vehicleDataFileName, mVehicle.mEngineDriveParams);
+}
