@@ -6,21 +6,25 @@ project(circuit-breaker)
 # note: this release version only works if in your cmakesettings.json your release build
 # is specifically Release
 # and not RelWithDebInfo (which visual studio defaults to)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
+
+#run this if using debug
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+
 
 # run this if using release
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  message("in debug mode rn")
+#if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  #message("in debug mode rn")
   # run this if using debug version
-  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  message("in release mode rn")
+  #set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
+#elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  #message("in release mode rn")
   #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
   # run this if using release
-  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
-endif()
+  #set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
+#endif()
 
 file(GLOB_RECURSE SOURCES "src/*")
 add_executable(circuit-breaker ${SOURCES})
@@ -29,6 +33,8 @@ add_executable(circuit-breaker ${SOURCES})
 # add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
+
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 
 
 # copy assets
