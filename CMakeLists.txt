@@ -5,26 +5,15 @@ project(circuit-breaker)
 
 # note: this release version only works if in your cmakesettings.json your release build
 # is specifically Release
-# and not RelWithDebInfo (which visual studio defaults to)
-#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
+# and not RelWithDebugInfo (which visual studio defaults to)
 
-#run this if using debug
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+# funky generator stuff that auto sets to debug if running debug and release to release (with non debug info)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
 
-
-# run this if using release
+# run this if using release (keep here for reference)
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
-#if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  #message("in debug mode rn")
-  # run this if using debug version
-  #set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
-#elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  #message("in release mode rn")
-  #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
-  # run this if using release
-  #set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
-#endif()
+
 
 file(GLOB_RECURSE SOURCES "src/*")
 add_executable(circuit-breaker ${SOURCES})
@@ -34,7 +23,14 @@ add_executable(circuit-breaker ${SOURCES})
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
 
-set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  # run this if using debug version
+  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+  # run this if using release
+  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
+endif()
 
 
 # copy assets
@@ -63,11 +59,6 @@ find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
 
-
-
-# run program once, on fail, copy openal32.dll to to executable directory
-# fits like a glove
-
 if (WIN32)
 
   # OPENAL
@@ -91,6 +82,7 @@ if (WIN32)
     ${LIBRARIES}
   )
 
+# copies openal32.dll after building openal and running the executable
  add_custom_command(TARGET circuit-breaker POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:OpenAL::OpenAL> $<TARGET_FILE_DIR:circuit-breaker> 
     )
