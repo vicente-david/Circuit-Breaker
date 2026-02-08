@@ -9,8 +9,6 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:
 # run this if using release
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
-message("CMAKE_BUILD_TYPE = '${CMAKE_BUILD_TYPE}'")
-
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   message("in debug mode rn")
   # run this if using debug version
