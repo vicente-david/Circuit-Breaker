@@ -142,8 +142,10 @@ int main()
 
 
 	Sound testSound = audio->createSound("muteCity");
+	float doplerX = 0, doplerVel = 5;
 	testSound.setLooping(true);
 	testSound.start();
+
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -156,12 +158,8 @@ int main()
 
 
 		// input
-
 		gameActions = inputSystem.getActions();
 		c1.updateCamera(gameActions, accumulator);
-		audio->updateListnerFrame(c1.GetViewMatrix());
-
-		audio->updateSoundLoc(testSound, 0, 0, 0);
 
 		// physics
 		while (accumulator >= dt) {
@@ -177,6 +175,24 @@ int main()
 			t -= 1.0;
 			framesPassed = 0;
 		}
+		
+
+
+		// test moving sound
+		audio->updateListenerFrame(c1.GetViewMatrix());
+		doplerVel = 0;
+
+		if(gameActions.keyboardForward){
+			doplerVel+=50;
+			doplerX+=10*dt;
+
+		}
+		if(gameActions.keyboardBackward){
+			doplerVel-=50;
+			doplerX-=10*dt;
+		}
+		audio->updateSoundVel(testSound, doplerVel, 0, 0);
+		audio->updateSoundLoc(testSound, doplerX, 0, 0);
 
 		// test update object transforms
 		objects[0].transform->rot = glm::quat(glm::vec3(0.7f, 0.5f, 0.1f) * (float)glfwGetTime());

@@ -18,8 +18,8 @@ class AudioEngine {
 
 	Sound createSound(std::string name);
 
-	void updateListnerFrame(glm::mat4 viewMatrix);
-	void updateListnerVel(float x, float y, float z);
+	void updateListenerFrame(glm::mat4 viewMatrix);
+	void updateListenerVel(float x, float y, float z);
 	void updateSoundLoc(Sound sound,float x, float y, float z);
 	void updateSoundVel(Sound sound,float x, float y, float z);
 
@@ -34,10 +34,10 @@ class AudioEngine {
 	std::map<std::string, WavData> sounds;
 	std::vector<Sound> channels;
 
-	struct ListnerData {
+	struct ListenerData {
 		glm::mat4 viewMatrix;
 		float velx, vely, velz;
 	};
 
-	ListnerData listner;
+	ListenerData listener;
 };
