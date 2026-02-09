@@ -22,9 +22,9 @@ public:
 	Model* model;
 	Transform* transform;
 
-	// theoretically only needs an id and a signature
-	// id to identify entity
+	// theoretically an entity only needs an id 
+	// id to identify entity 
 	int id;
-	// signature to identify which components are in use
+	// signature to identify which components are in use (temporary)
 	std::bitset<MAX_COMPONENTS> signature;
 };
