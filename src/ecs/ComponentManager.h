@@ -1,6 +1,6 @@
 #include <unordered_map>
 #include <memory>
-#include "ComponentArray.cpp"
+#include "ComponentArray.h"
 // will manage addition and removal of components between the various component arrays
 // note: every component does have it's own id or bit in the signature
 
@@ -8,22 +8,48 @@ using ComponentType = size_t;
 
 class ComponentManager {
 public:
-	template<typename T>
-	void registerComponent();
 
 	template<typename T>
-	ComponentType getComponentType();
+	void registerComponent() {
+		const char* typeName = typeid(T).name();
+
+		// assert mComponentTypes.find(typeName) == mComponentTypes.end()  multiple of same component
+
+		componentTypes.insert({ typeName, nextComponentType });
+		componentArrays.insert({ typeName, std::make_shared<ComponentArray<T>>() });
+		nextComponentType++;
+	}
 
 	template<typename T>
-	void addComponent(Entity entity, T component);
+	ComponentType getComponentType() {
+		const char* typeName = typeid(T).name();
+
+		return componentTypes[typeName];
+	}
 
 	template<typename T>
-	void removeComponent(Entity entity);
+	void addComponent(Entity entity, T component) {
+		getComponentArray <T>()->insertData(entity, component);
+	}
 
 	template<typename T>
-	T& getComponent(Entity entity);
+	void removeComponent(Entity entity) {
+		getComponentArray <T>()->removeData(entity);
+	}
 
-	void entityDestroyed(Entity entity);
+	template<typename T>
+	T& getComponent(Entity entity) {
+		return getComponentArray < T >()->getData(entity);
+	}
+
+	void entityDestroyed(Entity entity) {
+		// notify each component array that an entity has been destroyed
+		// if that component array has that entity, remove it
+		for (auto const& pair : componentArrays) {
+			auto const& component = pair.second;
+			component->entityDestroyed(entity);
+		}
+	}
 
 
 private:
@@ -39,6 +65,10 @@ private:
 	// takes a component of type T
 	// returns a pointer to the component array of type T
 	template<typename T>
-	std::shared_ptr<ComponentArray<T>> getComponentArray();
+	std::shared_ptr<ComponentArray<T>> getComponentArray() {
+		const char* typeName = typeid(T).name();
+		// assert component not registered
+		return std::static_pointer_cast<ComponentArray<T>>(componentArrays[typeName]);
+	}
 
 };

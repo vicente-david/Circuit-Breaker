@@ -8,7 +8,7 @@
 // the system will have a bit signature that it compares against to grab
 // the respective component(s) 
 
-enum class PhysType {
+enum class PhysType1 {
 	None,		// doesn't have any physics properties
 	StaticMesh, // non-moving object w/ collision box (i.e. track/walls)
 	Spark,		// vehicle, in this case, the sparks
@@ -21,10 +21,10 @@ struct TransformC {
 	glm::vec3 scale;
 };
 
-struct Physics {
-	PhysType physType = PhysType::None;
+struct Physics1 {
+	PhysType1 physType = PhysType1::None;
 };
 
-struct Model {
-	Model* model;
+struct Model1 {
+	Model1* model;
 };
