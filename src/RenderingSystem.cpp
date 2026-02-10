@@ -103,7 +103,7 @@ void RenderingSystem::initializeText() {
 
 }
 
-void RenderingSystem::update(std::vector<Entity> entities, unsigned int VAO, std::string fps, Camera& c1) {
+void RenderingSystem::update(std::vector<Entity1> entities, unsigned int VAO, std::string fps, Camera& c1) {
 	
 	basicShader->use();
 

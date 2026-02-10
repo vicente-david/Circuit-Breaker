@@ -5,7 +5,7 @@
 
 #include "Text.h"
 #include "Model.h"
-#include "Entity.h"
+#include "Entity1.h"
 #include "Camera.h"
 
 class RenderingSystem {
@@ -16,7 +16,7 @@ public:
 	void initializeShaders();
 	void initializeText();
 
-	void update(std::vector<Entity> entities, unsigned int VAO, std::string fps, Camera& c1); //temporarily adding VAO here
+	void update(std::vector<Entity1> entities, unsigned int VAO, std::string fps, Camera& c1); //temporarily adding VAO here
 
 	unsigned int textVBO;
 	unsigned int textVAO;

@@ -2,8 +2,8 @@
 
 GameState gameState;
 
-Entity* GameState::addEntity(std::string name, PhysType physType, Model* model, Transform* transform) {
-	Entity e{ name, physType, model, transform };
+Entity1* GameState::addEntity(std::string name, PhysType physType, Model* model, Transform* transform) {
+	Entity1 e{ name, physType, model, transform };
 	entityList.push_back(e);
 	return &e;
 }
@@ -16,9 +16,9 @@ Entity* GameState::addEntity(std::string name, PhysType physType, Model* model, 
 //	);
 //}
 
-Entity* GameState::findEntity(std::string name) {
+Entity1* GameState::findEntity(std::string name) {
 	auto it = std::find_if(entityList.begin(), entityList.end(),
-		[&](const Entity& e) { return e.name == name; });
+		[&](const Entity1& e) { return e.name == name; });
 
 	if (it != entityList.end()) // if the entity is found
 		return &(*it);			// return the pointer to the entity from entityList
@@ -26,7 +26,7 @@ Entity* GameState::findEntity(std::string name) {
 	return nullptr;				// return nullptr if entity is not found
 }
 
-void GameState::endGame(Entity* gameWinner) {
+void GameState::endGame(Entity1* gameWinner) {
 	winner = gameWinner;		// assign the game winner
 								
 								// TODO: probably do some UI/game management stuff here to give endscreen, etc.

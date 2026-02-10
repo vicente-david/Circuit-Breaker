@@ -13,9 +13,9 @@
 
 
 // to-do: move these to cmake
-#define MAX_ENTITIES 20
+#define MAX_ENTITIES 2000
 // this constant is also in entity.h
-#define MAX_COMPONENTS 5
+#define MAX_COMPONENTS 32
 
 using Signature = std::bitset<MAX_COMPONENTS>;
 using Entity = int;

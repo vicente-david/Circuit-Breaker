@@ -15,7 +15,7 @@ enum class PhysType {
 	RigidBody	// anything else that has physical properties and moves
 };
 
-struct Transform {
+struct TransformC {
 	glm::vec3 pos;
 	glm::quat rot;
 	glm::vec3 scale;

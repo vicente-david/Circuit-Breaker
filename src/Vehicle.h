@@ -1,7 +1,7 @@
 #pragma once
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
-#include "Entity.h"
+#include "Entity1.h"
 #include <vector>
 #include <iostream>
 

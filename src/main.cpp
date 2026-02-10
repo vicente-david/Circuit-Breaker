@@ -11,6 +11,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
 #include "Vehicle.h"
+#include "ecs/Coordinator.h"
 
 int main()
 {
@@ -30,7 +31,7 @@ int main()
 	
 
 	// --Placeholder code--
-	std::vector<Entity> entityList;
+	std::vector<Entity1> entityList;
 	entityList.reserve(465);
 
 	for (int i = 0; i < 465; i++)
@@ -114,14 +115,14 @@ int main()
 	};
 
 	// Temp function to create list of cube entities
-	std::vector<Entity> objects{};
+	std::vector<Entity1> objects{};
 	for (int i = 0; i < 10; i++) {
 
 		Transform* trans = new Transform();
 		trans->pos = cubePositions[i];
 		trans->rot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
-		Entity entity{ "perro" + std::to_string(i), PhysType::None, &cube, trans};
+		Entity1 entity{ "perro" + std::to_string(i), PhysType::None, &cube, trans};
 		objects.push_back(entity);
 
 		// push back to entityList vector
