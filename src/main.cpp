@@ -45,6 +45,8 @@ int main()
 	// time
 	double t = 0.0;
 	const double dt = 1.0 / 60.0; // simulate at 60fps
+	// if its slower than this, just slow down the game instead of lagging even more
+	const double minFps = 30.0; 
 	double currentTime = glfwGetTime();
 	double accumulator = 0.0;
 
@@ -150,6 +152,7 @@ int main()
 		double frameTime = newTime - currentTime;
 		currentTime = newTime;
 		accumulator += frameTime;
+		accumulator = std::min(accumulator, 1/minFps);
 		framesPassed++;
 
 
