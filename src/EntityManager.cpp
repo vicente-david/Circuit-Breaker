@@ -9,6 +9,9 @@ EntityManager::EntityManager() {
 }
 
 Entity EntityManager::createEntity() {
+
+	// to-do: change into asserts
+	// apparently that's faster and depending on compiler discarded in release mode
 	if (existingEntities == MAX_ENTITIES) { 
 		std::cout << "Too many entities" << std::endl;
 		return -1; 
