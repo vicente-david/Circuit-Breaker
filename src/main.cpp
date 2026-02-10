@@ -48,7 +48,7 @@ int main()
 		// pointer to entity
 		entity = coordinator.createEntity();
 		// add component
-		coordinator.addComponent(entity, TransformC{glm::vec3(count)});
+		coordinator.addComponent(entity, TransformC{glm::vec3(count), glm::vec3(count) });
 		count++;
 	}
 
@@ -64,6 +64,8 @@ int main()
 	for (const auto& x : testSystem->entities) {
 		std::cout << x << " ";
 	}
+
+	std::cout << coordinator.getComponent<TransformC>(1999).pos.x << std::endl;
 
 
 	auto renderer = std::make_unique<RenderingSystem>();	
