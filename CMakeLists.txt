@@ -72,17 +72,29 @@ if (WIN32)
     ${LIBRARIES}
   )
   elseif(UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
+	      target_link_libraries(${PROJECT_NAME} PRIVATE 
     # physx
+    ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
+    ${PHYSX_LIB}/libPhysXCooking_static_64.a
     ${PHYSX_LIB}/libPhysXExtensions_static_64.a
     ${PHYSX_LIB}/libPhysX_static_64.a
     ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
     ${PHYSX_LIB}/libPhysXCommon_static_64.a
     ${PHYSX_LIB}/libPhysXFoundation_static_64.a
-    ${PHYSX_LIB}/libPhysXCooking_static_64.a
-    ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
     ${LIBRARIES}
+    # target_link_libraries(${PROJECT_NAME} PRIVATE 
+    # # physx
+    # ${PHYSX_LIB}/libPhysXExtensions_static_64.a
+    # ${PHYSX_LIB}/libPhysX_static_64.a
+    # ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
+    # ${PHYSX_LIB}/libPhysXCommon_static_64.a
+    # ${PHYSX_LIB}/libPhysXFoundation_static_64.a
+    # ${PHYSX_LIB}/libPhysXCooking_static_64.a
+    # ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
+    # ${LIBRARIES}
   )
+
+
 endif()
 
 

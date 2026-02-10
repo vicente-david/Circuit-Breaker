@@ -1,4 +1,5 @@
 #include "GameState.h"
+#include "algorithm"
 
 GameState gameState;
 
