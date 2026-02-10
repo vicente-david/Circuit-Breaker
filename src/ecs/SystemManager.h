@@ -7,17 +7,17 @@ public:
 
 	// system needs to register
 	template<typename T>
-	std::shared_ptr<T> RegisterSystem();
+	std::shared_ptr<T> registerSystem();
 
 	// system set signature
 	template<typename T>
-	void SetSignature(Signature signature);
+	void setSignature(Signature signature);
 
 	// erase entity in all system entity lists
-	void EntityDestroyed(Entity entity);
+	void entityDestroyed(Entity entity);
 
 	// notify each system that an entity signature has changed
-	void EntitySignatureChanged(Entity entity, Signature entitySignature);
+	void entitySignatureChanged(Entity entity, Signature entitySignature);
 	
 private:
 	// map from system string pointer to a signature

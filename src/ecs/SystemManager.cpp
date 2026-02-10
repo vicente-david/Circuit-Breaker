@@ -3,7 +3,7 @@
 
 // system registration
 template<typename T>
-std::shared_ptr<T> SystemManager::RegisterSystem() {
+std::shared_ptr<T> SystemManager::registerSystem() {
 	// todo asserts
 	// get the system type
 	const char* typeName = typeid(T).name();
@@ -17,7 +17,7 @@ std::shared_ptr<T> SystemManager::RegisterSystem() {
 
 // system set signature
 template<typename T>
-void SystemManager::SetSignature(Signature signature) {
+void SystemManager::setSignature(Signature signature) {
 	const char* typeName = typeid(T).name();
 
 	// insert {systemtype, signature for systemtype} 
@@ -25,7 +25,7 @@ void SystemManager::SetSignature(Signature signature) {
 }
 
 // erase entity in all system entity lists
-void SystemManager::EntityDestroyed(Entity entity) {
+void SystemManager::entityDestroyed(Entity entity) {
 
 	// for every pair of {systemType, ptr to system} 
 	for (auto const& pair : systems) {
@@ -39,7 +39,7 @@ void SystemManager::EntityDestroyed(Entity entity) {
 }
 
 // notify each system that an entity signature has changed
-void SystemManager::EntitySignatureChanged(Entity entity, Signature entitySignature) {
+void SystemManager::entitySignatureChanged(Entity entity, Signature entitySignature) {
 	// for every pait of {systemType, ptr to system}
 	for (auto const& pair : systems) {
 		// system type
