@@ -14,7 +14,7 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	PxFilterData boxFilter(COLLISION_FLAG_OBSTACLE, COLLISION_FLAG_OBSTACLE_AGAINST, 0, 0); // Create obstacle filter
 	shape->setSimulationFilterData(boxFilter); // Add filter data to shader
 
-	physx::PxU32 size = 15;
+	physx::PxU32 size = 30;
 	physx::PxTransform tran(physx::PxVec3(0));
 
 	// Create a pyramid of physics-enabled boxes
