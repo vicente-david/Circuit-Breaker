@@ -12,12 +12,65 @@
 #include "Camera.h"
 #include "Vehicle.h"
 #include "ecs/Coordinator.h"
+#include "ecs/Component.h"
+#include "ecs/System.h"
+
+class Test1 : public System{
+	int i;
+};
 
 int main()
 {
+
+	// create the coordinator
+	Coordinator coordinator;
+	// initialize coordinator 
+	coordinator.Init();
+
+	// register components
+	coordinator.registerComponent<TransformC>();
+	
+	// register systems
+	auto testSystem = coordinator.registerSystem<Test1>();
+
+	// create signature for the system
+	Signature signature;
+	signature.set(coordinator.getComponentType<TransformC>());
+	// set the signature
+	coordinator.setSystemSignature<Test1>(signature);
+
+	// initialize entities
+	std::vector<Entity> entities(MAX_ENTITIES);
+
+	int count = 0;
+
+	for (auto& entity : entities) {
+		// pointer to entity
+		entity = coordinator.createEntity();
+		// add component
+		coordinator.addComponent(entity, TransformC{glm::vec3(count)});
+		count++;
+	}
+
+	for (const auto& x : testSystem->entities) {
+		std::cout << x << " ";
+	}
+
+	coordinator.destroyEntity(500);
+	coordinator.destroyEntity(501);
+	coordinator.destroyEntity(502);
+	coordinator.destroyEntity(503);
+
+	for (const auto& x : testSystem->entities) {
+		std::cout << x << " ";
+	}
+
+
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
 	GameState gameState;
+
+	
 
 	Vehicle car1(physicsSys);
 	car1.init();

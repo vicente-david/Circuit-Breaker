@@ -49,7 +49,7 @@ public:
 		size_t newIndex = validEntries;
 		// update maps
 		entityToIndex[entity] = newIndex;
-		indexToEntity[index] = entity;
+		indexToEntity[newIndex] = entity;
 		// add the component
 		componentArray[newIndex] = component;
 		// update valid entries
