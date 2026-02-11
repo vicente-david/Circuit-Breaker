@@ -35,8 +35,8 @@ public:
 
 	void applyInput(const Command& cmd);
 	void changeEngineDriveParams(const char* vehicleDataPath);
+	Transform getTransform();
 
-private:
 	PhysicsSystem& mPhysics;
 
 	EngineDriveVehicle mVehicle;

@@ -116,3 +116,14 @@ void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName)
 	// Changes the parameters of the engine
 	readEngineDrivetrainParamsFromJsonFile(mVehicleDataPath, vehicleDataFileName, mVehicle.mEngineDriveParams);
 }
+
+Transform Vehicle::getTransform() {
+	Transform t;
+	PxVec3 Ep = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
+	PxQuat Eq = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
+	glm::vec3 glmPos = glm::vec3(Ep.x, Ep.y, Ep.z);
+	glm::vec3 glmRot = glm::vec3(Eq.x, Eq.y, Eq.z);
+	t.pos = glmPos;
+	t.rot = glmRot;
+	return t;
+}
