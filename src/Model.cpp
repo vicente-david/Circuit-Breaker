@@ -71,7 +71,6 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		std::vector<Texture> diffuseTex = loadMatTextures(material, aiTextureType_DIFFUSE, "diffuse");
 		textures.insert(textures.end(), diffuseTex.begin(), diffuseTex.end());
-
 	}
 
 	return Mesh(vertices, indices, textures);

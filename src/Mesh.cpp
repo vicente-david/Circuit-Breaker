@@ -43,7 +43,10 @@ void Mesh::initMesh() {
 }
 
 void Mesh::Draw() {
-	glBindTexture(GL_TEXTURE_2D, textures[0].id);
+	if (textures.size() > 0) {
+		glBindTexture(GL_TEXTURE_2D, textures[0].id);
+
+	}
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 }
