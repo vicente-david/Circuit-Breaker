@@ -65,8 +65,6 @@ int main()
 		std::cout << x << " ";
 	}
 
-	std::cout << coordinator.getComponent<TransformC>(1999).pos.x << std::endl;
-
 
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;

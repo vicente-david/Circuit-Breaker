@@ -11,11 +11,15 @@
 #include "../snippets/snippetvehiclecommon/SnippetVehicleHelpers.h"
 #include "../snippets/snippetcommon/SnippetPVD.h"
 
+#include "ecs/Coordinator.h"
+
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-class PhysicsSystem
+extern Coordinator coordinator;
+
+class PhysicsSystem : public System
 {
 public:
 	//PhysX management class instances.
