@@ -1,4 +1,5 @@
 #include "Vehicle.h"
+#include "InputSystem.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
@@ -85,8 +86,8 @@ void Vehicle::cleanup()
 
 void Vehicle::step(double dt)
 {
-	Command input = { 0.0f, 0.65f, 0.0f, mVehicle.mTransmissionCommandState.targetGear};
-	applyInput(input);
+	// Command input = { 0.0f, 0.65f, 0.0f, mVehicle.mTransmissionCommandState.targetGear};
+	// applyInput(input);
 
 	// VEHICLE SCENE QUERIES
 	//Forward integrate the vehicle by a single timestep.
@@ -103,14 +104,17 @@ void Vehicle::step(double dt)
 	updateTransform();
 }
 
-void Vehicle::applyInput(const Command& cmd)
+void Vehicle::applyInput(Actions& actions)
 {
 	auto& mCmd = mVehicle.mCommandState;
-	mCmd.brakes[0] = cmd.brake;
-	mCmd.nbBrakes = 1;
-	mCmd.throttle = cmd.throttle;
-	mCmd.steer = cmd.steer;
-	mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
+	// mCmd.brakes[0] = cmd.brake;
+	// mCmd.brakes = actions.moveBackward;
+	mCmd.throttle = actions.moveForward;
+	// mCmd.steer = cmd.steer;
+
+	mCmd.steer = actions.xRotation;
+	// mCmd.steer = actions.xRotation;
+	// mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
 }
 
 void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName) 

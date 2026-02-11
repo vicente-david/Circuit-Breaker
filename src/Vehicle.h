@@ -1,4 +1,5 @@
 #pragma once
+#include "InputSystem.h"
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
 #include "Entity.h"
@@ -33,7 +34,7 @@ public:
 	void cleanup();
 	void step(double dt);
 
-	void applyInput(const Command& cmd);
+	void applyInput(Actions& actions);
 	void changeEngineDriveParams(const char* vehicleDataPath);
 	
 	PhysicsSystem& mPhysics;
