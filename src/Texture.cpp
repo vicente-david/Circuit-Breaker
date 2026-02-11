@@ -1,8 +1,12 @@
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
+#include<glm/glm.hpp>
 #include "Texture.h"
 #include "stb_image.h"
 #include <iostream>
 
-unsigned int generateTexture(const char* imagePath, bool isJPG) {
+
+unsigned int GenerateTexture(const char* imagePath, bool isJPG) {
 	
 	// Create and assign textures
 	unsigned int texture;
