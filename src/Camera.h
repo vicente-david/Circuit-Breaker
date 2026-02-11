@@ -57,7 +57,11 @@ public:
 
 	glm::mat4 GetViewMatrix()
 	{
-		return glm::lookAt(Position, Front, Up);
+		// eye=Position, center=lookatdirection, up=what is defined as up
+		// eye is where the camera is located
+		// front is where you're looking at
+		// up is up vector
+		return glm::lookAt(Position, Position + Front, Up);
 	}
 
 	// processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -116,9 +120,9 @@ public:
 
 	void updateCamera(glm::vec3 targetPos) {
 		Position.x = targetPos.x;
-		Position.y = targetPos.y + 5.0f;
-		Position.z = targetPos.z - 5.0f;
-		updateCameraVectors(targetPos);
+		Position.y = targetPos.y + 0.5f;
+		Position.z = targetPos.z - 2.0f;
+		updateCameraVectors(targetPos-Position);
 	}
 
 private:

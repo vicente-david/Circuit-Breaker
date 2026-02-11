@@ -41,6 +41,7 @@ add_subdirectory(dependencies/freetype)
 set(LIBRARIES ${LIBRARIES} freetype)
 
 # GLAD
+set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(dependencies/glad) 
 set(LIBRARIES ${LIBRARIES} glad)
 
