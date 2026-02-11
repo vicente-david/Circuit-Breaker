@@ -104,15 +104,19 @@ void PhysicsSystem::updateTransforms(std::vector<Entity> entityList)
 {
 	for (int i = 0; i < entityList.size(); i++)
 	{
-		// Update entity transforms
-		entityList.at(i).transform->pos.x = rigidDynamicList[i]->getGlobalPose().p.x;
-		entityList.at(i).transform->pos.y = rigidDynamicList[i]->getGlobalPose().p.y;
-		entityList.at(i).transform->pos.z = rigidDynamicList[i]->getGlobalPose().p.z;
+		// TODO: huge bandaid.. fix
+		if (entityList.at(i).name == "perro cube") {
+			// Update entity transforms
+			entityList.at(i).transform->pos.x = rigidDynamicList[i]->getGlobalPose().p.x;
+			entityList.at(i).transform->pos.y = rigidDynamicList[i]->getGlobalPose().p.y;
+			entityList.at(i).transform->pos.z = rigidDynamicList[i]->getGlobalPose().p.z;
 
-		entityList.at(i).transform->rot.x = rigidDynamicList[i]->getGlobalPose().q.x;
-		entityList.at(i).transform->rot.y = rigidDynamicList[i]->getGlobalPose().q.y;
-		entityList.at(i).transform->rot.z = rigidDynamicList[i]->getGlobalPose().q.z;
-		entityList.at(i).transform->rot.w = rigidDynamicList[i]->getGlobalPose().q.w;
+			entityList.at(i).transform->rot.x = rigidDynamicList[i]->getGlobalPose().q.x;
+			entityList.at(i).transform->rot.y = rigidDynamicList[i]->getGlobalPose().q.y;
+			entityList.at(i).transform->rot.z = rigidDynamicList[i]->getGlobalPose().q.z;
+			entityList.at(i).transform->rot.w = rigidDynamicList[i]->getGlobalPose().q.w;
+		}
+		
 	}
 }
 

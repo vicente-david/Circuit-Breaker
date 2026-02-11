@@ -99,6 +99,8 @@ void Vehicle::step(double dt)
 	
 	mVehicle.mComponentSequence.setSubsteps(mVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
 	mVehicle.step(dt, mVehicleSimContext);
+
+	updateTransform();
 }
 
 void Vehicle::applyInput(const Command& cmd)
@@ -117,13 +119,12 @@ void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName)
 	readEngineDrivetrainParamsFromJsonFile(mVehicleDataPath, vehicleDataFileName, mVehicle.mEngineDriveParams);
 }
 
-Transform Vehicle::getTransform() {
-	Transform t;
+void Vehicle::updateTransform() {
+	
 	PxVec3 Ep = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
 	PxQuat Eq = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
 	glm::vec3 glmPos = glm::vec3(Ep.x, Ep.y, Ep.z);
-	glm::vec3 glmRot = glm::vec3(Eq.x, Eq.y, Eq.z);
-	t.pos = glmPos;
-	t.rot = glmRot;
-	return t;
+	glm::quat glmRot = glm::vec3(Eq.x, Eq.y, Eq.z);
+	transform.pos = glmPos;
+	transform.rot = glmRot;
 }

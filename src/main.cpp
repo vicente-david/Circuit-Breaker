@@ -51,6 +51,7 @@ int main()
 	{
 		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
 	}
+	gameState.addEntity("Spark", PhysType::Spark, &cube, &car1.transform);
 
 
 	glEnable(GL_BLEND);
@@ -60,7 +61,7 @@ int main()
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-	auto tr = car1.getTransform();
+	
 
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -78,9 +79,9 @@ int main()
 		gameActions = inputSystem.getActions();
 		c1.updateCamera(gameActions, accumulator);
 
-		std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z << "\nRot: "
+		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z << "\nRot: "
 			<< tr.rot.x << ' ' << tr.rot.y << ' ' << tr.rot.z << '\n'
-			<< std::endl;
+			<< std::endl;*/
 
 		// physics
 		while (accumulator >= dt) {
@@ -90,7 +91,6 @@ int main()
 			t += dt;
 		}
 		
-		tr = car1.getTransform();
 
 		if (t >= 1.0) {
 			fps = std::to_string(static_cast<int>(std::round(framesPassed / t)));

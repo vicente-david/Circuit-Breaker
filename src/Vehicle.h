@@ -35,8 +35,7 @@ public:
 
 	void applyInput(const Command& cmd);
 	void changeEngineDriveParams(const char* vehicleDataPath);
-	Transform getTransform();
-
+	
 	PhysicsSystem& mPhysics;
 
 	EngineDriveVehicle mVehicle;
@@ -48,4 +47,8 @@ public:
 
 	const char* mVehicleDataPath = NULL;
 	const char* mVehicleName = "unnamed_vehicle";
+	Transform transform;
+
+private:
+	void updateTransform();
 };
