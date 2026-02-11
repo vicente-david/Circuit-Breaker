@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "Camera.h"
 #include "Vehicle.h"
+#include "Entity.h"
 
 int main()
 {
@@ -44,16 +45,11 @@ int main()
 	// Create cube object
 	Model cube("assets/cube.obj");
 	
-	// --Placeholder code--
-	std::vector<Entity> entityList;
-	entityList.reserve(465);
-
+	// --Placeholder code: Add cubes to game state entityList
+	gameState.entityList.reserve(465);
 	for (int i = 0; i < 465; i++)
 	{
-		entityList.emplace_back();
-		entityList.back().name = "perro cube";
-		entityList.back().transform = physicsSys.transformList[i];
-		entityList.back().model = &cube;
+		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
 	}
 
 
@@ -78,14 +74,13 @@ int main()
 
 
 		// input
-
 		gameActions = inputSystem.getActions();
 		c1.updateCamera(gameActions, accumulator);
 
 		// physics
 		while (accumulator >= dt) {
 			car1.step(dt);
-			physicsSys.updatePhysics(dt, entityList);
+			physicsSys.updatePhysics(dt, gameState.entityList);
 			accumulator -= dt;
 			t += dt;
 		}
@@ -97,7 +92,7 @@ int main()
 		}
 		
 		// rendering
-		renderer->update(entityList, fps, c1);
+		renderer->update(gameState.entityList, fps, c1);
 
 
 	}
