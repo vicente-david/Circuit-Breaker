@@ -43,11 +43,16 @@ void Mesh::initMesh() {
 }
 
 void Mesh::Draw() {
+	glActiveTexture(GL_TEXTURE0);
 	if (textures.size() > 0) {
 		glBindTexture(GL_TEXTURE_2D, textures[0].id);
-
+		//glUniform1i(glGetUniformLocation())
+	}
+	else {
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+	
 }
 

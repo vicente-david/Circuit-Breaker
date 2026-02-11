@@ -42,9 +42,10 @@ int main()
 
 	renderer->initializeText();
 
-	// Create cube object
+	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
+	Model track("assets/testTrack.obj");
 	// --Placeholder code: Add cubes to game state entityList
 	gameState.entityList.reserve(465);
 	for (int i = 0; i < 465; i++)
@@ -52,6 +53,9 @@ int main()
 		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
 	}
 	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
+
+	Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
+	gameState.addEntity("Track", PhysType::StaticMesh, &track, &none);
 
 
 	glEnable(GL_BLEND);
