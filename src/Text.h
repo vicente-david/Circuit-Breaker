@@ -1,6 +1,6 @@
+#include <glad/gl.h>
 #include<glm/glm.hpp>
 #include <map>
-#include <glad/gl.h>
 #include "ShaderProgram.h"
 
 struct Character {
