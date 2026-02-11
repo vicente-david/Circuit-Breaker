@@ -3,18 +3,21 @@
 #include <cmath>
 #include <cstdarg>
 #include <cstdio>
-#include <fstream>
-#include <ios>
+#include <set>
 #include <string>
 
 namespace dbug {
-bool print = true;
-int minSeverity = 1;
-std::string path = "debugLog.txt";
+bool printLogs = true;
+int minLogSeverity = 1;
+std::string logPath = "debugLog.txt";
 float startTime;
+std::set<std::string> ignoreTypes;
 
-static void appendLog(int lev, std::string str, va_list args) {
-	FILE *file = fopen(path.c_str(), "a");
+IgnoreType logIgnoreType = BLACK_LIST;
+
+static void appendLog(std::string type, int lev, std::string str,
+					  va_list args) {
+	FILE *file = fopen(logPath.c_str(), "a");
 
 	if (file == NULL) {
 		fprintf(stderr, "Err: Loging file couldn't be opened\n");
@@ -22,38 +25,57 @@ static void appendLog(int lev, std::string str, va_list args) {
 	}
 
 	double t = glfwGetTime();
-	fprintf(file, "(Lev: %d) [%6f]: ", lev, t);
+	fprintf(file, "%s (Lev: %d) [%6f]: ", type.c_str(), lev, t);
 	vfprintf(file, (str + "\n").c_str(), args);
 	fclose(file);
 }
 
-
+void logIgnore(std::string type) {
+	ignoreTypes.emplace(type);
+}
 void loggerInit() {
 	startTime = glfwGetTime();
-	remove(path.c_str());
+	remove(logPath.c_str());
 
 	log(0, " --== Starting Logging ==--");
 }
 
-
-void log(int level, std::string str, ...) {
-	if (level < minSeverity) {
+void vlog(std::string type, int level, std::string str, va_list args) {
+	if (level < minLogSeverity) {
 		return;
 	}
 
-	va_list args;
-	va_start(args, str);
+	if ((ignoreTypes.count(type) == 0) == logIgnoreType) {
+		return;
+	}
 
-	// str += "\n";
-	if (print) {
+	if (printLogs) {
 		va_list printArgs;
 		va_copy(printArgs, args);
-		std::vprintf(str.c_str(), printArgs);
+		std::vprintf((type+": "+str).c_str(), printArgs);
 		std::printf("\n");
 		va_end(printArgs);
 	}
 
-	appendLog(level, str, args);
+	appendLog(type, level, str, args);
+	va_end(args);
+}
+void log(std::string type, int level, std::string str, ...) {
+	va_list args;
+	va_start(args, str);
+	vlog(type, level, str, args);
+	va_end(args);
+}
+void log(int level, std::string str, ...) {
+	va_list args;
+	va_start(args, str);
+	vlog("GEN", level, str, args);
+	va_end(args);
+}
+void logd(std::string str, ...) {
+	va_list args;
+	va_start(args, str);
+	vlog("GEN", 0, str, args);
 	va_end(args);
 }
 

@@ -15,12 +15,16 @@
 
 int main()
 {
-	dbug::minSeverity = 0;
+	dbug::minLogSeverity = 0;
 	dbug::loggerInit();
 
-	dbug::log(0, "creating render system");
+	// uncomment/modify these to change what types of logs you want to see
+	// dbug::logIgnore("TEST");
+	// dbug::logIgnoreType = dbug::WHITE_LIST;
+
+	dbug::log("REND", 0, "creating render system");
 	auto renderer = std::make_unique<RenderingSystem>();	
-	dbug::log(0, "creating physics system");
+	dbug::log("PHYS", 0, "creating physics system");
 	PhysicsSystem physicsSys;
 	GameState gameState;
 
@@ -29,6 +33,7 @@ int main()
 	car1.init();
 	car1.changeEngineDriveParams("TestDrive.json");
 
+	dbug::log(0, "initializing input");
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
 
@@ -45,13 +50,13 @@ int main()
 	double accumulator = 0.0;
 
 
-	dbug::log(0, "initializing shaders");
+	dbug::log("REND", 0, "initializing shaders");
 	renderer->initializeShaders(); // Create shader programs
 
 	renderer->initializeText();
 
 	// Create cube object
-	dbug::log(0, "loading models");
+	dbug::log("REND", 0, "loading models");
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
 	// --Placeholder code: Add cubes to game state entityList
@@ -73,6 +78,7 @@ int main()
 	
 
 	// RENDER LOOP
+	dbug::log(0, "starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
 
 		// time
