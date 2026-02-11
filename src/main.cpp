@@ -79,6 +79,7 @@ int main()
 		gameActions = inputSystem.getActions();
 		car1.applyInput(gameActions);
 		// c1.updateCamera(gameActions, accumulator);
+		c1.updateCamera(car1.transform.pos);
 
 		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z << "\nRot: "
 			<< tr.rot.x << ' ' << tr.rot.y << ' ' << tr.rot.z << '\n'

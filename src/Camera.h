@@ -46,7 +46,7 @@ public:
 		updateCameraVectors();
 	}
 
-	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+	Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
 		Position = position;
 		WorldUp = up;
@@ -57,7 +57,7 @@ public:
 
 	glm::mat4 GetViewMatrix()
 	{
-		return glm::lookAt(Position, Position + Front, Up);
+		return glm::lookAt(Position, Front, Up);
 	}
 
 	// processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -114,6 +114,13 @@ public:
 		}
 	}
 
+	void updateCamera(glm::vec3 targetPos) {
+		Position.x = targetPos.x;
+		Position.y = targetPos.y + 5.0f;
+		Position.z = targetPos.z - 5.0f;
+		updateCameraVectors(targetPos);
+	}
+
 private:
 	// calculates the front vector from the Camera's (updated) Euler Angles
 	void updateCameraVectors()
@@ -123,6 +130,13 @@ private:
 		front.x = cos(glm::radians(Yaw)) * cos(glm::radians(Pitch));
 		front.y = sin(glm::radians(Pitch));
 		front.z = sin(glm::radians(Yaw)) * cos(glm::radians(Pitch));
+		Front = glm::normalize(front);
+		// also re-calculate the Right and Up vector
+		Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
+		Up = glm::normalize(glm::cross(Right, Front));
+	}
+	
+	void updateCameraVectors(glm::vec3 front) {
 		Front = glm::normalize(front);
 		// also re-calculate the Right and Up vector
 		Right = glm::normalize(glm::cross(Front, WorldUp));  // normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
