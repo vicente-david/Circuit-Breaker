@@ -32,6 +32,10 @@ file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 #copy shaders
 file (COPY ${PROJECT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
 
+# ASSIMP
+add_subdirectory(dependencies/assimp)
+set(LIBRARIES ${LIBRARIES} assimp)
+
 #free type
 add_subdirectory(dependencies/freetype) 
 set(LIBRARIES ${LIBRARIES} freetype)
