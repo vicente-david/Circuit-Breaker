@@ -1,4 +1,5 @@
 #include <iostream>
+#include "debugUtils/Logger.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
@@ -14,10 +15,16 @@
 
 int main()
 {
+	dbug::minSeverity = 0;
+	dbug::loggerInit();
+
+	dbug::log(0, "creating render system");
 	auto renderer = std::make_unique<RenderingSystem>();	
+	dbug::log(0, "creating physics system");
 	PhysicsSystem physicsSys;
 	GameState gameState;
 
+	dbug::log(0, "creating vehicle");
 	Vehicle car1(physicsSys);
 	car1.init();
 	car1.changeEngineDriveParams("TestDrive.json");
@@ -38,11 +45,13 @@ int main()
 	double accumulator = 0.0;
 
 
+	dbug::log(0, "initializing shaders");
 	renderer->initializeShaders(); // Create shader programs
 
 	renderer->initializeText();
 
 	// Create cube object
+	dbug::log(0, "loading models");
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
 	// --Placeholder code: Add cubes to game state entityList
