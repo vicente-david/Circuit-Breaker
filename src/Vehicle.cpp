@@ -106,15 +106,19 @@ void Vehicle::step(double dt)
 
 void Vehicle::applyInput(Actions& actions)
 {
-	auto& mCmd = mVehicle.mCommandState;
-	// mCmd.brakes[0] = cmd.brake;
-	// mCmd.brakes = actions.moveBackward;
-	mCmd.throttle = actions.moveForward;
-	// mCmd.steer = cmd.steer;
+	mVehicle.mCommandState.brakes[0] = actions.moveBackward;
+	mVehicle.mCommandState.nbBrakes = 1;
+	mVehicle.mCommandState.throttle = actions.moveForward;
+	mVehicle.mCommandState.steer = actions.xRotation;
 
-	mCmd.steer = actions.xRotation;
-	// mCmd.steer = actions.xRotation;
-	// mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
+	//// mCmd.brakes[0] = cmd.brake;
+	//// mCmd.brakes = actions.moveBackward;
+	//mCmd.throttle = actions.moveForward;
+	//// mCmd.steer = cmd.steer;
+
+	//mCmd.steer = actions.xRotation;
+	//// mCmd.steer = actions.xRotation;
+	//// mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
 }
 
 void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName) 
@@ -125,10 +129,8 @@ void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName)
 
 void Vehicle::updateTransform() {
 	
-	PxVec3 Ep = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
-	PxQuat Eq = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
-	glm::vec3 glmPos = glm::vec3(Ep.x, Ep.y, Ep.z);
-	glm::quat glmRot = glm::vec3(Eq.x, Eq.y, Eq.z);
-	transform.pos = glmPos;
-	transform.rot = glmRot;
+	PxVec3 p = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
+	PxQuat q = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
+	vehicleTransform.pos = glm::vec3(p.x, p.y, p.z);
+	vehicleTransform.rot = glm::quat(q.x, q.y, q.z, q.w);
 }
