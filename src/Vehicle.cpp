@@ -111,6 +111,8 @@ void Vehicle::applyInput(Actions& actions)
 	mVehicle.mCommandState.throttle = actions.moveForward;
 	mVehicle.mCommandState.steer = actions.xRotation;
 	if (actions.boost) Boost();
+	if (actions.shimmyRight) Shimmy(true);
+	if (actions.shimmyLeft) Shimmy(false);
 
 	//// mCmd.brakes[0] = cmd.brake;
 	//// mCmd.brakes = actions.moveBackward;
@@ -140,4 +142,11 @@ void Vehicle::Boost() {
 	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
 	float boostStrength = 50.f;
 	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+}
+
+void Vehicle::Shimmy(bool rightDir) {
+	PxVec3 direction = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector0();
+	if (rightDir) direction = -direction;
+	float shimmyForce = 10.f;
+	mVehicle.mPhysXState.physxActor.rigidBody->addForce(direction * shimmyForce, PxForceMode::eVELOCITY_CHANGE);
 }

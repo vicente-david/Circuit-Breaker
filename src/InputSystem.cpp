@@ -39,6 +39,20 @@ class TestInput1 : public CallbackInterface {
 		else if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
 			actions->boost = false;
 		}
+
+		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+			actions->shimmyRight = true;
+		}
+		else if (key == GLFW_KEY_L && action == GLFW_RELEASE) {
+			actions->shimmyRight = false;
+		}
+
+		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
+			actions->shimmyLeft = true;
+		}
+		else if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
+			actions->shimmyLeft = false;
+		}
 	}
 
 	void mouseButtonCallback(int button, int action, int mods) {
@@ -128,7 +142,11 @@ void InputSystem::combineInputs() {
 
 	if (actions.keyboardRight) actions.xRotation = -1.f;
 	if (actions.keyboardLeft) actions.xRotation = 1.f;
+
+	// Signal action
 	if (actions.boost) std::cout << "BOOST!" << std::endl;
+	if (actions.shimmyRight) std::cout << "Slide to right!" << std::endl;
+	if (actions.shimmyLeft) std::cout << "Sliiiiiiiide to left!" << std::endl;
 
 }
 

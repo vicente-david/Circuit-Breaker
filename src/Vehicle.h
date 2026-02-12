@@ -38,6 +38,7 @@ public:
 	void applyInput(Actions& actions);
 	void changeEngineDriveParams(const char* vehicleDataPath);
 	void Boost();
+	void Shimmy(bool rightDir);
 
 	PhysicsSystem& mPhysics;
 

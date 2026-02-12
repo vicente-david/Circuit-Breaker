@@ -38,6 +38,8 @@ struct Actions {
 	float yRotation = 0.0;
 
 	bool boost = false;
+	bool shimmyRight = false;
+	bool shimmyLeft = false;
 };
 
 
