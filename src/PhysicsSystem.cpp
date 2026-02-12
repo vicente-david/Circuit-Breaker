@@ -126,7 +126,8 @@ PxTriangleMesh* PhysicsSystem::cookTriangleMesh(Mesh mesh) {
 void PhysicsSystem::initStaticMesh(Mesh mesh, Transform transform) {
 	PxTriangleMesh* triangleMesh = cookTriangleMesh(mesh);
 
-	PxTriangleMeshGeometry triGeom(triangleMesh);
+	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
+	PxTriangleMeshGeometry triGeom(triangleMesh,scale, PxMeshGeometryFlag::eTIGHT_BOUNDS);
 	
 	PxShape* aiTriMeshShape = gPhysics->createShape(triGeom, *gMaterial);
 	PxRigidStatic* actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
