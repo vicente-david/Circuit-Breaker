@@ -129,11 +129,14 @@ void PhysicsSystem::initStaticMesh(Mesh mesh, Transform transform) {
 	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
 	PxTriangleMeshGeometry triGeom(triangleMesh,scale, PxMeshGeometryFlag::eTIGHT_BOUNDS);
 	
-	PxShape* aiTriMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+	PxShape* triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
 	PxRigidStatic* actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
-	actor->attachShape(*aiTriMeshShape);
+	actor->attachShape(*triMeshShape);
+	triMeshShape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+	triMeshShape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+	triMeshShape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
 	gScene->addActor(*actor);
-	aiTriMeshShape->release();
+	triMeshShape->release();
 
 }
 
