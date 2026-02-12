@@ -100,7 +100,7 @@ int main()
 		}
 		
 		// c1.updateCamera(gameActions, accumulator);
-		c1.updateCamera(car1.transform.pos);
+		c1.updateCamera(car1.transform.pos, car1.transform.forwardD);
 
 		// rendering
 		renderer->update(gameState.entityList, fps, c1);

@@ -127,8 +127,10 @@ void Vehicle::updateTransform() {
 	
 	PxVec3 Ep = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
 	PxQuat Eq = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
+	PxVec3 B3 = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
 	glm::vec3 glmPos = glm::vec3(Ep.x, Ep.y, Ep.z);
 	glm::quat glmRot = glm::vec3(Eq.x, Eq.y, Eq.z);
 	transform.pos = glmPos;
 	transform.rot = glmRot;
+	transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
 }

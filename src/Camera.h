@@ -118,11 +118,27 @@ public:
 		}
 	}
 
-	void updateCamera(glm::vec3 targetPos) {
-		Position.x = targetPos.x;
-		Position.y = targetPos.y + 0.5f;
-		Position.z = targetPos.z - 2.0f;
-		updateCameraVectors(targetPos-Position);
+	void updateCamera(glm::vec3 targetPos, glm::vec3 forwardD) {
+		float followingDistance = 3.0f;
+		glm::vec3 cameraHeight = glm::vec3(0.0f, 0.5f, 0.0f);
+
+	
+		// front is where the camera is facing
+		// front + position is where the camera is looking
+
+		// we want the camera front and the car front to be the same
+		// great that is easy, make the front vector of the camera the front vector of the car
+
+		// but where does the camera go now?
+		// well it would go behind the car in the direction opposite to front
+		// in otherwords cameraPos = targetPos + (-forwardD)
+		// since forwardD is a unit vector, this will make it go directly 1 unit behind the car
+		// we can add a following distance d
+		// and then add our height
+		Position = targetPos - forwardD * followingDistance + cameraHeight;
+
+		
+		updateCameraVectors(forwardD);
 	}
 
 private:
