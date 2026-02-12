@@ -105,7 +105,7 @@ void RenderingSystem::update(std::vector<Entity> entities, std::string fps, Came
 	}
 	// render text
 	textProg->use();
-	RenderText(*textProg, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), textFont);
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), textFont);
 
 	glfwPollEvents();
 	glfwSwapBuffers(window);

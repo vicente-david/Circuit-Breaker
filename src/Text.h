@@ -12,4 +12,4 @@ struct Character {
 
 std::map<char, Character> initFont(const char* font);
 
-void RenderText(ShaderProgram& s, unsigned int VAO, unsigned int VBO, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character> Characters);
+void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character> Characters);
