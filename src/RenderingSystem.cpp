@@ -100,7 +100,7 @@ void RenderingSystem::update(std::vector<Entity> entities, std::string fps, Came
 		unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelTransform));
 		
-		model.Draw();
+		model.Draw(basicShader->id);
 		
 	}
 	// render text

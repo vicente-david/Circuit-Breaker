@@ -7,13 +7,14 @@
 #include <string>
 #include <memory>
 
+
 class Model {
 
 public:
 	Model(char* path) {
 		loadModel(path);
 	}
-	void Draw();
+	void Draw(GLuint& shaderID);
 private:
 	std::vector<Mesh> meshes;
 	std::string directory;

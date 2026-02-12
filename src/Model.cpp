@@ -1,9 +1,10 @@
 #include "Model.h"
 #include <iostream>
 
-void Model::Draw() {
+
+void Model::Draw(GLuint& shaderID) {
 	for (unsigned int i = 0; i < meshes.size(); i++) {
-		meshes[i].Draw();
+		meshes[i].Draw(shaderID);
 	}
 }
 

@@ -1,7 +1,6 @@
 #include "Mesh.h"
 #include "Texture.h"
 #include <iostream>
-#include <glad/gl.h>
 
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) {
@@ -42,14 +41,16 @@ void Mesh::initMesh() {
 	this->VBO = VBO;
 }
 
-void Mesh::Draw() {
+void Mesh::Draw(GLuint& shaderID) {
 	glActiveTexture(GL_TEXTURE0);
 	if (textures.size() > 0) {
 		glBindTexture(GL_TEXTURE_2D, textures[0].id);
-		//glUniform1i(glGetUniformLocation())
+		glUniform1i(glGetUniformLocation(shaderID, "hasTex"), 1);
 	}
 	else {
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glUniform1i(glGetUniformLocation(shaderID, "hasTex"), 0);
+
 	}
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
