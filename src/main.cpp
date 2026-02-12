@@ -45,14 +45,14 @@ int main()
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model track("assets/testTrack.obj"); // temporary track model
+	Model track("assets/plane.obj"); // temporary track model
 
 	// --Placeholder code: Add cubes to game state entityList
 	gameState.entityList.reserve(465);
-	for (int i = 0; i < 465; i++)
+	/*for (int i = 0; i < 465; i++)
 	{
 		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
-	}
+	}*/
 	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
 
 	Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
