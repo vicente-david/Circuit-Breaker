@@ -5,14 +5,14 @@
 class TestInput1 : public CallbackInterface {
 
 	void keyCallback(int key, int scancode, int action, int mods) {
-		if (key == GLFW_KEY_W && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 			actions->keyboardForward = true;
 		}
 		else if(key == GLFW_KEY_W && action == GLFW_RELEASE) {
 			actions->keyboardForward = false;
 		}
 
-		if (key == GLFW_KEY_S && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
+		if (key == GLFW_KEY_S && action == GLFW_PRESS) {
 			actions->keyboardBackward = true;
 		}
 		else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
@@ -52,6 +52,40 @@ class TestInput1 : public CallbackInterface {
 		}
 
 
+		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+			actions->keyboardRight = true;
+		}
+		else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+			actions->keyboardRight = false;
+		}
+
+		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+			actions->keyboardLeft = true;
+		}
+		else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+			actions->keyboardLeft = false;
+		}
+
+		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+			actions->boost = true;
+		}
+		else if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
+			actions->boost = false;
+		}
+
+		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+			actions->shimmyRight = true;
+		}
+		else if (key == GLFW_KEY_L && action == GLFW_RELEASE) {
+			actions->shimmyRight = false;
+		}
+
+		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
+			actions->shimmyLeft = true;
+		}
+		else if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
+			actions->shimmyLeft = false;
+		}
 	}
 
 	void mouseButtonCallback(int button, int action, int mods) {
@@ -151,6 +185,14 @@ void InputSystem::combineInputs() {
 		actions.moveBackward = glm::clamp((actions.keyboardBackward + (float)actions.controllerBackward), 0.0f, 1.0f);
 	}
 
+	if (actions.keyboardRight) actions.xRotation = -1.f;
+	if (actions.keyboardLeft) actions.xRotation = 1.f;
+
+	// Signal action
+	if (actions.boost) std::cout << "BOOST!" << std::endl;
+	if (actions.shimmyRight) std::cout << "Slide to right!" << std::endl;
+	if (actions.shimmyLeft) std::cout << "Sliiiiiiiide to left!" << std::endl;
+
 }
 
 void InputSystem::updateGamepad() {
@@ -163,6 +205,7 @@ void InputSystem::updateGamepad() {
 	float righty = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
 	float leftx = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
 	float lefty = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
 	
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
@@ -196,6 +239,7 @@ void InputSystem::updateGamepad() {
 	else if (abs(rightx) < strickTriggerThreshold)
 		actions.controllerXRot = 0.0;
 
+	if (!actions.boost) actions.boost = button_A;
 
 }
 

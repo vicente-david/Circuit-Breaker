@@ -14,14 +14,15 @@ using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-struct Command
-{
-	PxF32 brake;
-	PxF32 throttle;
-	PxF32 steer;
-	PxU32 gear;
-	// add more when needed
-};
+//struct Command
+//{
+//	PxF32 brake;
+//	PxF32 throttle;
+//	PxF32 steer;
+//	PxU32 gear;
+//	bool boost;
+//	// add more when needed
+//};
 
 
 class Vehicle
@@ -36,7 +37,9 @@ public:
 
 	void applyInput(Actions& actions);
 	void changeEngineDriveParams(const char* vehicleDataPath);
-	
+	void Boost();
+	void Shimmy(bool rightDir);
+
 	PhysicsSystem& mPhysics;
 
 	EngineDriveVehicle mVehicle;
@@ -48,7 +51,7 @@ public:
 
 	const char* mVehicleDataPath = NULL;
 	const char* mVehicleName = "unnamed_vehicle";
-	Transform transform;
+	Transform vehicleTransform;
 
 private:
 	void updateTransform();
