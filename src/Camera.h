@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "InputSystem.h"
+#include <iostream>
 
 
 
@@ -36,6 +37,8 @@ public:
 	float MovementSpeed;
 	float MouseSensitivity;
 	float Zoom;
+
+	double idleTime;
 
 	Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 	{
@@ -118,11 +121,58 @@ public:
 		}
 	}
 
-	void updateCamera(glm::vec3 targetPos) {
-		Position.x = targetPos.x;
-		Position.y = targetPos.y + 0.5f;
-		Position.z = targetPos.z - 2.0f;
-		updateCameraVectors(targetPos-Position);
+	void updateCamera(glm::vec3 targetPos, glm::vec3 forwardD, float camXRot, double t, bool cameraReset) {
+		float followingDistance = 3.0f;
+		glm::vec3 cameraHeight = glm::vec3(0.0f, 0.5f, 0.0f);
+
+		// front is where the camera is facing
+		// front + position is where the camera is looking
+
+		// we want the camera front and the car front to be the same
+		// great that is easy, make the front vector of the camera the front vector of the car
+
+		// but where does the camera go now?
+		// well it would go behind the car in the direction opposite to front
+		// in otherwords cameraPos = targetPos + (-forwardD)
+		// since forwardD is a unit vector, this will make it go directly 1 unit behind the car
+		// we can add a following distance d
+		// and then add our height
+
+		Yaw += camXRot*100*t;
+		Yaw = glm::clamp(Yaw, -89.0f, 89.0f);
+
+
+		// if camera reset setting is toggled on
+		if (cameraReset) {
+			// if camera is not moving
+			if (camXRot == 0.0f) {
+				// increment idle time
+				idleTime += t;
+				// if idle time exceeds two seconds
+				if (idleTime > 2.0f) {
+					// smoothly bring it back
+					Yaw = glm::mix(Yaw, 0.0f, t);
+
+					// if less than 0.5 degrees, it's pretty much 0
+					if (glm::abs(Yaw) < 0.5f) Yaw = 0.0;
+				}
+			}
+			else {
+				// if camera is moving reset idle time to 0
+				idleTime = 0.0;
+			}
+		}
+		
+
+	
+
+		glm::vec3 newForward = glm::vec4(forwardD, 0.0f)*glm::rotate(glm::mat4(1.0f), glm::radians(Yaw), WorldUp);
+
+		Position = targetPos - newForward * followingDistance + cameraHeight;
+
+		
+		
+		updateCameraVectors(newForward);
 	}
 
 private:
