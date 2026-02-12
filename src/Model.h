@@ -15,6 +15,7 @@ public:
 		loadModel(path);
 	}
 	void Draw(GLuint& shaderID);
+	std::vector<Mesh> GetMesh();
 private:
 	std::vector<Mesh> meshes;
 	std::string directory;

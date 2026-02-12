@@ -8,6 +8,10 @@ void Model::Draw(GLuint& shaderID) {
 	}
 }
 
+std::vector<Mesh> Model::GetMesh() {
+	return meshes;
+}
+
 void Model::loadModel(std::string path) {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
