@@ -28,6 +28,8 @@ struct Actions {
 
 	bool keyboardForward = false; 
 	bool keyboardBackward = false;
+	bool keyboardRight = false;
+	bool keyboardLeft = false;
 
 	float controllerForward = 0.0;
 	float controllerBackward = 0.0;
