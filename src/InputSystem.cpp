@@ -19,20 +19,6 @@ class TestInput1 : public CallbackInterface {
 			actions->keyboardBackward = false;
 		}
 
-		if (key == GLFW_KEY_A && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			actions->kbxrot = 1.0;
-		}
-		else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-			actions->kbxrot = 0.0;
-		}
-
-		if (key == GLFW_KEY_D && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			actions->kbxrot = -1.0;
-		}
-		else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-			actions->kbxrot = 0.0;
-		}
-
 		if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
 			actions->keyboardXRot = -1.0;
 		}
@@ -53,17 +39,17 @@ class TestInput1 : public CallbackInterface {
 
 
 		if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-			actions->keyboardRight = true;
+			actions->keyboardDir = -1.0;
 		}
 		else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-			actions->keyboardRight = false;
+			actions->keyboardDir = 0.0;
 		}
 
 		if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-			actions->keyboardLeft = true;
+			actions->keyboardDir = 1.0;
 		}
 		else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-			actions->keyboardLeft = false;
+			actions->keyboardDir = 0.0;
 		}
 
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
@@ -167,15 +153,21 @@ void InputSystem::combineInputs() {
 	actions.camXRot = 0.0;
 	actions.xRotation = 0.0;
 
+
+	// camera
 	if (glm::abs(actions.controllerXRot) > glm::abs(actions.keyboardXRot))
 		actions.camXRot = actions.controllerXRot;
 	else
 		actions.camXRot = actions.keyboardXRot;
 
-	if (glm::abs(actions.cxrot) > glm::abs(actions.kbxrot))
-		actions.xRotation = actions.cxrot;
+
+	// steering
+	if (glm::abs(actions.controllerDir) > glm::abs(actions.keyboardDir))
+		actions.xRotation = actions.controllerDir;
 	else
-		actions.xRotation = actions.kbxrot;
+		actions.xRotation = actions.keyboardDir;
+	
+
 
 	if (actions.keyboardForward || actions.controllerForward) {
 		actions.moveForward = glm::clamp((actions.keyboardForward+(float)actions.controllerForward), 0.0f, 1.0f);
@@ -184,9 +176,6 @@ void InputSystem::combineInputs() {
 	if (actions.keyboardBackward || actions.controllerBackward) {
 		actions.moveBackward = glm::clamp((actions.keyboardBackward + (float)actions.controllerBackward), 0.0f, 1.0f);
 	}
-
-	if (actions.keyboardRight) actions.xRotation = -1.f;
-	if (actions.keyboardLeft) actions.xRotation = 1.f;
 
 	// Signal action
 	if (actions.boost) std::cout << "BOOST!" << std::endl;
@@ -221,18 +210,12 @@ void InputSystem::updateGamepad() {
 	}
 
 	if (glm::abs(leftx) >= strickTriggerThreshold) {
-		actions.cxrot = -leftx;
+		actions.controllerDir = -leftx;
 	}
 	else if (abs(leftx) < strickTriggerThreshold) {
-		actions.cxrot = 0.0;
+		actions.controllerDir = 0.0;
 	}
 
-	if (glm::abs(righty) >= strickTriggerThreshold) {
-		actions.yRotation = righty;
-	}
-	else if (abs(righty) < strickTriggerThreshold) {
-		actions.yRotation = 0.0;
-	}
 
 	if (glm::abs(rightx) >= strickTriggerThreshold)
 		actions.controllerXRot = rightx;
