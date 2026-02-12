@@ -134,9 +134,9 @@ void Vehicle::updateTransform() {
 	PxVec3 p = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
 	PxQuat q = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
 	PxVec3 B3 = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-	vehicleTransform.pos = glm::vec3(p.x, p.y, p.z);
-	vehicleTransform.rot = glm::quat(q.x, q.y, q.z, q.w);
-	vehicleTransform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
+	transform.pos = glm::vec3(p.x, p.y, p.z);
+	transform.rot = glm::quat(q.x, q.y, q.z, q.w);
+	transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
 }
 
 void Vehicle::Boost() {

@@ -141,7 +141,7 @@ public:
 		Yaw += camXRot*100*t;
 		Yaw = glm::clamp(Yaw, -89.0f, 89.0f);
 
-
+		
 		// if camera reset setting is toggled on
 		if (cameraReset) {
 			// if camera is not moving
