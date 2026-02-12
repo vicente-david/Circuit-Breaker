@@ -35,7 +35,7 @@ bool Vehicle::init()
 	}
 
 	//Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(0.000000000f, -0.0500000119f, -10.59399998f), PxQuat(PxIdentity));
+	PxTransform startPose(PxVec3(0.000000000f, -0.0500000119f, -50.59399998f), PxQuat(PxIdentity));
 	mVehicle.setUpActor(*mPhysics.gScene, startPose, mVehicleName);
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
@@ -110,6 +110,7 @@ void Vehicle::applyInput(Actions& actions)
 	mVehicle.mCommandState.nbBrakes = 1;
 	mVehicle.mCommandState.throttle = actions.moveForward;
 	mVehicle.mCommandState.steer = actions.xRotation;
+	if (actions.boost) Boost();
 
 	//// mCmd.brakes[0] = cmd.brake;
 	//// mCmd.brakes = actions.moveBackward;
@@ -133,4 +134,10 @@ void Vehicle::updateTransform() {
 	PxQuat q = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
 	vehicleTransform.pos = glm::vec3(p.x, p.y, p.z);
 	vehicleTransform.rot = glm::quat(q.x, q.y, q.z, q.w);
+}
+
+void Vehicle::Boost() {
+	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
+	float boostStrength = 50.f;
+	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
 }

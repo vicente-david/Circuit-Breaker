@@ -36,6 +36,8 @@ struct Actions {
 
 	float xRotation = 0.0;
 	float yRotation = 0.0;
+
+	bool boost = false;
 };
 
 

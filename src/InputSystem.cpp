@@ -128,6 +128,7 @@ void InputSystem::combineInputs() {
 
 	if (actions.keyboardRight) actions.xRotation = -1.f;
 	if (actions.keyboardLeft) actions.xRotation = 1.f;
+	if (actions.boost) std::cout << "BOOST!" << std::endl;
 
 }
 
@@ -138,7 +139,8 @@ void InputSystem::updateGamepad() {
 	float rightTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	float leftTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
 	float rightx = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
-	float righty = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];;
+	float righty = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
+	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
 	
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
@@ -167,6 +169,7 @@ void InputSystem::updateGamepad() {
 		actions.yRotation = 0.0;
 	}
 
+	actions.boost = button_A;
 
 }
 

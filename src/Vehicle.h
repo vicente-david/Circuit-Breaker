@@ -37,7 +37,8 @@ public:
 
 	void applyInput(Actions& actions);
 	void changeEngineDriveParams(const char* vehicleDataPath);
-	
+	void Boost();
+
 	PhysicsSystem& mPhysics;
 
 	EngineDriveVehicle mVehicle;
