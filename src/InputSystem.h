@@ -34,6 +34,17 @@ struct Actions {
 
 	float xRotation = 0.0;
 	float yRotation = 0.0;
+
+	float kbxrot = 0.0;
+	float cxrot = 0.0;
+
+	float camXRot = 0.0;
+	float camYRot = 0.0;
+
+	float keyboardXRot = 0.0;
+	float controllerXRot = 0.0;
+
+	float cameraReset = true;
 };
 
 
