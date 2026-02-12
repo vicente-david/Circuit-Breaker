@@ -34,14 +34,14 @@ class TestInput1 : public CallbackInterface {
 		}
 
 		if (key == GLFW_KEY_Q && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			actions->keyboardXRot = 1.0;
+			actions->keyboardXRot = -1.0;
 		}
 		else if (key == GLFW_KEY_Q && action == GLFW_RELEASE) {
 			actions->keyboardXRot = 0.0;
 		}
 
 		if (key == GLFW_KEY_E && (action == GLFW_PRESS || action == GLFW_REPEAT)) {
-			actions->keyboardXRot = -1.0;
+			actions->keyboardXRot = 1.0;
 		}
 		else if (key == GLFW_KEY_E && action == GLFW_RELEASE) {
 			actions->keyboardXRot = 0.0;
