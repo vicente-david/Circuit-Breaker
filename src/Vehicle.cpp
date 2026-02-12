@@ -140,13 +140,13 @@ void Vehicle::updateTransform() {
 
 void Vehicle::Boost() {
 	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-	float boostStrength = 50.f;
+	float boostStrength = 100.f;
 	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
 }
 
 void Vehicle::Shimmy(bool rightDir) {
 	PxVec3 direction = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector0();
 	if (rightDir) direction = -direction;
-	float shimmyForce = 10.f;
-	mVehicle.mPhysXState.physxActor.rigidBody->addForce(direction * shimmyForce, PxForceMode::eVELOCITY_CHANGE);
+	float shimmyForce = 20000.f;
+	mVehicle.mPhysXState.physxActor.rigidBody->addForce(direction * shimmyForce, PxForceMode::eIMPULSE);
 }

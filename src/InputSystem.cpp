@@ -187,7 +187,7 @@ void InputSystem::updateGamepad() {
 		actions.yRotation = 0.0;
 	}
 
-	actions.boost = button_A;
+	if (!actions.boost) actions.boost = button_A;
 
 }
 
