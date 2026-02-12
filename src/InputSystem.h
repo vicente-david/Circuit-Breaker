@@ -56,6 +56,7 @@ struct Actions {
 
 	// raw input
 	float cameraReset = true;
+
 	bool boost = false;
 	bool shimmyRight = false;
 	bool shimmyLeft = false;

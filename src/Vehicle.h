@@ -51,7 +51,7 @@ public:
 
 	const char* mVehicleDataPath = NULL;
 	const char* mVehicleName = "unnamed_vehicle";
-	Transform vehicleTransform;
+	Transform transform;
 
 private:
 	void updateTransform();
