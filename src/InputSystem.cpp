@@ -130,7 +130,7 @@ void InputSystem::updateGamepad() {
 	}
 
 	if (glm::abs(rightx) >= strickTriggerThreshold) {
-		actions.xRotation = rightx;
+		actions.xRotation = -rightx;
 	}
 	else if (abs(rightx) < strickTriggerThreshold) {
 		actions.xRotation = 0.0;
