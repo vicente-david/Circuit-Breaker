@@ -51,7 +51,7 @@ int main()
 	{
 		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
 	}
-	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.vehicleTransform);
+	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
 
 
 	glEnable(GL_BLEND);

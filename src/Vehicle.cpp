@@ -132,19 +132,12 @@ void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName)
 
 void Vehicle::updateTransform() {
 	
-	PxVec3 Ep = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
-	PxQuat Eq = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
-	PxVec3 B3 = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-	glm::vec3 glmPos = glm::vec3(Ep.x, Ep.y, Ep.z);
-	glm::quat glmRot = glm::quat(Eq.w, Eq.x, Eq.y, Eq.z);
-	transform.pos = glmPos;
-	transform.rot = glmRot;
-	transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
-}
 	PxVec3 p = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
 	PxQuat q = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
-	vehicleTransform.pos = glm::vec3(p.x, p.y, p.z);
-	vehicleTransform.rot = glm::quat(q.x, q.y, q.z, q.w);
+	PxVec3 B3 = q.getBasisVector2();
+	transform.pos = glm::vec3(p.x, p.y, p.z);
+	transform.rot = glm::quat(q.x, q.y, q.z, q.w);
+	transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
 }
 
 void Vehicle::Boost() {
