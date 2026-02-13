@@ -35,8 +35,29 @@ PhysicsSystem::PhysicsSystem() // Constructor
 		}
 	}
 
+	// create 'finish line' trigger box
+	PxVec3 finishLinePosition(0.0f, 0.0f, 10.0f); // finish line position in world space
+	PxVec3 triggerLengths(255.637f, 100.0f, 1.0f); // width, height, and depth of the finish line
+	PxRigidStatic* triggerActor = gPhysics->createRigidStatic(PxTransform(finishLinePosition)); // create static rigid body for the trigger box
+
+
+	physx::PxShape* triggerRect = gPhysics->createShape(physx::PxBoxGeometry(triggerLengths), *gMaterial, true);
+
+	// set the shape as a trigger
+	triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+	triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+
+	triggerActor->attachShape(*triggerRect);
+	gScene->addActor(*triggerActor);
+	
+	PxFilterData finishLineTriggerFilterData;
+	finishLineTriggerFilterData.word0 = 99; // it detects only the player vehicle
+	triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
+
 	// Clean up
 	shape->release();
+
+	triggerRect->release();
 }
 
 void PhysicsSystem::initPhysX()

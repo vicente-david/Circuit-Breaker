@@ -39,28 +39,37 @@ using namespace physx;
 namespace snippetvehicle
 {
 
-PxFilterFlags VehicleFilterShader(
-PxFilterObjectAttributes attributes0, PxFilterData filterData0,
-PxFilterObjectAttributes attributes1, PxFilterData filterData1,
-PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
-{
-	/*PX_UNUSED(attributes0);
-	PX_UNUSED(filterData0);
-	PX_UNUSED(attributes1);
-	PX_UNUSED(filterData1);
-	PX_UNUSED(pairFlags);
-	PX_UNUSED(constantBlock);
-	PX_UNUSED(constantBlockSize);*/
-
-	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
-
-	if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
-		(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_OBSTACLE)) 
+	PxFilterFlags VehicleFilterShader(
+		PxFilterObjectAttributes attributes0, PxFilterData filterData0,
+		PxFilterObjectAttributes attributes1, PxFilterData filterData1,
+		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
 	{
-		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		/*PX_UNUSED(attributes0);
+		PX_UNUSED(filterData0);
+		PX_UNUSED(attributes1);
+		PX_UNUSED(filterData1);
+		PX_UNUSED(pairFlags);
+		PX_UNUSED(constantBlock);
+		PX_UNUSED(constantBlockSize);*/
 
-		std::cout << "Collision Detected" << std::endl;
-	}
+		pairFlags = PxPairFlag::eCONTACT_DEFAULT;
+
+		if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+			(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_OBSTACLE))
+		{
+			pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+
+			std::cout << "Collision Detected" << std::endl;
+		}
+
+		// finish line collision
+		if ((filterData0.word0 == 99 && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+			(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == 99)) 
+		{
+			pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+			std::cout << "Finish Line Crossed!" << std::endl;
+		 }
+		// done
 	
 	pairFlags |= PxPairFlags(PxU16(filterData0.word2 | filterData1.word2)); // Our enums are bitwise
 

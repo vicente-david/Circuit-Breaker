@@ -141,7 +141,7 @@ void Vehicle::updateTransform() {
 
 void Vehicle::Boost() {
 	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-	float boostStrength = 100.f;
+	float boostStrength = 10.f;
 	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
 }
 
