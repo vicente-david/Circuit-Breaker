@@ -189,7 +189,7 @@ void InputSystem::updateGamepad() {
 	float righty = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
 	float leftx = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
 	float lefty = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
-	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
+	bool button_B = controllerState.buttons[GLFW_GAMEPAD_BUTTON_B];
 	
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
@@ -218,7 +218,7 @@ void InputSystem::updateGamepad() {
 		actions.controllerXRot = 0.0;
 
 
-	if (button_A || actions.kboost)
+	if (button_B || actions.kboost)
 		actions.boost = 1;
 	else
 		actions.boost = 0;
