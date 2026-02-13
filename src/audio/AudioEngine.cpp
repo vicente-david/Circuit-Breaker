@@ -88,7 +88,7 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	auto mat = listener.viewMatrix;
 	loc = mat * loc;
 
-	float alData[3] = {loc.x, loc.y, loc.z};
+	float alData[3] = {loc.x/20, loc.y/20, loc.z/20};
 	alSourcefv(s.source, AL_POSITION, alData);
 
 	// printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);

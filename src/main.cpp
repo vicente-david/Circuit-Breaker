@@ -67,6 +67,7 @@ int main()
 	// place holder test sounds
 	Sound testSound = audio->createSound("muteCity");
 	testSound.start();
+	float soundX = 0;
 
 
 	glEnable(GL_BLEND);
@@ -78,6 +79,7 @@ int main()
 
 	
 	c1.Yaw = 0.0f;
+
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -105,6 +107,21 @@ int main()
 			physicsSys.updatePhysics(dt, gameState.entityList);
 			accumulator -= dt;
 			t += dt;
+
+			float soundVel = 0;
+			if(gameActions.shimmyLeft){
+				soundX-=1;
+				soundVel = -15;
+			}
+			if(gameActions.shimmyRight){
+				soundX+=1;
+				soundVel = 15;
+			}
+				audio->updateSoundVel(testSound, soundVel, 0, 0);
+
+			audio->updateSoundLoc(testSound, soundX, 0, 0);
+			audio->update(dt);
+			audio->updateListenerFrame(c1.GetViewMatrix());
 		}
 		
 
