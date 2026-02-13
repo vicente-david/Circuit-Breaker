@@ -54,10 +54,10 @@ class TestInput1 : public CallbackInterface {
 		}
 
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-			actions->boost = true;
+			actions->kboost = true;
 		}
 		else if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE) {
-			actions->boost = false;
+			actions->kboost = false;
 		}
 
 		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
@@ -218,7 +218,10 @@ void InputSystem::updateGamepad() {
 		actions.controllerXRot = 0.0;
 
 
-	actions.boost = button_A;
+	if (button_A || actions.kboost)
+		actions.boost = 1;
+	else
+		actions.boost = 0;
 
 }
 
