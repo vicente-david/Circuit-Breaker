@@ -106,6 +106,7 @@ int main()
 		}
 		
 		// c1.updateCamera(gameActions, accumulator);
+		// todo: fix (will be integrated into new ecs system)
 		c1.updateCamera(car1.transform.pos, car1.transform.forwardD, gameActions.camXRot, frameTime, gameActions.cameraReset);
 
 		// rendering

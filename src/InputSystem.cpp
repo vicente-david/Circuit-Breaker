@@ -2,6 +2,7 @@
 #include<iostream>
 #include<glm/glm.hpp>
 
+// just test inputs right now, callbacks for different game states will exist for organizational purposes
 class TestInput1 : public CallbackInterface {
 
 	void keyCallback(int key, int scancode, int action, int mods) {
@@ -59,22 +60,18 @@ class TestInput1 : public CallbackInterface {
 			actions->boost = false;
 		}
 
-		if (key == GLFW_KEY_L) {
-			if (action == GLFW_PRESS) {
-				actions->shimmyRight = true;
-			}
-			else {
-				actions->shimmyRight = false;
-			}
+		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
+			actions->shimmyRight = true;
+		}
+		else{
+			actions->shimmyRight = false;
 		}
 
-		if (key == GLFW_KEY_J) {
-			if (action == GLFW_PRESS) {
-				actions->shimmyLeft = true;
-			}
-			else {
-				actions->shimmyLeft = false;
-			}
+		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
+			actions->shimmyLeft = true;
+		}
+		else{
+			actions->shimmyLeft = false;
 		}
 	}
 
@@ -220,7 +217,8 @@ void InputSystem::updateGamepad() {
 	else if (abs(rightx) < strickTriggerThreshold)
 		actions.controllerXRot = 0.0;
 
-	if (!actions.boost) actions.boost = button_A;
+
+	actions.boost = button_A;
 
 }
 

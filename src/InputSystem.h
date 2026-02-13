@@ -22,6 +22,10 @@ public:
 	virtual void windowSizeCallback(int width, int height) {};
 };
 
+// might be offloaded to just containing purely inputs
+// purely combined inputs
+// that way we can offload the logic to something else and keep this
+// as purely inputs
 struct Actions {
 
 	// actions are what the game actually uses
@@ -35,6 +39,7 @@ struct Actions {
 	bool keyboardForward = false; 
 	bool keyboardBackward = false;
 	
+	// action
 	float keyboardDir = 0.0;
 
 	// controller inputs (raw input)
@@ -57,6 +62,7 @@ struct Actions {
 	// raw input
 	float cameraReset = true;
 
+	// actions
 	bool boost = false;
 	bool shimmyRight = false;
 	bool shimmyLeft = false;
