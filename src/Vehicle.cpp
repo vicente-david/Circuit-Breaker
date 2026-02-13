@@ -40,11 +40,13 @@ bool Vehicle::init()
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
 	
+	rBody = mVehicle.mPhysXState.physxActor.rigidBody;
+
 	// Set flags
-	PxU32 shapes = mVehicle.mPhysXState.physxActor.rigidBody->getNbShapes();
+	PxU32 shapes = rBody->getNbShapes();
 	for (PxU32 i = 0; i < shapes; i++) {
 		PxShape* shape = NULL;
-		mVehicle.mPhysXState.physxActor.rigidBody->getShapes(&shape, 1, i);
+		rBody->getShapes(&shape, 1, i);
 
 		shape->setSimulationFilterData(vehicleFilter); // Add filter data to shader
 
@@ -92,8 +94,8 @@ void Vehicle::step(double dt)
 	// VEHICLE SCENE QUERIES
 	//Forward integrate the vehicle by a single timestep.
 	//Apply substepping at low forward speed to improve simulation fidelity.
-	const PxVec3 linVel = mVehicle.mPhysXState.physxActor.rigidBody->getLinearVelocity();
-	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
+	const PxVec3 linVel = rBody->getLinearVelocity();
+	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
 	
 	const PxReal speed = linVel.dot(forwardDir);
 	const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
@@ -146,8 +148,8 @@ void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName)
 
 void Vehicle::updateTransform() {
 	
-	PxVec3 p = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
-	PxQuat q = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
+	PxVec3 p = rBody->getGlobalPose().p;
+	PxQuat q = rBody->getGlobalPose().q;
 	PxVec3 B3 = q.getBasisVector2();
 	transform.pos = glm::vec3(p.x, p.y, p.z);
 	transform.rot = glm::quat(q.x, q.y, q.z, q.w);
@@ -155,21 +157,21 @@ void Vehicle::updateTransform() {
 }
 
 void Vehicle::Boost() {
-	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
+	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
 	float boostStrength = 10.f;
 	
 	boostAmount -= 0.5f;
 
-	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
 	std::cout << "BOOST!" << std::endl;
 }
 
 void Vehicle::Shimmy(bool rightDir) {
-	const PxVec3 latDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector0();
+	const PxVec3 latDir = rBody->getGlobalPose().q.getBasisVector0();
 	int flip = (rightDir) ? -1 : 1;
 	float shimmyForce = 24000.f;
 	
-	mVehicle.mPhysXState.physxActor.rigidBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
+	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
 	std::cout << "Weeeeeeee!!" << std::endl;
 	
 	shimmyActiveTimer = shimmyCooldown; // 

@@ -56,6 +56,8 @@ public:
 private:
 	void updateTransform();
 
+	PxRigidBody* rBody; // Vehicle actor rigid body
+
 	double shimmyCooldown = 1; // Time before you can shimmy again
 	double shimmyActiveTimer = 0; // Time left before you can shimmy
 
