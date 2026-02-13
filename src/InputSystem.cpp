@@ -51,9 +51,6 @@ class TestInput1 : public CallbackInterface {
 			actions->cameraReset = !actions->cameraReset;
 		}
 
-
-	}
-
 		if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 			actions->boost = true;
 		}
@@ -61,18 +58,26 @@ class TestInput1 : public CallbackInterface {
 			actions->boost = false;
 		}
 
-		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-			actions->shimmyRight = true;
-		}
-		else if (key == GLFW_KEY_L && action == GLFW_RELEASE) {
-			actions->shimmyRight = false;
+		if (key == GLFW_KEY_L) {
+			if (action == GLFW_PRESS) {
+				actions->shimmyRight = true;
+				std::cout << "L PRESS DETECTED" << std::endl;
+			}
+			else {
+				actions->shimmyRight = false;
+				std::cout << "L GONE" << std::endl;
+			}
 		}
 
-		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
-			actions->shimmyLeft = true;
-		}
-		else if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
-			actions->shimmyLeft = false;
+		if (key == GLFW_KEY_J) {
+			if (action == GLFW_PRESS) {
+				actions->shimmyLeft = true;
+				std::cout << "J PRESS DETECTED" << std::endl;
+			}
+			else {
+				actions->shimmyLeft = false;
+				std::cout << "J GONE" << std::endl;
+			}
 		}
 	}
 
@@ -176,10 +181,6 @@ void InputSystem::combineInputs() {
 	if (actions.keyboardRight) actions.xRotation = -1.f;
 	if (actions.keyboardLeft) actions.xRotation = 1.f;
 
-	// Signal action
-	if (actions.boost) std::cout << "BOOST!" << std::endl;
-	if (actions.shimmyRight) std::cout << "Slide to right!" << std::endl;
-	if (actions.shimmyLeft) std::cout << "Sliiiiiiiide to left!" << std::endl;
 
 }
 

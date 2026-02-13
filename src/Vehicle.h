@@ -35,7 +35,7 @@ public:
 	void cleanup();
 	void step(double dt);
 
-	void applyInput(Actions& actions);
+	void applyInput(Actions& actions, double currentTime);
 	void changeEngineDriveParams(const char* vehicleDataPath);
 	void Boost();
 	void Shimmy(bool rightDir);
@@ -55,4 +55,11 @@ public:
 
 private:
 	void updateTransform();
+
+	double shimmyCooldown = 1; // Time before you can shimmy again
+	double shimmyActiveTimer = 0; // Time left before you can shimmy
+
+	float boostMax = 100.f; // Maximum amount of boost
+	float boostAmount = boostMax; // Current amount of boost
+	float boostRegenerate = 0.3f; // Regeneration rate
 };

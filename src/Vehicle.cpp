@@ -104,24 +104,38 @@ void Vehicle::step(double dt)
 	updateTransform();
 }
 
-void Vehicle::applyInput(Actions& actions)
+void Vehicle::applyInput(Actions& actions, double dt)
 {
 	mVehicle.mCommandState.brakes[0] = actions.moveBackward;
 	mVehicle.mCommandState.nbBrakes = 1;
 	mVehicle.mCommandState.throttle = actions.moveForward;
 	mVehicle.mCommandState.steer = actions.xRotation;
-	if (actions.boost) Boost();
-	if (actions.shimmyRight) Shimmy(true);
-	if (actions.shimmyLeft) Shimmy(false);
+	
+	if (actions.boost) {
+		if (boostAmount > 0)
+			Boost();
+	}
+	else if (boostAmount < boostMax) {
+			boostAmount += boostRegenerate;
+			if (boostAmount > boostMax)
+				boostAmount = boostMax;
+			std::cout << "Boost at: " << boostAmount << "%" << std::endl;
+	}
 
-	//// mCmd.brakes[0] = cmd.brake;
-	//// mCmd.brakes = actions.moveBackward;
-	//mCmd.throttle = actions.moveForward;
-	//// mCmd.steer = cmd.steer;
+	if (shimmyActiveTimer == 0) {
+		if (actions.shimmyRight)
+			Shimmy(true);
 
-	//mCmd.steer = actions.xRotation;
-	//// mCmd.steer = actions.xRotation;
-	//// mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
+		if (actions.shimmyLeft)
+			Shimmy(false);
+	}
+	else {
+		shimmyActiveTimer -= dt;
+		if (shimmyActiveTimer <= 0) {
+			shimmyActiveTimer = 0;
+			std::cout << "Shimmy ready!" << std::endl;
+		}
+	}
 }
 
 void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName) 
@@ -142,13 +156,21 @@ void Vehicle::updateTransform() {
 
 void Vehicle::Boost() {
 	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
-	float boostStrength = 100.f;
+	float boostStrength = 10.f;
+	
+	boostAmount -= 0.5f;
+
 	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+	std::cout << "BOOST!" << std::endl;
 }
 
 void Vehicle::Shimmy(bool rightDir) {
-	PxVec3 direction = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector0();
-	if (rightDir) direction = -direction;
-	float shimmyForce = 20000.f;
-	mVehicle.mPhysXState.physxActor.rigidBody->addForce(direction * shimmyForce, PxForceMode::eIMPULSE);
+	const PxVec3 latDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector0();
+	int flip = (rightDir) ? -1 : 1;
+	float shimmyForce = 24000.f;
+	
+	mVehicle.mPhysXState.physxActor.rigidBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
+	std::cout << "Weeeeeeee!!" << std::endl;
+	
+	shimmyActiveTimer = shimmyCooldown; // 
 }
