@@ -52,8 +52,8 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     - R-Stick: Rotate Camera 
     - R-Trigger: accelerate
     - L-Trigger: brake
-    - B/Circle: Boost
-    - Y/Triangle: Reset
+    - B/◯: Boost
+    - Y/△: Reset
 
 ### Keyboard:
     - A/D: Turn 
