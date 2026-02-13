@@ -70,13 +70,15 @@ void AudioEngine::updateListenerFrame(glm::mat4 viewMat) {
 	listener.viewMatrix = viewMat;
 }
 
-// velocity for dopler effect 
+// velocity for dopler effect
 // this should be given in world coordinates
 // (not implented)
 void AudioEngine::updateListenerVel(float x, float y, float z) {
 	listener.velx = x;
 	listener.vely = y;
 	listener.velz = z;
+
+	// printf("list vel. [%f, %f, %f]\n", x, y, z);
 }
 
 // move a sound instance to a specified location in world coordinates
@@ -85,10 +87,9 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	auto loc = glm::vec4(x, y, z, 1);
 
 	// convert to screen coords
-	auto mat = listener.viewMatrix;
-	loc = mat * loc;
+	loc = listener.viewMatrix * loc;
 
-	float alData[3] = {loc.x/20, loc.y/20, loc.z/20};
+	float alData[3] = {loc.x / 20, loc.y / 20, loc.z / 20};
 	alSourcefv(s.source, AL_POSITION, alData);
 
 	// printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
@@ -97,13 +98,15 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 // update sound velocity for dopler shifting
 // this should be in world coordinates
 void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
-	float vel[3] = {
-		x - listener.velx,
-		y - listener.vely,
-		z - listener.velz,
-	};
-	// printf("rel vel. [%f, %f, %f]\n", vel[0],vel[1],vel[2]);
-	alSourcefv(s.source, AL_VELOCITY, vel);
+	// get velocity relative to the camera (in world coordinates)
+	glm::vec4 vel(x - listener.velx, y - listener.vely,
+									 z - listener.velz, 0);
+	// transform to camera frame
+	vel = listener.viewMatrix * vel;
+	float alData[3] = {vel.x, vel.y, vel.x};
+
+	// printf("rel vel. [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
+	alSourcefv(s.source, AL_VELOCITY, alData);
 }
 
 // create a sounds channel to play a sound. you need to call play before it will

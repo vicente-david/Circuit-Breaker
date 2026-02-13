@@ -1,5 +1,7 @@
 #include <AL/al.h>
 #include <cstdio>
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <iostream>
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
@@ -66,6 +68,7 @@ int main()
 
 	// place holder test sounds
 	Sound testSound = audio->createSound("muteCity");
+	testSound.setLooping(true);
 	testSound.start();
 	float soundX = 0;
 
@@ -108,20 +111,36 @@ int main()
 			accumulator -= dt;
 			t += dt;
 
+
+
+			// dopler shift test
+			// this stuff would  go in whatever is playing a sound (ex. physics collision
+			// and like gamestate stuff for 
+			
+			// test moving the sound left/right
 			float soundVel = 0;
 			if(gameActions.shimmyLeft){
-				soundX-=1;
+				soundX-=0.5f;
 				soundVel = -15;
+				gameActions.shimmyLeft = false;
 			}
 			if(gameActions.shimmyRight){
-				soundX+=1;
+				soundX+=0.5f;
 				soundVel = 15;
+				gameActions.shimmyRight = false;
 			}
-				audio->updateSoundVel(testSound, soundVel, 0, 0);
-
 			audio->updateSoundLoc(testSound, soundX, 0, 0);
-			audio->update(dt);
-			audio->updateListenerFrame(c1.GetViewMatrix());
+			audio->updateSoundVel(testSound, soundVel, 0, 0);
+
+			// dopler effect when boosting by setting listner's velocity
+			if(gameActions.boost){
+				auto vel =  glm::vec4(-10,0,0,1)*c1.GetViewMatrix();
+				audio->updateListenerVel(vel.x, vel.y, vel.z);
+
+			}else{
+				audio->updateListenerVel(0,0,0);
+			}
+
 		}
 		
 
@@ -139,9 +158,15 @@ int main()
 		// rendering
 		renderer->update(gameState.entityList, fps, c1);
 
+		// update camera location in audio system for 3d audio
+		audio->updateListenerFrame(c1.GetViewMatrix());
+		// tihs just cleans up completed sounds, so it doesn't need to be called super often
+		audio->update(dt);
+
 
 	}
 	car1.cleanup();
+	audio->close();
 	glfwTerminate();
 	
 
