@@ -59,18 +59,22 @@ class TestInput1 : public CallbackInterface {
 			actions->boost = false;
 		}
 
-		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-			actions->shimmyRight = true;
-		}
-		else if (key == GLFW_KEY_L && action == GLFW_RELEASE) {
-			actions->shimmyRight = false;
+		if (key == GLFW_KEY_L) {
+			if (action == GLFW_PRESS) {
+				actions->shimmyRight = true;
+			}
+			else {
+				actions->shimmyRight = false;
+			}
 		}
 
-		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
-			actions->shimmyLeft = true;
-		}
-		else if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
-			actions->shimmyLeft = false;
+		if (key == GLFW_KEY_J) {
+			if (action == GLFW_PRESS) {
+				actions->shimmyLeft = true;
+			}
+			else {
+				actions->shimmyLeft = false;
+			}
 		}
 	}
 
@@ -176,12 +180,6 @@ void InputSystem::combineInputs() {
 	if (actions.keyboardBackward || actions.controllerBackward) {
 		actions.moveBackward = glm::clamp((actions.keyboardBackward + (float)actions.controllerBackward), 0.0f, 1.0f);
 	}
-
-	// Signal action
-	if (actions.boost) std::cout << "BOOST!" << std::endl;
-	if (actions.shimmyRight) std::cout << "Slide to right!" << std::endl;
-	if (actions.shimmyLeft) std::cout << "Sliiiiiiiide to left!" << std::endl;
-
 }
 
 void InputSystem::updateGamepad() {
