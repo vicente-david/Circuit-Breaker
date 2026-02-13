@@ -7,7 +7,7 @@ Release builds for windows can be downloaded from [this drive link](https://driv
 
 1. Download PhysX from [this drive link](https://drive.google.com/file/d/1B7-nrPuDbISO0T2DwgRJ0B8NHrhkncgF/view?usp=sharing)
     - if this isn't working you can also download just physX from [here](https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing)
-    and add the rapidjson to the include folder yourself (this can be dowloaded from [here](https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing)
+    and add the rapidjson to the include folder yourself (this can be dowloaded from [here](https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing))
 
 1. Extract folder to /dependencies/physx
     - you should end up with dependencies/physX/include, dependencies/physX/debug, etc.
