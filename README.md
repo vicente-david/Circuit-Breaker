@@ -1,13 +1,13 @@
 # Circuit Breaker
 
 ## Windows Binaries:
-Release builds for windows can be downloaded from (this drive link)[https://drive.google.com/drive/folders/1yXyVN6x6JoO25Hn-unKxrLh_0AZRWiRO]
+Release builds for windows can be downloaded from [this drive link](https://drive.google.com/drive/folders/1yXyVN6x6JoO25Hn-unKxrLh_0AZRWiRO)
 
 ## Windows Build Instructions:
 
-1. Download PhysX from (this drive link)[https://drive.google.com/file/d/1B7-nrPuDbISO0T2DwgRJ0B8NHrhkncgF/view?usp=sharing]
-    - if this isn't working you can also download just physX from (here)[https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing], 
-    and add the rapidjson to the include folder yourself (this can be dowloaded from (here)[https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing]
+1. Download PhysX from [this drive link](https://drive.google.com/file/d/1B7-nrPuDbISO0T2DwgRJ0B8NHrhkncgF/view?usp=sharing)
+    - if this isn't working you can also download just physX from [here](https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing)
+    and add the rapidjson to the include folder yourself (this can be dowloaded from [here](https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing)
 
 1. Extract folder to /dependencies/physx
     - you should end up with dependencies/physX/include, dependencies/physX/debug, etc.
@@ -25,7 +25,7 @@ Release builds for windows can be downloaded from (this drive link)[https://driv
     - you should end up with 2 folders in dependencies/physX: include, and debug (plus any other build modes you want to use)
 
 1. add rapidjson folder to the physx/include folder
-    - this can be from the physx base folder, or this (drive link)[https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing]
+    - this can be from the physx base folder, or this [drive link](https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing)
 
 1. create build folder
     ```
