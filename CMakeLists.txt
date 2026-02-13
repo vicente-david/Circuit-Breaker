@@ -2,36 +2,29 @@ cmake_minimum_required(VERSION 3.15)
 
 project(circuit-breaker)
 
+# run this if using debug version
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
-# note: this release version only works if in your cmakesettings.json your release build
-# is specifically Release
-# and not RelWithDebugInfo (which visual studio defaults to)
-
-# funky generator stuff that auto sets to debug if running debug and release to release (with non debug info)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>$<$<CONFIG:Release>:>")
-
-# run this if using release (keep here for reference)
-#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
-
-
-
+# run this if using release
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 file(GLOB_RECURSE SOURCES "src/*")
-add_executable(circuit-breaker ${SOURCES})
+file(GLOB_RECURSE SNIPPETS "snippets/*")
+add_executable(circuit-breaker ${SOURCES} ${SNIPPETS})
 
 # PHYSX
 # add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
+
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/physx/include)
 set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
 
+# RapidJSON
+# add folder 'rapidjson' into 'physx/include' project directory. Download from: https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  # run this if using debug version
-  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-  # run this if using release
-  set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
-endif()
+# run this if using debug version
+#set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 
+# run this if using release
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
 
 # copy assets
 file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
@@ -39,13 +32,19 @@ file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
 #copy shaders
 file (COPY ${PROJECT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_BINARY_DIR})
 
+# GLAD
+set(BUILD_SHARED_LIBS OFF)
+add_subdirectory(dependencies/glad) 
+set(LIBRARIES ${LIBRARIES} glad)
+
+# ASSIMP
+add_subdirectory(dependencies/assimp)
+set(LIBRARIES ${LIBRARIES} assimp)
+
 #free type
 add_subdirectory(dependencies/freetype) 
 set(LIBRARIES ${LIBRARIES} freetype)
 
-# GLAD
-add_subdirectory(dependencies/glad) 
-set(LIBRARIES ${LIBRARIES} glad)
 
 # GLFW
 add_subdirectory(dependencies/glfw-3.4)
@@ -70,6 +69,7 @@ if (WIN32)
     ${PHYSX_LIB}/PhysX_64.dll
     ${PHYSX_LIB}/PhysXCommon_64.dll
     ${PHYSX_LIB}/PhysXFoundation_64.dll
+    ${PHYSX_LIB}/PhysXCooking_64.dll
     DESTINATION ${CMAKE_BINARY_DIR} )
 
   target_link_libraries(${PROJECT_NAME} PRIVATE 
@@ -79,6 +79,8 @@ if (WIN32)
     ${PHYSX_LIB}/PhysXPvdSDK_static_64.lib
     ${PHYSX_LIB}/PhysXCommon_64.lib
     ${PHYSX_LIB}/PhysXFoundation_64.lib
+    ${PHYSX_LIB}/PhysXCooking_64.lib
+    ${PHYSX_LIB}/PhysXVehicle2_static_64.lib
     ${LIBRARIES}
   )
 
@@ -88,16 +90,28 @@ if (WIN32)
     )
 
   elseif(UNIX)
-    target_link_libraries(${PROJECT_NAME} PRIVATE 
+	      target_link_libraries(${PROJECT_NAME} PRIVATE 
     # physx
+    ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
+    ${PHYSX_LIB}/libPhysXCooking_static_64.a
     ${PHYSX_LIB}/libPhysXExtensions_static_64.a
     ${PHYSX_LIB}/libPhysX_static_64.a
     ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
     ${PHYSX_LIB}/libPhysXCommon_static_64.a
     ${PHYSX_LIB}/libPhysXFoundation_static_64.a
     ${LIBRARIES}
-
+    # target_link_libraries(${PROJECT_NAME} PRIVATE 
+    # # physx
+    # ${PHYSX_LIB}/libPhysXExtensions_static_64.a
+    # ${PHYSX_LIB}/libPhysX_static_64.a
+    # ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
+    # ${PHYSX_LIB}/libPhysXCommon_static_64.a
+    # ${PHYSX_LIB}/libPhysXFoundation_static_64.a
+    # ${PHYSX_LIB}/libPhysXCooking_static_64.a
+    # ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
+    # ${LIBRARIES}
   )
+
 
 endif()
 

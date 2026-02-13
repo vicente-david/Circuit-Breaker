@@ -2,54 +2,23 @@
 
 PhysicsSystem::PhysicsSystem() // Constructor
 {
-	// Initialize PhysX
-	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
-	if (!gFoundation)
-	{
-		std::cout << "PxCreateFoundation failed!" << std::endl;
-	}
 
-	// PVD
-	gPvd = PxCreatePvd(*gFoundation);
-	physx::PxPvdTransport* transport = physx::PxDefaultPvdSocketTransportCreate("127.0.0.1", 5425, 10);
-	gPvd->connect(*transport, physx::PxPvdInstrumentationFlag::eALL);
-
-	// Physics
-	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, physx::PxTolerancesScale(), true, gPvd);
-	if (!gPhysics)
-	{
-		std::cout << "PxCreatePhysics failed!" << std::endl;
-	}
-
-	// Scene
-	physx::PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
-	sceneDesc.gravity = physx::PxVec3(0.0f, -9.81f, 0.0f);
-	gDispatcher = physx::PxDefaultCpuDispatcherCreate(2);
-	sceneDesc.cpuDispatcher = gDispatcher;
-	sceneDesc.filterShader = physx::PxDefaultSimulationFilterShader;
-	gScene = gPhysics->createScene(sceneDesc);
-
-	// Prep PVD
-	physx::PxPvdSceneClient* pvdClient = gScene->getScenePvdClient();
-	if (pvdClient)
-	{
-		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
-		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
-		pvdClient->setScenePvdFlag(physx::PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
-	}
-
-	// Simulate
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
-	physx::PxRigidStatic* groundPlane = physx::PxCreatePlane(*gPhysics, physx::PxPlane(0, 1, 0, 50), *gMaterial);
-	gScene->addActor(*groundPlane);
+	initPhysX();
+	//initGroundPlane();
+	initMaterialFrictionTable();
 
 	// Define a box
 	float halfLen = 0.5f;
 	physx::PxShape* shape = gPhysics->createShape(physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
+
+	PxFilterData boxFilter(COLLISION_FLAG_OBSTACLE, COLLISION_FLAG_OBSTACLE_AGAINST, 0, 0); // Create obstacle filter
+	shape->setSimulationFilterData(boxFilter); // Add filter data to shader
+
 	physx::PxU32 size = 30;
 	physx::PxTransform tran(physx::PxVec3(0));
 
 	// Create a pyramid of physics-enabled boxes
+	transformList.reserve(465);
 	for (physx::PxU32 i = 0; i < size; i++)
 	{
 		for (physx::PxU32 j = 0; j < size - i; j++)
@@ -66,33 +35,156 @@ PhysicsSystem::PhysicsSystem() // Constructor
 		}
 	}
 
+	// create 'finish line' trigger box
+	PxVec3 finishLinePosition(0.0f, 0.0f, 10.0f); // finish line position in world space
+	PxVec3 triggerLengths(255.637f, 100.0f, 1.0f); // width, height, and depth of the finish line
+	PxRigidStatic* triggerActor = gPhysics->createRigidStatic(PxTransform(finishLinePosition)); // create static rigid body for the trigger box
+
+
+	physx::PxShape* triggerRect = gPhysics->createShape(physx::PxBoxGeometry(triggerLengths), *gMaterial, true);
+
+	// set the shape as a trigger
+	triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+	triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+
+	triggerActor->attachShape(*triggerRect);
+	gScene->addActor(*triggerActor);
+	
+	PxFilterData finishLineTriggerFilterData;
+	finishLineTriggerFilterData.word0 = 99; // it detects only the player vehicle
+	triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
+
 	// Clean up
 	shape->release();
+
+	triggerRect->release();
 }
 
-void PhysicsSystem::updateTransforms()
+void PhysicsSystem::initPhysX()
 {
-	for (int i = 0; i < transformList.size(); i++)
-	{
-		// Store positions
-		transformList[i]->pos.x = getPos(i).x;
-		transformList[i]->pos.y = getPos(i).y;
-		transformList[i]->pos.z = getPos(i).z;
+	gFoundation = PxCreateFoundation(PX_PHYSICS_VERSION, gAllocator, gErrorCallback);
+	gPvd = PxCreatePvd(*gFoundation);
+	PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
+	gPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
+	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation, PxTolerancesScale(), true, gPvd);
 
-		// Store positions
-		transformList[i]->rot.x = getRot(i).x;
-		transformList[i]->rot.y = getRot(i).y;
-		transformList[i]->rot.z = getRot(i).z;
-		transformList[i]->rot.w = getRot(i).w;
+	// Scene
+	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
+	sceneDesc.gravity = gGravity;
+
+	PxU32 numWorkers = 1;
+	gDispatcher = PxDefaultCpuDispatcherCreate(numWorkers);
+	sceneDesc.cpuDispatcher = gDispatcher;
+	sceneDesc.filterShader = VehicleFilterShader;
+
+	ContactReportCallback* gContactReportCallback = new ContactReportCallback();
+	sceneDesc.simulationEventCallback = gContactReportCallback; // Assign callback to scene
+
+	gScene = gPhysics->createScene(sceneDesc);
+
+	// Prep PVD
+	PxPvdSceneClient* pvdClient = gScene->getScenePvdClient();
+	if (pvdClient)
+	{
+		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONSTRAINTS, true);
+		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_CONTACTS, true);
+		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES, true);
+	}
+	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+
+	PxInitVehicleExtension(*gFoundation); // Initialize vehicle extension
+}
+
+void PhysicsSystem::initGroundPlane()
+{
+	PxRigidStatic* groundPlane = PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
+
+	for (PxU32 i = 0; i < groundPlane->getNbShapes(); i++) {
+		PxShape* shape = nullptr;
+		groundPlane->getShapes(&shape, 1, i);
+		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+	}
+	gScene->addActor(*groundPlane);
+}
+
+void PhysicsSystem::initMaterialFrictionTable()
+{
+	//Each physx material can be mapped to a tire friction value on a per tire basis.
+	//If a material is encountered that is not mapped to a friction value, the friction value used is the specified default value.
+	//In this snippet there is only a single material so there can only be a single mapping between material and friction.
+	//In this snippet the same mapping is used by all tires.
+	gPhysXMaterialFrictions[0].friction = 1.0f;
+	gPhysXMaterialFrictions[0].material = gMaterial;
+	gPhysXDefaultMaterialFriction = 1.0f;
+	gNbPhysXMaterialFrictions = 1;
+}
+
+PxTriangleMesh* PhysicsSystem::cookTriangleMesh(Mesh mesh) {
+	PxTriangleMeshDesc meshDesc;
+	meshDesc.points.count = mesh.vertices.size();
+	meshDesc.points.stride = sizeof(Vertex);
+	meshDesc.points.data = mesh.vertices.data();
+
+	meshDesc.triangles.count = mesh.indices.size() / 3;
+	meshDesc.triangles.stride = 3 * sizeof(PxU32);
+	meshDesc.triangles.data = mesh.indices.data();
+
+	PxTolerancesScale scale;
+	PxCookingParams params(scale);
+
+	PxDefaultMemoryOutputStream writeBuffer;
+	PxTriangleMeshCookingResult::Enum result;
+	bool status = PxCookTriangleMesh(params, meshDesc, writeBuffer, &result);
+	if (!status)
+		return NULL;
+
+	PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+	return gPhysics->createTriangleMesh(readBuffer);
+}
+
+void PhysicsSystem::initStaticMesh(Mesh mesh, Transform transform) {
+	PxTriangleMesh* triangleMesh = cookTriangleMesh(mesh);
+
+	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
+	PxTriangleMeshGeometry triGeom(triangleMesh,scale, PxMeshGeometryFlag::eTIGHT_BOUNDS);
+	
+	PxShape* triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+	PxRigidStatic* actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
+	actor->attachShape(*triMeshShape);
+
+	gScene->addActor(*actor);
+	triMeshShape->release();
+
+}
+
+void PhysicsSystem::updateTransforms(std::vector<Entity> entityList)
+{
+	for (int i = 0; i < entityList.size(); i++)
+	{
+		// TODO: huge bandaid.. fix
+		if (entityList.at(i).name == "perro cube") {
+			// Update entity transforms
+			entityList.at(i).transform->pos.x = rigidDynamicList[i]->getGlobalPose().p.x;
+			entityList.at(i).transform->pos.y = rigidDynamicList[i]->getGlobalPose().p.y;
+			entityList.at(i).transform->pos.z = rigidDynamicList[i]->getGlobalPose().p.z;
+
+			entityList.at(i).transform->rot.x = rigidDynamicList[i]->getGlobalPose().q.x;
+			entityList.at(i).transform->rot.y = rigidDynamicList[i]->getGlobalPose().q.y;
+			entityList.at(i).transform->rot.z = rigidDynamicList[i]->getGlobalPose().q.z;
+			entityList.at(i).transform->rot.w = rigidDynamicList[i]->getGlobalPose().q.w;
+		}
+		
 	}
 }
 
-void PhysicsSystem::updatePhysics(double dt) {
+void PhysicsSystem::updatePhysics(double dt, std::vector<Entity> entityList) {
 	gScene->simulate(dt);
 	gScene->fetchResults(true);
 
-	updateTransforms();
+	updateTransforms(entityList);
 }
 
-physx::PxVec3 PhysicsSystem::getPos(int i) { return rigidDynamicList[i]->getGlobalPose().p; }
-physx::PxQuat PhysicsSystem::getRot(int i) { return rigidDynamicList[i]->getGlobalPose().q; }
+physx::PxVec3 PhysicsSystem::getPos(int i) const { return rigidDynamicList[i]->getGlobalPose().p; }
+physx::PxQuat PhysicsSystem::getRot(int i) const { return rigidDynamicList[i]->getGlobalPose().q; }

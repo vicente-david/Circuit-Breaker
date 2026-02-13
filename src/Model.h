@@ -1,24 +1,27 @@
 #pragma once
-#include <vector>
-#include <glm/glm.hpp>
+#include "Mesh.h"
+#include "Texture.h"
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <string>
+#include <memory>
 
-struct Vertex
-{
-	glm::vec3 pos;
-	glm::vec3 col; //replace with normals?
-	glm::vec2 tex;
-};
 
-struct Texture {
-	unsigned int id;
-	const char* type;
-};
+class Model {
 
-class Model
-{
 public:
-	std::vector<Vertex> vertices;
-	std::vector<unsigned int> indices;
-	std::vector<Texture> textures;
-	glm::mat4 modelMatrix;
+	Model(char* path) {
+		loadModel(path);
+	}
+	void Draw(GLuint& shaderID);
+	std::vector<Mesh> GetMesh();
+private:
+	std::vector<Mesh> meshes;
+	std::string directory;
+	
+	void loadModel(std::string path);
+	void processNode(aiNode* node, const aiScene* scene);
+	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	std::vector<Texture> loadMatTextures(aiMaterial* mat, aiTextureType type, std::string typeName);
 };
