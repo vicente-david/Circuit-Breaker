@@ -34,6 +34,10 @@ void Mesh::initMesh() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, tex)));
 	glEnableVertexAttribArray(1);
 
+	// Normal attribute
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(offsetof(Vertex, norm)));
+	glEnableVertexAttribArray(2);
+
 	glBindVertexArray(0); // Unbind VAO
 
 	this->VAO = VAO;

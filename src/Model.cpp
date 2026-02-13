@@ -60,6 +60,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 		else vertex.tex = glm::vec2(0.0f, 0.0f);
 
+		// Process normals
+		glm::vec3 normVec = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+		vertex.norm = normVec;
+
 		vertices.push_back(vertex);
 	}
 
