@@ -35,7 +35,7 @@ bool Vehicle::init()
 	}
 
 	//Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(0.000000000f, -0.0500000119f, -50.59399998f), PxQuat(PxIdentity));
+	PxTransform startPose(PxVec3(0.000000000f, -0.000000000f, -50.59399998f), PxQuat(PxIdentity));
 	mVehicle.setUpActor(*mPhysics.gScene, startPose, mVehicleName);
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
