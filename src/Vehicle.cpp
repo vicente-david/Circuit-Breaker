@@ -121,9 +121,12 @@ void Vehicle::applyInput(Actions& actions, double dt)
 	}
 	else if (boostAmount < boostMax) {
 			boostAmount += boostRegenerate;
+			
 			if (boostAmount > boostMax)
 				boostAmount = boostMax;
-			std::cout << "Boost at: " << boostAmount << "%" << std::endl;
+
+			if (std::fmod(boostAmount, 10) < boostRegenerate)
+				std::cout << "Boost at: " << boostAmount << "%" << std::endl;
 	}
 
 	if (shimmyActiveTimer == 0) {
@@ -135,11 +138,15 @@ void Vehicle::applyInput(Actions& actions, double dt)
 	}
 	else {
 		shimmyActiveTimer -= dt;
+		
 		if (shimmyActiveTimer <= 0) {
 			shimmyActiveTimer = 0;
-			std::cout << "Shimmy ready!" << std::endl;
+			//std::cout << "Shimmy ready!" << std::endl;
 		}
 	}
+
+	if (actions.respawn)
+		respawn();
 }
 
 void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName) 
@@ -165,7 +172,7 @@ void Vehicle::Boost() {
 	boostAmount -= 0.5f;
 
 	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
-	std::cout << "BOOST!" << std::endl;
+	//std::cout << "BOOST!" << std::endl;
 }
 
 void Vehicle::Shimmy(bool rightDir) {
@@ -176,5 +183,10 @@ void Vehicle::Shimmy(bool rightDir) {
 	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
 	std::cout << "Weeeeeeee!!" << std::endl;
 	
-	shimmyActiveTimer = shimmyCooldown; // 
+	shimmyActiveTimer = shimmyCooldown;
+}
+
+void Vehicle::respawn() {
+	rBody->setGlobalPose(PxTransform(PxVec3(0.f, 0.f, -50.f), PxQuat(PxIdentity)));
+	rBody->setMassSpaceInertiaTensor(PxVec3(PxIdentity));
 }

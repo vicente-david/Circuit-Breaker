@@ -73,6 +73,13 @@ class TestInput1 : public CallbackInterface {
 		else{
 			actions->shimmyLeft = false;
 		}
+
+		if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+			actions->kRespawn = true;
+		}
+		else {
+			actions->kRespawn = false;
+		}
 	}
 
 	void mouseButtonCallback(int button, int action, int mods) {
@@ -190,6 +197,7 @@ void InputSystem::updateGamepad() {
 	float leftx = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
 	float lefty = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
 	bool button_B = controllerState.buttons[GLFW_GAMEPAD_BUTTON_B];
+	bool button_Y = controllerState.buttons[GLFW_GAMEPAD_BUTTON_Y];
 	
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
@@ -223,6 +231,10 @@ void InputSystem::updateGamepad() {
 	else
 		actions.boost = 0;
 
+	if (button_Y || actions.kRespawn)
+		actions.respawn = true;
+	else
+		actions.respawn = false;
 }
 
 void InputSystem::keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

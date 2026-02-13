@@ -67,6 +67,8 @@ struct Actions {
 	bool kboost = false;
 	bool shimmyRight = false;
 	bool shimmyLeft = false;
+	bool respawn = false;
+	bool kRespawn = false;
 };
 
 

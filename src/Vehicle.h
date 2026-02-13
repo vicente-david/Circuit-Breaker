@@ -39,6 +39,7 @@ public:
 	void changeEngineDriveParams(const char* vehicleDataPath);
 	void Boost();
 	void Shimmy(bool rightDir);
+	void respawn();
 
 	PhysicsSystem& mPhysics;
 
