@@ -77,7 +77,7 @@ int main()
 
 		// input
 		gameActions = inputSystem.getActions();
-		car1.applyInput(gameActions);
+		car1.applyInput(gameActions, dt);
 		
 
 		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z << "\nRot: "
