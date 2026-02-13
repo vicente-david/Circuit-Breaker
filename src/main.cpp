@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <iostream>
 #include "audio/AudioEngine.h"
+#include "audio/Sound.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
@@ -62,6 +63,10 @@ int main()
 	Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
 	gameState.addEntity("Track", PhysType::StaticMesh, &track, &none);
 	physicsSys.initStaticMesh(track.GetMesh()[0], none);
+
+	// place holder test sounds
+	Sound testSound = audio->createSound("muteCity");
+	testSound.start();
 
 
 	glEnable(GL_BLEND);

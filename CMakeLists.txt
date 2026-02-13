@@ -90,7 +90,9 @@ if (WIN32)
     )
 
   elseif(UNIX)
-	      target_link_libraries(${PROJECT_NAME} PRIVATE 
+    find_package(OpenAL REQUIRED)
+    set(LIBRARIES ${LIBRARIES} OpenAL::OpenAL)
+    target_link_libraries(${PROJECT_NAME} PRIVATE 
     # physx
     ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
     ${PHYSX_LIB}/libPhysXCooking_static_64.a

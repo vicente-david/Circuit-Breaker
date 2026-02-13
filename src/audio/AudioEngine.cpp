@@ -94,8 +94,8 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	// printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
 }
 
-// update sounde velocity for dopler shifting
-// this shuold be in world coordinates
+// update sound velocity for dopler shifting
+// this should be in world coordinates
 void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 	float vel[3] = {
 		x - listener.velx,
