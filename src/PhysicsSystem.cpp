@@ -19,7 +19,7 @@ PhysicsSystem::PhysicsSystem() // Constructor
 
 	// Create a pyramid of physics-enabled boxes
 	transformList.reserve(465);
-	/*for (physx::PxU32 i = 0; i < size; i++)
+	for (physx::PxU32 i = 0; i < size; i++)
 	{
 		for (physx::PxU32 j = 0; j < size - i; j++)
 		{
@@ -33,7 +33,7 @@ PhysicsSystem::PhysicsSystem() // Constructor
 			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
 			gScene->addActor(*body);
 		}
-	}*/
+	}
 
 	// Clean up
 	shape->release();
@@ -164,7 +164,7 @@ void PhysicsSystem::updatePhysics(double dt, std::vector<Entity> entityList) {
 	gScene->simulate(dt);
 	gScene->fetchResults(true);
 
-	//updateTransforms(entityList);
+	updateTransforms(entityList);
 }
 
 physx::PxVec3 PhysicsSystem::getPos(int i) const { return rigidDynamicList[i]->getGlobalPose().p; }
