@@ -74,7 +74,7 @@ void RenderingSystem::update(std::vector<Entity> entities, std::string fps, Came
 	basicShader->use();
 
 	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+	//view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	view = c1.GetViewMatrix();
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -100,12 +100,12 @@ void RenderingSystem::update(std::vector<Entity> entities, std::string fps, Came
 		unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelTransform));
 		
-		model.Draw();
+		model.Draw(basicShader->id);
 		
 	}
 	// render text
 	textProg->use();
-	RenderText(*textProg, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), textFont);
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f, 1.0f, glm::vec3(1.0f), textFont);
 
 	glfwPollEvents();
 	glfwSwapBuffers(window);

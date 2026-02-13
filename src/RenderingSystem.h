@@ -1,7 +1,7 @@
-#include <memory>
-#include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <memory>
+#include <vector>
 
 #include "Text.h"
 #include "Mesh.h"

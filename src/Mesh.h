@@ -1,7 +1,9 @@
 #pragma once
+#include <glad/gl.h>
+#include <glm/glm.hpp>
 #include <vector>
 #include <string>
-#include <glm/glm.hpp>
+
 
 struct Vertex
 {
@@ -22,7 +24,7 @@ public:
 	std::vector<Texture> textures;
 
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
-	void Draw();
+	void Draw(GLuint& shaderID);
 	
 private:
 	void initMesh();

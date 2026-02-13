@@ -1,10 +1,15 @@
 #include "Model.h"
 #include <iostream>
 
-void Model::Draw() {
+
+void Model::Draw(GLuint& shaderID) {
 	for (unsigned int i = 0; i < meshes.size(); i++) {
-		meshes[i].Draw();
+		meshes[i].Draw(shaderID);
 	}
+}
+
+std::vector<Mesh> Model::GetMesh() {
+	return meshes;
 }
 
 void Model::loadModel(std::string path) {
@@ -72,6 +77,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		std::vector<Texture> diffuseTex = loadMatTextures(material, aiTextureType_DIFFUSE, "diffuse");
 		textures.insert(textures.end(), diffuseTex.begin(), diffuseTex.end());
 	}
+	
 
 	return Mesh(vertices, indices, textures);
 }

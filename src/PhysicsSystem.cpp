@@ -4,7 +4,7 @@ PhysicsSystem::PhysicsSystem() // Constructor
 {
 
 	initPhysX();
-	initGroundPlane();
+	//initGroundPlane();
 	initMaterialFrictionTable();
 
 	// Define a box
@@ -98,6 +98,46 @@ void PhysicsSystem::initMaterialFrictionTable()
 	gPhysXMaterialFrictions[0].material = gMaterial;
 	gPhysXDefaultMaterialFriction = 1.0f;
 	gNbPhysXMaterialFrictions = 1;
+}
+
+PxTriangleMesh* PhysicsSystem::cookTriangleMesh(Mesh mesh) {
+	PxTriangleMeshDesc meshDesc;
+	meshDesc.points.count = mesh.vertices.size();
+	meshDesc.points.stride = sizeof(Vertex);
+	meshDesc.points.data = mesh.vertices.data();
+
+	meshDesc.triangles.count = mesh.indices.size() / 3;
+	meshDesc.triangles.stride = 3 * sizeof(PxU32);
+	meshDesc.triangles.data = mesh.indices.data();
+
+	PxTolerancesScale scale;
+	PxCookingParams params(scale);
+
+	PxDefaultMemoryOutputStream writeBuffer;
+	PxTriangleMeshCookingResult::Enum result;
+	bool status = PxCookTriangleMesh(params, meshDesc, writeBuffer, &result);
+	if (!status)
+		return NULL;
+
+	PxDefaultMemoryInputData readBuffer(writeBuffer.getData(), writeBuffer.getSize());
+	return gPhysics->createTriangleMesh(readBuffer);
+}
+
+void PhysicsSystem::initStaticMesh(Mesh mesh, Transform transform) {
+	PxTriangleMesh* triangleMesh = cookTriangleMesh(mesh);
+
+	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
+	PxTriangleMeshGeometry triGeom(triangleMesh,scale, PxMeshGeometryFlag::eTIGHT_BOUNDS);
+	
+	PxShape* triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+	PxRigidStatic* actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
+	actor->attachShape(*triMeshShape);
+	triMeshShape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+	triMeshShape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+	triMeshShape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+	gScene->addActor(*actor);
+	triMeshShape->release();
+
 }
 
 void PhysicsSystem::updateTransforms(std::vector<Entity> entityList)

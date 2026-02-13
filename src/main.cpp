@@ -42,9 +42,11 @@ int main()
 
 	renderer->initializeText();
 
-	// Create cube object
+	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
+	Model track("assets/plane.obj"); // temporary track model
+
 	// --Placeholder code: Add cubes to game state entityList
 	gameState.entityList.reserve(465);
 	for (int i = 0; i < 465; i++)
@@ -52,6 +54,10 @@ int main()
 		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
 	}
 	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
+
+	Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
+	gameState.addEntity("Track", PhysType::StaticMesh, &track, &none);
+	physicsSys.initStaticMesh(track.GetMesh()[0], none);
 
 
 	glEnable(GL_BLEND);
@@ -62,7 +68,7 @@ int main()
 	std::string fps = std::to_string(0);
 
 	
-
+	c1.Yaw = 0.0f;
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -78,7 +84,7 @@ int main()
 		// input
 		gameActions = inputSystem.getActions();
 		car1.applyInput(gameActions);
-		// c1.updateCamera(gameActions, accumulator);
+		
 
 		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z << "\nRot: "
 			<< tr.rot.x << ' ' << tr.rot.y << ' ' << tr.rot.z << '\n'
@@ -99,6 +105,9 @@ int main()
 			framesPassed = 0;
 		}
 		
+		// c1.updateCamera(gameActions, accumulator);
+		c1.updateCamera(car1.transform.pos, car1.transform.forwardD, gameActions.camXRot, frameTime, gameActions.cameraReset);
+
 		// rendering
 		renderer->update(gameState.entityList, fps, c1);
 

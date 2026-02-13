@@ -5,6 +5,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <string>
+#include <memory>
+
 
 class Model {
 
@@ -12,7 +14,8 @@ public:
 	Model(char* path) {
 		loadModel(path);
 	}
-	void Draw();
+	void Draw(GLuint& shaderID);
+	std::vector<Mesh> GetMesh();
 private:
 	std::vector<Mesh> meshes;
 	std::string directory;

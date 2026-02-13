@@ -3,6 +3,7 @@
 #include "PxPhysicsAPI.h"
 #include "Entity.h"
 #include "Callbacks.h"
+#include "Mesh.h"
 #include <vector>
 #include <iostream>
 
@@ -44,6 +45,9 @@ public:
 	void initPhysX();
 	void initGroundPlane();
 	void initMaterialFrictionTable();
+
+	PxTriangleMesh* cookTriangleMesh(Mesh mesh);
+	void initStaticMesh(Mesh mesh, Transform transform);
 
 	void updateTransforms(std::vector<Entity> entityList);
 
