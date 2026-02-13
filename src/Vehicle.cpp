@@ -188,5 +188,8 @@ void Vehicle::Shimmy(bool rightDir) {
 
 void Vehicle::respawn() {
 	rBody->setGlobalPose(PxTransform(PxVec3(0.f, 0.f, -50.f), PxQuat(PxIdentity)));
-	rBody->setMassSpaceInertiaTensor(PxVec3(PxIdentity));
+
+	PxRigidDynamic* dynamicBody = rBody->is<PxRigidDynamic>();
+	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
+	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
 }
