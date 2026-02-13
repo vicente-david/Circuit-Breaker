@@ -35,7 +35,7 @@ bool Vehicle::init()
 	}
 
 	//Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(0.000000000f, -0.0500000119f, -10.59399998f), PxQuat(PxIdentity));
+	PxTransform startPose(PxVec3(0.000000000f, -0.0500000119f, -50.59399998f), PxQuat(PxIdentity));
 	mVehicle.setUpActor(*mPhysics.gScene, startPose, mVehicleName);
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
@@ -106,15 +106,22 @@ void Vehicle::step(double dt)
 
 void Vehicle::applyInput(Actions& actions)
 {
-	auto& mCmd = mVehicle.mCommandState;
-	// mCmd.brakes[0] = cmd.brake;
-	// mCmd.brakes = actions.moveBackward;
-	mCmd.throttle = actions.moveForward;
-	// mCmd.steer = cmd.steer;
+	mVehicle.mCommandState.brakes[0] = actions.moveBackward;
+	mVehicle.mCommandState.nbBrakes = 1;
+	mVehicle.mCommandState.throttle = actions.moveForward;
+	mVehicle.mCommandState.steer = actions.xRotation;
+	if (actions.boost) Boost();
+	if (actions.shimmyRight) Shimmy(true);
+	if (actions.shimmyLeft) Shimmy(false);
 
-	mCmd.steer = actions.xRotation;
-	// mCmd.steer = actions.xRotation;
-	// mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
+	//// mCmd.brakes[0] = cmd.brake;
+	//// mCmd.brakes = actions.moveBackward;
+	//mCmd.throttle = actions.moveForward;
+	//// mCmd.steer = cmd.steer;
+
+	//mCmd.steer = actions.xRotation;
+	//// mCmd.steer = actions.xRotation;
+	//// mVehicle.mTransmissionCommandState.targetGear = cmd.gear;
 }
 
 void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName) 
@@ -124,11 +131,23 @@ void Vehicle::changeEngineDriveParams(const char* vehicleDataFileName)
 }
 
 void Vehicle::updateTransform() {
-	
-	PxVec3 Ep = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
-	PxQuat Eq = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
-	glm::vec3 glmPos = glm::vec3(Ep.x, Ep.y, Ep.z);
-	glm::quat glmRot = glm::vec3(Eq.x, Eq.y, Eq.z);
-	transform.pos = glmPos;
-	transform.rot = glmRot;
+	PxVec3 p = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().p;
+	PxQuat q = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q;
+	PxVec3 B3 = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
+	transform.pos = glm::vec3(p.x, p.y, p.z);
+	transform.rot = glm::quat(q.x, q.y, q.z, q.w);
+	transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
+}
+
+void Vehicle::Boost() {
+	const PxVec3 forwardDir = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector2();
+	float boostStrength = 100.f;
+	mVehicle.mPhysXState.physxActor.rigidBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+}
+
+void Vehicle::Shimmy(bool rightDir) {
+	PxVec3 direction = mVehicle.mPhysXState.physxActor.rigidBody->getGlobalPose().q.getBasisVector0();
+	if (rightDir) direction = -direction;
+	float shimmyForce = 20000.f;
+	mVehicle.mPhysXState.physxActor.rigidBody->addForce(direction * shimmyForce, PxForceMode::eIMPULSE);
 }

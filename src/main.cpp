@@ -68,7 +68,7 @@ int main()
 	std::string fps = std::to_string(0);
 
 	
-
+	c1.Yaw = 0.0f;
 	// RENDER LOOP
 	while (!glfwWindowShouldClose(renderer->window)) {
 
@@ -106,7 +106,7 @@ int main()
 		}
 		
 		// c1.updateCamera(gameActions, accumulator);
-		c1.updateCamera(car1.transform.pos);
+		c1.updateCamera(car1.transform.pos, car1.transform.forwardD, gameActions.camXRot, frameTime, gameActions.cameraReset);
 
 		// rendering
 		renderer->update(gameState.entityList, fps, c1);
