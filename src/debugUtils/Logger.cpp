@@ -60,6 +60,13 @@ void vlog(std::string type, int level, std::string str, va_list args) {
 	appendLog(type, level, str, args);
 	va_end(args);
 }
+// specify the severity of the log
+// in general
+// 0 = logging info to know whats going on (nothing is wrong)
+// 1 = warnings (things might be weird, but not necissarily wrong)
+// 2 = err (this shouldn't happen)
+// (you can use negative/bigger numbers if you 
+// really want something to be hidden or shown)
 void log(std::string type, int level, std::string str, ...) {
 	va_list args;
 	va_start(args, str);

@@ -1,12 +1,15 @@
 #pragma once
 
+#include "../debugUtils/Logger.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <string>
 class WavData {
   public:
 	WavData() {
-		printf("this shouldn't be called\n");
+		dbug::log("AUDIO", 1,
+				  "wavData created without specifying file name. this "
+				  "shouldn't be used");
 	}
 	WavData(std::string file);
 	// WavData(std::string name, std::string file);

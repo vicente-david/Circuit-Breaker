@@ -12,7 +12,8 @@ WavData::WavData(std::string path) {
 	// this->name = name;
 	auto file = fopen(path.c_str(), "rb");
 	if (file == NULL) {
-		fprintf(stderr, "audio file at '%s' not found\n", path.c_str());
+		dbug::log("AUDIO", 2, "audio file at '%s' was not found\n",
+				  path.c_str());
 		return;
 	}
 
@@ -28,6 +29,10 @@ WavData::WavData(std::string path) {
 
 		  ((header.format[0] == 'W') && (header.format[1] == 'A') &&
 		   (header.format[2] == 'V') && (header.format[3] == 'E')))) {
+			dbug::log(
+				"AUDIO", 2,
+				"invalid  header in file '%s'. it is likely corrupted.\n",
+				path.c_str());
 		fprintf(stderr, "invalid header '%s' for wav file at '%s'\n",
 				header.chunkId, path.c_str());
 		return;
@@ -41,8 +46,10 @@ WavData::WavData(std::string path) {
 		// Read in the sub chunk header.
 		int count = fread(&fmtData, sizeof(fmtData), 1, file);
 		if (count != 1) {
-			fprintf(stderr, "%dcouldn't find  header in file '%s'\n", count,
-					path.c_str());
+			dbug::log(
+				"AUDIO", 2,
+				"Couldn't find header in file '%s'. it is likely corrupted.\n",
+				path.c_str());
 			return;
 		}
 
@@ -66,10 +73,10 @@ WavData::WavData(std::string path) {
 		} else if (fmtData.bitsPerSample == 16) {
 			format = AL_FORMAT_MONO16;
 		} else {
-			fprintf(stderr, "couldn't get format for wav file at '%s'\n",
-					path.c_str());
-			fprintf(stderr, "only 8/16 bit/sample allowed (got %d)\n",
-					fmtData.bitsPerSample);
+			dbug::log(
+				"AUDIO", 2,
+				"format of file '%s'. was not 8/16 bits/sample (got %d).\n",
+				path.c_str(), fmtData.bitsPerSample);
 			return;
 		}
 	} else {
@@ -79,10 +86,10 @@ WavData::WavData(std::string path) {
 		} else if (fmtData.bitsPerSample == 16) {
 			format = AL_FORMAT_STEREO16;
 		} else {
-			fprintf(stderr, "couldn't get format for wav file at '%s'\n",
-					path.c_str());
-			fprintf(stderr, "only 8/16 bit/sample allowed (got %d)\n",
-					fmtData.bitsPerSample);
+			dbug::log(
+				"AUDIO", 2,
+				"format of file '%s'. was not 8/16 bits/sample (got %d).\n",
+				path.c_str(), fmtData.bitsPerSample);
 			return;
 		}
 	}
@@ -150,7 +157,7 @@ ALuint WavData::createSource() {
 	if (!loop) {
 		alSourcei(channel, AL_LOOPING, AL_FALSE);
 		AudioEngine::checkALErrors("setting no looping");
-	}else{
+	} else {
 		alSourcei(channel, AL_LOOPING, AL_TRUE);
 		AudioEngine::checkALErrors("setting yes looping");
 	}

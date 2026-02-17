@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <string>
 #include <vector>
+#include "../debugUtils/Logger.h"
 
 // reference:
 // https://indiegamedev.net/2020/02/15/the-complete-guide-to-openal-with-c-part-1-playing-a-sound/
@@ -18,6 +19,8 @@
 
 AudioEngine::AudioEngine() {
 
+
+	dbug::log("AUDIO", 0, "intializing audio" );
 	// use the deafult audio device
 	device = alcOpenDevice(NULL);
 
@@ -82,6 +85,7 @@ void AudioEngine::updateListenerVel(float x, float y, float z) {
 }
 
 // move a sound instance to a specified location in world coordinates
+// Note: 3d sound only works with mono audio files. if you use sterio there aren't errors, but it just won't move in 3D
 void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	// point for sound loc
 	auto loc = glm::vec4(x, y, z, 1);
@@ -136,30 +140,32 @@ bool AudioEngine::checkALErrors(std::string location) {
 	if (err == AL_NO_ERROR) {
 		return true;
 	}
-	fprintf(stderr, "OpenAl Error at location: %s\n", location.c_str());
+
+	dbug::log("AUDIO", 2, "Open Al Error at location %s\n", location.c_str() );
 	switch (err) {
 	case AL_INVALID_NAME:
-		fprintf(stderr,
+
+		dbug::log("AUDIO",2,
 				"AL_INVALID_NAME: invalid ID was passed to AL function.\n");
 		break;
 
 	case AL_INVALID_ENUM:
-		fprintf(stderr,
+		dbug::log("AUDIO",2,
 				"AL_INVALID_ENUM: invalid enum was passed to AL function.\n");
 		break;
 	case AL_INVALID_VALUE:
-		fprintf(stderr,
+		dbug::log("AUDIO",2,
 				"AL_INVALID_VALUE: invalid value was passed to AL function.\n");
 		break;
 	case AL_INVALID_OPERATION:
-		fprintf(stderr,
+		dbug::log("AUDIO",2,
 				"AL_INVALID_OPERATION: requested operation is invalid.\n");
 		break;
 	case AL_OUT_OF_MEMORY:
-		fprintf(stderr, "AL_OUT_OF_MEMORY: openAL ran out of memory!.\n");
+		dbug::log("AUDIO",2, "AL_OUT_OF_MEMORY: openAL ran out of memory!.\n");
 		break;
 	default:
-		fprintf(stderr, "UNKNOWN AL ERROR: good luck :(\n");
+		dbug::log("AUDIO",2, "UNKNOWN AL ERROR: good luck :(\n");
 		break;
 	}
 	return false;

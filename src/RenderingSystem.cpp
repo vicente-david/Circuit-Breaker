@@ -1,4 +1,5 @@
 #include "RenderingSystem.h"
+#include "debugUtils/Logger.h"
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -41,6 +42,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 
 void RenderingSystem::initializeShaders() {
+	dbug::log("REND",0,"loading shaders");
 	// Create shader program
 	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert", "shaders/basic.frag");
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert", "shaders/testText.frag");

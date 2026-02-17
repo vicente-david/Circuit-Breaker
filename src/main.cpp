@@ -5,6 +5,7 @@
 #include <iostream>
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
+#include "debugUtils/Logger.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
@@ -20,6 +21,9 @@
 
 int main()
 {
+	// change to enable logging of different levels (0-> everything, 1-> warnings, 3-> errors
+	// dbug::minLogSeverity = 0;
+	dbug::loggerInit();
 	auto renderer = std::make_unique<RenderingSystem>();	
 	auto audio = std::make_unique<AudioEngine>();	
 	PhysicsSystem physicsSys;
