@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../debugUtils/Logger.h"
+#include "debugUtils/Logger.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <string>

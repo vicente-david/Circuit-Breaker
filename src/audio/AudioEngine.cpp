@@ -10,7 +10,7 @@
 #include <stdbool.h>
 #include <string>
 #include <vector>
-#include "../debugUtils/Logger.h"
+#include "debugUtils/Logger.h"
 
 // reference:
 // https://indiegamedev.net/2020/02/15/the-complete-guide-to-openal-with-c-part-1-playing-a-sound/

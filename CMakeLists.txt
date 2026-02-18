@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 
 project(circuit-breaker)
 
+include_directories(${PROJECT_SOURCE_DIR}/src)
+
 # run this if using debug version
 #set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
@@ -56,6 +58,7 @@ include_directories(SYSTEM dependencies/glm-0.9.9.7/)
 # OPENGL
 find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
+
 
 
 if (WIN32)
