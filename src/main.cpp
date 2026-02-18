@@ -1,4 +1,5 @@
 #include <iostream>
+#include "Entity.h"
 #include "glad/gl.h"
 #include "GLFW/glfw3.h"
 #include "PxPhysicsAPI.h"
@@ -22,6 +23,8 @@ class Test1 : public System{
 int main()
 {
 
+
+	// ECS Test
 	// create the coordinator
 	Coordinator coordinator;
 	// initialize coordinator 
@@ -40,7 +43,7 @@ int main()
 	coordinator.setSystemSignature<Test1>(signature);
 
 	// initialize entities
-	std::vector<Entity> entities(MAX_ENTITIES);
+	std::vector<EcsEntity> entities(MAX_ENTITIES);
 
 	int count = 0;
 
@@ -65,6 +68,7 @@ int main()
 		std::cout << x << " ";
 	}
 
+	// do game
 
 	auto renderer = std::make_unique<RenderingSystem>();	
 	PhysicsSystem physicsSys;
@@ -84,7 +88,7 @@ int main()
 	
 
 	// --Placeholder code--
-	std::vector<Entity1> entityList;
+	std::vector<Entity> entityList;
 	entityList.reserve(465);
 
 	for (int i = 0; i < 465; i++)
@@ -168,14 +172,14 @@ int main()
 	};
 
 	// Temp function to create list of cube entities
-	std::vector<Entity1> objects{};
+	std::vector<Entity> objects{};
 	for (int i = 0; i < 10; i++) {
 
 		Transform* trans = new Transform();
 		trans->pos = cubePositions[i];
 		trans->rot = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
-		Entity1 entity{ "perro" + std::to_string(i), PhysType::None, &cube, trans};
+		Entity entity{ "perro" + std::to_string(i), PhysType::None, &cube, trans};
 		objects.push_back(entity);
 
 		// push back to entityList vector

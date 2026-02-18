@@ -11,7 +11,7 @@ enum class PhysType {
 	RigidBody	// anything else that has physical properties and moves
 };
 
-class Entity1
+class Entity
 {
 public:
 	std::string name;

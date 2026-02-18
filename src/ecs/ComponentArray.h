@@ -27,7 +27,7 @@ public:
 	// essentially does proper cleanup
 	virtual ~IComponentArray() = default;
 
-	virtual void entityDestroyed(Entity entity) = 0;
+	virtual void entityDestroyed(EcsEntity entity) = 0;
 };
 
 
@@ -40,7 +40,7 @@ class ComponentArray : public IComponentArray {
 public:
 
 	
-	void insertData(Entity entity, T component) {
+	void insertData(EcsEntity entity, T component) {
 		// to-do: asserts
 		// they're basically compiler only if statements, they disappear in release mode
 		// assert(entityToIndexMap.find(entity) == entityToIndexMap.end() && "Component added to same entity more than once.");
@@ -58,7 +58,7 @@ public:
 	}
 
 	// replacing the current last element into the to be deleted element spot
-	void removeData(Entity entity) {
+	void removeData(EcsEntity entity) {
 		// todo: assert (removal of nonexistent component)
 
 		// whatever we are removing, note the index
@@ -70,7 +70,7 @@ public:
 		componentArray[removedIndex] = componentArray[lastIndex];
 
 		// update maps
-		Entity lastEntity = indexToEntity[lastIndex];
+		EcsEntity lastEntity = indexToEntity[lastIndex];
 		entityToIndex[lastEntity] = removedIndex;
 		indexToEntity[removedIndex] = lastEntity;
 
@@ -80,14 +80,14 @@ public:
 	}
 
 	// gets the data of a component
-	T& getData(Entity entity) {
+	T& getData(EcsEntity entity) {
 		// assert: non existent entity
 
 		return componentArray[entityToIndex[entity]];
 	}
 
 	// if an entity was destroyed 
-	void entityDestroyed(Entity entity) override{
+	void entityDestroyed(EcsEntity entity) override{
 
 		// this if statement just means if the entity was found destroy it
 		if (entityToIndex.find(entity) != entityToIndex.end()) {
@@ -101,10 +101,10 @@ private:
 	std::array<T, MAX_ENTITIES> componentArray;
 
 	// map entity id to index in above array
-	std::unordered_map<Entity, size_t> entityToIndex;
+	std::unordered_map<EcsEntity, size_t> entityToIndex;
 
 	// map index to entity id in above array
-	std::unordered_map<size_t, Entity> indexToEntity;
+	std::unordered_map<size_t, EcsEntity> indexToEntity;
 	
 	// how many valid entries are in the array
 	size_t validEntries;
