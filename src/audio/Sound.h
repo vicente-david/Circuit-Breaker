@@ -1,0 +1,19 @@
+#pragma once
+
+#include <AL/al.h>
+#include <string>
+
+class Sound {
+  public:
+	Sound(ALuint source, std::string name);
+	std::string soundName;
+	ALuint source;
+	bool freed = false;
+
+	void stop();
+	void start();
+	void setLooping(bool looping);
+	// void updatePosition(float x, float y, float z);
+	// void updateVelocity(float x, float y, float z);
+
+};

@@ -22,18 +22,53 @@ public:
 	virtual void windowSizeCallback(int width, int height) {};
 };
 
+// might be offloaded to just containing purely inputs
+// purely combined inputs
+// that way we can offload the logic to something else and keep this
+// as purely inputs
 struct Actions {
+
+	// actions are what the game actually uses
+	// raw inputs get combined to make actions
+
+	// steer forward or backward (action)
 	float moveForward = 0.0;
 	float moveBackward = 0.0;
 
+	// keyboard inputs (raw input)
 	bool keyboardForward = false; 
 	bool keyboardBackward = false;
+	
+	// action
+	float keyboardDir = 0.0;
 
+	// controller inputs (raw input)
 	float controllerForward = 0.0;
 	float controllerBackward = 0.0;
+	float controllerDir = 0.0;
 
+	// vehicle rotation (action)
 	float xRotation = 0.0;
 	float yRotation = 0.0;
+
+	// camera rotation (action)
+	float camXRot = 0.0;
+	float camYRot = 0.0;
+
+	// camera rotation (raw input)
+	float keyboardXRot = 0.0;
+	float controllerXRot = 0.0;
+
+	// raw input
+	float cameraReset = true;
+
+	// actions
+	bool boost = false;
+	bool kboost = false;
+	bool shimmyRight = false;
+	bool shimmyLeft = false;
+	bool respawn = false;
+	bool kRespawn = false;
 };
 
 

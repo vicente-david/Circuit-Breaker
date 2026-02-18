@@ -1,22 +1,21 @@
-#include <memory>
-#include <vector>
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <memory>
+#include <vector>
 
-#include "Entity.h"
 #include "Text.h"
-#include "Model.h"
+#include "Mesh.h"
+#include "Entity.h"
 #include "Camera.h"
 
 class RenderingSystem {
 
 public:
 	RenderingSystem();
-	unsigned int initVAO(Vertex* vertices, int vertSize, unsigned int* indices, int indSize);
 	void initializeShaders();
 	void initializeText();
 
-	void update(std::vector<Entity> entities, unsigned int VAO, std::string fps, Camera& c1); //temporarily adding VAO here
+	void update(std::vector<Entity> entities, std::string fps, Camera& c1); //temporarily adding VAO here
 
 	unsigned int textVBO;
 	unsigned int textVAO;

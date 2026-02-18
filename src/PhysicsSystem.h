@@ -3,6 +3,7 @@
 #include "PxPhysicsAPI.h"
 #include "Entity.h"
 #include "Callbacks.h"
+#include "Mesh.h"
 #include <vector>
 #include <iostream>
 
@@ -49,9 +50,12 @@ public:
 	void initGroundPlane();
 	void initMaterialFrictionTable();
 
-	void updateTransforms();
+	PxTriangleMesh* cookTriangleMesh(Mesh mesh);
+	void initStaticMesh(Mesh mesh, Transform transform);
 
-	void updatePhysics(double dt);
+	void updateTransforms(std::vector<Entity> entityList);
+
+	void updatePhysics(double dt, std::vector<Entity> entityList);
 
 	PxVec3 getPos(int i) const; // Get position of id
 	PxQuat getRot(int i) const; // Get rotation of id

@@ -1,4 +1,5 @@
 #pragma once
+#include "InputSystem.h"
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
 #include "Entity.h"
@@ -13,14 +14,15 @@ using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-struct Command
-{
-	PxF32 brake;
-	PxF32 throttle;
-	PxF32 steer;
-	PxU32 gear;
-	// add more when needed
-};
+//struct Command
+//{
+//	PxF32 brake;
+//	PxF32 throttle;
+//	PxF32 steer;
+//	PxU32 gear;
+//	bool boost;
+//	// add more when needed
+//};
 
 
 class Vehicle
@@ -33,10 +35,12 @@ public:
 	void cleanup();
 	void step(double dt);
 
-	void applyInput(const Command& cmd);
+	void applyInput(Actions& actions, double currentTime);
 	void changeEngineDriveParams(const char* vehicleDataPath);
+	void Boost();
+	void Shimmy(bool rightDir);
+	void respawn();
 
-private:
 	PhysicsSystem& mPhysics;
 
 	EngineDriveVehicle mVehicle;
@@ -48,4 +52,17 @@ private:
 
 	const char* mVehicleDataPath = NULL;
 	const char* mVehicleName = "unnamed_vehicle";
+	Transform transform;
+
+private:
+	void updateTransform();
+
+	PxRigidBody* rBody; // Vehicle actor rigid body
+
+	double shimmyCooldown = 1; // Time before you can shimmy again
+	double shimmyActiveTimer = 0; // Time left before you can shimmy
+
+	float boostMax = 100.f; // Maximum amount of boost
+	float boostAmount = boostMax; // Current amount of boost
+	float boostRegenerate = 0.3f; // Regeneration rate
 };
