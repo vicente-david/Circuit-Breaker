@@ -16,12 +16,6 @@ enum class PhysType1 {
 	RigidBody	// anything else that has physical properties and moves
 };
 
-struct TransformC {
-	glm::vec3 pos;
-	glm::quat rot;
-	glm::vec3 scale;
-};
-
 struct Physics1 {
 	PhysType1 physType = PhysType1::None;
 };
@@ -29,6 +23,7 @@ struct Physics1 {
 struct Model1 {
 	Model1* model;
 };
+
 struct RigidBody{
 	physx::PxRigidDynamic* body;
 };

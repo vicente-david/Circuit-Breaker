@@ -40,21 +40,22 @@ int main() {
 	gameState.coordinator->Init();
 
 	// register components
-	gameState.coordinator->registerComponent<TransformC>();
 	gameState.coordinator->registerComponent<Transform>();
 	gameState.coordinator->registerComponent<RigidBody>();
+	// gameState.coordinator->registerComponent<Model>();
 
 	// register systems
 	auto testSystem = gameState.coordinator->registerSystem<Test1>();
 
 	// create signature for the system
 	Signature signature;
-	signature.set(gameState.coordinator->getComponentType<TransformC>());
+	signature.set(gameState.coordinator->getComponentType<Transform>());
 	// set the signature
 	gameState.coordinator->setSystemSignature<Test1>(signature);
 
 	// physics system
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
+	auto renderer = RenderingSystem::registerSystem(gameState.coordinator);
 
 	// initialize entities
 	std::vector<EcsEntity> entities(MAX_ENTITIES);
@@ -66,13 +67,10 @@ int main() {
 		auto entity = gameState.coordinator->createEntity();
 		// add component
 		gameState.coordinator->addComponent(
-			entity, TransformC{glm::vec3(count), glm::vec3(count)});
+			entity, Transform{glm::vec3(count), glm::vec3(count)});
 		count++;
 	}
 
-	for (const auto &x : testSystem->entities) {
-		std::cout << x << " ";
-	}
 
 	// coordinator.destroyEntity(500);
 	// coordinator.destroyEntity(501);
@@ -83,7 +81,6 @@ int main() {
 		std::cout << x << " ";
 	}
 
-	auto renderer = std::make_unique<RenderingSystem>();
 	// PhysicsSystem physicsSys;
 
 	Vehicle car1(physicsSystem);
@@ -212,7 +209,7 @@ int main() {
 						gameActions.cameraReset);
 
 		// rendering
-		renderer->update(gameState.entityList, fps, c1);
+		renderer->update(gameState, fps, c1);
 
 		// update camera location in audio system for 3d audio
 		gameState.audio->updateListenerFrame(c1.GetViewMatrix());

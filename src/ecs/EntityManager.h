@@ -1,18 +1,16 @@
 #pragma once
 #include "debugUtils/Logger.h"
-#include <cstdio>
-#include <queue>
-#include <bitset>
 #include <array>
+#include <bitset>
+#include <cstdio>
 #include <iostream>
+#include <queue>
 // all entity manager does is to
 // manage the creation and deletion of entities
 // this means that giving an entity an id, or adding an id back into usable ids
 // it also means setting that entity's signature, or grabbing that
 
-// IT DOES NOT ADD COMPONENTS 
-
-
+// IT DOES NOT ADD COMPONENTS
 
 // to-do: move these to cmake
 #define MAX_ENTITIES 2000
@@ -26,8 +24,7 @@ using EcsEntity = int;
 // keeps track of which entities are in use and which aren't
 class EntityManager {
 
-public:
-
+  public:
 	EntityManager() {
 		// initialize queue with usable entities
 		for (EcsEntity entity = 0; entity < MAX_ENTITIES; entity++) {
@@ -38,10 +35,14 @@ public:
 	EcsEntity createEntity() {
 
 		// to-do: change into asserts
-		// apparently that's faster and depending on compiler discarded in release mode
-		dbug::log("ECS",0, "Creating entity %d/%d", existingEntities, MAX_ENTITIES);
+		// apparently that's faster and depending on compiler discarded in
+		// release mode dbug::log("ECS",0, "Creating entity %d/%d",
+		// existingEntities, MAX_ENTITIES);
 		if (existingEntities == MAX_ENTITIES) {
-			std::cout << "Too many entities" << std::endl;
+			dbug::log("ECS", 2,
+					  "Too many entities exist! increase MAX_ENTITIES or clean "
+					  "stuff up.");
+			// std::cout << "Too many entities" << std::endl;
 			return -1;
 		}
 		// snag entity id from available ids
@@ -60,7 +61,7 @@ public:
 			std::cout << "Entity out of range" << std::endl;
 			return;
 		}
-		// reset the signature 
+		// reset the signature
 		entitySignatures[entity].reset();
 		// push id back into usable ids
 		usableIDs.push(entity);
@@ -86,7 +87,7 @@ public:
 		return entitySignatures[entity];
 	}
 
-private:
+  private:
 	// reuse of ids is permissible
 	// when entity is destroyed, push that id to the back of the queue
 	// when entity is created, use the id at the front of the queue
@@ -96,11 +97,10 @@ private:
 	// Signature is a type-alias for std::bitset<MAX_COMPONENTS>
 	std::array<Signature, MAX_ENTITIES> entitySignatures{};
 	// signature just means what components that entity has
-	// it is just a bitset 
-	// ex: 101 could correspond to having the transform component, not having a physics type, and having a model component
-
+	// it is just a bitset
+	// ex: 101 could correspond to having the transform component, not having a
+	// physics type, and having a model component
 
 	// alive entities
 	int existingEntities = 0;
-	
 };

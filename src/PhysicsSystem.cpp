@@ -93,6 +93,7 @@ void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coord) {
 	physx::PxU32 size = 30;
 	physx::PxTransform tran(physx::PxVec3(0));
 
+	Model cube("assets/cube.obj");
 	// Create a pyramid of physics-enabled boxes
 	for (physx::PxU32 i = 0; i < size; i++) {
 		for (physx::PxU32 j = 0; j < size - i; j++) {
@@ -112,6 +113,7 @@ void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coord) {
 			EcsEntity ent = coord->createEntity();
 			coord->addComponent(ent, Transform());
 			coord->addComponent(ent, b);
+			// coord->addComponent(ent, cube);
 		}
 	}
 	shape->release();
@@ -254,7 +256,7 @@ std::shared_ptr<PhysicsSystem> PhysicsSystem::registerSystem(std::shared_ptr<Coo
 	// create system signture (what components this system needs)
 	Signature sig;
 	sig.set(coord->getComponentType<physx::PxRigidDynamic>(),
-			coord->getComponentType<TransformC>());
+			coord->getComponentType<Transform>());
 	coord->setSystemSignature<PhysicsSystem>(sig);
 
 	return system;

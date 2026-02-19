@@ -1,21 +1,25 @@
+#pragma once 
+
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-#include <vector>
 
+#include "GameState.h"
 #include "Text.h"
-#include "Mesh.h"
-#include "Entity.h"
 #include "Camera.h"
+#include "ecs/System.h"
 
-class RenderingSystem {
+class RenderingSystem:public System {
 
 public:
 	RenderingSystem();
 	void initializeShaders();
 	void initializeText();
 
-	void update(std::vector<Entity> entities, std::string fps, Camera& c1); //temporarily adding VAO here
+	void update(GameState& gamestate, std::string fps, Camera& c1);
+
+	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
+
 
 	unsigned int textVBO;
 	unsigned int textVAO;
