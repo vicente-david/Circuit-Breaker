@@ -109,14 +109,13 @@ void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coord) {
 			gScene->addActor(*b.body);
 
 			// add to the ecs
-			// EcsEntity ent = coord->createEntity();
-			// coord->addComponent(ent, Transform());
-			// coord->addComponent(ent, b);
+			EcsEntity ent = coord->createEntity();
+			coord->addComponent(ent, Transform());
+			coord->addComponent(ent, b);
 		}
 	}
 	shape->release();
 
-	dbug::log("PHYS",0, "finished test objects");
 }
 
 void PhysicsSystem::initPhysX() {
@@ -249,14 +248,14 @@ void PhysicsSystem::updatePhysics(double dt, GameState &gameState) {
 }
 
 // convinence function to create/register the physics system in the ecs
-std::shared_ptr<PhysicsSystem> PhysicsSystem::registerSystem(Coordinator &coord) {
+std::shared_ptr<PhysicsSystem> PhysicsSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	// register system
-	auto system = coord.registerSystem<PhysicsSystem>();
+	auto system = coord->registerSystem<PhysicsSystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	sig.set(coord.getComponentType<physx::PxRigidDynamic>(),
-			coord.getComponentType<TransformC>());
-	coord.setSystemSignature<PhysicsSystem>(sig);
+	sig.set(coord->getComponentType<physx::PxRigidDynamic>(),
+			coord->getComponentType<TransformC>());
+	coord->setSystemSignature<PhysicsSystem>(sig);
 
 	return system;
 }

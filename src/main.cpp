@@ -34,49 +34,50 @@ int main() {
 
 	dbug::loggerInit();
 
+	GameState gameState;
 	// create the coordinator
-	Coordinator coordinator;
 	// initialize coordinator
-	coordinator.Init();
+	gameState.coordinator->Init();
 
 	// register components
-	coordinator.registerComponent<TransformC>();
+	gameState.coordinator->registerComponent<TransformC>();
+	gameState.coordinator->registerComponent<Transform>();
+	gameState.coordinator->registerComponent<RigidBody>();
 
 	// register systems
-	auto testSystem = coordinator.registerSystem<Test1>();
+	auto testSystem = gameState.coordinator->registerSystem<Test1>();
 
 	// create signature for the system
 	Signature signature;
-	signature.set(coordinator.getComponentType<TransformC>());
+	signature.set(gameState.coordinator->getComponentType<TransformC>());
 	// set the signature
-	coordinator.setSystemSignature<Test1>(signature);
-
+	gameState.coordinator->setSystemSignature<Test1>(signature);
 
 	// physics system
-	auto physicsSystem = PhysicsSystem::registerSystem(coordinator);
+	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
 
 	// initialize entities
 	std::vector<EcsEntity> entities(MAX_ENTITIES);
 
 	int count = 0;
 
-	// for (auto &entity : entities) {
-	// 	// pointer to entity
-	// 	entity = coordinator.createEntity();
-	// 	// add component
-	// 	coordinator.addComponent(
-	// 		entity, TransformC{glm::vec3(count), glm::vec3(count)});
-	// 	count++;
-	// }
+	for (int i = 0; i < 10; i++) {
+		// pointer to entity
+		auto entity = gameState.coordinator->createEntity();
+		// add component
+		gameState.coordinator->addComponent(
+			entity, TransformC{glm::vec3(count), glm::vec3(count)});
+		count++;
+	}
 
 	for (const auto &x : testSystem->entities) {
 		std::cout << x << " ";
 	}
 
-	coordinator.destroyEntity(500);
-	coordinator.destroyEntity(501);
-	coordinator.destroyEntity(502);
-	coordinator.destroyEntity(503);
+	// coordinator.destroyEntity(500);
+	// coordinator.destroyEntity(501);
+	// coordinator.destroyEntity(502);
+	// coordinator.destroyEntity(503);
 
 	for (const auto &x : testSystem->entities) {
 		std::cout << x << " ";
@@ -84,7 +85,6 @@ int main() {
 
 	auto renderer = std::make_unique<RenderingSystem>();
 	// PhysicsSystem physicsSys;
-	GameState gameState;
 
 	Vehicle car1(physicsSystem);
 	car1.init();

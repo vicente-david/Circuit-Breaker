@@ -7,14 +7,12 @@
 
 #include "../snippets/snippetvehiclecommon/SnippetVehicleHelpers.h"
 #include "ecs/Coordinator.h"
-#include "systems/PhysicsManager.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-
-class PhysicsSystem :public System {
+class PhysicsSystem : public System {
   public:
 	// PhysX management class instances.
 	PxDefaultAllocator gAllocator;
@@ -35,8 +33,7 @@ class PhysicsSystem :public System {
 	const PxVec3 gGravity = PxVec3(0.0f, -9.81f, 0.0f);
 
 	PhysicsSystem(); // Constructor
-					 //
-	static std::shared_ptr<PhysicsSystem> registerSystem(Coordinator &coord);
+
 	void createTestObjs(std::shared_ptr<Coordinator> coordinator);
 
 	void initPhysX();
@@ -49,8 +46,10 @@ class PhysicsSystem :public System {
 
 	void updatePhysics(double dt, GameState &gameState);
 
+	static std::shared_ptr<PhysicsSystem>
+	registerSystem(std::shared_ptr<Coordinator> &coord);
 	// this is done through ecs now
 	// PxVec3 getPos(int i) const; // Get position of id
 	// PxQuat getRot(int i) const; // Get rotation of id
-								//
+	//
 };

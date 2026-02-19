@@ -2,6 +2,7 @@
 #include "EntityManager.h"
 #include "ComponentManager.h"
 #include "SystemManager.h"
+#include "debugUtils/Logger.h"
 // coordinates between all things of the ecs system
 // that is communicate between that three managers
 // entity manager, component manager, system manager
@@ -18,6 +19,7 @@ class Coordinator {
 public:
 	// on initialize create the managers
 	void Init() {
+		dbug::log("ECS", 0, "Initializing coordinator");
 		componentManager = std::make_unique<ComponentManager>();
 		entityManager = std::make_unique<EntityManager>();
 		systemManager = std::make_unique<SystemManager>();

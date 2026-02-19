@@ -1,10 +1,12 @@
 #include "GameState.h"
 #include "algorithm"
+#include <cstdio>
+#include <memory>
 
 GameState gameState;
 
 GameState::GameState(){
-		coordinator = std::make_unique<Coordinator>();
+		coordinator = std::make_shared<Coordinator>();
 		audio = std::make_unique<AudioEngine>();
 	}
 
