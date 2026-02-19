@@ -1,4 +1,5 @@
 #pragma once
+#include "PxRigidDynamic.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -27,4 +28,7 @@ struct Physics1 {
 
 struct Model1 {
 	Model1* model;
+};
+struct RigidBody{
+	physx::PxRigidDynamic* body;
 };

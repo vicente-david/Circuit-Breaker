@@ -1,4 +1,5 @@
 #pragma once
+#include "debugUtils/Logger.h"
 #include <queue>
 #include <bitset>
 #include <array>
@@ -37,6 +38,7 @@ public:
 
 		// to-do: change into asserts
 		// apparently that's faster and depending on compiler discarded in release mode
+		dbug::log("ECS",0, "Creating entity %d/%d", existingEntities, MAX_ENTITIES);
 		if (existingEntities == MAX_ENTITIES) {
 			std::cout << "Too many entities" << std::endl;
 			return -1;

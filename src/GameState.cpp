@@ -3,6 +3,11 @@
 
 GameState gameState;
 
+GameState::GameState(){
+		coordinator = std::make_unique<Coordinator>();
+		audio = std::make_unique<AudioEngine>();
+	}
+
 Entity* GameState::addEntity(std::string name, PhysType physType, Model* model, Transform* transform) {
 	Entity e{ name, physType, model, transform };
 	entityList.push_back(e);

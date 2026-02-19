@@ -3,6 +3,7 @@
 #include "PxPhysicsAPI.h"
 #include "PhysicsSystem.h"
 #include "Entity.h"
+#include <memory>
 #include <vector>
 #include <iostream>
 
@@ -29,7 +30,7 @@ class Vehicle
 {
 public:
 	//PhysX management class instances.
-	Vehicle(PhysicsSystem& physicsSystem);
+	Vehicle(std::shared_ptr<PhysicsSystem> physicsSystem);
 
 	bool init();
 	void cleanup();
@@ -41,7 +42,7 @@ public:
 	void Shimmy(bool rightDir);
 	void respawn();
 
-	PhysicsSystem& mPhysics;
+	std::shared_ptr<PhysicsSystem> mPhysics;
 
 	EngineDriveVehicle mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;

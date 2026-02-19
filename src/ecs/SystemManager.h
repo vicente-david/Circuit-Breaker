@@ -12,6 +12,7 @@ public:
 		// todo asserts
 		// get the system type
 		const char* typeName = typeid(T).name();
+		// printf("registering system %s\n", typeName);
 
 		// creates a pointer to the system and returns that pointer
 		auto system = std::make_shared<T>();

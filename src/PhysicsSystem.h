@@ -1,62 +1,56 @@
 #pragma once
 
-#include "PxPhysicsAPI.h"
-#include "Entity.h"
-#include "Callbacks.h"
+#include "GameState.h"
 #include "Mesh.h"
+#include <memory>
 #include <vector>
-#include <iostream>
-
-#include <ctype.h>
 
 #include "../snippets/snippetvehiclecommon/SnippetVehicleHelpers.h"
-#include "../snippets/snippetcommon/SnippetPVD.h"
-
 #include "ecs/Coordinator.h"
+#include "systems/PhysicsManager.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-extern Coordinator coordinator;
 
-class PhysicsSystem : public System
-{
-public:
-	//PhysX management class instances.
-	PxDefaultAllocator		gAllocator;
-	PxDefaultErrorCallback	gErrorCallback;
-	PxFoundation* gFoundation = NULL;
-	PxPhysics* gPhysics = NULL;
-	PxDefaultCpuDispatcher* gDispatcher = NULL;
-	PxScene* gScene = NULL;
-	PxMaterial* gMaterial = NULL;
-	PxPvd* gPvd = NULL;
+class PhysicsSystem :public System {
+  public:
+	// PhysX management class instances.
+	PxDefaultAllocator gAllocator;
+	PxDefaultErrorCallback gErrorCallback;
+	PxFoundation *gFoundation = NULL;
+	PxPhysics *gPhysics = NULL;
+	PxDefaultCpuDispatcher *gDispatcher = NULL;
+	PxScene *gScene = NULL;
+	PxMaterial *gMaterial = NULL;
+	PxPvd *gPvd = NULL;
 
-	//The mapping between PxMaterial and friction.
+	// The mapping between PxMaterial and friction.
 	PxVehiclePhysXMaterialFriction gPhysXMaterialFrictions[16];
 	PxU32 gNbPhysXMaterialFrictions = 0;
 	PxReal gPhysXDefaultMaterialFriction = 1.0f;
 
-	PxRigidStatic* gGroundPlane = NULL;
+	PxRigidStatic *gGroundPlane = NULL;
 	const PxVec3 gGravity = PxVec3(0.0f, -9.81f, 0.0f);
 
-	std::vector<physx::PxRigidDynamic*> rigidDynamicList;
-	std::vector<Transform*> transformList;
-
 	PhysicsSystem(); // Constructor
+					 //
+	static std::shared_ptr<PhysicsSystem> registerSystem(Coordinator &coord);
+	void createTestObjs(std::shared_ptr<Coordinator> coordinator);
 
 	void initPhysX();
-	void initGroundPlane();
 	void initMaterialFrictionTable();
 
-	PxTriangleMesh* cookTriangleMesh(Mesh mesh);
+	PxTriangleMesh *cookTriangleMesh(Mesh mesh);
 	void initStaticMesh(Mesh mesh, Transform transform);
 
-	void updateTransforms(std::vector<Entity> entityList);
+	void updateTransforms(GameState &state);
 
-	void updatePhysics(double dt, std::vector<Entity> entityList);
+	void updatePhysics(double dt, GameState &gameState);
 
-	PxVec3 getPos(int i) const; // Get position of id
-	PxQuat getRot(int i) const; // Get rotation of id
+	// this is done through ecs now
+	// PxVec3 getPos(int i) const; // Get position of id
+	// PxQuat getRot(int i) const; // Get rotation of id
+								//
 };

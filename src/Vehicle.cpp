@@ -1,11 +1,13 @@
 #include "Vehicle.h"
 #include "InputSystem.h"
+#include "PhysicsSystem.h"
+#include <memory>
 
 using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-Vehicle::Vehicle(PhysicsSystem& physicsSystem)
+Vehicle::Vehicle(std::shared_ptr<PhysicsSystem> physicsSystem)
 	: mPhysics(physicsSystem)
 {}
 
@@ -25,9 +27,9 @@ bool Vehicle::init()
 
 	//Set the states to default.
 	if (!mVehicle.initialize(
-		*mPhysics.gPhysics,
+		*mPhysics->gPhysics,
 		PxCookingParams(PxTolerancesScale()),
-		*mPhysics.gMaterial,
+		*mPhysics->gMaterial,
 		EngineDriveVehicle::eDIFFTYPE_FOURWHEELDRIVE
 		))
 	{
@@ -36,7 +38,7 @@ bool Vehicle::init()
 
 	//Apply a start pose to the physx actor and add it to the physx scene.
 	PxTransform startPose(PxVec3(0.000000000f, -0.000000000f, -50.59399998f), PxQuat(PxIdentity));
-	mVehicle.setUpActor(*mPhysics.gScene, startPose, mVehicleName);
+	mVehicle.setUpActor(*mPhysics->gScene, startPose, mVehicleName);
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
 	
@@ -74,8 +76,8 @@ bool Vehicle::init()
 	mVehicleSimContext.frame.vrtAxis = PxVehicleAxes::ePosY;
 	mVehicleSimContext.scale.scale = 1.0f;
 
-	mVehicleSimContext.gravity = mPhysics.gGravity;
-	mVehicleSimContext.physxScene = mPhysics.gScene;
+	mVehicleSimContext.gravity = mPhysics->gGravity;
+	mVehicleSimContext.physxScene = mPhysics->gScene;
 	mVehicleSimContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
 	return true;

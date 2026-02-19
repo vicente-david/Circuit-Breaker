@@ -1,43 +1,47 @@
-#include <AL/al.h>
-#include <cstdio>
-#include <glm/fwd.hpp>
-#include <glm/geometric.hpp>
-#include <iostream>
+#include "Camera.h"
+#include "Entity.h"
+#include "GLFW/glfw3.h"
+#include "GameState.h"
+#include "InputSystem.h"
+#include "Model.h"
+#include "PhysicsSystem.h"
+#include "PxPhysicsAPI.h"
+#include "RenderingSystem.h"
+#include "Vehicle.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "ecs/Component.h"
 #include "glad/gl.h"
-#include "GLFW/glfw3.h"
-#include "PxPhysicsAPI.h"
-#include "RenderingSystem.h"
-#include "PhysicsSystem.h"
-#include "InputSystem.h"
-#include "GameState.h"
-#include "Model.h"
+#include <AL/al.h>
+#include <cstdio>
+#include <glm/fwd.hpp>
+#include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "Camera.h"
-#include "Vehicle.h"
-#include "Entity.h"
+#include <iostream>
 
-class Test1 : public System{
+class Test1 : public System {
 	int i;
 };
 
-int main()
-{
-	// change to enable logging of different levels (0-> everything, 1-> warnings, 3-> errors
-	// dbug::minLogSeverity = 0;
+int main() {
+	// change to enable logging of different levels (0-> everything, 1->
+	// warnings, 3-> errors
+	dbug::minLogSeverity = 0;
+	// dbug::logIgnore("PHYS");
+	// dbug::logIgnore("ECS");
+	// dbug::logIgnoreType = dbug::WHITE_LIST;
+
 	dbug::loggerInit();
 
 	// create the coordinator
 	Coordinator coordinator;
-	// initialize coordinator 
+	// initialize coordinator
 	coordinator.Init();
 
 	// register components
 	coordinator.registerComponent<TransformC>();
-	
+
 	// register systems
 	auto testSystem = coordinator.registerSystem<Test1>();
 
@@ -47,20 +51,25 @@ int main()
 	// set the signature
 	coordinator.setSystemSignature<Test1>(signature);
 
+
+	// physics system
+	auto physicsSystem = PhysicsSystem::registerSystem(coordinator);
+
 	// initialize entities
 	std::vector<EcsEntity> entities(MAX_ENTITIES);
 
 	int count = 0;
 
-	for (auto& entity : entities) {
-		// pointer to entity
-		entity = coordinator.createEntity();
-		// add component
-		coordinator.addComponent(entity, TransformC{glm::vec3(count), glm::vec3(count) });
-		count++;
-	}
+	// for (auto &entity : entities) {
+	// 	// pointer to entity
+	// 	entity = coordinator.createEntity();
+	// 	// add component
+	// 	coordinator.addComponent(
+	// 		entity, TransformC{glm::vec3(count), glm::vec3(count)});
+	// 	count++;
+	// }
 
-	for (const auto& x : testSystem->entities) {
+	for (const auto &x : testSystem->entities) {
 		std::cout << x << " ";
 	}
 
@@ -69,16 +78,15 @@ int main()
 	coordinator.destroyEntity(502);
 	coordinator.destroyEntity(503);
 
-	for (const auto& x : testSystem->entities) {
+	for (const auto &x : testSystem->entities) {
 		std::cout << x << " ";
 	}
 
-	auto renderer = std::make_unique<RenderingSystem>();	
-	auto audio = std::make_unique<AudioEngine>();	
-	PhysicsSystem physicsSys;
+	auto renderer = std::make_unique<RenderingSystem>();
+	// PhysicsSystem physicsSys;
 	GameState gameState;
 
-	Vehicle car1(physicsSys);
+	Vehicle car1(physicsSystem);
 	car1.init();
 	car1.changeEngineDriveParams("TestDrive.json");
 
@@ -87,16 +95,15 @@ int main()
 
 	Actions gameActions = inputSystem.getActions();
 	Camera c1 = Camera();
-	
 
 	// time
 	double t = 0.0;
 	const double dt = 1.0 / 60.0; // simulate at 60fps
-	// if its slower than this, just slow down the game instead of lagging even more
-	const double minFps = 30.0; 
+	// if its slower than this, just slow down the game instead of lagging even
+	// more
+	const double minFps = 30.0;
 	double currentTime = glfwGetTime();
 	double accumulator = 0.0;
-
 
 	renderer->initializeShaders(); // Create shader programs
 
@@ -109,31 +116,30 @@ int main()
 
 	// --Placeholder code: Add cubes to game state entityList
 	gameState.entityList.reserve(465);
-	for (int i = 0; i < 465; i++)
-	{
-		gameState.addEntity("perro cube", PhysType::RigidBody, &cube, physicsSys.transformList[i]);
-	}
+	// for (int i = 0; i < 465; i++) {
+	// 	gameState.addEntity("perro cube", PhysType::RigidBody, &cube,
+	// 						physicsSys.transformList[i]);
+	// }
 	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
 
-	Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
+	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 	gameState.addEntity("Track", PhysType::StaticMesh, &track, &none);
-	physicsSys.initStaticMesh(track.GetMesh()[0], none);
+	physicsSystem->initStaticMesh(track.GetMesh()[0], none);
+	physicsSystem->createTestObjs(gameState.coordinator);
 
 	// place holder test sounds
-	Sound testSound = audio->createSound("muteCity");
+	Sound testSound = gameState.audio->createSound("muteCity");
 	testSound.setLooping(true);
 	testSound.start();
 	float soundX = 0;
 
-
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
-	
+
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-	
 	c1.Yaw = 0.0f;
 
 	// RENDER LOOP
@@ -144,85 +150,79 @@ int main()
 		double frameTime = newTime - currentTime;
 		currentTime = newTime;
 		accumulator += frameTime;
-		accumulator = std::min(accumulator, 1/minFps);
+		accumulator = std::min(accumulator, 1 / minFps);
 		framesPassed++;
-
 
 		// input
 		gameActions = inputSystem.getActions();
 		car1.applyInput(gameActions, dt);
-		
 
-		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z << "\nRot: "
+		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z
+		   << "\nRot: "
 			<< tr.rot.x << ' ' << tr.rot.y << ' ' << tr.rot.z << '\n'
 			<< std::endl;*/
 
 		// physics
 		while (accumulator >= dt) {
 			car1.step(dt);
-			physicsSys.updatePhysics(dt, gameState.entityList);
+			physicsSystem->updatePhysics(dt, gameState);
 			accumulator -= dt;
 			t += dt;
 
-
-
 			// dopler shift test
-			// this stuff would  go in whatever is playing a sound (ex. physics collision
-			// and like gamestate stuff for 
-			
+			// this stuff would  go in whatever is playing a sound (ex. physics
+			// collision and like gamestate stuff for
+
 			// test moving the sound left/right
 			float soundVel = 0;
-			if(gameActions.shimmyLeft){
-				soundX-=0.5f;
+			if (gameActions.shimmyLeft) {
+				soundX -= 0.5f;
 				soundVel = -15;
 				gameActions.shimmyLeft = false;
 			}
-			if(gameActions.shimmyRight){
-				soundX+=0.5f;
+			if (gameActions.shimmyRight) {
+				soundX += 0.5f;
 				soundVel = 15;
 				gameActions.shimmyRight = false;
 			}
-			audio->updateSoundLoc(testSound, soundX, 0, 0);
-			audio->updateSoundVel(testSound, soundVel, 0, 0);
+			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
+			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 
 			// dopler effect when boosting by setting listner's velocity
-			if(gameActions.boost){
-				auto vel =  glm::vec4(-10,0,0,1)*c1.GetViewMatrix();
-				audio->updateListenerVel(vel.x, vel.y, vel.z);
+			if (gameActions.boost) {
+				auto vel = glm::vec4(-10, 0, 0, 1) * c1.GetViewMatrix();
+				gameState.audio->updateListenerVel(vel.x, vel.y, vel.z);
 
-			}else{
-				audio->updateListenerVel(0,0,0);
+			} else {
+				gameState.audio->updateListenerVel(0, 0, 0);
 			}
-
 		}
-		
-
 
 		if (t >= 1.0) {
-			fps = std::to_string(static_cast<int>(std::round(framesPassed / t)));
+			fps =
+				std::to_string(static_cast<int>(std::round(framesPassed / t)));
 			t -= 1.0;
 			framesPassed = 0;
 		}
-		
+
 		// c1.updateCamera(gameActions, accumulator);
 		// todo: fix (will be integrated into new ecs system)
-		c1.updateCamera(car1.transform.pos, car1.transform.forwardD, gameActions.camXRot, frameTime, gameActions.cameraReset);
+		c1.updateCamera(car1.transform.pos, car1.transform.forwardD,
+						gameActions.camXRot, frameTime,
+						gameActions.cameraReset);
 
 		// rendering
 		renderer->update(gameState.entityList, fps, c1);
 
 		// update camera location in audio system for 3d audio
-		audio->updateListenerFrame(c1.GetViewMatrix());
-		// tihs just cleans up completed sounds, so it doesn't need to be called super often
-		audio->update(dt);
-
-
+		gameState.audio->updateListenerFrame(c1.GetViewMatrix());
+		// tihs just cleans up completed sounds, so it doesn't need to be called
+		// super often
+		gameState.audio->update(dt);
 	}
 	car1.cleanup();
-	audio->close();
+	gameState.audio->close();
 	glfwTerminate();
-	
 
 	return 0;
 }
-
