@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
 #include "Transform.h"
-#include "Model.h"
+#include "ecs/Component.h"
+#include "graphics/Model.h"
 
 // class to store types of physics for each object
 enum class PhysType {

@@ -1,7 +1,7 @@
 #pragma once
 #include "InputSystem.h"
 #include "PxPhysicsAPI.h"
-#include "PhysicsSystem.h"
+#include "physics/PhysicsSystem.h"
 #include "Entity.h"
 #include <memory>
 #include <vector>

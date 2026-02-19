@@ -86,11 +86,9 @@ void RenderingSystem::update(GameState &game, std::string fps, Camera &c1) {
 	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-	Model model("assets/cube.obj");
-
 	// draw every entities model at the location of it's transform
 	for (auto &entity : entities) {
-		// Model& model = game.coordinator->getComponent<Model>(entity);
+		Model& model = game.coordinator->getComponent<Model>(entity);
 		Transform &transform =
 			game.coordinator->getComponent<Transform>(entity);
 
@@ -120,9 +118,9 @@ RenderingSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	auto system = coord->registerSystem<RenderingSystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	sig.set(coord->getComponentType<Transform>());
-	// sig.set(coord->getComponentType<Model>(),
-	// 		coord->getComponentType<Transform>());
+	// sig.set(coord->getComponentType<Transform>());
+	sig.set(coord->getComponentType<Model>(),
+			coord->getComponentType<Transform>());
 	coord->setSystemSignature<RenderingSystem>(sig);
 
 	return system;

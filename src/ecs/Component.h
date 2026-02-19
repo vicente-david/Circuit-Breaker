@@ -20,10 +20,11 @@ struct Physics1 {
 	PhysType1 physType = PhysType1::None;
 };
 
-struct Model1 {
-	Model1* model;
-};
 
-struct RigidBody{
-	physx::PxRigidDynamic* body;
+class Transform
+{
+public:
+	glm::vec3 pos;
+	glm::quat rot;
+	glm::vec3 forwardD;
 };

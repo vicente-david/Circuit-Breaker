@@ -1,14 +1,17 @@
 #pragma once
 
 #include "Entity.h"
+#include "PxPhysics.h"
 #include "audio/AudioEngine.h"
 #include "ecs/Coordinator.h"
+// #include "physics/PhysicsSystem.h"
 #include <memory>
 
 class GameState {
 public:
 
 	std::shared_ptr<Coordinator> coordinator;
+	// std::shared_ptr<PhysicsSystem> physx;
 	std::unique_ptr<AudioEngine> audio;
 
 	// Public functions

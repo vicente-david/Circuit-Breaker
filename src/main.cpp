@@ -1,12 +1,13 @@
-#include "Camera.h"
+#include "graphics/Camera.h"
 #include "Entity.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
 #include "InputSystem.h"
-#include "Model.h"
-#include "PhysicsSystem.h"
+#include "graphics/Model.h"
+#include "physics/PhysicsSystem.h"
 #include "PxPhysicsAPI.h"
-#include "RenderingSystem.h"
+#include "PxRigidDynamic.h"
+#include "graphics/RenderingSystem.h"
 #include "Vehicle.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
@@ -41,8 +42,8 @@ int main() {
 
 	// register components
 	gameState.coordinator->registerComponent<Transform>();
-	gameState.coordinator->registerComponent<RigidBody>();
-	// gameState.coordinator->registerComponent<Model>();
+	gameState.coordinator->registerComponent<physx::PxRigidDynamic*>();
+	gameState.coordinator->registerComponent<Model>();
 
 	// register systems
 	auto testSystem = gameState.coordinator->registerSystem<Test1>();
@@ -56,32 +57,8 @@ int main() {
 	// physics system
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
 	auto renderer = RenderingSystem::registerSystem(gameState.coordinator);
+	// gameState.physx = physicsSystem->gPhysics;
 
-	// initialize entities
-	std::vector<EcsEntity> entities(MAX_ENTITIES);
-
-	int count = 0;
-
-	for (int i = 0; i < 10; i++) {
-		// pointer to entity
-		auto entity = gameState.coordinator->createEntity();
-		// add component
-		gameState.coordinator->addComponent(
-			entity, Transform{glm::vec3(count), glm::vec3(count)});
-		count++;
-	}
-
-
-	// coordinator.destroyEntity(500);
-	// coordinator.destroyEntity(501);
-	// coordinator.destroyEntity(502);
-	// coordinator.destroyEntity(503);
-
-	for (const auto &x : testSystem->entities) {
-		std::cout << x << " ";
-	}
-
-	// PhysicsSystem physicsSys;
 
 	Vehicle car1(physicsSystem);
 	car1.init();

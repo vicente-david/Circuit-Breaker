@@ -2,6 +2,7 @@
 #include "../snippets/snippetcommon/SnippetPVD.h"
 #include "Callbacks.h"
 #include "GameState.h"
+#include "PxPhysics.h"
 #include "PxRigidDynamic.h"
 #include "Transform.h"
 #include "debugUtils/Logger.h"
@@ -79,7 +80,7 @@ PhysicsSystem::PhysicsSystem() // Constructor
 	triggerRect->release();
 }
 
-void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coord) {
+void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coordinator){
 	dbug::log("PHYS",0, "Creating test objects");
 	float halfLen = 0.5f;
 	physx::PxShape *shape = gPhysics->createShape(
@@ -94,6 +95,7 @@ void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coord) {
 	physx::PxTransform tran(physx::PxVec3(0));
 
 	Model cube("assets/cube.obj");
+	Model spark("assets/spark.obj");
 	// Create a pyramid of physics-enabled boxes
 	for (physx::PxU32 i = 0; i < size; i++) {
 		for (physx::PxU32 j = 0; j < size - i; j++) {
@@ -101,19 +103,24 @@ void PhysicsSystem::createTestObjs(std::shared_ptr<Coordinator> coord) {
 				physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i),
 							  physx::PxReal(i * 2 - 1), 0) *
 				halfLen);
-			RigidBody b;
-			b.body = gPhysics->createRigidDynamic(tran.transform(localTran));
+			PxRigidDynamic* b;
+			b = gPhysics->createRigidDynamic(tran.transform(localTran));
 
 
-			b.body->attachShape(*shape);
-			physx::PxRigidBodyExt::updateMassAndInertia(*b.body, 10.0f);
-			gScene->addActor(*b.body);
+			// give different models
+			b->attachShape(*shape);
+			physx::PxRigidBodyExt::updateMassAndInertia(*b, 10.0f);
+			gScene->addActor(*b);
 
 			// add to the ecs
-			EcsEntity ent = coord->createEntity();
-			coord->addComponent(ent, Transform());
-			coord->addComponent(ent, b);
-			// coord->addComponent(ent, cube);
+			EcsEntity ent = coordinator->createEntity();
+			coordinator->addComponent(ent, Transform());
+			coordinator->addComponent(ent, b);
+			if (j%2==0){
+			coordinator->addComponent(ent, cube);
+			}else{
+			coordinator->addComponent(ent, spark);
+			}
 		}
 	}
 	shape->release();
@@ -128,8 +135,8 @@ void PhysicsSystem::initPhysX() {
 	PxPvdTransport *transport =
 		PxDefaultPvdSocketTransportCreate(PVD_HOST, 5425, 10);
 	gPvd->connect(*transport, PxPvdInstrumentationFlag::eALL);
-	gPhysics = PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation,
-							   PxTolerancesScale(), true, gPvd);
+	gPhysics = std::shared_ptr<PxPhysics>(PxCreatePhysics(PX_PHYSICS_VERSION, *gFoundation,
+							   PxTolerancesScale(), true, gPvd));
 
 	// Scene
 	PxSceneDesc sceneDesc(gPhysics->getTolerancesScale());
@@ -230,11 +237,11 @@ void PhysicsSystem::updateTransforms(GameState &state) {
 	// update the transform to match the state of the physics simulation
 	for (auto const &entity : entities) {
 		auto &body =
-			state.coordinator->getComponent<RigidBody>(entity);
+			state.coordinator->getComponent<physx::PxRigidDynamic*>(entity);
 		auto &transform = state.coordinator->getComponent<Transform>(entity);
 
-		physx::PxVec3 p = body.body->getGlobalPose().p;
-		physx::PxQuat q = body.body->getGlobalPose().q;
+		physx::PxVec3 p = body->getGlobalPose().p;
+		physx::PxQuat q = body->getGlobalPose().q;
 		physx::PxVec3 B3 = q.getBasisVector2();
 		transform.pos = glm::vec3(p.x, p.y, p.z);
 		transform.rot = glm::quat(q.x, q.y, q.z, q.w);
@@ -255,7 +262,7 @@ std::shared_ptr<PhysicsSystem> PhysicsSystem::registerSystem(std::shared_ptr<Coo
 	auto system = coord->registerSystem<PhysicsSystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	sig.set(coord->getComponentType<physx::PxRigidDynamic>(),
+	sig.set(coord->getComponentType<physx::PxRigidDynamic*>(),
 			coord->getComponentType<Transform>());
 	coord->setSystemSignature<PhysicsSystem>(sig);
 

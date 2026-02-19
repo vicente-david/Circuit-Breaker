@@ -1,11 +1,11 @@
 #pragma once
 
 #include "GameState.h"
-#include "Mesh.h"
 #include <memory>
 #include <vector>
 
 #include "../snippets/snippetvehiclecommon/SnippetVehicleHelpers.h"
+#include "PxPhysics.h"
 #include "ecs/Coordinator.h"
 
 using namespace physx;
@@ -18,7 +18,7 @@ class PhysicsSystem : public System {
 	PxDefaultAllocator gAllocator;
 	PxDefaultErrorCallback gErrorCallback;
 	PxFoundation *gFoundation = NULL;
-	PxPhysics *gPhysics = NULL;
+	std::shared_ptr<PxPhysics> gPhysics = NULL;
 	PxDefaultCpuDispatcher *gDispatcher = NULL;
 	PxScene *gScene = NULL;
 	PxMaterial *gMaterial = NULL;
