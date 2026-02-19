@@ -88,6 +88,8 @@ void RenderingSystem::update(GameState &game, std::string fps, Camera &c1) {
 
 	// draw every entities model at the location of it's transform
 	for (auto &entity : entities) {
+		dbug::log("REND",0, "Drawing entity %d", entity);
+
 		Model& model = game.coordinator->getComponent<Model>(entity);
 		Transform &transform =
 			game.coordinator->getComponent<Transform>(entity);
@@ -119,8 +121,8 @@ RenderingSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	// create system signture (what components this system needs)
 	Signature sig;
 	// sig.set(coord->getComponentType<Transform>());
-	sig.set(coord->getComponentType<Model>(),
-			coord->getComponentType<Transform>());
+	sig.set(coord->getComponentType<Transform>());
+	sig.set(coord->getComponentType<Model>());
 	coord->setSystemSignature<RenderingSystem>(sig);
 
 	return system;

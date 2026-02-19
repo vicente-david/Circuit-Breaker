@@ -1,4 +1,5 @@
 #include "Vehicle.h"
+#include "GameState.h"
 #include "InputSystem.h"
 #include "physics/PhysicsSystem.h"
 #include <memory>
@@ -7,7 +8,7 @@ using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
-Vehicle::Vehicle(std::shared_ptr<PhysicsSystem> physicsSystem)
+Vehicle::Vehicle(std::shared_ptr<PhysicsManager> physicsSystem)
 	: mPhysics(physicsSystem)
 {}
 

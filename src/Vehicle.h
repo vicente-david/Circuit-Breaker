@@ -1,4 +1,5 @@
 #pragma once
+#include "GameState.h"
 #include "InputSystem.h"
 #include "PxPhysicsAPI.h"
 #include "physics/PhysicsSystem.h"
@@ -30,7 +31,7 @@ class Vehicle
 {
 public:
 	//PhysX management class instances.
-	Vehicle(std::shared_ptr<PhysicsSystem> physicsSystem);
+	Vehicle(std::shared_ptr<PhysicsManager> physicsSystem);
 
 	bool init();
 	void cleanup();
@@ -42,7 +43,7 @@ public:
 	void Shimmy(bool rightDir);
 	void respawn();
 
-	std::shared_ptr<PhysicsSystem> mPhysics;
+	std::shared_ptr<PhysicsManager> mPhysics;
 
 	EngineDriveVehicle mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;

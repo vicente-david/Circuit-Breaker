@@ -1,9 +1,11 @@
+#include "ecs/EntityManager.h"
 #include "graphics/Camera.h"
 #include "Entity.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
 #include "InputSystem.h"
 #include "graphics/Model.h"
+#include "physics/PhysicsManager.h"
 #include "physics/PhysicsSystem.h"
 #include "PxPhysicsAPI.h"
 #include "PxRigidDynamic.h"
@@ -20,6 +22,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <memory>
 
 class Test1 : public System {
 	int i;
@@ -60,7 +63,11 @@ int main() {
 	// gameState.physx = physicsSystem->gPhysics;
 
 
-	Vehicle car1(physicsSystem);
+	// create physics manager
+	std::shared_ptr<PhysicsManager> physicsManager = std::make_shared<PhysicsManager>();
+	gameState.physics = physicsManager;
+
+	Vehicle car1(physicsManager);
 	car1.init();
 	car1.changeEngineDriveParams("TestDrive.json");
 
@@ -80,26 +87,26 @@ int main() {
 	double accumulator = 0.0;
 
 	renderer->initializeShaders(); // Create shader programs
-
 	renderer->initializeText();
 
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model track("assets/plane.obj"); // temporary track model
+	Model trackModel("assets/plane.obj"); // temporary track model
 
-	// --Placeholder code: Add cubes to game state entityList
-	gameState.entityList.reserve(465);
-	// for (int i = 0; i < 465; i++) {
-	// 	gameState.addEntity("perro cube", PhysType::RigidBody, &cube,
-	// 						physicsSys.transformList[i]);
-	// }
 	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
 
+
+	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
-	gameState.addEntity("Track", PhysType::StaticMesh, &track, &none);
-	physicsSystem->initStaticMesh(track.GetMesh()[0], none);
-	physicsSystem->createTestObjs(gameState.coordinator);
+
+	EcsEntity track = gameState.coordinator->createEntity();
+	gameState.coordinator->addComponent(track, none);
+	gameState.coordinator->addComponent(track,trackModel);
+	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
+	dbug::log(0,"trackId:%d", track);
+
+	physicsManager->createTestObjs(*gameState.coordinator);
 
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
@@ -117,6 +124,7 @@ int main() {
 	c1.Yaw = 0.0f;
 
 	// RENDER LOOP
+	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
 
 		// time

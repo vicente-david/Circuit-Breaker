@@ -106,7 +106,7 @@ public:
 	}
 
 private:
-	std::unique_ptr<ComponentManager> componentManager;
 	std::unique_ptr<EntityManager> entityManager;
+	std::unique_ptr<ComponentManager> componentManager;
 	std::unique_ptr<SystemManager> systemManager;
 };

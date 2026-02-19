@@ -1,4 +1,5 @@
 #include "EntityManager.h"
+#include <cstdio>
 #include <memory>
 #include <unordered_map>
 #include "System.h"
@@ -26,6 +27,7 @@ public:
 	void setSignature(Signature signature) {
 		const char* typeName = typeid(T).name();
 
+		printf("system %s sig: %b\n", typeName, signature);
 		// insert {systemtype, signature for systemtype} 
 		signatures.insert({ typeName, signature });
 	}
