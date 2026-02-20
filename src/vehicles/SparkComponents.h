@@ -5,6 +5,10 @@
 
 using namespace snippetvehicle;
 
+struct HumanController {
+	int controllerNum=0;
+};
+
 struct SparkControls {
 	float steering; // range [-1,1] for turning left/right
 	float throttle; // [0-1] for going forewards

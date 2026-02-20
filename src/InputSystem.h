@@ -31,21 +31,10 @@ struct Actions {
 	// actions are what the game actually uses
 	// raw inputs get combined to make actions
 
+	// actions
 	// steer forward or backward (action)
 	float moveForward = 0.0;
 	float moveBackward = 0.0;
-
-	// keyboard inputs (raw input)
-	bool keyboardForward = false; 
-	bool keyboardBackward = false;
-	
-	// action
-	float keyboardDir = 0.0;
-
-	// controller inputs (raw input)
-	float controllerForward = 0.0;
-	float controllerBackward = 0.0;
-	float controllerDir = 0.0;
 
 	// vehicle rotation (action)
 	float xRotation = 0.0;
@@ -55,12 +44,6 @@ struct Actions {
 	float camXRot = 0.0;
 	float camYRot = 0.0;
 
-	// camera rotation (raw input)
-	float keyboardXRot = 0.0;
-	float controllerXRot = 0.0;
-
-	// raw input
-	float cameraReset = true;
 
 	// actions
 	bool boost = false;
@@ -69,6 +52,27 @@ struct Actions {
 	bool shimmyLeft = false;
 	bool respawn = false;
 	bool kRespawn = false;
+
+
+	float cameraReset = true;
+
+	// raw inputs
+	// controller inputs (raw input)
+	float controllerForward = 0.0;
+	float controllerBackward = 0.0;
+	float controllerDir = 0.0;
+
+	// keyboard inputs (raw input)
+	bool keyboardForward = false; 
+	bool keyboardBackward = false;
+	
+	// action
+	float keyboardDir = 0.0;
+
+	// camera rotation (raw input)
+	float keyboardXRot = 0.0;
+	float controllerXRot = 0.0;
+
 };
 
 

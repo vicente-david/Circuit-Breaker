@@ -15,6 +15,7 @@
 #include "graphics/RenderingSystem.h"
 #include "physics/PhysicsManager.h"
 #include "physics/PhysicsSystem.h"
+#include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
 #include "vehicles/Vehicle.h"
@@ -25,14 +26,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 
-class Test1 : public System {
-	int i;
-};
 
 int main() {
 	// change to enable logging of different levels (0-> everything, 1->
-	// warnings, 3-> errors
-	dbug::minLogSeverity = 0;
+	// warnings, 3-> errors, -1-> things that get spamed every frame)
+	dbug::minLogSeverity = -1;
 	// dbug::logIgnore("PHYS");
 	// dbug::logIgnore("ECS");
 	// dbug::logIgnoreType = dbug::WHITE_LIST;
@@ -50,28 +48,21 @@ int main() {
 	gameState.coordinator->registerComponent<Model>();
 	gameState.coordinator->registerComponent<SparkControls>();
 	gameState.coordinator->registerComponent<SparkData>();
-
-	// register systems
-	auto testSystem = gameState.coordinator->registerSystem<Test1>();
-
-	// create signature for the system
-	Signature signature;
-	signature.set(gameState.coordinator->getComponentType<Transform>());
-	// set the signature
-	gameState.coordinator->setSystemSignature<Test1>(signature);
+	gameState.coordinator->registerComponent<HumanController>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
 	auto renderer = RenderingSystem::registerSystem(gameState.coordinator);
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
-	// gameState.physx = physicsSystem->gPhysics;
+	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
+
 
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
 		std::make_shared<PhysicsManager>();
 	gameState.physics = physicsManager;
 
-	// old vehicle fr reference/testing
+	// old vehicle for reference/testing
 	Vehicle car1(gameState.physics);
 	car1.init();
 	car1.changeEngineDriveParams("TestDrive.json");
@@ -128,19 +119,11 @@ int main() {
 	c1.Yaw = 0.0f;
 
 	// create spark with new system
-	auto spak = sparkSys->createSpark(gameState);
-
-	// update the car, but this time it crashes (literally the same code)
 	{
-		auto &sd2 = gameState.coordinator->getComponent<SparkData>(spak);
-
-		dbug::log("Pain", 2, "sd:%p", &sd2);
-		sd2.mVehicle.mComponentSequence.setSubsteps(
-			sd2.mVehicle.mComponentSequenceSubstepGroupHandle, 2);
-		dbug::log("Pain", 2, "a");
-		sd2.mVehicle.step(0.02, sd2.mVehicleSimContext);
-		dbug::log("Pain", 2, "b");
+		auto sparkEntity = sparkSys->createSpark(gameState);
+		gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	}
+
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -154,8 +137,11 @@ int main() {
 		framesPassed++;
 
 		// input
+		
 		gameActions = inputSystem.getActions();
-		car1.applyInput(gameActions, dt);
+		gameState.inputActions = gameActions;
+		controllerSys->update(gameState);
+		// car1.applyInput(gameActions, dt);
 
 		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z
 		   << "\nRot: "

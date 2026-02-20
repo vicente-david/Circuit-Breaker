@@ -104,7 +104,6 @@ void Vehicle::step(double dt)
 	const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
 	
 
-		printf("veh phys: %p\n", mVehicleSimContext.physxScene);
 	mVehicle.mComponentSequence.setSubsteps(mVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
 	mVehicle.step(dt, mVehicleSimContext);
 
