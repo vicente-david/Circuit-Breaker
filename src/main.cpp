@@ -1,27 +1,28 @@
-#include "ecs/EntityManager.h"
-#include "graphics/Camera.h"
 #include "Entity.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
 #include "InputSystem.h"
-#include "graphics/Model.h"
-#include "physics/PhysicsManager.h"
-#include "physics/PhysicsSystem.h"
 #include "PxPhysicsAPI.h"
 #include "PxRigidDynamic.h"
-#include "graphics/RenderingSystem.h"
-#include "Vehicle.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "ecs/Component.h"
+#include "ecs/EntityManager.h"
 #include "glad/gl.h"
+#include "graphics/Camera.h"
+#include "graphics/Model.h"
+#include "graphics/RenderingSystem.h"
+#include "physics/PhysicsManager.h"
+#include "physics/PhysicsSystem.h"
+#include "vehicles/SparkComponents.h"
+#include "vehicles/SparkSys.h"
+#include "vehicles/Vehicle.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
 #include <memory>
 
 class Test1 : public System {
@@ -45,8 +46,10 @@ int main() {
 
 	// register components
 	gameState.coordinator->registerComponent<Transform>();
-	gameState.coordinator->registerComponent<physx::PxRigidDynamic*>();
+	gameState.coordinator->registerComponent<physx::PxRigidBody *>();
 	gameState.coordinator->registerComponent<Model>();
+	gameState.coordinator->registerComponent<SparkControls>();
+	gameState.coordinator->registerComponent<SparkData>();
 
 	// register systems
 	auto testSystem = gameState.coordinator->registerSystem<Test1>();
@@ -57,17 +60,19 @@ int main() {
 	// set the signature
 	gameState.coordinator->setSystemSignature<Test1>(signature);
 
-	// physics system
+	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
 	auto renderer = RenderingSystem::registerSystem(gameState.coordinator);
+	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	// gameState.physx = physicsSystem->gPhysics;
 
-
 	// create physics manager
-	std::shared_ptr<PhysicsManager> physicsManager = std::make_shared<PhysicsManager>();
+	std::shared_ptr<PhysicsManager> physicsManager =
+		std::make_shared<PhysicsManager>();
 	gameState.physics = physicsManager;
 
-	Vehicle car1(physicsManager);
+	// old vehicle fr reference/testing
+	Vehicle car1(gameState.physics);
 	car1.init();
 	car1.changeEngineDriveParams("TestDrive.json");
 
@@ -96,15 +101,14 @@ int main() {
 
 	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
 
-
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 
 	EcsEntity track = gameState.coordinator->createEntity();
 	gameState.coordinator->addComponent(track, none);
-	gameState.coordinator->addComponent(track,trackModel);
+	gameState.coordinator->addComponent(track, trackModel);
 	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
-	dbug::log(0,"trackId:%d", track);
+	dbug::log(0, "track entity id:%d", track);
 
 	physicsManager->createTestObjs(*gameState.coordinator);
 
@@ -123,6 +127,20 @@ int main() {
 
 	c1.Yaw = 0.0f;
 
+	// create spark with new system
+	auto spak = sparkSys->createSpark(gameState);
+
+	// update the car, but this time it crashes (literally the same code)
+	{
+		auto &sd2 = gameState.coordinator->getComponent<SparkData>(spak);
+
+		dbug::log("Pain", 2, "sd:%p", &sd2);
+		sd2.mVehicle.mComponentSequence.setSubsteps(
+			sd2.mVehicle.mComponentSequenceSubstepGroupHandle, 2);
+		dbug::log("Pain", 2, "a");
+		sd2.mVehicle.step(0.02, sd2.mVehicleSimContext);
+		dbug::log("Pain", 2, "b");
+	}
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -147,6 +165,8 @@ int main() {
 		// physics
 		while (accumulator >= dt) {
 			car1.step(dt);
+
+			sparkSys->updateSparks(dt, gameState);
 			physicsSystem->updatePhysics(dt, gameState);
 			accumulator -= dt;
 			t += dt;

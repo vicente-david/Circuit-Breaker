@@ -1,5 +1,6 @@
 #include "PhysicsSystem.h"
 #include "GameState.h"
+#include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
@@ -12,7 +13,7 @@ PhysicsSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	auto system = coord->registerSystem<PhysicsSystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	sig.set(coord->getComponentType<physx::PxRigidDynamic *>());
+	sig.set(coord->getComponentType<physx::PxRigidBody *>());
 	sig.set(coord->getComponentType<Transform>());
 	coord->setSystemSignature<PhysicsSystem>(sig);
 
@@ -29,7 +30,7 @@ void PhysicsSystem::updateTransforms(GameState &state) {
 	// update the transform to match the state of the physics simulation
 	for (auto const &entity : entities) {
 		auto &body =
-			state.coordinator->getComponent<physx::PxRigidDynamic *>(entity);
+			state.coordinator->getComponent<physx::PxRigidBody *>(entity);
 		auto &transform = state.coordinator->getComponent<Transform>(entity);
 
 		physx::PxVec3 p = body->getGlobalPose().p;
@@ -38,6 +39,7 @@ void PhysicsSystem::updateTransforms(GameState &state) {
 		transform.pos = glm::vec3(p.x, p.y, p.z);
 		transform.rot = glm::quat(q.x, q.y, q.z, q.w);
 		transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
-		dbug::log("PHYS", 0, "Entity %d at [%f, %f, %f]", entity, p.x, p.y, p.z);
+		dbug::log("PHYS", 0, "Entity %d at [%f, %f, %f]", entity, p.x, p.y,
+		p.z);
 	}
 }

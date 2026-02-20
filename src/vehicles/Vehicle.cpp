@@ -79,7 +79,7 @@ bool Vehicle::init()
 
 	mVehicleSimContext.gravity = mPhysics->gGravity;
 	mVehicleSimContext.physxScene = mPhysics->gScene;
-	mVehicleSimContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
+	// mVehicleSimContext.physxActorUpdateMode = PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
 	return true;
 }
@@ -103,6 +103,8 @@ void Vehicle::step(double dt)
 	const PxReal speed = linVel.dot(forwardDir);
 	const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
 	
+
+		printf("veh phys: %p\n", mVehicleSimContext.physxScene);
 	mVehicle.mComponentSequence.setSubsteps(mVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
 	mVehicle.step(dt, mVehicleSimContext);
 

@@ -20,38 +20,6 @@ PhysicsManager::PhysicsManager() // Constructor
 	// initGroundPlane();
 	initMaterialFrictionTable();
 
-	// Define a box
-	float halfLen = 0.5f;
-	physx::PxShape *shape = gPhysics->createShape(
-		physx::PxBoxGeometry(halfLen, halfLen, halfLen), *gMaterial);
-
-	PxFilterData boxFilter(COLLISION_FLAG_OBSTACLE,
-						   COLLISION_FLAG_OBSTACLE_AGAINST, 0,
-						   0);				   // Create obstacle filter
-	shape->setSimulationFilterData(boxFilter); // Add filter data to shader
-
-	physx::PxU32 size = 30;
-	physx::PxTransform tran(physx::PxVec3(0));
-
-	// // Create a pyramid of physics-enabled boxes
-	// transformList.reserve(465);
-	// for (physx::PxU32 i = 0; i < size; i++) {
-	// 	for (physx::PxU32 j = 0; j < size - i; j++) {
-	// 		physx::PxTransform localTran(
-	// 			physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i),
-	// 						  physx::PxReal(i * 2 - 1), 0) *
-	// 			halfLen);
-	// 		physx::PxRigidDynamic *body =
-	// 			gPhysics->createRigidDynamic(tran.transform(localTran));
-	//
-	// 		rigidDynamicList.push_back(body);
-	// 		transformList.push_back(new Transform);
-	//
-	// 		body->attachShape(*shape);
-	// 		physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
-	// 		gScene->addActor(*body);
-	// 	}
-	// }
 	// create 'finish line' trigger box
 	PxVec3 finishLinePosition(0.0f, 0.0f,
 							  10.0f); // finish line position in world space
@@ -76,8 +44,6 @@ PhysicsManager::PhysicsManager() // Constructor
 	triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
 
 	// Clean up
-	shape->release();
-
 	triggerRect->release();
 }
 
@@ -183,7 +149,7 @@ void PhysicsManager::createTestObjs(Coordinator &coordinator) {
 						   0);				   // Create obstacle filter
 	shape->setSimulationFilterData(boxFilter); // Add filter data to shader
 
-	physx::PxU32 size = 4;
+	physx::PxU32 size = 5;
 	physx::PxTransform tran(physx::PxVec3(0));
 
 	Model cube("assets/cube.obj");
@@ -193,20 +159,21 @@ void PhysicsManager::createTestObjs(Coordinator &coordinator) {
 		for (physx::PxU32 j = 0; j < size - i; j++) {
 			physx::PxTransform localTran(
 				physx::PxVec3(physx::PxReal(j * 2) - physx::PxReal(size - i),
-							  physx::PxReal(i * 2 ), 0) *
+							  physx::PxReal(i * 2), 0) *
 				halfLen);
-			PxRigidDynamic *b;
-			b = gPhysics->createRigidDynamic(tran.transform(localTran));
+
+			PxRigidBody *body =
+				gPhysics->createRigidDynamic(tran.transform(localTran));
 
 			// give different models
-			b->attachShape(*shape);
-			physx::PxRigidBodyExt::updateMassAndInertia(*b, 10.0f);
-			gScene->addActor(*b);
+			body->attachShape(*shape);
+			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.0f);
+			gScene->addActor(*body);
 
 			// add to the ecs
 			EcsEntity ent = coordinator.createEntity();
 			coordinator.addComponent(ent, Transform());
-			coordinator.addComponent(ent, b);
+			coordinator.addComponent(ent, body);
 			if (j % 2 == 0) {
 				coordinator.addComponent(ent, cube);
 			} else {

@@ -88,7 +88,7 @@ void RenderingSystem::update(GameState &game, std::string fps, Camera &c1) {
 
 	// draw every entities model at the location of it's transform
 	for (auto &entity : entities) {
-		dbug::log("REND",0, "Drawing entity %d", entity);
+		// dbug::log("REND",0, "Drawing entity %d", entity);
 
 		Model& model = game.coordinator->getComponent<Model>(entity);
 		Transform &transform =

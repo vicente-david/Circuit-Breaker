@@ -27,7 +27,7 @@ public:
 	void setSignature(Signature signature) {
 		const char* typeName = typeid(T).name();
 
-		printf("system %s sig: %b\n", typeName, signature);
+		dbug::log("ECS", 0, "Registering System: %s sig: %b", typeName, signature);
 		// insert {systemtype, signature for systemtype} 
 		signatures.insert({ typeName, signature });
 	}

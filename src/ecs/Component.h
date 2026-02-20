@@ -4,10 +4,10 @@
 #include <glm/gtx/quaternion.hpp>
 
 // consider these components as data that you attach to entities
-// each component will have an id 
+// each component will have an id
 // so whichever system needs things about the entity
 // the system will have a bit signature that it compares against to grab
-// the respective component(s) 
+// the respective component(s)
 
 enum class PhysType1 {
 	None,		// doesn't have any physics properties
@@ -20,10 +20,8 @@ struct Physics1 {
 	PhysType1 physType = PhysType1::None;
 };
 
-
-class Transform
-{
-public:
+class Transform {
+  public:
 	glm::vec3 pos;
 	glm::quat rot;
 	glm::vec3 forwardD;
