@@ -9,6 +9,7 @@
 #include "ecs/EntityManager.h"
 #include "graphics/Model.h"
 #include <cstdio>
+#include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	for (auto const &entity : entities) {
@@ -22,18 +23,18 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		const PxReal speed = linVel.dot(forwardDir);
 		const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
 
-		sData.mVehicle.mCommandState.brakes[0] = controls.brake;
-		sData.mVehicle.mCommandState.nbBrakes = 1;
-		sData.mVehicle.mCommandState.throttle = controls.throttle;
-		sData.mVehicle.mCommandState.steer = controls.steering;
+		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
+		sData.mVehicle->mCommandState.nbBrakes = 1;
+		sData.mVehicle->mCommandState.throttle = controls.throttle;
+		sData.mVehicle->mCommandState.steer = controls.steering;
 
 		dbug::log("GAME", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				  controls.throttle, controls.brake, controls.steering);
 
-		sData.mVehicle.mComponentSequence.setSubsteps(
-			sData.mVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
+		sData.mVehicle->mComponentSequence.setSubsteps(
+			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 
-		sData.mVehicle.step(dt, sData.mVehicleSimContext);
+		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 		// rBody->addForce(forwardDir *controls.throttle, PxForceMode::eACCELERATION);
 	}
 }
@@ -47,22 +48,23 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	// defintely didn't take hours to debug. I love c)
 	game.coordinator->addComponent(sparkEntity, SparkData());
 	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
+	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
 
 	// SparkData sData;
 	// Load the params from json or set directly.
 	sData.mVehicleDataPath = "assets/vehicledata";
 	readBaseParamsFromJsonFile(sData.mVehicleDataPath, "Base.json",
-							   sData.mVehicle.mBaseParams);
+							   sData.mVehicle->mBaseParams);
 	readEngineDrivetrainParamsFromJsonFile(sData.mVehicleDataPath,
 										   "EngineDrive.json",
-										   sData.mVehicle.mEngineDriveParams);
+										   sData.mVehicle->mEngineDriveParams);
 	setPhysXIntegrationParams(
-		sData.mVehicle.mBaseParams.axleDescription, sData.mMaterialFrictions,
+		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
 		sData.mNbMaterialFrictions, sData.mDefaultMaterialFriction,
-		sData.mVehicle.mPhysXParams);
+		sData.mVehicle->mPhysXParams);
 
 	// Set the states to default.
-	if (!sData.mVehicle.initialize(
+	if (!sData.mVehicle->initialize(
 			*game.physics->gPhysics, PxCookingParams(PxTolerancesScale()),
 			*game.physics->gMaterial,
 			EngineDriveVehicle::eDIFFTYPE_FOURWHEELDRIVE)) {
@@ -72,13 +74,13 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	// Apply a start pose to the physx actor and add it to the physx scene.
 	PxTransform startPose(PxVec3(5.000000000f, -0.000000000f, -40.0f),
 						  PxQuat(PxIdentity));
-	sData.mVehicle.setUpActor(*game.physics->gScene, startPose,
+	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
 							  sData.mVehicleName);
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS,
 							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
 
-	auto rBody = sData.mVehicle.mPhysXState.physxActor.rigidBody;
+	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
@@ -95,12 +97,12 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	}
 
 	// Set the vehicle in 1st gear.
-	sData.mVehicle.mEngineDriveState.gearboxState.currentGear =
-		sData.mVehicle.mEngineDriveParams.gearBoxParams.neutralGear + 1;
-	sData.mVehicle.mEngineDriveState.gearboxState.targetGear =
-		sData.mVehicle.mEngineDriveParams.gearBoxParams.neutralGear + 1;
+	sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
+	sData.	mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
+	sData.mVehicle->mEngineDriveState.gearboxState.targetGear =
+	sData.	mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
 	// Set the vehicle to use the automatic gearbox.
-	sData.mVehicle.mTransmissionCommandState.targetGear =
+	sData.mVehicle->mTransmissionCommandState.targetGear =
 		PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
 
 	// Set up the simulation context.
@@ -122,6 +124,7 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	sData.mVehicleSimContext.physxActorUpdateMode =
 		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
+	// sData.mVehicle = &mVehicle;
 	SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, controls);
 	game.coordinator->addComponent(sparkEntity, sData);

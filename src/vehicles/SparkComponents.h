@@ -2,6 +2,7 @@
 #include "../snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
+#include <memory>
 
 using namespace snippetvehicle;
 
@@ -25,7 +26,7 @@ struct SparkData {
 	double shimmyTimer = 0;
 
 	// this is stuff for physx magic
-	EngineDriveVehicle mVehicle;
+	std::shared_ptr<EngineDriveVehicle> mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;
 
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];
@@ -36,6 +37,6 @@ struct SparkData {
 	const char *mVehicleName = "unnamed_vehicle";
 
 	void destroy() {
-		mVehicle.destroy();
+		// mVehicle.destroy();
 	}
 };

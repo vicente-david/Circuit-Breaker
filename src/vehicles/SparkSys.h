@@ -20,5 +20,9 @@ class SparkSys : public System {
 	void cleanup();
 	void changeEngineDriveParams(const char* vehicleDataPath);
 
+
+	// EngineDriveVehicle mVehicle;
+	// PxVehiclePhysXSimulationContext mVehicleSimContext;
+
 	
 };
