@@ -4,6 +4,7 @@
 #include "InputSystem.h"
 #include "audio/AudioEngine.h"
 #include "ecs/Coordinator.h"
+#include "ecs/EntityManager.h"
 #include "physics/PhysicsManager.h"
 
 #include <memory>
@@ -20,17 +21,10 @@ class GameState {
 	// Public functions
 	GameState();
 
-	Entity *addEntity(std::string name, PhysType physType, Model *model,
-					  Transform *transform);
-	// void removeEntity(Entity* e);  <-- probably not necessary, might help
-	// optimize the game if we simply stop rendering certain entities instead.
-	Entity *findEntity(std::string name);
-	void endGame(Entity *gameWinner);
+	void endGame(EcsEntity gameWinner);
 	void resetGameState();
 
-	// Entity tracking
-	std::vector<Entity> entityList;
-	Entity *winner;
+	EcsEntity winner = -1;
 
 	// Flags
 	bool gameEnded = false;

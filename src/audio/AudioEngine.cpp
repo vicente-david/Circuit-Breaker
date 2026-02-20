@@ -75,7 +75,7 @@ void AudioEngine::updateListenerFrame(glm::mat4 viewMat) {
 
 // velocity for dopler effect
 // this should be given in world coordinates
-// (not implented)
+// this will eventually need to be updated if we do split screen
 void AudioEngine::updateListenerVel(float x, float y, float z) {
 	listener.velx = x;
 	listener.vely = y;

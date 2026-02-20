@@ -5,6 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <memory>
+#include "CameraSystem.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width,
 							   int height); // TODO: move this
@@ -69,9 +71,10 @@ void RenderingSystem::initializeText() {
 	glBindVertexArray(0);
 }
 
-void RenderingSystem::update(GameState &game, std::string fps, Camera &c1) {
+void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
 
 	basicShader->use();
+	Camera& c1 = camSystem->cameras[0];
 
 	glm::mat4 view = glm::mat4(1.0f);
 	// view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));

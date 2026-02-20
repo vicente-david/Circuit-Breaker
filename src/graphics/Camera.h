@@ -31,8 +31,8 @@ public:
 	glm::vec3 Right;
 	glm::vec3 WorldUp;
 	// euler Angles
-	float Yaw;
-	float Pitch;
+	float Yaw=0;
+	float Pitch=0;
 	// camera options
 	float MovementSpeed;
 	float MouseSensitivity;

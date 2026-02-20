@@ -8,6 +8,7 @@
 #include "Text.h"
 #include "Camera.h"
 #include "ecs/System.h"
+#include "graphics/CameraSystem.h"
 
 class RenderingSystem:public System {
 
@@ -16,7 +17,7 @@ public:
 	void initializeShaders();
 	void initializeText();
 
-	void update(GameState& gamestate, std::string fps, Camera& c1);
+	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
 
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 

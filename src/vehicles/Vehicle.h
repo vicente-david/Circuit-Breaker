@@ -27,6 +27,7 @@ using namespace snippetvehicle;
 //};
 
 
+// this shouldn't be needed anymore, just keeping it for reference incase things break
 class Vehicle
 {
 public:

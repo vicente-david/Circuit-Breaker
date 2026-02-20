@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
+#include "graphics/CameraSystem.h"
 #include "InputSystem.h"
 #include "PxPhysicsAPI.h"
 #include "PxRigidDynamic.h"
@@ -49,12 +50,14 @@ int main() {
 	gameState.coordinator->registerComponent<SparkControls>();
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
+	gameState.coordinator->registerComponent<CameraComp>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
 	auto renderer = RenderingSystem::registerSystem(gameState.coordinator);
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
+	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 
 
 	// create physics manager
@@ -62,16 +65,10 @@ int main() {
 		std::make_shared<PhysicsManager>();
 	gameState.physics = physicsManager;
 
-	// old vehicle for reference/testing
-	Vehicle car1(gameState.physics);
-	car1.init();
-	car1.changeEngineDriveParams("TestDrive.json");
-
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
 
 	Actions gameActions = inputSystem.getActions();
-	Camera c1 = Camera();
 
 	// time
 	double t = 0.0;
@@ -90,7 +87,6 @@ int main() {
 	Model spark("assets/spark.obj");
 	Model trackModel("assets/plane.obj"); // temporary track model
 
-	gameState.addEntity("Spark", PhysType::Spark, &spark, &car1.transform);
 
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
@@ -116,14 +112,13 @@ int main() {
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-	c1.Yaw = 0.0f;
 
 	// create spark with new system
-	{
 		auto sparkEntity = sparkSys->createSpark(gameState);
 		gameState.coordinator->addComponent(sparkEntity, HumanController{0});
-	}
+		gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
+		auto testSpark2 = sparkSys->createSpark(gameState);
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -137,20 +132,12 @@ int main() {
 		framesPassed++;
 
 		// input
-		
 		gameActions = inputSystem.getActions();
 		gameState.inputActions = gameActions;
 		controllerSys->update(gameState);
-		// car1.applyInput(gameActions, dt);
-
-		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z
-		   << "\nRot: "
-			<< tr.rot.x << ' ' << tr.rot.y << ' ' << tr.rot.z << '\n'
-			<< std::endl;*/
 
 		// physics
 		while (accumulator >= dt) {
-			car1.step(dt);
 
 			sparkSys->updateSparks(dt, gameState);
 			physicsSystem->updatePhysics(dt, gameState);
@@ -176,14 +163,6 @@ int main() {
 			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 
-			// dopler effect when boosting by setting listner's velocity
-			if (gameActions.boost) {
-				auto vel = glm::vec4(-10, 0, 0, 1) * c1.GetViewMatrix();
-				gameState.audio->updateListenerVel(vel.x, vel.y, vel.z);
-
-			} else {
-				gameState.audio->updateListenerVel(0, 0, 0);
-			}
 		}
 
 		if (t >= 1.0) {
@@ -193,22 +172,12 @@ int main() {
 			framesPassed = 0;
 		}
 
-		// c1.updateCamera(gameActions, accumulator);
-		// todo: fix (will be integrated into new ecs system)
-		c1.updateCamera(car1.transform.pos, car1.transform.forwardD,
-						gameActions.camXRot, frameTime,
-						gameActions.cameraReset);
-
 		// rendering
-		renderer->update(gameState, fps, c1);
+		cameraSys->update(gameState, dt);
+		renderer->update(gameState, fps, cameraSys);
 
-		// update camera location in audio system for 3d audio
-		gameState.audio->updateListenerFrame(c1.GetViewMatrix());
-		// tihs just cleans up completed sounds, so it doesn't need to be called
-		// super often
 		gameState.audio->update(dt);
 	}
-	car1.cleanup();
 	gameState.audio->close();
 	glfwTerminate();
 
