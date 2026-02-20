@@ -124,9 +124,8 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	sData.mVehicleSimContext.physxActorUpdateMode =
 		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
-	// sData.mVehicle = &mVehicle;
-	SparkControls controls;
-	game.coordinator->addComponent(sparkEntity, controls);
+	//SparkControls controls;
+	game.coordinator->addComponent(sparkEntity, SparkControls());
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
