@@ -2,6 +2,7 @@
 #include "vehicles/SparkSys.h"
 #include "GameState.h"
 #include "PxForceMode.h"
+#include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
 #include "SparkComponents.h"
 #include "debugUtils/Logger.h"
@@ -28,15 +29,78 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mCommandState.throttle = controls.throttle;
 		sData.mVehicle->mCommandState.steer = controls.steering;
 
-		dbug::log("GAME", -1, "Spark commands: th: %f, brk: %f, trn: %f",
+		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				  controls.throttle, controls.brake, controls.steering);
 
+		// boosting
+		if (controls.boost && sData.currBoost > 0) {
+			dbug::log("GAME", 0, "boosting!");
+			boost(rBody, sData);
+		} else if (sData.currBoost < 100) {
+			sData.currBoost += sData.boostRegenSpeed * dt;
+
+			if (sData.currBoost > 100) {
+				sData.currBoost = 100;
+				dbug::log("GAME", 0, "boost full");
+			}
+		}
+
+		// shimmying
+		if (sData.shimmyTimer <= 0) {
+			if (controls.shimmyL) {
+				dbug::log("GAME", 0, "slide to the left");
+				shimmy(rBody, sData, false);
+			}
+
+			if (controls.shimmyR) {
+				dbug::log("GAME", 0, "slide to the right");
+				shimmy(rBody, sData, true);
+			}
+		} else if (sData.shimmyTimer > 0) {
+			sData.shimmyTimer -= dt;
+		}
+		if (controls.reset) {
+			respawn(rBody);
+		}
+
+		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
-
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
-		// rBody->addForce(forwardDir *controls.throttle, PxForceMode::eACCELERATION);
+		// rBody->addForce(forwardDir *controls.throttle,
+		// PxForceMode::eACCELERATION);
 	}
+}
+
+void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
+	const PxVec3 latDir = rBody->getGlobalPose().q.getBasisVector0();
+	int flip = (rightDir) ? -1 : 1;
+	float shimmyForce = 24000.f;
+
+	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
+	dbug::log("GAME", 0, "Weeeeeeee!");
+
+	sData.shimmyTimer = sData.ShimmyCooldown;
+}
+
+void SparkSys::boost(PxRigidBody *rBody, SparkData &sData) {
+	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
+	float boostStrength = 10.f;
+
+	sData.currBoost -= 0.5f;
+
+	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+}
+
+void SparkSys::respawn(PxRigidBody *rBody) {
+	dbug::log("GAME", 0, "resetting");
+
+	rBody->setGlobalPose(
+		PxTransform(PxVec3(0.f, 0.f, -50.f), PxQuat(PxIdentity)));
+
+	PxRigidDynamic *dynamicBody = rBody->is<PxRigidDynamic>();
+	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
+	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
 }
 
 EcsEntity SparkSys::createSpark(GameState &game) {
@@ -75,7 +139,7 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	PxTransform startPose(PxVec3(5.000000000f, -0.000000000f, -40.0f),
 						  PxQuat(PxIdentity));
 	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
-							  sData.mVehicleName);
+							   sData.mVehicleName);
 	// Create vehicle filter
 	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS,
 							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
@@ -98,9 +162,9 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 
 	// Set the vehicle in 1st gear.
 	sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
-	sData.	mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
+		sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
 	sData.mVehicle->mEngineDriveState.gearboxState.targetGear =
-	sData.	mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
+		sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
 	// Set the vehicle to use the automatic gearbox.
 	sData.mVehicle->mTransmissionCommandState.targetGear =
 		PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
@@ -124,7 +188,7 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	sData.mVehicleSimContext.physxActorUpdateMode =
 		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
-	//SparkControls controls;
+	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());

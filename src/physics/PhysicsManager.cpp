@@ -148,7 +148,7 @@ void PhysicsManager::createTestObjs(Coordinator &coordinator) {
 						   0);				   // Create obstacle filter
 	shape->setSimulationFilterData(boxFilter); // Add filter data to shader
 
-	physx::PxU32 size = 5;
+	physx::PxU32 size = 15;
 	physx::PxTransform tran(physx::PxVec3(0));
 
 	Model cube("assets/cube.obj");

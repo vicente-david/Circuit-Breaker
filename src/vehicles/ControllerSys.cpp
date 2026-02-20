@@ -29,7 +29,8 @@ void ControllerSys::update(GameState &game) {
 		sControl.throttle = input.moveForward;
 		sControl.steering = input.xRotation;
 		sControl.boost = input.boost;
-		sControl.leftShimmy = input.shimmyLeft;
-		sControl.rightShimmy = input.shimmyRight;
+		sControl.shimmyL = input.shimmyLeft;
+		sControl.shimmyR = input.shimmyRight;
+		sControl.reset = input.respawn;
 	}
 }

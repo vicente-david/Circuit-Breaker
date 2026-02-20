@@ -17,12 +17,17 @@ struct SparkControls {
 	float reverse; // [0-1] for going backwards
 
 	bool boost;
-	bool leftShimmy;
-	bool rightShimmy;
+	bool shimmyL;
+	bool shimmyR;
+
+	bool reset;
 };
 
 struct SparkData {
 	float currBoost = 100;
+	float boostRegenSpeed = 10.0f; 
+
+	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
 
 	// this is stuff for physx magic

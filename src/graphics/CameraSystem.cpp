@@ -31,15 +31,17 @@ void CameraSystem::update(GameState &game, float dt) {
 		auto &camData = game.coordinator->getComponent<CameraComp>(entity);
 		auto &transform = game.coordinator->getComponent<Transform>(entity);
 
+		// save the starting position so we can calculate velocity later
+		auto startLocation = camData.position;
+
 		// move camera to where it's proper position/orientation
-		//  camData.position = (camData.position+transform.pos) *
-		//  camData.posEasing;
 
+		// get the position the camera wants to be based on car position
 		camData.carPosition = transform.pos;
-
 		auto targetPos = camData.targetPosition(transform.rot);
 
 		// interpolate between target and current position
+		// if we are in an invalid position, just use the target position
 		if (glm::all(glm::isnan(camData.position))) {
 			camData.position = targetPos;
 		} else {
@@ -47,8 +49,6 @@ void CameraSystem::update(GameState &game, float dt) {
 							   camData.position * (1 - camData.posEasing);
 		}
 		camData.up = camData.carUp;
-		// camData.position = transform.pos;
-		// camData.up = glm::vec3(0, 1, 0);
 
 		// update camera for this object
 		if (camData.camNumber >= MAX_CAMS) {
@@ -59,23 +59,20 @@ void CameraSystem::update(GameState &game, float dt) {
 		}
 
 		glm::vec3 carOffset = transform.forwardD * camData.lookAtdistance;
-		camData.carPosition +=  carOffset;
+		camData.carPosition += carOffset;
 		// add cameras if there isn't enough
 		while (cameras.size() < camData.camNumber + 1) {
-			cameras.push_back(CameraComp());
+			cameras.push_back(std::make_shared<CameraComp>());
 		}
-		cameras[camData.camNumber] = camData;
+		cameras[camData.camNumber] = std::make_shared<CameraComp>(camData);
 
 		dbug::log("REND", -1, "cam pos: [%f, %f, %f]", camData.position.x,
 				  camData.position.y, camData.position.z);
-		// cam.updateCamera(camData.position, transform.forwardD,
-		// 				 game.inputActions.camXRot, dt,
-		// 				 game.inputActions.cameraReset);
-		//
 
-		// update the audio listner's frame for 3d audio
-		// TODO: set this to real camera velocty
-		game.audio->updateListenerVel(0, 0, 0);
+		auto camVel = (camData.carPosition - startLocation)*(1.0f/dt);
+		
+		// update the audio listner's frame and velocity for 3d audio
+		game.audio->updateListenerVel(camVel.x,camVel.y, camVel.z);
 		game.audio->updateListenerFrame(camData.GetViewMatrix());
 	}
 }

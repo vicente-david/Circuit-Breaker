@@ -33,9 +33,9 @@ int main() {
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = -1;
-	// dbug::logIgnore("PHYS");
+	dbug::logIgnore("INPUT");
 	// dbug::logIgnore("ECS");
-	// dbug::logIgnoreType = dbug::WHITE_LIST;
+	dbug::logIgnoreType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 

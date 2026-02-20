@@ -74,11 +74,11 @@ void RenderingSystem::initializeText() {
 void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
 
 	basicShader->use();
-	CameraComp& c1 = camSystem->cameras[0];
+	auto c1 = camSystem->cameras[0];
 
 	glm::mat4 view = glm::mat4(1.0f);
 	// view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-	view = c1.GetViewMatrix();
+	view = c1->GetViewMatrix();
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 

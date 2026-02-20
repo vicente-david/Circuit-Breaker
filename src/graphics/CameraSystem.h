@@ -13,11 +13,12 @@
 class CameraSystem : public System {
   public:
 	const int MAX_CAMS = 1;
-	std::vector<CameraComp> cameras;
+	// store pointers to all the cameras so rendering can use them
+	std::vector<std::shared_ptr<CameraComp>> cameras;
 
 	CameraSystem() {
 		// create 1 camera by default
-		cameras = std::vector<CameraComp>(1);
+		cameras = std::vector<std::shared_ptr<CameraComp>>(1);
 	}
 	// helper to register the signature in the ECS
 	static std::shared_ptr<CameraSystem>
