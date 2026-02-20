@@ -141,7 +141,7 @@ int main() {
 		gameActions = inputSystem.getActions();
 		gameState.inputActions = gameActions;
 		controllerSys->update(gameState);
-		// car1.applyInput(gameActions, dt);
+		car1.applyInput(gameActions, dt);
 
 		/*std::cout << "Pos: " << tr.pos.x << ' ' << tr.pos.y << ' ' << tr.pos.z
 		   << "\nRot: "

@@ -23,6 +23,7 @@ struct SparkControls {
 struct SparkData {
 	float currBoost = 100;
 	double shimmyTimer = 0;
+
 	// this is stuff for physx magic
 	EngineDriveVehicle mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;

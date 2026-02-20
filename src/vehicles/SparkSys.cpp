@@ -27,13 +27,14 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle.mCommandState.throttle = controls.throttle;
 		sData.mVehicle.mCommandState.steer = controls.steering;
 
+		dbug::log("GAME", -1, "Spark commands: th: %f, brk: %f, trn: %f",
+				  controls.throttle, controls.brake, controls.steering);
 
-		dbug::log("GAME", -1,"Vehicle commands: th: %f, brk: %f, trn: %f", controls.throttle, controls.brake, controls.steering );
 		sData.mVehicle.mComponentSequence.setSubsteps(
 			sData.mVehicle.mComponentSequenceSubstepGroupHandle, nbSubsteps);
 
 		sData.mVehicle.step(dt, sData.mVehicleSimContext);
-		// rBody->addForce(forwardDir * 10, PxForceMode::eACCELERATION);
+		// rBody->addForce(forwardDir *controls.throttle, PxForceMode::eACCELERATION);
 	}
 }
 
@@ -69,7 +70,7 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	}
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(0.000000000f, -0.000000000f, -30.59399998f),
+	PxTransform startPose(PxVec3(5.000000000f, -0.000000000f, -40.0f),
 						  PxQuat(PxIdentity));
 	sData.mVehicle.setUpActor(*game.physics->gScene, startPose,
 							  sData.mVehicleName);
@@ -118,12 +119,10 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	sData.mVehicleSimContext.gravity = game.physics->gGravity;
 	sData.mVehicleSimContext.physxScene = game.physics->gScene;
 
-	// mVehicleSimContext.physxActorUpdateMode =
-	// PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
+	sData.mVehicleSimContext.physxActorUpdateMode =
+		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
 	SparkControls controls;
-	// controls.steering = 0.1;
-	controls.throttle = 1;
 	game.coordinator->addComponent(sparkEntity, controls);
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
