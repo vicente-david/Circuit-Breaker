@@ -6,6 +6,9 @@
 #include <iostream>
 
 
+// I tihnk this has been moslty transerfed to the new camera 
+// compoenet and system classes, but ill leave it here for reference 
+// in case i broke something
 
 // Default camera values
 const float YAW = -90.0f;

@@ -5,6 +5,10 @@
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "graphics/Camera.h"
+#include "graphics/CameraComp.h"
+#include <glm/ext/quaternion_common.hpp>
+#include <glm/fwd.hpp>
+#include <glm/vector_relational.hpp>
 #include <memory>
 
 std::shared_ptr<CameraSystem>
@@ -27,10 +31,24 @@ void CameraSystem::update(GameState &game, float dt) {
 		auto &camData = game.coordinator->getComponent<CameraComp>(entity);
 		auto &transform = game.coordinator->getComponent<Transform>(entity);
 
-		// smoothly interpolate distance
+		// move camera to where it's proper position/orientation
 		//  camData.position = (camData.position+transform.pos) *
 		//  camData.posEasing;
-		camData.position = transform.pos;
+
+		camData.carPosition = transform.pos;
+
+		auto targetPos = camData.targetPosition(transform.rot);
+
+		// interpolate between target and current position
+		if (glm::all(glm::isnan(camData.position))) {
+			camData.position = targetPos;
+		} else {
+			camData.position = targetPos * camData.posEasing +
+							   camData.position * (1 - camData.posEasing);
+		}
+		camData.up = camData.carUp;
+		// camData.position = transform.pos;
+		// camData.up = glm::vec3(0, 1, 0);
 
 		// update camera for this object
 		if (camData.camNumber >= MAX_CAMS) {
@@ -39,22 +57,25 @@ void CameraSystem::update(GameState &game, float dt) {
 				"Cam number %d is larger than the maximum number of cameras!",
 				camData.camNumber);
 		}
+
+		glm::vec3 carOffset = transform.forwardD * camData.lookAtdistance;
+		camData.carPosition +=  carOffset;
 		// add cameras if there isn't enough
 		while (cameras.size() < camData.camNumber + 1) {
-			cameras.push_back(Camera());
+			cameras.push_back(CameraComp());
 		}
+		cameras[camData.camNumber] = camData;
 
 		dbug::log("REND", -1, "cam pos: [%f, %f, %f]", camData.position.x,
 				  camData.position.y, camData.position.z);
-		auto &cam = cameras[camData.camNumber];
-		cam.updateCamera(camData.position, transform.forwardD,
-						 game.inputActions.camXRot, dt,
-						 game.inputActions.cameraReset);
-
+		// cam.updateCamera(camData.position, transform.forwardD,
+		// 				 game.inputActions.camXRot, dt,
+		// 				 game.inputActions.cameraReset);
+		//
 
 		// update the audio listner's frame for 3d audio
-		//TODO: set this to real camera velocty
+		// TODO: set this to real camera velocty
 		game.audio->updateListenerVel(0, 0, 0);
-		game.audio->updateListenerFrame(cam.GetViewMatrix());
+		game.audio->updateListenerFrame(camData.GetViewMatrix());
 	}
 }

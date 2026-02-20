@@ -5,7 +5,6 @@
 #include "GameState.h"
 #include "PxPhysics.h"
 #include "PxRigidDynamic.h"
-#include "Transform.h"
 #include "debugUtils/Logger.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"

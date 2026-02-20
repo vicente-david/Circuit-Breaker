@@ -39,7 +39,6 @@ void PhysicsSystem::updateTransforms(GameState &state) {
 		transform.pos = glm::vec3(p.x, p.y, p.z);
 		transform.rot = glm::quat(q.x, q.y, q.z, q.w);
 		transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
-		dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y,
-		p.z);
+		// dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y, p.z);
 	}
 }

@@ -1,6 +1,7 @@
 #include "Entity.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
+#include "graphics/CameraComp.h"
 #include "graphics/CameraSystem.h"
 #include "InputSystem.h"
 #include "PxPhysicsAPI.h"
