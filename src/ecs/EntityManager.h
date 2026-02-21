@@ -18,7 +18,7 @@
 #define MAX_COMPONENTS 32
 
 using Signature = std::bitset<MAX_COMPONENTS>;
-using EcsEntity = int;
+using Entity = int;
 
 // distributes ID's to entities
 // keeps track of which entities are in use and which aren't
@@ -27,12 +27,12 @@ class EntityManager {
   public:
 	EntityManager() {
 		// initialize queue with usable entities
-		for (EcsEntity entity = 0; entity < MAX_ENTITIES; entity++) {
+		for (Entity entity = 0; entity < MAX_ENTITIES; entity++) {
 			usableIDs.push(entity);
 		}
 	}
 
-	EcsEntity createEntity() {
+	Entity createEntity() {
 
 		// to-do: change into asserts
 		// apparently that's faster and depending on compiler discarded in
@@ -46,7 +46,7 @@ class EntityManager {
 			return -1;
 		}
 		// snag entity id from available ids
-		EcsEntity e = usableIDs.front();
+		Entity e = usableIDs.front();
 		// pop the id from the queue
 		usableIDs.pop();
 		// increment active entities
@@ -56,7 +56,7 @@ class EntityManager {
 	}
 
 	// destroys specified entity and frees up the id
-	void destroyEntity(EcsEntity entity) {
+	void destroyEntity(Entity entity) {
 		if (entity > MAX_ENTITIES) {
 			std::cout << "Entity out of range" << std::endl;
 			return;
@@ -70,7 +70,7 @@ class EntityManager {
 	}
 
 	// sets the specified entity's signature
-	void setSignature(EcsEntity entity, Signature signature) {
+	void setSignature(Entity entity, Signature signature) {
 		if (entity > MAX_ENTITIES) {
 			std::cout << "Entity out of range" << std::endl;
 			return;
@@ -78,7 +78,7 @@ class EntityManager {
 		entitySignatures[entity] = signature;
 	}
 
-	Signature getSignature(EcsEntity entity) {
+	Signature getSignature(Entity entity) {
 		if (entity > MAX_ENTITIES) {
 			std::cout << "Entity out of range" << std::endl;
 			// empty signature
@@ -91,7 +91,7 @@ class EntityManager {
 	// reuse of ids is permissible
 	// when entity is destroyed, push that id to the back of the queue
 	// when entity is created, use the id at the front of the queue
-	std::queue<EcsEntity> usableIDs{};
+	std::queue<Entity> usableIDs{};
 
 	// array of signatures, index corresponds to entity id
 	// Signature is a type-alias for std::bitset<MAX_COMPONENTS>

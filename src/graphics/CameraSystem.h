@@ -10,6 +10,8 @@
 #include <vector>
 
 
+// this handles the movement of the all the cameras
+// (currently it only works with 1, but it should be extendable)
 class CameraSystem : public System {
   public:
 	const int MAX_CAMS = 1;
@@ -17,7 +19,7 @@ class CameraSystem : public System {
 	std::vector<std::shared_ptr<CameraComp>> cameras;
 
 	CameraSystem() {
-		// create 1 camera by default
+		// create 1 camera by default so things dont crash
 		cameras = std::vector<std::shared_ptr<CameraComp>>(1);
 	}
 	// helper to register the signature in the ECS

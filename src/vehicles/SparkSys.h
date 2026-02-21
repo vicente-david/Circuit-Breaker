@@ -21,7 +21,7 @@ class SparkSys : public System {
 
 	// very convinient function to just make a spark instead of needing to go
 	// though whatever physX makes you to do
-	EcsEntity createSpark(GameState &game);
+	Entity createSpark(GameState &game);
 
 	bool init();
 	void cleanup();

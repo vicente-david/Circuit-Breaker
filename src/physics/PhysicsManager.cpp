@@ -148,7 +148,7 @@ void PhysicsManager::createTestObjs(Coordinator &coordinator) {
 			gScene->addActor(*body);
 
 			// add to the ecs
-			EcsEntity ent = coordinator.createEntity();
+			Entity ent = coordinator.createEntity();
 			coordinator.addComponent(ent, Transform());
 			coordinator.addComponent(ent, body);
 			if (j % 2 == 0) {

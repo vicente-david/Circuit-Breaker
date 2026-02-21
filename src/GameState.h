@@ -20,10 +20,10 @@ class GameState {
 	// Public functions
 	GameState();
 
-	void endGame(EcsEntity gameWinner);
+	void endGame(Entity gameWinner);
 	void resetGameState();
 
-	EcsEntity winner = -1;
+	Entity winner = -1;
 
 	// Flags
 	bool gameEnded = false;

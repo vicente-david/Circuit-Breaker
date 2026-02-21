@@ -34,7 +34,7 @@ public:
 
 
 	// erase entity in all system entity lists
-	void entityDestroyed(EcsEntity entity) {
+	void entityDestroyed(Entity entity) {
 
 		// for every pair of {systemType, ptr to system} 
 		for (auto const& pair : systems) {
@@ -49,7 +49,7 @@ public:
 
 	// notify each system that an entity signature has changed
 	// notify each system that an entity signature has changed
-	void entitySignatureChanged(EcsEntity entity, Signature entitySignature) {
+	void entitySignatureChanged(Entity entity, Signature entitySignature) {
 		// for every pait of {systemType, ptr to system}
 		for (auto const& pair : systems) {
 			// system type

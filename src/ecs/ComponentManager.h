@@ -28,21 +28,21 @@ public:
 	}
 
 	template<typename T>
-	void addComponent(EcsEntity entity, T component) {
+	void addComponent(Entity entity, T component) {
 		getComponentArray <T>()->insertData(entity, component);
 	}
 
 	template<typename T>
-	void removeComponent(EcsEntity entity) {
+	void removeComponent(Entity entity) {
 		getComponentArray <T>()->removeData(entity);
 	}
 
 	template<typename T>
-	T& getComponent(EcsEntity entity) {
+	T& getComponent(Entity entity) {
 		return getComponentArray < T >()->getData(entity);
 	}
 
-	void entityDestroyed(EcsEntity entity) {
+	void entityDestroyed(Entity entity) {
 		// notify each component array that an entity has been destroyed
 		// if that component array has that entity, remove it
 		for (auto const& pair : componentArrays) {

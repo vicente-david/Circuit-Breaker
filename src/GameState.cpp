@@ -11,7 +11,7 @@ GameState::GameState(){
 		audio = std::make_unique<AudioEngine>();
 	}
 
-void GameState::endGame(EcsEntity gameWinner) {
+void GameState::endGame(Entity gameWinner) {
 	winner = gameWinner;		// assign the game winner
 								
 								// TODO: probably do some UI/game management stuff here to give endscreen, etc.

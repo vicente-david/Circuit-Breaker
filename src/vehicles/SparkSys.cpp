@@ -103,9 +103,9 @@ void SparkSys::respawn(PxRigidBody *rBody) {
 	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
 }
 
-EcsEntity SparkSys::createSpark(GameState &game) {
+Entity SparkSys::createSpark(GameState &game) {
 
-	EcsEntity sparkEntity = game.coordinator->createEntity();
+	Entity sparkEntity = game.coordinator->createEntity();
 
 	// if you create a sparkdata object in this function it gets freed, so
 	// we need to get a referenct from the ECS coordinator instead (this

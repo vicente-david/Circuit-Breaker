@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
+// all the data that a camera should need
 struct CameraComp {
 
 	glm::vec3 position; // current location of the camera (not its target)

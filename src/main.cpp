@@ -1,16 +1,12 @@
-#include "Entity.h"
-#include "GLFW/glfw3.h"
 #include "GameState.h"
+#include "GLFW/glfw3.h"
 #include "InputSystem.h"
-#include "PxPhysicsAPI.h"
-#include "PxRigidDynamic.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
 #include "glad/gl.h"
-#include "graphics/Camera.h"
 #include "graphics/CameraComp.h"
 #include "graphics/CameraSystem.h"
 #include "graphics/Model.h"
@@ -20,7 +16,6 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
-#include "vehicles/Vehicle.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
@@ -92,7 +87,7 @@ int main() {
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 
-	EcsEntity track = gameState.coordinator->createEntity();
+	Entity track = gameState.coordinator->createEntity();
 	gameState.coordinator->addComponent(track, none);
 	gameState.coordinator->addComponent(track, trackModel);
 	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);

@@ -28,13 +28,13 @@ public:
 	// entity 
 
 	// you run the create entity from the manager
-	EcsEntity createEntity() {
+	Entity createEntity() {
 		return entityManager->createEntity();
 	}
 
 	// with destroy you have to delete the entity and
 	// it's components, and the systems that use that entity
-	void destroyEntity(EcsEntity entity) {
+	void destroyEntity(Entity entity) {
 		entityManager->destroyEntity(entity);
 
 		componentManager->entityDestroyed(entity);
@@ -53,7 +53,7 @@ public:
 
 	// add component
 	template<typename T>
-	void addComponent(EcsEntity entity, T component) {
+	void addComponent(Entity entity, T component) {
 		// first add the component
 		componentManager->addComponent<T>(entity, component);
 
@@ -72,7 +72,7 @@ public:
 	// remove a component
 	// same as add component but remove
 	template<typename T>
-	void removeComponent(EcsEntity entity) {
+	void removeComponent(Entity entity) {
 		componentManager->removeComponent<T>(entity);
 
 		auto signature = entityManager->getSignature(entity);
@@ -83,7 +83,7 @@ public:
 	}
 
 	template<typename T>
-	T& getComponent(EcsEntity entity) {
+	T& getComponent(Entity entity) {
 		return componentManager->getComponent<T>(entity);
 	}
 

@@ -6,5 +6,5 @@
 // from that they can do component signature comparison via the coordinator
 class System {
 public:
-	std::set<EcsEntity> entities;
+	std::set<Entity> entities;
 };
