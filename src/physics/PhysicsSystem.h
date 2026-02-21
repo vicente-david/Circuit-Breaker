@@ -5,9 +5,10 @@
 
 #include "ecs/Coordinator.h"
 
-// this is the physics system in ECS. all it really does it tells the
-// physics manager to update physx, then updats the transforms of all the
-// objects
+// this is the physics system in ECS. all it really does is:
+// 1) tells the physics manager to update physx 
+// 2) update the transform components to match the physics component
+
 // this could probably be combined with the manager, but you end up with 
 // circular dependencies, and I feel like this is a bit cleaner
 class PhysicsSystem : public System {

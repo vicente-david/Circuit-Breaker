@@ -200,6 +200,18 @@ EcsEntity SparkSys::createSpark(GameState &game) {
 	return sparkEntity;
 }
 
+// updates the drive params of all the active sparks
+void SparkSys::changeEngineDriveParams(const char *vehicleDataFileName,
+									   GameState &game) {
+	for (auto const &entity : entities) {
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		// Changes the parameters of the engine
+		readEngineDrivetrainParamsFromJsonFile(
+			sData.mVehicleDataPath, vehicleDataFileName,
+			sData.mVehicle->mEngineDriveParams);
+	}
+}
+
 // helper to register the system
 std::shared_ptr<SparkSys>
 SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {

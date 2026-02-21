@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Entity.h"
 #include "InputSystem.h"
 #include "audio/AudioEngine.h"
 #include "ecs/Coordinator.h"

@@ -6,10 +6,16 @@
 
 using namespace snippetvehicle;
 
+// this component tells the controller system that this car is piloted by a
+// controller, not an AI. I also added the controller number for if we can to
+// multiplayer though
 struct HumanController {
-	int controllerNum=0;
+	int controllerNum = 0;
 };
 
+// this stores the controls for piloting a spark. they can be changed wither by
+// an AI or controller input. this could propably be compined with sparkData,
+// but they feel better seperate to me
 struct SparkControls {
 	float steering; // range [-1,1] for turning left/right
 	float throttle; // [0-1] for going forewards
@@ -23,9 +29,11 @@ struct SparkControls {
 	bool reset;
 };
 
+// this is basically the current state of the spark. things can sometimes break
+// if you forget to use refences to this stuff because physx makes no sense
 struct SparkData {
 	float currBoost = 100;
-	float boostRegenSpeed = 10.0f; 
+	float boostRegenSpeed = 10.0f;
 
 	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
@@ -42,6 +50,6 @@ struct SparkData {
 	const char *mVehicleName = "unnamed_vehicle";
 
 	void destroy() {
-		// mVehicle.destroy();
+		mVehicle->destroy();
 	}
 };

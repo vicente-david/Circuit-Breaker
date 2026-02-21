@@ -1,8 +1,6 @@
 #include "Entity.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
-#include "graphics/CameraComp.h"
-#include "graphics/CameraSystem.h"
 #include "InputSystem.h"
 #include "PxPhysicsAPI.h"
 #include "PxRigidDynamic.h"
@@ -13,6 +11,8 @@
 #include "ecs/EntityManager.h"
 #include "glad/gl.h"
 #include "graphics/Camera.h"
+#include "graphics/CameraComp.h"
+#include "graphics/CameraSystem.h"
 #include "graphics/Model.h"
 #include "graphics/RenderingSystem.h"
 #include "physics/PhysicsManager.h"
@@ -28,12 +28,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 
-
 int main() {
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
-	dbug::minLogSeverity = -1;
-	dbug::logIgnore("INPUT");
+	dbug::minLogSeverity = 0;
+	// dbug::logIgnore("INPUT");
 	// dbug::logIgnore("ECS");
 	dbug::logIgnoreType = dbug::WHITE_LIST;
 
@@ -59,7 +58,6 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
-
 
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
@@ -88,6 +86,8 @@ int main() {
 	Model spark("assets/spark.obj");
 	Model trackModel("assets/plane.obj"); // temporary track model
 
+	// create the track. this should eventually be moved to its own
+	// class/function
 
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
@@ -98,7 +98,39 @@ int main() {
 	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
 	dbug::log(0, "track entity id:%d", track);
 
+	// create test object pyramid
 	physicsManager->createTestObjs(*gameState.coordinator);
+
+	// create finish line trigger box
+	{
+		PxVec3 finishLinePosition(0.0f, 0.0f,
+								  10.0f); // finish line position in world space
+		PxVec3 triggerLengths(
+			255.637f, 100.0f,
+			1.0f); // width, height, and depth of the finish line
+		PxRigidStatic *triggerActor =
+			physicsManager->gPhysics->createRigidStatic(
+				PxTransform(finishLinePosition)); // create static rigid body
+												  // for the trigger box
+
+		auto material = physicsManager->gPhysics->createMaterial(0, 0, 0);
+		physx::PxShape *triggerRect = physicsManager->gPhysics->createShape(
+			physx::PxBoxGeometry(triggerLengths), *material, true);
+
+		// set the shape as a trigger
+		triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+
+		triggerActor->attachShape(*triggerRect);
+		physicsManager->gScene->addActor(*triggerActor);
+
+		PxFilterData finishLineTriggerFilterData;
+		finishLineTriggerFilterData.word0 =
+			99; // it detects only the player vehicle
+		triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
+		// Clean up
+		triggerRect->release();
+	}
 
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
@@ -113,13 +145,12 @@ int main() {
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-
 	// create spark with new system
-		auto sparkEntity = sparkSys->createSpark(gameState);
-		gameState.coordinator->addComponent(sparkEntity, HumanController{0});
-		gameState.coordinator->addComponent(sparkEntity, CameraComp());
+	auto sparkEntity = sparkSys->createSpark(gameState);
+	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
+	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-		auto testSpark2 = sparkSys->createSpark(gameState);
+	auto testSpark2 = sparkSys->createSpark(gameState);
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -164,8 +195,6 @@ int main() {
 			}
 			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
-
-
 		}
 
 		if (t >= 1.0) {
@@ -176,7 +205,7 @@ int main() {
 		}
 
 		// rendering
-		
+
 		renderer->update(gameState, fps, cameraSys);
 
 		gameState.audio->update(dt);

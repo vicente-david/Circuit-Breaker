@@ -7,6 +7,7 @@
 #include <memory>
 #include "CameraSystem.h"
 #include "graphics/CameraComp.h"
+#include "graphics/Model.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width,
 							   int height); // TODO: move this

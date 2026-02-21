@@ -8,6 +8,7 @@ using namespace physx;
 using namespace physx::vehicle2;
 using namespace snippetvehicle;
 
+// this has all been moved to sparksystem/sparkdata. just keeping it incase we need to refer to it later
 Vehicle::Vehicle(std::shared_ptr<PhysicsManager> physicsSystem)
 	: mPhysics(physicsSystem)
 {}

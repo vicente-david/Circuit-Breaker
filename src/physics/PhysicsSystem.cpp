@@ -1,12 +1,12 @@
 #include "PhysicsSystem.h"
 #include "GameState.h"
 #include "PxRigidBody.h"
-#include "PxRigidDynamic.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
 #include <memory>
 
+// convinence function to create/register the physics system in the ecs
 std::shared_ptr<PhysicsSystem>
 PhysicsSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	// register system
@@ -20,12 +20,12 @@ PhysicsSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	return system;
 }
 
+// this is called every frame
 void PhysicsSystem::updatePhysics(double dt, GameState &game) {
 	game.physics->updatePhysics(dt);
 	updateTransforms(game);
 }
 
-// convinence function to create/register the physics system in the ecs
 void PhysicsSystem::updateTransforms(GameState &state) {
 	// update the transform to match the state of the physics simulation
 	for (auto const &entity : entities) {
@@ -39,6 +39,7 @@ void PhysicsSystem::updateTransforms(GameState &state) {
 		transform.pos = glm::vec3(p.x, p.y, p.z);
 		transform.rot = glm::quat(q.x, q.y, q.z, q.w);
 		transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
-		// dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y, p.z);
+		// dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y,
+		// p.z);
 	}
 }

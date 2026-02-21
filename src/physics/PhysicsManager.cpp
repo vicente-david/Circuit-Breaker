@@ -9,41 +9,19 @@
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
+#include "graphics/Model.h"
 #include <memory>
 
-PhysicsManager::PhysicsManager() // Constructor
-{
+// this class acts as an interface between physx and the rest of the game. it
+// holds the physx scene, and other global physics things that systems might
+// need (for example to create a new physics object)
+//
+// It may be handy to make some method to just make a rigidbody for you without 
+// needling like 1000 steps like it is currenlty, but i haven't done that yet
+PhysicsManager::PhysicsManager() {
 
-	dbug::log("PHYS", 0, "initializing physics");
 	initPhysX();
-	// initGroundPlane();
 	initMaterialFrictionTable();
-
-	// create 'finish line' trigger box
-	PxVec3 finishLinePosition(0.0f, 0.0f,
-							  10.0f); // finish line position in world space
-	PxVec3 triggerLengths(255.637f, 100.0f,
-						  1.0f); // width, height, and depth of the finish line
-	PxRigidStatic *triggerActor = gPhysics->createRigidStatic(PxTransform(
-		finishLinePosition)); // create static rigid body for the trigger box
-
-	physx::PxShape *triggerRect = gPhysics->createShape(
-		physx::PxBoxGeometry(triggerLengths), *gMaterial, true);
-
-	// set the shape as a trigger
-	triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
-	triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
-
-	triggerActor->attachShape(*triggerRect);
-	gScene->addActor(*triggerActor);
-
-	PxFilterData finishLineTriggerFilterData;
-	finishLineTriggerFilterData.word0 =
-		99; // it detects only the player vehicle
-	triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
-
-	// Clean up
-	triggerRect->release();
 }
 
 void PhysicsManager::initPhysX() {
