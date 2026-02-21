@@ -142,6 +142,7 @@ int main() {
 
 			sparkSys->updateSparks(dt, gameState);
 			physicsSystem->updatePhysics(dt, gameState);
+			cameraSys->update(gameState, dt);
 			accumulator -= dt;
 			t += dt;
 
@@ -164,6 +165,7 @@ int main() {
 			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 
+
 		}
 
 		if (t >= 1.0) {
@@ -174,7 +176,7 @@ int main() {
 		}
 
 		// rendering
-		cameraSys->update(gameState, dt);
+		
 		renderer->update(gameState, fps, cameraSys);
 
 		gameState.audio->update(dt);
