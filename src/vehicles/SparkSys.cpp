@@ -1,0 +1,228 @@
+
+#include "vehicles/SparkSys.h"
+#include "GameState.h"
+#include "PxForceMode.h"
+#include "PxRigidBody.h"
+#include "PxRigidDynamic.h"
+#include "SparkComponents.h"
+#include "debugUtils/Logger.h"
+#include "ecs/Component.h"
+#include "ecs/EntityManager.h"
+#include "graphics/Model.h"
+#include <cstdio>
+#include <memory>
+
+void SparkSys::updateSparks(double dt, GameState &game) {
+	for (auto const &entity : entities) {
+		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		auto &controls = game.coordinator->getComponent<SparkControls>(entity);
+
+		const PxVec3 linVel = rBody->getLinearVelocity();
+		const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
+
+		const PxReal speed = linVel.dot(forwardDir);
+		const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
+
+		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
+		sData.mVehicle->mCommandState.nbBrakes = 1;
+		sData.mVehicle->mCommandState.throttle = controls.throttle;
+		sData.mVehicle->mCommandState.steer = controls.steering;
+
+		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
+				  controls.throttle, controls.brake, controls.steering);
+
+		// boosting
+		if (controls.boost && sData.currBoost > 0) {
+			dbug::log("GAME", 0, "boosting!");
+			boost(rBody, sData);
+		} else if (sData.currBoost < 100) {
+			sData.currBoost += sData.boostRegenSpeed * dt;
+
+			if (sData.currBoost > 100) {
+				sData.currBoost = 100;
+				dbug::log("GAME", 0, "boost full");
+			}
+		}
+
+		// shimmying
+		if (sData.shimmyTimer <= 0) {
+			if (controls.shimmyL) {
+				dbug::log("GAME", 0, "slide to the left");
+				shimmy(rBody, sData, false);
+			}
+
+			if (controls.shimmyR) {
+				dbug::log("GAME", 0, "slide to the right");
+				shimmy(rBody, sData, true);
+			}
+		} else if (sData.shimmyTimer > 0) {
+			sData.shimmyTimer -= dt;
+		}
+		if (controls.reset) {
+			respawn(rBody);
+		}
+
+		// do the physx vehicle movement
+		sData.mVehicle->mComponentSequence.setSubsteps(
+			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
+		sData.mVehicle->step(dt, sData.mVehicleSimContext);
+		// rBody->addForce(forwardDir *controls.throttle,
+		// PxForceMode::eACCELERATION);
+	}
+}
+
+void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
+	const PxVec3 latDir = rBody->getGlobalPose().q.getBasisVector0();
+	int flip = (rightDir) ? -1 : 1;
+	float shimmyForce = 24000.f;
+
+	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
+	dbug::log("GAME", 0, "Weeeeeeee!");
+
+	sData.shimmyTimer = sData.ShimmyCooldown;
+}
+
+void SparkSys::boost(PxRigidBody *rBody, SparkData &sData) {
+	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
+	float boostStrength = 10.f;
+
+	sData.currBoost -= 0.5f;
+
+	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+}
+
+void SparkSys::respawn(PxRigidBody *rBody) {
+	dbug::log("GAME", 0, "resetting");
+
+	rBody->setGlobalPose(
+		PxTransform(PxVec3(0.f, 0.f, -50.f), PxQuat(PxIdentity)));
+
+	PxRigidDynamic *dynamicBody = rBody->is<PxRigidDynamic>();
+	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
+	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
+}
+
+Entity SparkSys::createSpark(GameState &game) {
+
+	Entity sparkEntity = game.coordinator->createEntity();
+
+	// if you create a sparkdata object in this function it gets freed, so
+	// we need to get a referenct from the ECS coordinator instead (this
+	// defintely didn't take hours to debug. I love c)
+	game.coordinator->addComponent(sparkEntity, SparkData());
+	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
+	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
+
+	// SparkData sData;
+	// Load the params from json or set directly.
+	sData.mVehicleDataPath = "assets/vehicledata";
+	readBaseParamsFromJsonFile(sData.mVehicleDataPath, "Base.json",
+							   sData.mVehicle->mBaseParams);
+	readEngineDrivetrainParamsFromJsonFile(sData.mVehicleDataPath,
+										   "EngineDrive.json",
+										   sData.mVehicle->mEngineDriveParams);
+	setPhysXIntegrationParams(
+		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
+		sData.mNbMaterialFrictions, sData.mDefaultMaterialFriction,
+		sData.mVehicle->mPhysXParams);
+
+	// Set the states to default.
+	if (!sData.mVehicle->initialize(
+			*game.physics->gPhysics, PxCookingParams(PxTolerancesScale()),
+			*game.physics->gMaterial,
+			EngineDriveVehicle::eDIFFTYPE_FOURWHEELDRIVE)) {
+		return -1;
+	}
+
+	// Apply a start pose to the physx actor and add it to the physx scene.
+	PxTransform startPose(PxVec3(5.000000000f, -0.000000000f, -40.0f),
+						  PxQuat(PxIdentity));
+	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
+							   sData.mVehicleName);
+	// Create vehicle filter
+	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS,
+							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
+
+	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+
+	// Set flags
+	PxU32 shapes = rBody->getNbShapes();
+	for (PxU32 i = 0; i < shapes; i++) {
+		PxShape *shape = NULL;
+		rBody->getShapes(&shape, 1, i);
+
+		shape->setSimulationFilterData(
+			vehicleFilter); // Add filter data to shader
+
+		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+	}
+
+	// Set the vehicle in 1st gear.
+	sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
+		sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
+	sData.mVehicle->mEngineDriveState.gearboxState.targetGear =
+		sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
+	// Set the vehicle to use the automatic gearbox.
+	sData.mVehicle->mTransmissionCommandState.targetGear =
+		PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
+
+	// Set up the simulation context.
+	// The snippet is set up with
+	// a) z as the longitudinal axis
+	// b) x as the lateral axis
+	// c) y as the vertical axis.
+	// d) metres  as the lengthscale.
+	sData.mVehicleSimContext.setToDefault();
+
+	sData.mVehicleSimContext.frame.lngAxis = PxVehicleAxes::ePosZ;
+	sData.mVehicleSimContext.frame.latAxis = PxVehicleAxes::ePosX;
+	sData.mVehicleSimContext.frame.vrtAxis = PxVehicleAxes::ePosY;
+	sData.mVehicleSimContext.scale.scale = 1.0f;
+
+	sData.mVehicleSimContext.gravity = game.physics->gGravity;
+	sData.mVehicleSimContext.physxScene = game.physics->gScene;
+
+	sData.mVehicleSimContext.physxActorUpdateMode =
+		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
+
+	// SparkControls controls;
+	game.coordinator->addComponent(sparkEntity, SparkControls());
+	game.coordinator->addComponent(sparkEntity, sData);
+	game.coordinator->addComponent(sparkEntity, Transform());
+	game.coordinator->addComponent(sparkEntity, rBody);
+	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
+
+	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
+
+	return sparkEntity;
+}
+
+// updates the drive params of all the active sparks
+void SparkSys::changeEngineDriveParams(const char *vehicleDataFileName,
+									   GameState &game) {
+	for (auto const &entity : entities) {
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		// Changes the parameters of the engine
+		readEngineDrivetrainParamsFromJsonFile(
+			sData.mVehicleDataPath, vehicleDataFileName,
+			sData.mVehicle->mEngineDriveParams);
+	}
+}
+
+// helper to register the system
+std::shared_ptr<SparkSys>
+SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
+	// register system
+	auto system = coord->registerSystem<SparkSys>();
+	// create system signture (what components this system needs)
+	Signature sig;
+	sig.set(coord->getComponentType<SparkControls>());
+	sig.set(coord->getComponentType<SparkData>());
+	// sig.set(coord->getComponentType<physx::PxRigidDynamic *>());
+	coord->setSystemSignature<SparkSys>(sig);
+
+	return system;
+}
