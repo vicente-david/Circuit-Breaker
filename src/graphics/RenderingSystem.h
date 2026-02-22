@@ -21,7 +21,7 @@ public:
 
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
-
+	unsigned int SCR_WIDTH = 800, SCR_HEIGHT = 600;
 	unsigned int textVBO;
 	unsigned int textVAO;
 

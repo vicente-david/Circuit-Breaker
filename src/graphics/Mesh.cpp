@@ -7,7 +7,9 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textures = textures;
+	
 	initMesh();
+	initShadowMap();
 }
 
 
@@ -43,6 +45,33 @@ void Mesh::initMesh() {
 	this->VAO = VAO;
 	this->EBO = EBO;
 	this->VBO = VBO;
+
+	
+}
+
+void Mesh::initShadowMap() {
+
+	unsigned int depthFBO, depthMap;
+	glGenFramebuffers(1, &depthFBO);
+
+	// 2D texture for depth buffer
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOW_W, SHADOW_H, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE); // no colour data to render
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	this->depthFBO = depthFBO;
+	this->depthMap = depthMap;
 }
 
 void Mesh::Draw(GLuint& shaderID) {

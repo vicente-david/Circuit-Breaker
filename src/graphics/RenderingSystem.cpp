@@ -20,7 +20,7 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create window object
-	window = glfwCreateWindow(800, 600, "Circuit Breaker", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Circuit Breaker", NULL, NULL);
 	if (window == NULL) {
 		glfwTerminate();
 		std::cout << "Window creation failed." << std::endl;
@@ -32,7 +32,7 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 		std::cout << "GLAD initialization failed." << std::endl;
 	}
 
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 }
 
