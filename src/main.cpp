@@ -16,6 +16,8 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
+#include "ai/AIControllerSys.h"
+#include "ai/AISparkComponents.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
@@ -46,6 +48,7 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<AIController>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -53,6 +56,7 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
+	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
 
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
@@ -146,6 +150,13 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
 	auto testSpark2 = sparkSys->createSpark(gameState);
+	gameState.coordinator->addComponent(testSpark2, AIController{
+		AIState::IDLE, // start AI in idle state
+		glm::vec3(150.0f, 0.0f, 150.0f), // target position
+		5.0f, // arrival radius
+		2.0f, // steering sharpness
+		15.0f // brake distance
+		});
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -162,6 +173,7 @@ int main() {
 		gameActions = inputSystem.getActions();
 		gameState.inputActions = gameActions;
 		controllerSys->update(gameState);
+		aiControllerSys->update(gameState);
 
 		// physics
 		while (accumulator >= dt) {
