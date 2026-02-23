@@ -11,7 +11,7 @@ uniform bool hasTex; // if no texture bound, render with default color
 
 out vec4 color;
 
-float shadowCalc(vec4 fragPosLightSpace) {
+float shadowCalc(vec4 fragPosLightSpace, float bias) {
 	
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; // Perspective divide
 	
@@ -19,7 +19,9 @@ float shadowCalc(vec4 fragPosLightSpace) {
 
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
-	float shadow = currentDepth > closestDepth ? 1.0 : 0.0; // check if fragment in shadow
+
+	
+	float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0; // check if fragment in shadow
 
 	return shadow;
 }
@@ -41,6 +43,7 @@ void main() {
 	else
 		objCol = vec4(0.5, 0.5, 0.5, 1.0);
 
-	float shadow = shadowCalc(FragPosLightSpace);
+	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
+	float shadow = shadowCalc(FragPosLightSpace, bias);
 	color = vec4(ambient + (1.0 - shadow) * diffuse, 1.0) * objCol;
 }

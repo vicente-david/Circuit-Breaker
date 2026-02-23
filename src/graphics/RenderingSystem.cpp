@@ -66,7 +66,7 @@ void RenderingSystem::initShadowMap() {
 	glGenTextures(1, &depthMap);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-		800, 600, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -102,16 +102,17 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
-	float near_plane = 1.0f, far_plane = 7.5f;
-	glm::mat4 lightProj = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-	glm::mat4 lightView = glm::lookAt(glm::vec3(0.3, 3.0, 1.0), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	float near_plane = -100.0f, far_plane = 200.0f;
+	glm::mat4 lightProj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, near_plane, far_plane);
+	
+	glm::mat4 lightView = glm::lookAt(glm::vec3(0.3f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
 	
 	shadowShader->use();
 	unsigned int lightSpaceLoc = glGetUniformLocation(shadowShader->id, "lightSpaceMat");
 	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
 
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
