@@ -90,25 +90,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	glViewport(0, 0, 1024, 1024);
 
-	// draw every entities model at the location of it's transform
-	for (auto& entity : entities) {
-		// dbug::log("REND",0, "Drawing entity %d", entity);
-
-		Model& model = game.coordinator->getComponent<Model>(entity);
-		Transform& transform =
-			game.coordinator->getComponent<Transform>(entity);
-
-		glm::mat4 modelTransform = glm::mat4(1.0f);
-		modelTransform = glm::translate(modelTransform, transform.pos);
-		modelTransform *= glm::toMat4(transform.rot);
-
-		// use transformations
-		unsigned int modelLoc = glGetUniformLocation(shadowShader->id, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
-			glm::value_ptr(modelTransform));
-
-		model.Draw(shadowShader->id);
-	}
+	renderScene(game, shadowShader->id);
 
 	// Render pass 2: render scene as normal
 
@@ -129,25 +111,8 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
 
-	// draw every entities model at the location of it's transform
-	for (auto &entity : entities) {
-		// dbug::log("REND",0, "Drawing entity %d", entity);
+	renderScene(game, basicShader->id);
 
-		Model& model = game.coordinator->getComponent<Model>(entity);
-		Transform &transform =
-			game.coordinator->getComponent<Transform>(entity);
-
-		glm::mat4 modelTransform = glm::mat4(1.0f);
-		modelTransform = glm::translate(modelTransform, transform.pos);
-		modelTransform *= glm::toMat4(transform.rot);
-
-		// use transformations
-		unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
-						   glm::value_ptr(modelTransform));
-
-		model.Draw(basicShader->id);
-	}
 	// render text
 	textProg->use();
 	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
@@ -155,6 +120,28 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	glfwPollEvents();
 	glfwSwapBuffers(window);
+}
+
+void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
+	// draw every entities model at the location of it's transform
+	for (auto& entity : entities) {
+		// dbug::log("REND",0, "Drawing entity %d", entity);
+
+		Model& model = game.coordinator->getComponent<Model>(entity);
+		Transform& transform =
+			game.coordinator->getComponent<Transform>(entity);
+
+		glm::mat4 modelTransform = glm::mat4(1.0f);
+		modelTransform = glm::translate(modelTransform, transform.pos);
+		modelTransform *= glm::toMat4(transform.rot);
+
+		// use transformations
+		unsigned int modelLoc = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+			glm::value_ptr(modelTransform));
+
+		model.Draw(shaderID);
+	}
 }
 
 std::shared_ptr<RenderingSystem>

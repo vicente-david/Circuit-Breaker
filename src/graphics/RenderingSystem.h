@@ -18,6 +18,7 @@ public:
 	void initializeText();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
+	void renderScene(GameState& game, GLuint& shaderID);
 
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
