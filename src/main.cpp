@@ -145,15 +145,17 @@ int main() {
 	std::string fps = std::to_string(0);
 
 	// create spark with new system
-	auto sparkEntity = sparkSys->createSpark(gameState);
+	PxVec3 startLoc = PxVec3(5.000000000f, -0.000000000f, -40.0f);
+	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-	auto testSpark2 = sparkSys->createSpark(gameState);
+	PxVec3 startLoc2 = PxVec3(2.000000000f, -0.000000000f, -30.0f);
+	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
-		glm::vec3(150.0f, 0.0f, 150.0f), // target position
-		5.0f, // arrival radius
+		glm::vec3(10.0f, 0.0f, -10.0f), // target position
+		2.0f, // arrival radius
 		2.0f, // steering sharpness
 		15.0f // brake distance
 		});

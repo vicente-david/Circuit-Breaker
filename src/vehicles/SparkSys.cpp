@@ -103,7 +103,7 @@ void SparkSys::respawn(PxRigidBody *rBody) {
 	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
 }
 
-Entity SparkSys::createSpark(GameState &game) {
+Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	Entity sparkEntity = game.coordinator->createEntity();
 
@@ -136,8 +136,7 @@ Entity SparkSys::createSpark(GameState &game) {
 	}
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(5.000000000f, -0.000000000f, -40.0f),
-						  PxQuat(PxIdentity));
+	PxTransform startPose(startP, PxQuat(PxIdentity));
 	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
 							   sData.mVehicleName);
 	// Create vehicle filter

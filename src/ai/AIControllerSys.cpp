@@ -2,7 +2,6 @@
 #include "debugUtils/Logger.h"
 #include "ecs/Coordinator.h"
 #include "ecs/Component.h"
-#include <algorithm>
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
@@ -95,14 +94,14 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	// map the angle to [-1, 1] steering. pi/2 rads (90 degrees) = full
 	// lock before sharpness multiplier
 	float steerRaw = (angle / (glm::pi<float>() * 0.5f)) * ai.steeringSharpness;
-	controls.steering = std::clamp(steerRaw, -1.0f, 1.0f);
+	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
 
 	// ---- THROTTLE (and brake for now) ----
 	if (distance < ai.brakeDistance) {
 		// decrease throttle as we approach
 		float t = distance / ai.brakeDistance;
-		controls.throttle = std::clamp(t, 0.1f, 1.0f);
-		controls.brake = std::clamp(1.0f - t, 0.0f, 0.5f);
+		controls.throttle = glm::clamp(t, 0.1f, 1.0f);
+		controls.brake = glm::clamp(1.0f - t, 0.0f, 0.5f);
 	}
 	else {
 		controls.throttle = 1.0f;
@@ -116,7 +115,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	controls.shimmyR = false;
 	controls.reset = false;
 
-	dbug::log("AI", -1, "Entity: dist = %.1f steer=%.2f throttle = %.2f brake = %.2f", distance, controls.steering, controls.throttle, controls.brake);
+	dbug::log("AI", 0, "Entity: dist = %.1f steer=%.2f throttle = %.2f brake = %.2f", distance, controls.steering, controls.throttle, controls.brake);
 	return;
 }
 
