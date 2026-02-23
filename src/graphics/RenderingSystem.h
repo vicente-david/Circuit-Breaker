@@ -31,6 +31,7 @@ public:
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
 	std::unique_ptr<ShaderProgram> textProg;
+	std::unique_ptr<ShaderProgram> shadowShader;
 
 
 private:

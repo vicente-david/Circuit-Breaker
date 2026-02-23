@@ -45,6 +45,8 @@ void RenderingSystem::initializeShaders() {
 	// Create shader program
 	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert",
 												  "shaders/basic.frag");
+	shadowShader = std::make_unique<ShaderProgram>("shaders/shadow.vert",
+												"shaders/shadow.frag");
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert",
 											   "shaders/testText.frag");
 	textFont = initFont("assets/miamanueva.ttf");
@@ -73,7 +75,44 @@ void RenderingSystem::initializeText() {
 }
 
 void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// Render pass 1: depth to texture
+	float near_plane = 1.0f, far_plane = 7.5f;
+	glm::mat4 lightProj = glm::ortho(10.0f, 10.0f, 10.0f, 10.0f, near_plane, far_plane);
+	glm::mat4 lightView = glm::lookAt(glm::vec3(0.3, 1.0, 1.0), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightSpaceMat = lightProj * lightView;
+	
+	shadowShader->use();
+	unsigned int lightSpaceLoc = glGetUniformLocation(shadowShader->id, "lightSpaceMat");
+	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
+
+	glViewport(0, 0, 1024, 1024);
+
+	// draw every entities model at the location of it's transform
+	for (auto& entity : entities) {
+		// dbug::log("REND",0, "Drawing entity %d", entity);
+
+		Model& model = game.coordinator->getComponent<Model>(entity);
+		Transform& transform =
+			game.coordinator->getComponent<Transform>(entity);
+
+		glm::mat4 modelTransform = glm::mat4(1.0f);
+		modelTransform = glm::translate(modelTransform, transform.pos);
+		modelTransform *= glm::toMat4(transform.rot);
+
+		// use transformations
+		unsigned int modelLoc = glGetUniformLocation(shadowShader->id, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+			glm::value_ptr(modelTransform));
+
+		model.Draw(shadowShader->id);
+	}
+
+	// Render pass 2: render scene as normal
+
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	basicShader->use();
 	auto c1 = camSystem->cameras[0];
 
@@ -83,7 +122,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
 
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
