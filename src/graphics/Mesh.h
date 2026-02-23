@@ -29,11 +29,6 @@ public:
 	
 private:
 	void initMesh();
-	void initShadowMap();
 	unsigned int VBO, EBO, VAO;
 
-	// Depth map variables for shadows
-	unsigned int SHADOW_W = 1024, SHADOW_H = 1024; //resolution
-	unsigned int depthMap;
-	unsigned int depthFBO;
 };

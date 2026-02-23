@@ -16,6 +16,7 @@ public:
 	RenderingSystem();
 	void initializeShaders();
 	void initializeText();
+	void initShadowMap();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
 	void renderScene(GameState& game, GLuint& shaderID);
@@ -25,6 +26,7 @@ public:
 	unsigned int SCR_WIDTH = 800, SCR_HEIGHT = 600;
 	unsigned int textVBO;
 	unsigned int textVAO;
+	unsigned int depthFBO, depthMap;
 
 	std::map<char, Character> textFont;
 	glm::mat4 textMat;
