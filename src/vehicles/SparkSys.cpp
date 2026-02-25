@@ -1,6 +1,7 @@
 
 #include "vehicles/SparkSys.h"
 #include "GameState.h"
+#include "PxActor.h"
 #include "PxForceMode.h"
 #include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
@@ -194,6 +195,7 @@ Entity SparkSys::createSpark(GameState &game) {
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
 	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
+	rBody->setActorFlag(physx::PxActorFlag::eVISUALIZATION, true);
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 

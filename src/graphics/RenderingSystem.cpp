@@ -1,13 +1,17 @@
 #include "RenderingSystem.h"
+#include "CameraSystem.h"
 #include "GameState.h"
+#include "InputSystem.h"
 #include "debugUtils/Logger.h"
+#include "graphics/CameraComp.h"
+#include "graphics/Mesh.h"
+#include "graphics/Model.h"
+#include <GL/gl.h>
+#include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <memory>
-#include "CameraSystem.h"
-#include "graphics/CameraComp.h"
-#include "graphics/Model.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width,
 							   int height); // TODO: move this
@@ -47,6 +51,8 @@ void RenderingSystem::initializeShaders() {
 												  "shaders/basic.frag");
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert",
 											   "shaders/testText.frag");
+	solidColour = std::make_unique<ShaderProgram>("shaders/lines.vert",
+												  "shaders/lines.frag");
 	textFont = initFont("assets/miamanueva.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f,
 						 static_cast<float>(1440));
@@ -70,11 +76,17 @@ void RenderingSystem::initializeText() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	// lines vbo
+	glGenBuffers(1, &linesVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
+	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), 0);
 }
 
-void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
+void RenderingSystem::update(GameState &game, std::string fps,
+							 std::shared_ptr<CameraSystem> camSystem) {
 
-	basicShader->use();
 	auto c1 = camSystem->cameras[0];
 
 	glm::mat4 view = glm::mat4(1.0f);
@@ -85,6 +97,11 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+	// for some reason drawing this before entities wont work
+	// drawPhysxDebug(game, view, proj);
+
+	// draw entities with basic shader
+	basicShader->use();
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
@@ -94,7 +111,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	for (auto &entity : entities) {
 		// dbug::log("REND",0, "Drawing entity %d", entity);
 
-		Model& model = game.coordinator->getComponent<Model>(entity);
+		Model &model = game.coordinator->getComponent<Model>(entity);
 		Transform &transform =
 			game.coordinator->getComponent<Transform>(entity);
 
@@ -109,6 +126,10 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 		model.Draw(basicShader->id);
 	}
+	
+	// this makes the last entity get drawn wrong idk why
+	drawPhysxDebug(game, view, proj);
+
 	// render text
 	textProg->use();
 	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
@@ -116,6 +137,56 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	glfwPollEvents();
 	glfwSwapBuffers(window);
+}
+
+void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
+									 glm::mat4 &proj) {
+	// draw physx geometry render
+	const PxRenderBuffer &physXRBuffer =
+		game.physics->gScene->getRenderBuffer();
+
+	glm::vec3 lines[physXRBuffer.getNbLines() * 2];
+	// glm::vec3 lines[6] = {
+	// 	glm::vec3(-0.5,0.5,0), glm::vec3(0.5,0.5,0),
+	// 	glm::vec3(0,0,0),glm::vec3(-10,1,1), 
+	// 	glm::vec3(10,-0.5,1), glm::vec3(0,0,0)
+	// };
+	printf("nlines:%d\n", physXRBuffer.getNbLines());
+	for (PxU32 i = 0; i < physXRBuffer.getNbLines(); i++) {
+		int arrIdx = i * 2;
+		auto line = physXRBuffer.getLines()[i];
+		glm::vec3 p1(line.pos0.x, line.pos0.y, line.pos0.z);
+		glm::vec3 p2(line.pos1.x, line.pos1.y, line.pos1.z);
+		lines[arrIdx] = p1;
+		lines[arrIdx + 1] = p2;
+		printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
+			   p2.y, p2.z);
+	}
+	// bind shader and stuff
+	solidColour->use();
+	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
+	// it wont draw properly if this isn't set each frame
+	// it will break the last drawn entity for some reason though TwT
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), 0);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(lines), lines, GL_DYNAMIC_DRAW);
+
+	// glEnableVertexAttribArray(0);
+	// set uniforms
+	// unsigned int uniLoc ;
+	unsigned int uniLoc = glGetUniformLocation(solidColour->id, "model");
+	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1)));
+	uniLoc = glGetUniformLocation(solidColour->id, "view");
+	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(view));
+	uniLoc = glGetUniformLocation(solidColour->id, "projection");
+	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	// uniLoc = glGetUniformLocation(solidColour->id, "colour");
+	// glUniformMatrix4fv(uniLoc, 1, GL_FALSE,
+	// 				   glm::value_ptr(glm::vec4(1, 0, 1, 1)));
+
+	// draw the things
+	// glDrawArrays(GL_TRIANGLES, 0,6);
+	glDrawArrays(GL_LINES, 0, sizeof(lines)/sizeof(glm::vec3));
+	// glDisableVertexAttribArray(0);
 }
 
 std::shared_ptr<RenderingSystem>

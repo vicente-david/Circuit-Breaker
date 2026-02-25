@@ -18,12 +18,14 @@ public:
 	void initializeText();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
+	void drawPhysxDebug(GameState &game, glm::mat4& view, glm::mat4& proj);
 
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
 
 	unsigned int textVBO;
 	unsigned int textVAO;
+	unsigned int linesVBO;
 
 	std::map<char, Character> textFont;
 	glm::mat4 textMat;
@@ -31,6 +33,8 @@ public:
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
 	std::unique_ptr<ShaderProgram> textProg;
+	std::unique_ptr<ShaderProgram> solidColour;
+
 
 
 private:

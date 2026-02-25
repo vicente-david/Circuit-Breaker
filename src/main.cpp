@@ -117,7 +117,7 @@ int main() {
 		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
 
 		triggerActor->attachShape(*triggerRect);
-		physicsManager->gScene->addActor(*triggerActor);
+		// physicsManager->gScene->addActor(*triggerActor);
 
 		PxFilterData finishLineTriggerFilterData;
 		finishLineTriggerFilterData.word0 =
