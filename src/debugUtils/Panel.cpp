@@ -1,9 +1,27 @@
 
+#include "debugUtils/Logger.h"
+#include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "imgui.h"
+#include "imgui_stdlib.h"
+#include <cstdio>
+#include <string>
 
 namespace dbugPanel {
+
+// tuning values
+namespace tuning {
+bool reloadSpark = false;
+bool setFolder = false;
+std::string configFolder = "assets/vehicledata";
+std::string enginePath = "EngineDrive.json";
+std::string basePath = "Base.json";
+
+} // namespace tuning
+namespace debug {
+float updateTime;
+}
+
 void createPanel(GLFWwindow *window) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -18,6 +36,50 @@ void createPanel(GLFWwindow *window) {
 		window, true); // Second param install_callback=true will install
 					   // GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
+}
+void frameStart() {
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+}
+void debugPanel() {
+	ImGui::Begin("Debug");
+
+	ImGui::InputInt("Log level", &dbug::minLogSeverity);
+	ImGui::Checkbox("Log whiteList", (bool *)&dbug::logListType);
+	std::string tags = "Logging tags [";
+	for(auto& t : dbug::logIgnoreTags){
+		tags+=t;
+	}
+	tags+="]";
+	ImGui::Text("%s", tags.c_str());
+	ImGui::Text("Update time: %.2f ms (%.1f fps)", debug::updateTime * 1000,
+				1 / debug::updateTime);
+	ImGui::End();
+}
+void vehicleTuningPanel() {
+	ImGui::Begin("Vehicle Tuning");
+	ImGui::InputText("Folder", &tuning::configFolder);
+	ImGui::InputText("Base Conf.", &tuning::basePath);
+	ImGui::InputText("Engine Conf.", &tuning::enginePath);
+	tuning::reloadSpark = ImGui::Button("Reload Conf.");
+	ImGui::SameLine();
+	tuning::setFolder = ImGui::Button("Set Folder");
+	ImGui::End();
+}
+void render() {
+	ImGui::ShowDemoWindow();
+	vehicleTuningPanel();
+	debugPanel();
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void cleanup() {
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
+	ImGui::DestroyContext();
 }
 
 } // namespace dbugPanel

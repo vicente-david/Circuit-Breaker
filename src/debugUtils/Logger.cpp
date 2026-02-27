@@ -11,9 +11,9 @@ bool printLogs = true;
 int minLogSeverity = 1;
 std::string logPath = "debugLog.txt";
 float startTime;
-std::set<std::string> ignoreTypes;
+std::set<std::string> logIgnoreTags;
 
-IgnoreType logIgnoreType = BLACK_LIST;
+IgnoreType logListType = BLACK_LIST;
 
 static void appendLog(std::string type, int lev, std::string str,
 					  va_list args) {
@@ -31,7 +31,7 @@ static void appendLog(std::string type, int lev, std::string str,
 }
 
 void logIgnore(std::string type) {
-	ignoreTypes.emplace(type);
+	logIgnoreTags.emplace(type);
 }
 void loggerInit() {
 	startTime = glfwGetTime();
@@ -45,7 +45,7 @@ void vlog(std::string type, int level, std::string str, va_list args) {
 		return;
 	}
 
-	if ((ignoreTypes.count(type) == 0) == logIgnoreType) {
+	if ((logIgnoreTags.count(type) == 0) == logListType) {
 		return;
 	}
 

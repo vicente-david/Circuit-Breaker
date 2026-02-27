@@ -67,11 +67,6 @@ find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
 
 
-# #imgui?_
-# add_subdirectory(dependencies/imgui)
-# set(LIBRARIES ${LIBRARIES} imgui)
-
-
 
 if (WIN32)
 

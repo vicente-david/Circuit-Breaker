@@ -6,6 +6,7 @@
 #include "PxRigidDynamic.h"
 #include "SparkComponents.h"
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
 #include "graphics/Model.h"
@@ -70,6 +71,19 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
 	}
+
+	// reload the tuning stuff from debug panel
+	if (dbugPanel::tuning::reloadSpark) {
+		dbugPanel::tuning::reloadSpark = false;
+		reloadSparkParams(game);
+	}
+	if (dbugPanel::tuning::setFolder) {
+		dbugPanel::tuning::setFolder = false;
+		for (auto const &entity : entities) {
+			auto &sData = game.coordinator->getComponent<SparkData>(entity);
+			sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
+		}
+	}
 }
 
 void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
@@ -116,12 +130,13 @@ Entity SparkSys::createSpark(GameState &game) {
 
 	// SparkData sData;
 	// Load the params from json or set directly.
-	sData.mVehicleDataPath = "assets/vehicledata";
-	readBaseParamsFromJsonFile(sData.mVehicleDataPath, "Base.json",
+	sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
+	readBaseParamsFromJsonFile(sData.mVehicleDataPath,
+							   dbugPanel::tuning::basePath.c_str(),
 							   sData.mVehicle->mBaseParams);
-	readEngineDrivetrainParamsFromJsonFile(sData.mVehicleDataPath,
-										   "EngineDrive.json",
-										   sData.mVehicle->mEngineDriveParams);
+	readEngineDrivetrainParamsFromJsonFile(
+		sData.mVehicleDataPath, dbugPanel::tuning::enginePath.c_str(),
+		sData.mVehicle->mEngineDriveParams);
 	setPhysXIntegrationParams(
 		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
 		sData.mNbMaterialFrictions, sData.mDefaultMaterialFriction,
@@ -201,14 +216,19 @@ Entity SparkSys::createSpark(GameState &game) {
 }
 
 // updates the drive params of all the active sparks
-void SparkSys::changeEngineDriveParams(const char *vehicleDataFileName,
-									   GameState &game) {
+void SparkSys::reloadSparkParams(GameState &game) {
+	dbug::log("GAME",0,"Reloading spark config" );
 	for (auto const &entity : entities) {
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
 		// Changes the parameters of the engine
+		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
 		readEngineDrivetrainParamsFromJsonFile(
-			sData.mVehicleDataPath, vehicleDataFileName,
+			sData.mVehicleDataPath, engineFileName,
 			sData.mVehicle->mEngineDriveParams);
+		// load params for vehicle base
+		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
+		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
+								   sData.mVehicle->mBaseParams);
 	}
 }
 

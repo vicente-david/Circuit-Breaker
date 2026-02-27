@@ -29,8 +29,8 @@ int main() {
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
-	// dbug::logIgnore("ECS");
-	dbug::logIgnoreType = dbug::WHITE_LIST;
+	dbug::logIgnore("GAME");
+	dbug::logListType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 
@@ -56,7 +56,6 @@ int main() {
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
-	dbugPanel::createPanel(renderer->window);
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
 		std::make_shared<PhysicsManager>();
@@ -66,6 +65,8 @@ int main() {
 	inputSystem.attachWindow(renderer->window);
 
 	Actions gameActions = inputSystem.getActions();
+	// add debug imgui panel (needs to be after input callbacks are set)
+	dbugPanel::createPanel(renderer->window);
 
 	// time
 	double t = 0.0;
@@ -142,6 +143,7 @@ int main() {
 
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
+	dbugPanel::debug::updateTime = dt;
 
 	// create spark with new system
 	auto sparkEntity = sparkSys->createSpark(gameState);
@@ -149,6 +151,7 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
 	auto testSpark2 = sparkSys->createSpark(gameState);
+
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -209,6 +212,7 @@ int main() {
 		gameState.audio->update(dt);
 	}
 	gameState.audio->close();
+	dbugPanel::cleanup();
 	glfwTerminate();
 
 	return 0;

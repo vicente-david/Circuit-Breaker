@@ -1,6 +1,7 @@
 #include "RenderingSystem.h"
 #include "GameState.h"
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
@@ -34,6 +35,7 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
@@ -115,6 +117,8 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 			   1.0f, glm::vec3(1.0f), textFont);
 
 	glfwPollEvents();
+	dbugPanel::frameStart();
+	dbugPanel::render();
 	glfwSwapBuffers(window);
 }
 
