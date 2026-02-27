@@ -79,7 +79,7 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model trackModel("assets/trackModel.obj"); // temporary track model
+	Model trackModel("assets/track1.obj"); // temporary track model
 	Model planeModel("assets/plane.obj");
 
 	// create the track. this should eventually be moved to its own
