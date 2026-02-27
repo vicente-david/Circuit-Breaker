@@ -5,7 +5,9 @@
 #include "imgui_impl_opengl3.h"
 #include "imgui_stdlib.h"
 #include <cstdio>
+#include <filesystem>
 #include <string>
+#include <unistd.h>
 
 namespace dbugPanel {
 
@@ -58,9 +60,17 @@ void vehicleTuningPanel() {
 	ImGui::InputText("Folder", &tuning::configFolder);
 	ImGui::InputText("Base Conf.", &tuning::basePath);
 	ImGui::InputText("Engine Conf.", &tuning::enginePath);
-	tuning::reloadSpark = ImGui::Button("Reload Conf.");
-	ImGui::SameLine();
-	tuning::setFolder = ImGui::Button("Set Folder");
+	tuning::reloadSpark = ImGui::Button("Reload config");
+	// ImGui::SameLine();
+	// tuning::setFolder = ImGui::Button("Set Folder");
+	// set path to <projdir>/assets/vehicledata instead of the build version
+	if (ImGui::Button("Find project config folder")) {
+		std::string path = std::filesystem::current_path();
+		dbug::log(0, "CWD: %s", path.c_str());
+		int idx = path.rfind("out");
+		path = path.substr(0,idx)+"assets/vehicledata";
+		tuning::configFolder = path;
+	}
 
 	ImGui::Checkbox("Show Colliders", &tuning::physicsShapes);
 	ImGui::End();
@@ -71,8 +81,8 @@ void render() {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
 
-	// draw panels 
-	ImGui::ShowDemoWindow();
+	// draw panels
+	// ImGui::ShowDemoWindow();
 	vehicleTuningPanel();
 	debugPanel();
 	ImGui::Render();

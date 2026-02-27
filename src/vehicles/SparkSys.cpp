@@ -76,15 +76,12 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 	// reload the tuning stuff from debug panel
 	if (dbugPanel::tuning::reloadSpark) {
-		dbugPanel::tuning::reloadSpark = false;
-		reloadSparkParams(game);
-	}
-	if (dbugPanel::tuning::setFolder) {
 		dbugPanel::tuning::setFolder = false;
 		for (auto const &entity : entities) {
 			auto &sData = game.coordinator->getComponent<SparkData>(entity);
 			sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
 		}
+		reloadSparkParams(game);
 	}
 }
 
@@ -175,7 +172,7 @@ Entity SparkSys::createSpark(GameState &game) {
 		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-	shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
 	}
 
 	// Set the vehicle in 1st gear.
@@ -199,6 +196,7 @@ Entity SparkSys::createSpark(GameState &game) {
 	sData.mVehicleSimContext.frame.latAxis = PxVehicleAxes::ePosX;
 	sData.mVehicleSimContext.frame.vrtAxis = PxVehicleAxes::ePosY;
 	sData.mVehicleSimContext.scale.scale = 1.0f;
+	// sData.mVehicleSimContext.scale.scale = 100f;
 
 	sData.mVehicleSimContext.gravity = game.physics->gGravity;
 	sData.mVehicleSimContext.physxScene = game.physics->gScene;
@@ -220,8 +218,9 @@ Entity SparkSys::createSpark(GameState &game) {
 
 // updates the drive params of all the active sparks
 void SparkSys::reloadSparkParams(GameState &game) {
-	dbug::log("GAME",0,"Reloading spark config" );
+	dbug::log("GAME", 0, "Reloading spark config");
 	for (auto const &entity : entities) {
+		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
 		// Changes the parameters of the engine
 		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
@@ -232,6 +231,7 @@ void SparkSys::reloadSparkParams(GameState &game) {
 		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
 		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
 								   sData.mVehicle->mBaseParams);
+		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
 	}
 }
 

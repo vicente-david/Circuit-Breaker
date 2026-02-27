@@ -148,7 +148,6 @@ int main() {
 
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
-	dbugPanel::debug::updateTime = dt;
 
 	// create spark with new system
 	auto sparkEntity = sparkSys->createSpark(gameState);
@@ -168,6 +167,7 @@ int main() {
 		accumulator += frameTime;
 		accumulator = std::min(accumulator, 1 / minFps);
 		framesPassed++;
+		dbugPanel::debug::updateTime = frameTime;
 
 		// input
 		gameActions = inputSystem.getActions();
