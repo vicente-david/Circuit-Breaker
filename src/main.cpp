@@ -4,6 +4,7 @@
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
 #include "glad/gl.h"
@@ -54,6 +55,8 @@ int main() {
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 
+	// initialize debug panel
+	dbugPanel::createPanel(renderer->window);
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
 		std::make_shared<PhysicsManager>();

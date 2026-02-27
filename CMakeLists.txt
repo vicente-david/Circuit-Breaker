@@ -11,7 +11,14 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 file(GLOB_RECURSE SOURCES "src/*")
 file(GLOB_RECURSE SNIPPETS "snippets/*")
-add_executable(circuit-breaker ${SOURCES} ${SNIPPETS})
+
+# imgui
+include_directories(${PROJECT_SOURCE_DIR}/dependencies/imgui)
+file(GLOB IMGUI "dependencies/imgui/*")
+
+add_executable(circuit-breaker ${SOURCES} ${SNIPPETS} ${IMGUI} )
+# add_executable(circuit-breaker ${SOURCES} ${SNIPPETS} ${IMGUI_H} ${IMGUI_CPP} 
+# 	${IMGUI_GL_H} ${IMGUI_GL_CPP} ${IMGUI_GLFW_H} ${IMGUI_GLFW_CPP})
 
 # PHYSX
 # add folder 'phsyx' into project directory. Download from: https://drive.google.com/file/d/1pEJwnzxcU9dmLWXS2b9Mpow9S-b2PFo7/view?usp=sharing 
@@ -58,6 +65,11 @@ include_directories(SYSTEM dependencies/glm-0.9.9.7/)
 # OPENGL
 find_package(OpenGL REQUIRED)
 set(LIBRARIES ${LIBRARIES} ${OPENGL_gl_LIBRARY})
+
+
+# #imgui?_
+# add_subdirectory(dependencies/imgui)
+# set(LIBRARIES ${LIBRARIES} imgui)
 
 
 

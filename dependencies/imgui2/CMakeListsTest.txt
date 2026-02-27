@@ -1,0 +1,7 @@
+add_library(imgui STATIC
+    imgui.cpp
+    imgui_draw.cpp
+
+tsrget
+public
+glmfw glad
