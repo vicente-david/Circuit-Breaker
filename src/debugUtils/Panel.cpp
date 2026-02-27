@@ -14,8 +14,8 @@ namespace tuning {
 bool reloadSpark = false;
 bool setFolder = false;
 std::string configFolder = "assets/vehicledata";
-std::string enginePath = "EngineDrive.json";
-std::string basePath = "Base.json";
+std::string enginePath = "SparkDrive.json";
+std::string basePath = "SparkBase.json";
 
 } // namespace tuning
 namespace debug {

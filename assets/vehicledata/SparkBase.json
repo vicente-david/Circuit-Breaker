@@ -504,34 +504,34 @@
     "WheelParams": [
         {
             "WheelId": 0,
-            "HalfWidth": 0.15768450498580934,
-            "Radius": 0.3432520031929016,
-            "Mass": 20.0,
-            "MOI": 1.1716899871826172,
+            "HalfWidth": 0.1,
+            "Radius": 0.75,
+            "Mass": 2.0,
+            "MOI": 1,
             "DampingRate": 0.25
         },
         {
             "WheelId": 1,
-            "HalfWidth": 0.15768450498580934,
-            "Radius": 0.3432520031929016,
-            "Mass": 20.0,
-            "MOI": 1.1716899871826172,
+            "HalfWidth": 0.1,
+            "Radius": 0.75,
+            "Mass": 2.0,
+            "MOI": 1,
             "DampingRate": 0.25
         },
         {
             "WheelId": 2,
-            "HalfWidth": 0.15768450498580934,
-            "Radius": 0.3432520031929016,
-            "Mass": 20.0,
-            "MOI": 1.1716899871826172,
+            "HalfWidth": 0.1,
+            "Radius": 0.75,
+            "Mass": 2.0,
+            "MOI": 1,
             "DampingRate": 0.25
         },
         {
             "WheelId": 3,
-            "HalfWidth": 0.15768450498580934,
-            "Radius": 0.3432520031929016,
-            "Mass": 20.0,
-            "MOI": 1.1716899871826172,
+            "HalfWidth": 0.1,
+            "Radius": 0.75,
+            "Mass": 2.0,
+            "MOI": 1,
             "DampingRate": 0.25
         }
     ]
