@@ -83,7 +83,8 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model trackModel("assets/plane.obj"); // temporary track model
+	Model trackModel("assets/track1.obj"); // temporary track model
+	Model planeModel("assets/plane.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -94,7 +95,11 @@ int main() {
 	Entity track = gameState.coordinator->createEntity();
 	gameState.coordinator->addComponent(track, none);
 	gameState.coordinator->addComponent(track, trackModel);
+	Entity plane = gameState.coordinator->createEntity();
+	gameState.coordinator->addComponent(plane, none);
+	gameState.coordinator->addComponent(plane, planeModel);
 	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
+	physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
 	dbug::log(0, "track entity id:%d", track);
 
 	// create test object pyramid
