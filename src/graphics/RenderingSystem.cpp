@@ -145,7 +145,7 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 	// 	glm::vec3(0,0,0),glm::vec3(-10,1,1),
 	// 	glm::vec3(10,-0.5,1), glm::vec3(0,0,0)
 	// };
-	printf("nlines:%d\n", physXRBuffer.getNbLines());
+	// printf("nlines:%d\n", physXRBuffer.getNbLines());
 	for (PxU32 i = 0; i < physXRBuffer.getNbLines(); i++) {
 		int arrIdx = i * 2;
 		auto line = physXRBuffer.getLines()[i];
@@ -153,8 +153,8 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 		glm::vec3 p2(line.pos1.x, line.pos1.y, line.pos1.z);
 		lines[arrIdx] = p1;
 		lines[arrIdx + 1] = p2;
-		printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
-			   p2.y, p2.z);
+		// printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
+			   // p2.y, p2.z);
 	}
 	// bind shader and stuff
 	solidColour->use();

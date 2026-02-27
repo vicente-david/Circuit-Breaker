@@ -5,6 +5,7 @@
 #include "PxForceMode.h"
 #include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
+#include "PxShape.h"
 #include "SparkComponents.h"
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
@@ -174,6 +175,7 @@ Entity SparkSys::createSpark(GameState &game) {
 		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+	shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
 	}
 
 	// Set the vehicle in 1st gear.
@@ -210,7 +212,6 @@ Entity SparkSys::createSpark(GameState &game) {
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
 	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
-	rBody->setActorFlag(physx::PxActorFlag::eVISUALIZATION, true);
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
