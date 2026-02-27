@@ -7,6 +7,7 @@ namespace dbugPanel {
 namespace tuning {
 extern bool reloadSpark;
 extern bool setFolder;
+extern bool physicsShapes;
 extern std::string configFolder;
 extern std::string enginePath;
 extern std::string basePath;
@@ -18,7 +19,6 @@ namespace debug {
 	
 }
 void createPanel(GLFWwindow *window);
-void frameStart();
 void update(GameState &game);
 void render();
 

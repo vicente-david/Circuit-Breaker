@@ -13,6 +13,7 @@ namespace dbugPanel {
 namespace tuning {
 bool reloadSpark = false;
 bool setFolder = false;
+bool physicsShapes;
 std::string configFolder = "assets/vehicledata";
 std::string enginePath = "SparkDrive.json";
 std::string basePath = "SparkBase.json";
@@ -37,22 +38,16 @@ void createPanel(GLFWwindow *window) {
 					   // GLFW callbacks and chain to existing ones.
 	ImGui_ImplOpenGL3_Init();
 }
-void frameStart() {
-	// Start the Dear ImGui frame
-	ImGui_ImplOpenGL3_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
-	ImGui::NewFrame();
-}
 void debugPanel() {
 	ImGui::Begin("Debug");
 
 	ImGui::InputInt("Log level", &dbug::minLogSeverity);
 	ImGui::Checkbox("Log whiteList", (bool *)&dbug::logListType);
 	std::string tags = "Logging tags [";
-	for(auto& t : dbug::logIgnoreTags){
-		tags+=t;
+	for (auto &t : dbug::logIgnoreTags) {
+		tags += t;
 	}
-	tags+="]";
+	tags += "]";
 	ImGui::Text("%s", tags.c_str());
 	ImGui::Text("Update time: %.2f ms (%.1f fps)", debug::updateTime * 1000,
 				1 / debug::updateTime);
@@ -66,9 +61,17 @@ void vehicleTuningPanel() {
 	tuning::reloadSpark = ImGui::Button("Reload Conf.");
 	ImGui::SameLine();
 	tuning::setFolder = ImGui::Button("Set Folder");
+
+	ImGui::Checkbox("Show Colliders", &tuning::physicsShapes);
 	ImGui::End();
 }
 void render() {
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
+	ImGui::NewFrame();
+
+	// draw panels 
 	ImGui::ShowDemoWindow();
 	vehicleTuningPanel();
 	debugPanel();
