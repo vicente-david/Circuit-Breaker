@@ -15,7 +15,7 @@ struct CameraComp {
 
 	// target location realitive to the target
 	// (in the coordinate frame of the car)
-	glm::vec3 targetOffset = glm::vec3(0.0f, -1.00f, -3.0f);
+	glm::vec3 targetOffset = glm::vec3(0.0f, 1.00f, -3.f);
 
 	// how far ahead of the car to look
 	float lookAtdistance = 2;
@@ -25,7 +25,7 @@ struct CameraComp {
 
 	// movement related data
 	int camNumber = 0;
-	float posEasing = 0.08;
+	float posEasing = 0.1;
 
 	glm::mat4 GetViewMatrix() {
 		// eye=Position, center=lookatdirection, up=what is defined as up
@@ -43,7 +43,7 @@ struct CameraComp {
 		// this is the distance the camera will be from the car
 		// we transform the offset form model to global coordinates
 		glm::mat4 carTransform = glm::toMat4(carRot);
-		auto offset = glm::vec4(targetOffset, 1) * carTransform;
+		auto offset = carTransform*glm::vec4(targetOffset, 1) ;
 
 		// getting the car's up vector doesn't seem to be working, so i just use 
 		// the world up, idk
