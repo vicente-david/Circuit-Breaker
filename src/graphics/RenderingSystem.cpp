@@ -159,7 +159,13 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
 			   1.0f, glm::vec3(1.0f), textFont);
 
+	if (dbugPanel::tuning::physicsShapes) {
+		// this makes the last entity get drawn wrong idk why
+		drawPhysxDebug(game, view, proj);
+	}
+
 	glfwPollEvents();
+	dbugPanel::render();
 	glfwSwapBuffers(window);
 }
 
@@ -183,18 +189,7 @@ void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
 
 		model.Draw(shaderID);
 	}
-	if (dbugPanel::tuning::physicsShapes) {
-	// this makes the last entity get drawn wrong idk why
-		drawPhysxDebug(game, view, proj);
-	}
-	// render text
-	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
-			   1.0f, glm::vec3(1.0f), textFont);
-
-	glfwPollEvents();
-	dbugPanel::render();
-	glfwSwapBuffers(window);
+	
 }
 void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 									 glm::mat4 &proj) {
