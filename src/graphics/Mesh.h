@@ -26,6 +26,7 @@ public:
 
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
 	void Draw(GLuint& shaderID);
+	std::pair<glm::vec3, glm::vec3> GetBounds();
 	
 private:
 	void initMesh();

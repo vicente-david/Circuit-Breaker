@@ -113,9 +113,9 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
 	float near_plane = -100.0f, far_plane = 200.0f;
-	glm::mat4 lightProj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, near_plane, far_plane);
+	glm::mat4 lightProj = glm::ortho(bounds.first.x, bounds.second.x, bounds.first.z, bounds.second.z, near_plane, far_plane);
 	
-	glm::mat4 lightView = glm::lookAt(glm::vec3(0.3f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
 	
 	shadowShader->use();
@@ -191,6 +191,12 @@ void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
 	}
 	
 }
+
+// Needs to be set once for track
+void RenderingSystem::setTrackBounds(std::pair<glm::vec3, glm::vec3> trackBounds) {
+	this->bounds = trackBounds;
+}
+
 void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 									 glm::mat4 &proj) {
 	// draw physx geometry render
@@ -204,7 +210,7 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 	// 	glm::vec3(10,-0.5,1), glm::vec3(0,0,0)
 	// };
 
-	printf("nlines:%d\n", physXRBuffer.getNbLines());
+	//printf("nlines:%d\n", physXRBuffer.getNbLines());
 	// getNbLines does not seems to return an accurate number of how many lines there are in the scene. Multiplying it by 10 is a random choice that seems to work ok
 	for (PxU32 i = 0; i < physXRBuffer.getNbLines() * 10; i++) {
 		int arrIdx = i * 2;
@@ -254,9 +260,9 @@ RenderingSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	auto system = coord->registerSystem<RenderingSystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	// sig.set(coord->getComponentType<Transform>());
 	sig.set(coord->getComponentType<Transform>());
 	sig.set(coord->getComponentType<Model>());
+	//sig.set(coord->getComponentType<std::pair<glm::vec3, glm::vec3>>()); // Track bounds for shadow map
 	coord->setSystemSignature<RenderingSystem>(sig);
 
 	return system;

@@ -29,7 +29,7 @@ float shadowCalc(vec4 fragPosLightSpace, float bias) {
 
 void main() {
 	vec3 norm = normalize(Normal);
-	vec3 lightDir = normalize(vec3(0.3, 3.0, 1.0)); // directional light
+	vec3 lightDir = normalize(vec3(0.0, 1.0, 0.1)); // directional light
 	vec3 lightCol = vec3(1.0, 1.0, 1.0);
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * lightCol;
