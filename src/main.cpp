@@ -89,6 +89,24 @@ int main() {
 	// create the track. this should eventually be moved to its own
 	// class/function
 
+	// Find max/min xyz coords of track for size of shadow map texture.
+	// Add these bounds as component
+	Mesh trMesh = trackModel.GetMesh()[0]; // only one mesh in track model
+	glm::vec3 trackMax(0.0, 0.0, 0.0);
+	glm::vec3 trackMin(0.0, 0.0, 0.0);
+	for (Vertex vert : trMesh.vertices)
+	{
+		glm::vec3 pos = vert.pos;
+		trackMax.x = glm::max(pos.x, trackMax.x);
+		trackMax.y = glm::max(pos.y, trackMax.y);
+		trackMax.z = glm::max(pos.z, trackMax.z);
+
+		trackMin.x = glm::min(pos.x, trackMin.x);
+		trackMin.y = glm::min(pos.y, trackMin.y);
+		trackMin.z = glm::min(pos.z, trackMin.z);
+	}
+	glm::vec2 bounds(trackMin, trackMax);
+
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 
