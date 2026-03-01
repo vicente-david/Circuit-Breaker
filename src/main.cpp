@@ -105,7 +105,9 @@ int main() {
 		trackMin.y = glm::min(pos.y, trackMin.y);
 		trackMin.z = glm::min(pos.z, trackMin.z);
 	}
-	glm::vec2 bounds(trackMin, trackMax);
+	std::pair<glm::vec3, glm::vec3> bounds(trackMin, trackMax);
+	
+
 
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
