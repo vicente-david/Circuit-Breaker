@@ -89,7 +89,6 @@ void RenderingSystem::update(GameState &game, std::string fps,
 	auto c1 = camSystem->cameras[0];
 
 	glm::mat4 view = glm::mat4(1.0f);
-	// view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	view = c1->GetViewMatrix();
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
@@ -138,31 +137,38 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 	// draw physx geometry render
 	const PxRenderBuffer &physXRBuffer =
 		game.physics->gScene->getRenderBuffer();
-
-	glm::vec3 lines[physXRBuffer.getNbLines() * 2];
+	
+	std::vector<glm::vec3> lines;
 	// glm::vec3 lines[6] = {
 	// 	glm::vec3(-0.5,0.5,0), glm::vec3(0.5,0.5,0),
 	// 	glm::vec3(0,0,0),glm::vec3(-10,1,1),
 	// 	glm::vec3(10,-0.5,1), glm::vec3(0,0,0)
 	// };
-	// printf("nlines:%d\n", physXRBuffer.getNbLines());
-	for (PxU32 i = 0; i < physXRBuffer.getNbLines(); i++) {
+
+	printf("nlines:%d\n", physXRBuffer.getNbLines());
+	// getNbLines does not seems to return an accurate number of how many lines there are in the scene. Multiplying it by 10 is a random choice that seems to work ok
+	for (PxU32 i = 0; i < physXRBuffer.getNbLines() * 10; i++) {
 		int arrIdx = i * 2;
 		auto line = physXRBuffer.getLines()[i];
 		glm::vec3 p1(line.pos0.x, line.pos0.y, line.pos0.z);
 		glm::vec3 p2(line.pos1.x, line.pos1.y, line.pos1.z);
-		lines[arrIdx] = p1;
-		lines[arrIdx + 1] = p2;
-		// printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
+		lines.push_back(p1);
+		lines.push_back(p2);
+		//lines.insert(lines.begin() + arrIdx, p1);
+		//lines.insert(lines.begin() + (arrIdx + 1), p1);
+		//lines.at(arrIdx) = p1;
+		//lines.at(arrIdx + 1) = p2;
+		 //printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
 			   // p2.y, p2.z);
 	}
+	std::cout << "lines size: " << lines.size() << std::endl;
 	// bind shader and stuff
 	solidColour->use();
 	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
 	// it wont draw properly if this isn't set each frame
 	// it will break the last drawn entity for some reason though TwT
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(lines), lines, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, lines.size(), lines.data(), GL_DYNAMIC_DRAW);
 
 	// glEnableVertexAttribArray(0);
 	// set uniforms
@@ -179,7 +185,7 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 
 	// draw the things
 	// glDrawArrays(GL_TRIANGLES, 0,6);
-	glDrawArrays(GL_LINES, 0, sizeof(lines) / sizeof(glm::vec3));
+	glDrawArrays(GL_LINES, 0, lines.size());
 	// glDisableVertexAttribArray(0);
 }
 

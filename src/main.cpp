@@ -154,7 +154,7 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-	auto testSpark2 = sparkSys->createSpark(gameState);
+	//auto testSpark2 = sparkSys->createSpark(gameState);
 
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");

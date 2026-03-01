@@ -6,8 +6,9 @@
 #include "imgui_stdlib.h"
 #include <cstdio>
 #include <filesystem>
+#include <iostream>
 #include <string>
-#include <unistd.h>
+//#include <unistd.h>
 
 namespace dbugPanel {
 
@@ -65,7 +66,8 @@ void vehicleTuningPanel() {
 	// tuning::setFolder = ImGui::Button("Set Folder");
 	// set path to <projdir>/assets/vehicledata instead of the build version
 	if (ImGui::Button("Find project config folder")) {
-		std::string path = std::filesystem::current_path();
+		
+		std::string path = std::filesystem::current_path().string();
 		dbug::log(0, "CWD: %s", path.c_str());
 		int idx = path.rfind("out");
 		path = path.substr(0,idx)+"assets/vehicledata";
