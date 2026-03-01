@@ -1,16 +1,10 @@
 {
     "AxleDescription": [
         {
-            "WheelIds": [
-                0,
-                1
-            ]
+            "WheelIds": [ 0, 1 ]
         },
         {
-            "WheelIds": [
-                2,
-                3
-            ]
+            "WheelIds": [ 2, 3 ]
         }
     ],
     "Frame": {

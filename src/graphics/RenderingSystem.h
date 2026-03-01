@@ -19,6 +19,7 @@ public:
 	void initShadowMap();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
+	void drawPhysxDebug(GameState &game, glm::mat4& view, glm::mat4& proj);
 	void renderScene(GameState& game, GLuint& shaderID);
 
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
@@ -27,6 +28,7 @@ public:
 	unsigned int SHADOW_WIDTH = SCR_WIDTH * 6, SHADOW_HEIGHT = SCR_HEIGHT * 6;
 	unsigned int textVBO;
 	unsigned int textVAO;
+	unsigned int linesVBO;
 	unsigned int depthFBO, depthMap;
 
 	std::map<char, Character> textFont;
@@ -35,6 +37,8 @@ public:
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
 	std::unique_ptr<ShaderProgram> textProg;
+	std::unique_ptr<ShaderProgram> solidColour;
+
 	std::unique_ptr<ShaderProgram> shadowShader;
 
 

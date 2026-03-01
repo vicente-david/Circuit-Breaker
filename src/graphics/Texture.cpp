@@ -26,7 +26,7 @@ unsigned int GenerateTexture(const char* imagePath, bool isJPG) {
 
 	if (data) // if we got data, we loaded succesfully
 	{
-		if (isJPG) { // JPG needs RGBA
+		if (isJPG) { // JPG needs RGB
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		}
 		else { // Likely PNG here

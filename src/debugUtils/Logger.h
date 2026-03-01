@@ -1,4 +1,5 @@
 #pragma once
+#include <set>
 #include <string>
 
 namespace dbug {
@@ -7,8 +8,9 @@ enum IgnoreType { BLACK_LIST = false, WHITE_LIST = true };
 extern bool printLogs;
 extern int minLogSeverity;
 extern std::string logPath;
+extern std::set<std::string> logIgnoreTags;
 
-extern IgnoreType logIgnoreType;
+extern IgnoreType logListType;
 void loggerInit();
 
 // specify the severity of the log

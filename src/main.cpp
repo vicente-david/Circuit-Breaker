@@ -4,6 +4,7 @@
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
 #include "glad/gl.h"
@@ -28,8 +29,8 @@ int main() {
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
-	// dbug::logIgnore("ECS");
-	dbug::logIgnoreType = dbug::WHITE_LIST;
+	dbug::logIgnore("GAME");
+	dbug::logListType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 
@@ -54,6 +55,7 @@ int main() {
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 
+	// initialize debug panel
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
 		std::make_shared<PhysicsManager>();
@@ -63,6 +65,8 @@ int main() {
 	inputSystem.attachWindow(renderer->window);
 
 	Actions gameActions = inputSystem.getActions();
+	// add debug imgui panel (needs to be after input callbacks are set)
+	dbugPanel::createPanel(renderer->window);
 
 	// time
 	double t = 0.0;
@@ -79,7 +83,8 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model trackModel("assets/plane.obj"); // temporary track model
+	Model trackModel("assets/track1.obj"); // temporary track model
+	Model planeModel("assets/plane.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -90,7 +95,11 @@ int main() {
 	Entity track = gameState.coordinator->createEntity();
 	gameState.coordinator->addComponent(track, none);
 	gameState.coordinator->addComponent(track, trackModel);
+	Entity plane = gameState.coordinator->createEntity();
+	gameState.coordinator->addComponent(plane, none);
+	gameState.coordinator->addComponent(plane, planeModel);
 	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
+	physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
 	dbug::log(0, "track entity id:%d", track);
 
 	// create test object pyramid
@@ -117,7 +126,7 @@ int main() {
 		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
 
 		triggerActor->attachShape(*triggerRect);
-		physicsManager->gScene->addActor(*triggerActor);
+		// physicsManager->gScene->addActor(*triggerActor);
 
 		PxFilterData finishLineTriggerFilterData;
 		finishLineTriggerFilterData.word0 =
@@ -145,7 +154,8 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-	auto testSpark2 = sparkSys->createSpark(gameState);
+	//auto testSpark2 = sparkSys->createSpark(gameState);
+
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -157,6 +167,7 @@ int main() {
 		accumulator += frameTime;
 		accumulator = std::min(accumulator, 1 / minFps);
 		framesPassed++;
+		dbugPanel::debug::updateTime = frameTime;
 
 		// input
 		gameActions = inputSystem.getActions();
@@ -206,6 +217,7 @@ int main() {
 		gameState.audio->update(dt);
 	}
 	gameState.audio->close();
+	dbugPanel::cleanup();
 	glfwTerminate();
 
 	return 0;

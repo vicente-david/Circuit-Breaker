@@ -5,6 +5,7 @@
 #include "GameState.h"
 #include "PxPhysics.h"
 #include "PxRigidDynamic.h"
+#include "PxVisualizationParameter.h"
 #include "debugUtils/Logger.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
@@ -61,6 +62,11 @@ void PhysicsManager::initPhysX() {
 	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
 	PxInitVehicleExtension(*gFoundation); // Initialize vehicle extension
+										  
+	// debug info 
+	// TODO: make this disabled by default, because it's bad for performance
+	gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1);
+	gScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1);
 }
 
 void PhysicsManager::initMaterialFrictionTable() {
