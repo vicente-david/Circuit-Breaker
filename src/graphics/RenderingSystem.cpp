@@ -11,9 +11,6 @@
 #include <iostream>
 #include <memory>
 
-void framebuffer_size_callback(GLFWwindow *window, int width,
-							   int height); // TODO: move this
-
 RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 	// Instantiate GLFW window
 	glfwInit();
@@ -35,12 +32,9 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 	}
 
 	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
 }
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-	glViewport(0, 0, width, height);
-}
 
 void RenderingSystem::initializeShaders() {
 	dbug::log("REND", 0, "loading shaders");
@@ -114,7 +108,8 @@ void RenderingSystem::initializeText() {
 }
 
 void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
-	
+	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
@@ -146,7 +141,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glm::mat4 view = glm::mat4(1.0f);
 	view = c1->GetViewMatrix();
 	glm::mat4 proj;
-	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(45.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 100.0f);
 
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));

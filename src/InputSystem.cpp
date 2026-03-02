@@ -104,6 +104,7 @@ class TestInput1 : public CallbackInterface {
 	}
 
 	void windowSizeCallback(int width, int height) {
+		std::cout << "Resize: " << width << "x" << height << std::endl;
 		glViewport(0, 0, width, height);
 	}
 public:
