@@ -100,11 +100,17 @@ void RenderingSystem::initializeText() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	// lines vbo
+	// lines debug VAO/VBO setup
+	glGenVertexArrays(1, &linesVAO);
+	glBindVertexArray(linesVAO);
 	glGenBuffers(1, &linesVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
 	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 }
 
 void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
@@ -113,9 +119,9 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
 	float near_plane = -100.0f, far_plane = 200.0f;
-	glm::mat4 lightProj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, near_plane, far_plane);
+	glm::mat4 lightProj = glm::ortho(bounds.first.x, bounds.second.x, bounds.first.z, bounds.second.z, near_plane, far_plane);
 	
-	glm::mat4 lightView = glm::lookAt(glm::vec3(0.3f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
 	
 	shadowShader->use();
@@ -159,7 +165,13 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
 			   1.0f, glm::vec3(1.0f), textFont);
 
+	if (dbugPanel::tuning::physicsShapes) {
+		// this makes the last entity get drawn wrong idk why
+		drawPhysxDebug(game, view, proj);
+	}
+
 	glfwPollEvents();
+	dbugPanel::render();
 	glfwSwapBuffers(window);
 }
 
@@ -183,19 +195,14 @@ void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
 
 		model.Draw(shaderID);
 	}
-	if (dbugPanel::tuning::physicsShapes) {
-	// this makes the last entity get drawn wrong idk why
-		drawPhysxDebug(game, view, proj);
-	}
-	// render text
-	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
-			   1.0f, glm::vec3(1.0f), textFont);
-
-	glfwPollEvents();
-	dbugPanel::render();
-	glfwSwapBuffers(window);
+	
 }
+
+// Needs to be set once for track
+void RenderingSystem::setTrackBounds(std::pair<glm::vec3, glm::vec3> trackBounds) {
+	this->bounds = trackBounds;
+}
+
 void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 									 glm::mat4 &proj) {
 	// draw physx geometry render
@@ -209,48 +216,36 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 	// 	glm::vec3(10,-0.5,1), glm::vec3(0,0,0)
 	// };
 
-	printf("nlines:%d\n", physXRBuffer.getNbLines());
-	// getNbLines does not seems to return an accurate number of how many lines there are in the scene. Multiplying it by 10 is a random choice that seems to work ok
-	for (PxU32 i = 0; i < physXRBuffer.getNbLines() * 10; i++) {
+	//printf("nlines:%d\n", physXRBuffer.getNbLines());
+	for (PxU32 i = 0; i < physXRBuffer.getNbLines() * 2; i++) {
 		int arrIdx = i * 2;
 		auto line = physXRBuffer.getLines()[i];
 		glm::vec3 p1(line.pos0.x, line.pos0.y, line.pos0.z);
 		glm::vec3 p2(line.pos1.x, line.pos1.y, line.pos1.z);
 		lines.push_back(p1);
 		lines.push_back(p2);
-		//lines.insert(lines.begin() + arrIdx, p1);
-		//lines.insert(lines.begin() + (arrIdx + 1), p1);
-		//lines.at(arrIdx) = p1;
-		//lines.at(arrIdx + 1) = p2;
-		 //printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
-			   // p2.y, p2.z);
+
 	}
 	std::cout << "lines size: " << lines.size() << std::endl;
 	// bind shader and stuff
 	solidColour->use();
+	glBindVertexArray(linesVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
-	// it wont draw properly if this isn't set each frame
-	// it will break the last drawn entity for some reason though TwT
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-	glBufferData(GL_ARRAY_BUFFER, lines.size(), lines.data(), GL_DYNAMIC_DRAW);
+	
+	glBufferData(GL_ARRAY_BUFFER, lines.size() * sizeof(glm::vec3), lines.data(), GL_DYNAMIC_DRAW);
 
-	// glEnableVertexAttribArray(0);
 	// set uniforms
-	// unsigned int uniLoc ;
 	unsigned int uniLoc = glGetUniformLocation(solidColour->id, "model");
 	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1)));
 	uniLoc = glGetUniformLocation(solidColour->id, "view");
 	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(view));
 	uniLoc = glGetUniformLocation(solidColour->id, "projection");
 	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(proj));
-	// uniLoc = glGetUniformLocation(solidColour->id, "colour");
-	// glUniformMatrix4fv(uniLoc, 1, GL_FALSE,
-	// 				   glm::value_ptr(glm::vec4(1, 0, 1, 1)));
 
 	// draw the things
-	// glDrawArrays(GL_TRIANGLES, 0,6);
 	glDrawArrays(GL_LINES, 0, lines.size());
-	// glDisableVertexAttribArray(0);
+	glBindVertexArray(0);
+
 }
 
 std::shared_ptr<RenderingSystem>
@@ -259,7 +254,6 @@ RenderingSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	auto system = coord->registerSystem<RenderingSystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	// sig.set(coord->getComponentType<Transform>());
 	sig.set(coord->getComponentType<Transform>());
 	sig.set(coord->getComponentType<Model>());
 	coord->setSystemSignature<RenderingSystem>(sig);

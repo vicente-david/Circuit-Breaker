@@ -93,6 +93,10 @@ int main() {
 	// create the track. this should eventually be moved to its own
 	// class/function
 
+	// Find max/min xyz coords of track for size of shadow map texture.
+	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
+	renderer->setTrackBounds(plMesh.GetBounds());
+
 	// create track as a static mesh with baked physics
 	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 

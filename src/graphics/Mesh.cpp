@@ -66,3 +66,23 @@ void Mesh::Draw(GLuint& shaderID) {
 	
 }
 
+// Returns max and min coordinates in the mesh
+std::pair<glm::vec3, glm::vec3> Mesh::GetBounds() {
+	glm::vec3 trackMax(0.0, 0.0, 0.0);
+	glm::vec3 trackMin(0.0, 0.0, 0.0);
+	for (Vertex vert : vertices)
+	{
+		glm::vec3 pos = vert.pos;
+		trackMax.x = glm::max(pos.x, trackMax.x);
+		trackMax.y = glm::max(pos.y, trackMax.y);
+		trackMax.z = glm::max(pos.z, trackMax.z);
+
+		trackMin.x = glm::min(pos.x, trackMin.x);
+		trackMin.y = glm::min(pos.y, trackMin.y);
+		trackMin.z = glm::min(pos.z, trackMin.z);
+	}
+
+	std::pair<glm::vec3, glm::vec3> bounds(trackMin, trackMax);
+	return bounds;
+}
+
