@@ -32,7 +32,8 @@ int main() {
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	dbug::logListType = dbug::WHITE_LIST;
+	//dbug::logIgnore("AI");
+	//dbug::logListType = dbug::WHITE_LIST;
 	// dbug::logIgnore("ECS");
 	//dbug::logIgnoreType = dbug::WHITE_LIST;
 
@@ -51,6 +52,7 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<AIController>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -58,6 +60,7 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
+	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
 	// create physics manager
