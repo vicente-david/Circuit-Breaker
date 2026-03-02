@@ -7,6 +7,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textures = textures;
+	
 	initMesh();
 }
 
@@ -43,7 +44,10 @@ void Mesh::initMesh() {
 	this->VAO = VAO;
 	this->EBO = EBO;
 	this->VBO = VBO;
+
+	
 }
+
 
 void Mesh::Draw(GLuint& shaderID) {
 	glActiveTexture(GL_TEXTURE0);
@@ -56,6 +60,7 @@ void Mesh::Draw(GLuint& shaderID) {
 		glUniform1i(glGetUniformLocation(shaderID, "hasTex"), 0);
 
 	}
+
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 	

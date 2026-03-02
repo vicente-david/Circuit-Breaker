@@ -1,13 +1,15 @@
 #include "RenderingSystem.h"
+#include "CameraSystem.h"
 #include "GameState.h"
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
+#include "graphics/Model.h"
+#include <GL/gl.h>
+#include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <memory>
-#include "CameraSystem.h"
-#include "graphics/CameraComp.h"
-#include "graphics/Model.h"
 
 void framebuffer_size_callback(GLFWwindow *window, int width,
 							   int height); // TODO: move this
@@ -20,7 +22,7 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// Create window object
-	window = glfwCreateWindow(800, 600, "Circuit Breaker", NULL, NULL);
+	window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Circuit Breaker", NULL, NULL);
 	if (window == NULL) {
 		glfwTerminate();
 		std::cout << "Window creation failed." << std::endl;
@@ -32,7 +34,7 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 		std::cout << "GLAD initialization failed." << std::endl;
 	}
 
-	glViewport(0, 0, 800, 600);
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 }
 
@@ -45,14 +47,41 @@ void RenderingSystem::initializeShaders() {
 	// Create shader program
 	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert",
 												  "shaders/basic.frag");
+	shadowShader = std::make_unique<ShaderProgram>("shaders/shadow.vert",
+												"shaders/shadow.frag");
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert",
 											   "shaders/testText.frag");
+	solidColour = std::make_unique<ShaderProgram>("shaders/lines.vert",
+												  "shaders/lines.frag");
 	textFont = initFont("assets/miamanueva.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f,
 						 static_cast<float>(1440));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 					   GL_FALSE, glm::value_ptr(textMat));
+	initShadowMap();
+}
+
+void RenderingSystem::initShadowMap() {
+
+	glGenFramebuffers(1, &depthFBO);
+
+	// 2D texture for depth buffer
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glDrawBuffer(GL_NONE); // no colour data to render
+	glReadBuffer(GL_NONE);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 }
 
 void RenderingSystem::initializeText() {
@@ -70,45 +99,61 @@ void RenderingSystem::initializeText() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	// lines vbo
+	glGenBuffers(1, &linesVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
+	glBufferData(GL_ARRAY_BUFFER, 0, NULL, GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 }
 
 void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	// Render pass 1: depth to texture
+	float near_plane = -100.0f, far_plane = 200.0f;
+	glm::mat4 lightProj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, near_plane, far_plane);
+	
+	glm::mat4 lightView = glm::lookAt(glm::vec3(0.3f, 1.0f, 1.0f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 lightSpaceMat = lightProj * lightView;
+	
+	shadowShader->use();
+	unsigned int lightSpaceLoc = glGetUniformLocation(shadowShader->id, "lightSpaceMat");
+	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
+
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+	glClear(GL_DEPTH_BUFFER_BIT);
+
+	renderScene(game, shadowShader->id);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Render pass 2: render scene as normal
+
+	glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	basicShader->use();
 	auto c1 = camSystem->cameras[0];
 
 	glm::mat4 view = glm::mat4(1.0f);
-	// view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
 	view = c1->GetViewMatrix();
 	glm::mat4 proj;
 	proj = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	lightSpaceLoc = glGetUniformLocation(basicShader->id, "lightSpaceMat");
+	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
+	glUniform1i(glGetUniformLocation(basicShader->id, "shadowMap"), 1);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
 
-	// draw every entities model at the location of it's transform
-	for (auto &entity : entities) {
-		// dbug::log("REND",0, "Drawing entity %d", entity);
+	renderScene(game, basicShader->id);
 
-		Model& model = game.coordinator->getComponent<Model>(entity);
-		Transform &transform =
-			game.coordinator->getComponent<Transform>(entity);
-
-		glm::mat4 modelTransform = glm::mat4(1.0f);
-		modelTransform = glm::translate(modelTransform, transform.pos);
-		modelTransform *= glm::toMat4(transform.rot);
-
-		// use transformations
-		unsigned int modelLoc = glGetUniformLocation(basicShader->id, "model");
-		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
-						   glm::value_ptr(modelTransform));
-
-		model.Draw(basicShader->id);
-	}
 	// render text
 	textProg->use();
 	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
@@ -116,6 +161,96 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	glfwPollEvents();
 	glfwSwapBuffers(window);
+}
+
+void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
+	// draw every entities model at the location of it's transform
+	for (auto& entity : entities) {
+		// dbug::log("REND",0, "Drawing entity %d", entity);
+
+		Model& model = game.coordinator->getComponent<Model>(entity);
+		Transform& transform =
+			game.coordinator->getComponent<Transform>(entity);
+
+		glm::mat4 modelTransform = glm::mat4(1.0f);
+		modelTransform = glm::translate(modelTransform, transform.pos);
+		modelTransform *= glm::toMat4(transform.rot);
+
+		// use transformations
+		unsigned int modelLoc = glGetUniformLocation(shaderID, "model");
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
+			glm::value_ptr(modelTransform));
+
+		model.Draw(shaderID);
+	}
+	if (dbugPanel::tuning::physicsShapes) {
+	// this makes the last entity get drawn wrong idk why
+		drawPhysxDebug(game, view, proj);
+	}
+	// render text
+	textProg->use();
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
+			   1.0f, glm::vec3(1.0f), textFont);
+
+	glfwPollEvents();
+	dbugPanel::render();
+	glfwSwapBuffers(window);
+}
+void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
+									 glm::mat4 &proj) {
+	// draw physx geometry render
+	const PxRenderBuffer &physXRBuffer =
+		game.physics->gScene->getRenderBuffer();
+	
+	std::vector<glm::vec3> lines;
+	// glm::vec3 lines[6] = {
+	// 	glm::vec3(-0.5,0.5,0), glm::vec3(0.5,0.5,0),
+	// 	glm::vec3(0,0,0),glm::vec3(-10,1,1),
+	// 	glm::vec3(10,-0.5,1), glm::vec3(0,0,0)
+	// };
+
+	printf("nlines:%d\n", physXRBuffer.getNbLines());
+	// getNbLines does not seems to return an accurate number of how many lines there are in the scene. Multiplying it by 10 is a random choice that seems to work ok
+	for (PxU32 i = 0; i < physXRBuffer.getNbLines() * 10; i++) {
+		int arrIdx = i * 2;
+		auto line = physXRBuffer.getLines()[i];
+		glm::vec3 p1(line.pos0.x, line.pos0.y, line.pos0.z);
+		glm::vec3 p2(line.pos1.x, line.pos1.y, line.pos1.z);
+		lines.push_back(p1);
+		lines.push_back(p2);
+		//lines.insert(lines.begin() + arrIdx, p1);
+		//lines.insert(lines.begin() + (arrIdx + 1), p1);
+		//lines.at(arrIdx) = p1;
+		//lines.at(arrIdx + 1) = p2;
+		 //printf("line: [%f,%f, %f] [%f, %f, %f] \n", p1.x, p1.y, p1.z, p2.x,
+			   // p2.y, p2.z);
+	}
+	std::cout << "lines size: " << lines.size() << std::endl;
+	// bind shader and stuff
+	solidColour->use();
+	glBindBuffer(GL_ARRAY_BUFFER, linesVBO);
+	// it wont draw properly if this isn't set each frame
+	// it will break the last drawn entity for some reason though TwT
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+	glBufferData(GL_ARRAY_BUFFER, lines.size(), lines.data(), GL_DYNAMIC_DRAW);
+
+	// glEnableVertexAttribArray(0);
+	// set uniforms
+	// unsigned int uniLoc ;
+	unsigned int uniLoc = glGetUniformLocation(solidColour->id, "model");
+	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1)));
+	uniLoc = glGetUniformLocation(solidColour->id, "view");
+	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(view));
+	uniLoc = glGetUniformLocation(solidColour->id, "projection");
+	glUniformMatrix4fv(uniLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	// uniLoc = glGetUniformLocation(solidColour->id, "colour");
+	// glUniformMatrix4fv(uniLoc, 1, GL_FALSE,
+	// 				   glm::value_ptr(glm::vec4(1, 0, 1, 1)));
+
+	// draw the things
+	// glDrawArrays(GL_TRIANGLES, 0,6);
+	glDrawArrays(GL_LINES, 0, lines.size());
+	// glDisableVertexAttribArray(0);
 }
 
 std::shared_ptr<RenderingSystem>

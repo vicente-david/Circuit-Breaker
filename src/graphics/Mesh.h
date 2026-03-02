@@ -30,4 +30,5 @@ public:
 private:
 	void initMesh();
 	unsigned int VBO, EBO, VAO;
+
 };

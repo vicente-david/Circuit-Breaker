@@ -25,7 +25,7 @@ class SparkSys : public System {
 
 	bool init();
 	void cleanup();
-	void changeEngineDriveParams(const char *vehicleDataPath, GameState& gameState);
+	void reloadSparkParams( GameState& gameState);
 
   private:
 	// helper functions for doing the movements

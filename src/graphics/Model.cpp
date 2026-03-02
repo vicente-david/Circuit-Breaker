@@ -55,14 +55,19 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 
 		if (mesh->mTextureCoords[0]) {
 			// get tex coords if contained in mesh
-			glm::vec2 texVec = { mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y };
+			// the y axis is flipped when exporting from blender, so we match that
+			glm::vec2 texVec = { mesh->mTextureCoords[0][i].x, (1-mesh->mTextureCoords[0][i].y) };
 			vertex.tex = texVec;
 		}
 		else vertex.tex = glm::vec2(0.0f, 0.0f);
 
-		// Process normals
-		glm::vec3 normVec = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
-		vertex.norm = normVec;
+		if (mesh->HasNormals()) {
+			// Process normals
+			glm::vec3 normVec = { mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z };
+			vertex.norm = normVec;
+		}
+		else vertex.norm = glm::vec3(0.0f);
+		
 
 		vertices.push_back(vertex);
 	}
