@@ -115,7 +115,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	controls.shimmyR = false;
 	controls.reset = false;
 
-	dbug::log("AI", 0, "Entity: dist = %.1f steer=%.2f throttle = %.2f brake = %.2f", distance, controls.steering, controls.throttle, controls.brake);
+	dbug::log("AI", 0, "Entity: dist = %.1f steer=%.2f throttle = %.2f brake = %.2f curr location = (%.1f, %.1f, %.1f)", distance, controls.steering, controls.throttle, controls.brake, transform.pos.x, transform.pos.y, transform.pos.z);
 	return;
 }
 
