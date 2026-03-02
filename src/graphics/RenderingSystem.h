@@ -29,7 +29,7 @@ public:
 	unsigned int SHADOW_WIDTH = SCR_WIDTH * 8, SHADOW_HEIGHT = SCR_HEIGHT * 8;
 	unsigned int textVBO;
 	unsigned int textVAO;
-	unsigned int linesVBO;
+	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
 
 	std::map<char, Character> textFont;
