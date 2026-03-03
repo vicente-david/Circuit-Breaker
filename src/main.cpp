@@ -23,8 +23,14 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include "world/CurveLoader.h"
 
 int main() {
+
+	// method is static so you can just call it
+	std::vector<TrackCurve> track1Curves = CurveLoader::loadCurve("assets/trck1.obj");
+	std::cout << "Number of curves found in track1: " << track1Curves.size() << std::endl;
+
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = 0;
