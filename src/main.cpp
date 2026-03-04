@@ -17,6 +17,8 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
+#include "ai/AISparkComponents.h"
+#include "ai/AIControllerSys.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
@@ -32,7 +34,10 @@ int main() {
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	dbug::logListType = dbug::WHITE_LIST;
+	//dbug::logIgnore("AI");
+	//dbug::logListType = dbug::WHITE_LIST;
+	// dbug::logIgnore("ECS");
+	//dbug::logIgnoreType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 
@@ -49,6 +54,7 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<AIController>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -56,6 +62,7 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
+	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
 	// create physics manager
@@ -156,11 +163,20 @@ int main() {
 	std::string fps = std::to_string(0);
 
 	// create spark with new system
-	auto sparkEntity = sparkSys->createSpark(gameState);
+	PxVec3 startLoc = PxVec3(5.000000000f, -0.000000000f, -40.0f);
+	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-	//auto testSpark2 = sparkSys->createSpark(gameState);
+	PxVec3 startLoc2 = PxVec3(2.000000000f, -0.000000000f, -30.0f);
+	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
+	gameState.coordinator->addComponent(testSpark2, AIController{
+		AIState::IDLE, // start AI in idle state
+		glm::vec3(2.0f, 0.0f, -20.0f), // target position
+		0.5f, // arrival radius
+		2.0f, // steering sharpness
+		5.0f // brake distance
+		});
 
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
