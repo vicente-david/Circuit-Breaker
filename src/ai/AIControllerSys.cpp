@@ -2,6 +2,7 @@
 #include "debugUtils/Logger.h"
 #include "ecs/Coordinator.h"
 #include "ecs/Component.h"
+#include "../world/CurveLoader.h"
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
@@ -50,7 +51,8 @@ void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transfo
 	controls.reset = false;
 
 	// logic to determine if we should start driving
-	glm::vec3 vectorToTarget = ai.targetPos - transform.pos; // vector from the spark to target location
+	glm::vec3 targetPos = ai.paths.at(0).curvePoints.at(ai.targetIndex);
+	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
 	// if we are not yet within the arrival radius, change to DRIVING state
@@ -62,7 +64,8 @@ void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transfo
 }
 
 void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform) {
-	glm::vec3 vectorToTarget = ai.targetPos - transform.pos; // vector from the spark to target location
+	glm::vec3 targetPos = ai.paths.at(0).curvePoints.at(ai.targetIndex);
+	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
 
@@ -124,7 +127,8 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 }
 
 void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform) {
-	glm::vec3 vectorToTarget = ai.targetPos - transform.pos;
+	glm::vec3 targetPos = ai.paths.at(0).curvePoints.at(ai.targetIndex);
+	glm::vec3 vectorToTarget = targetPos - transform.pos;
 	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget);
 

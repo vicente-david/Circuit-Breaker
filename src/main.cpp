@@ -168,11 +168,16 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-	PxVec3 startLoc2 = PxVec3(2.000000000f, -0.000000000f, -30.0f);
+
+	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(60); // First point of first path (only one path for now)
+	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
-		glm::vec3(2.0f, 0.0f, -20.0f), // target position
+		trackPaths, // set of paths
+		61, // index of starting position
+		//glm::vec3(2.0f, 0.0f, -20.0f), // target position
 		1.0f, // arrival radius
 		2.0f, // steering sharpness
 		2.0f // brake distance

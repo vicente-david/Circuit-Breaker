@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "../world/CurveLoader.h"
 
 // FSM states for AI sparks
 enum AIState {
@@ -15,7 +16,10 @@ enum AIState {
 struct AIController {
 	AIState state = IDLE;
 
-	glm::vec3 targetPos = glm::vec3(0.0f); // where the AI is trying to drive to
+	std::vector<TrackCurve> paths{}; // set of paths along track
+	int targetIndex = 61; // index of target position
+	
+	// glm::vec3 targetPos = glm::vec3(0.0f); // where the AI is trying to drive to
 	float arrivalRadius = 1.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
 	float steeringSharpness = 2.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
 	float brakeDistance = 2.0f; // how close the AI needs to be from the targetPos to begin braking
