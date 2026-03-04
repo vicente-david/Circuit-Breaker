@@ -23,13 +23,9 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
-#include "world/CurveLoader.h"
+#include "world/Track.h"
 
 int main() {
-
-	// method is static so you can just call it
-	std::vector<TrackCurve> track1Curves = CurveLoader::loadCurve("assets/trck1.obj");
-	std::cout << "Number of curves found in track1: " << track1Curves.size() << std::endl;
 
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
@@ -89,11 +85,11 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model trackModel("assets/track1.obj"); // temporary track model
 	Model planeModel("assets/plane.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
+	Track Track("assets/track1.obj"); //loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
@@ -104,11 +100,11 @@ int main() {
 
 	Entity track = gameState.coordinator->createEntity();
 	gameState.coordinator->addComponent(track, none);
-	gameState.coordinator->addComponent(track, trackModel);
+	gameState.coordinator->addComponent(track, Track.model);
 	Entity plane = gameState.coordinator->createEntity();
 	gameState.coordinator->addComponent(plane, none);
 	gameState.coordinator->addComponent(plane, planeModel);
-	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
+	physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
 	physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
 	dbug::log(0, "track entity id:%d", track);
 
