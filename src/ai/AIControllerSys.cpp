@@ -23,6 +23,16 @@ void AIControllerSys::update(GameState& game) {
 		auto &controls = game.coordinator->getComponent<SparkControls>(entity);
 		auto &transform = game.coordinator->getComponent<Transform>(entity);
 
+		// update current position index
+		int i = ai.currentPosIdx;
+		while (glm::distance(transform.pos, ai.route.at(i)) < ai.arrivalRadius) {
+			i = (i + 1) % ai.route.size();
+		}
+		ai.currentPosIdx = i;
+
+		// Update target index
+		ai.targetIdx = (ai.targetIdx + lookAheadSteps) % ai.route.size();
+
 		if (ai.state == IDLE)
 			AI_IDLE(ai, controls, transform);
 		else if (ai.state == DRIVING)
@@ -39,6 +49,7 @@ void AIControllerSys::update(GameState& game) {
 	}
 }
 
+
 void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transform &transform) {
 	// zero out all controls, car will stay idle
 	controls.throttle = 0.0f;
@@ -51,7 +62,7 @@ void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transfo
 	controls.reset = false;
 
 	// logic to determine if we should start driving
-	glm::vec3 targetPos = ai.paths.at(0).curvePoints.at(ai.targetIndex);
+	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
@@ -64,7 +75,7 @@ void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transfo
 }
 
 void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform) {
-	glm::vec3 targetPos = ai.paths.at(0).curvePoints.at(ai.targetIndex);
+	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
@@ -127,7 +138,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 }
 
 void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform) {
-	glm::vec3 targetPos = ai.paths.at(0).curvePoints.at(ai.targetIndex);
+	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
 	glm::vec3 vectorToTarget = targetPos - transform.pos;
 	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget);

@@ -115,8 +115,6 @@ int main() {
 	physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
 	dbug::log(0, "track entity id:%d", track);
 
-	// create test object pyramid
-	physicsManager->createTestObjs(*gameState.coordinator);
 
 	// create finish line trigger box
 	{
@@ -176,8 +174,9 @@ int main() {
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths, // set of paths
+		trackPaths.at(0).curvePoints, // planned route
 		61, // index of starting position
-		//glm::vec3(2.0f, 0.0f, -20.0f), // target position
+		60, // index of current position
 		1.0f, // arrival radius
 		2.0f, // steering sharpness
 		2.0f // brake distance

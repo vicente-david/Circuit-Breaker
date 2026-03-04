@@ -18,4 +18,7 @@ class AIControllerSys : public System {
 		void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform);
 		void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform);
 		void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform);
+
+private:
+	int lookAheadSteps = 10;
 };

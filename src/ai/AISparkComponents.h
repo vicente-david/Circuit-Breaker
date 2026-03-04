@@ -17,7 +17,9 @@ struct AIController {
 	AIState state = IDLE;
 
 	std::vector<TrackCurve> paths{}; // set of paths along track
-	int targetIndex = 61; // index of target position
+	std::vector<glm::vec3> route{}; // Current route plan for the ai
+	int targetIdx = 61; // index of target position
+	int currentPosIdx = 60; // approx index current position of spark
 	
 	// glm::vec3 targetPos = glm::vec3(0.0f); // where the AI is trying to drive to
 	float arrivalRadius = 1.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
