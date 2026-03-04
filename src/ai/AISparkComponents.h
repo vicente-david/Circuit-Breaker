@@ -16,7 +16,7 @@ struct AIController {
 	AIState state = IDLE;
 
 	glm::vec3 targetPos = glm::vec3(0.0f); // where the AI is trying to drive to
-	float arrivalRadius = 5.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
+	float arrivalRadius = 1.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
 	float steeringSharpness = 2.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
-	float brakeDistance = 15.0f; // how close the AI needs to be from the targetPos to begin braking
+	float brakeDistance = 2.0f; // how close the AI needs to be from the targetPos to begin braking
 };
