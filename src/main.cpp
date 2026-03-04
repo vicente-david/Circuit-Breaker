@@ -173,9 +173,9 @@ int main() {
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		glm::vec3(2.0f, 0.0f, -20.0f), // target position
-		0.5f, // arrival radius
+		1.0f, // arrival radius
 		2.0f, // steering sharpness
-		5.0f // brake distance
+		2.0f // brake distance
 		});
 
 	// RENDER LOOP
@@ -231,6 +231,9 @@ int main() {
 			t -= 1.0;
 			framesPassed = 0;
 		}
+
+		// AI
+		aiControllerSys->update(gameState);
 
 		// rendering
 
