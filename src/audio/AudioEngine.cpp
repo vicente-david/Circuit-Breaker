@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 
 // reference:
 // https://indiegamedev.net/2020/02/15/the-complete-guide-to-openal-with-c-part-1-playing-a-sound/
@@ -65,6 +66,10 @@ void AudioEngine::update(double dt) {
 			return false;
 		});
 	channels.erase(remIdx, channels.end());
+
+	if(dbugPanel::debug::updateVol){
+		alListenerf(AL_GAIN, dbugPanel::debug::volume);
+	}
 }
 
 // updates the location/rotation of the listener location.

@@ -15,9 +15,11 @@ extern std::string basePath;
 } // namespace tuning
 
 namespace debug {
-	extern float updateTime;
-	
-}
+extern float updateTime;
+extern float volume;
+extern bool updateVol;
+
+} // namespace debug
 void createPanel(GLFWwindow *window);
 void update(GameState &game);
 void render();

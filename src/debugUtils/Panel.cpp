@@ -8,7 +8,7 @@
 #include <filesystem>
 #include <iostream>
 #include <string>
-//#include <unistd.h>
+// #include <unistd.h>
 
 namespace dbugPanel {
 
@@ -24,7 +24,9 @@ std::string basePath = "SparkBase.json";
 } // namespace tuning
 namespace debug {
 float updateTime;
-}
+float volume = 1;
+bool updateVol = false;
+} // namespace debug
 
 void createPanel(GLFWwindow *window) {
 	IMGUI_CHECKVERSION();
@@ -44,6 +46,11 @@ void createPanel(GLFWwindow *window) {
 void debugPanel() {
 	ImGui::Begin("Debug");
 
+	float startV = debug::volume;
+	ImGui::SliderFloat("Volume", &debug::volume, 0, 1);
+	if (startV != debug::volume) {
+		debug::updateVol = true;
+	}
 	ImGui::InputInt("Log level", &dbug::minLogSeverity);
 	ImGui::Checkbox("Log whiteList", (bool *)&dbug::logListType);
 	std::string tags = "Logging tags [";
@@ -66,11 +73,11 @@ void vehicleTuningPanel() {
 	// tuning::setFolder = ImGui::Button("Set Folder");
 	// set path to <projdir>/assets/vehicledata instead of the build version
 	if (ImGui::Button("Find project config folder")) {
-		
+
 		std::string path = std::filesystem::current_path().string();
 		dbug::log(0, "CWD: %s", path.c_str());
 		int idx = path.rfind("out");
-		path = path.substr(0,idx)+"assets/vehicledata";
+		path = path.substr(0, idx) + "assets/vehicledata";
 		tuning::configFolder = path;
 	}
 
