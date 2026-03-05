@@ -38,7 +38,8 @@ void AIControllerSys::update(GameState& game) {
 			
 		}
 		ai.targetIdx = (ai.currentPosIdx + lookAheadSteps) % ai.route.size();
-	
+		
+		
 		dbug::log("AI", 1, "CURRENT IDX: %d, TARGET IDX: %d", ai.currentPosIdx, ai.targetIdx);
 		
 		
@@ -137,11 +138,25 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
 
 	// ---- THROTTLE ----
-	if (distance <= ai.brakeDistance) {
+
+	// TODO: precomp this
+	glm::vec3 dirIn = ai.route.at(ai.targetIdx - lookAheadSteps);
+	dirIn = ai.route.at(ai.targetIdx) - dirIn;
+	glm::vec3 dirOut = ai.route.at(ai.targetIdx + lookAheadSteps);
+	dirOut = dirOut - ai.route.at(ai.targetIdx);
+	float curvature = glm::acos(glm::dot(dirIn, dirOut) / (glm::length(dirIn) * glm::length(dirOut))); // curvature 0 = straight, 1 = curve
+	
+	float targetSpeed = glm::mix(0.3f, 0.8f, curvature);
+	dbug::log("AI", 1, "CURVE: %.2f, TARGET SPEED: %.2f", curvature, targetSpeed);
+
+
+	if (controls.throttle > targetSpeed) {
 		// close enough to start braking, hand off to BRAKING state
 //		ai.state = BRAKING;
-		dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
-		return;
+		//dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
+		
+		controls.throttle = glm::clamp(targetSpeed, 0.3f, 0.8f);
+		
 	}
 	else {
 		float headingAlignment = glm::clamp(dot, 0.0f, 1.0f);

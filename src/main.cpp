@@ -178,7 +178,7 @@ int main() {
 		55, // index of target position
 		50, // index of current position
 		8.0f, // arrival radius
-		2.0f, // steering sharpness
+		3.0f, // steering sharpness
 		2.0f // brake distance
 		});
 

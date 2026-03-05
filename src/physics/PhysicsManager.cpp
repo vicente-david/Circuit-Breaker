@@ -78,7 +78,7 @@ void PhysicsManager::initMaterialFrictionTable() {
 	// is used by all tires.
 	gPhysXMaterialFrictions[0].friction = 1.0f;
 	gPhysXMaterialFrictions[0].material = gMaterial;
-	gPhysXDefaultMaterialFriction = 1.0f;
+	gPhysXDefaultMaterialFriction = 40.0f;
 	gNbPhysXMaterialFrictions = 1;
 }
 

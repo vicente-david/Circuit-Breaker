@@ -20,5 +20,5 @@ class AIControllerSys : public System {
 		void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform);
 
 private:
-	int lookAheadSteps = 3;
+	int lookAheadSteps = 5;
 };
