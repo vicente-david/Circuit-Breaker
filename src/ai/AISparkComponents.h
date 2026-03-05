@@ -18,11 +18,11 @@ struct AIController {
 
 	std::vector<TrackCurve> paths{}; // set of paths along track
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
-	int targetIdx = 61; // index of target position
-	int currentPosIdx = 60; // approx index current position of spark
+	int targetIdx = 50; // index of target position
+	int currentPosIdx = 50; // approx index current position of spark
 	
 	// glm::vec3 targetPos = glm::vec3(0.0f); // where the AI is trying to drive to
-	float arrivalRadius = 1.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
-	float steeringSharpness = 2.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
+	float arrivalRadius = 10.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
+	float steeringSharpness = 1.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
 	float brakeDistance = 2.0f; // how close the AI needs to be from the targetPos to begin braking
 };

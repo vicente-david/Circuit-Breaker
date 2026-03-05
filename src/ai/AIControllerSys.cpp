@@ -30,11 +30,20 @@ void AIControllerSys::update(GameState& game) {
 		}
 		ai.currentPosIdx = i;
 
-		// Update target index
-		ai.targetIdx = (ai.targetIdx + lookAheadSteps) % ai.route.size();
-
+		// Update target index only if progress was made to current target
+		float distToTarget = glm::distance(ai.route.at(ai.targetIdx), transform.pos);
+		
+		float halfDist = glm::distance(ai.route.at(ai.targetIdx), ai.route.at(ai.currentPosIdx)) / 2.f;
+		if (distToTarget <= halfDist) {
+			ai.targetIdx = (ai.targetIdx + lookAheadSteps) % ai.route.size();
+		}
+		
+	
+		dbug::log("AI", 0, "CURRENT IDX: %d, TARGET IDX: %d", ai.currentPosIdx, ai.targetIdx);
+		
+		
 		if (ai.state == IDLE)
-			AI_IDLE(ai, controls, transform);
+			AI_IDLE(ai, controls, game);
 		else if (ai.state == DRIVING)
 			AI_DRIVING(ai, controls, transform);
 		else if (ai.state == BRAKING)
@@ -46,11 +55,18 @@ void AIControllerSys::update(GameState& game) {
 		else if (ai.state == ATTACKING)
 			AI_ATTACKING(ai, controls, transform);
 
+		glm::vec3 indLoc = ai.route.at(ai.currentPosIdx);
+		glm::vec3 targLoc = ai.route.at(ai.targetIdx);
+		dbug::log("AI", 1, "LOC: (%.1f, %.1f, %.1f) IDX: (%.1f, %.1f, %.1f) TARGET: (%.1f, %.1f, %.1f)",
+			transform.pos.x, transform.pos.y, transform.pos.z,
+			indLoc.x, indLoc.y, indLoc.z, targLoc.x, targLoc.y, targLoc.z);
+
+
 	}
 }
 
 
-void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transform &transform) {
+void AIControllerSys::AI_IDLE(AIController& ai, SparkControls& controls, GameState& game) {
 	// zero out all controls, car will stay idle
 	controls.throttle = 0.0f;
 	controls.steering = 0.0f;
@@ -61,23 +77,30 @@ void AIControllerSys::AI_IDLE(AIController &ai, SparkControls &controls, Transfo
 	controls.shimmyR = false;
 	controls.reset = false;
 
-	// logic to determine if we should start driving
-	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
-	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
-	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
-	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
-	// if we are not yet within the arrival radius, change to DRIVING state
-	if (distance > ai.arrivalRadius) { 
+	// AI only idle when race hasn't started yet
+	if (game.raceStart == true) {
 		ai.state = DRIVING;
-		dbug::log("AI", 0, "Entity: IDLE -> DRIVING (dist: %.1f)", distance);
 	}
+
+	//// logic to determine if we should start driving
+	//glm::vec3 targetPos = ai.route.at(ai.targetIdx);
+	//glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
+	//vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
+	//float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
+	//// if we are not yet within the arrival radius, change to DRIVING state
+	//if (distance > ai.arrivalRadius) { 
+	//	ai.state = DRIVING;
+	//	dbug::log("AI", 0, "Entity: IDLE -> DRIVING (dist: %.1f)", distance);
+	//}
+
+	
 	return;
 }
 
 void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform) {
 	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
-	vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
+	//vectorToTarget.y = 0.0f; // zero out the Y coordinate so that we get a vector on the XZ-plane
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
 
 	// if we've arrived, stop and change to IDLE state
@@ -110,20 +133,20 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 
 	// map the angle to [-1, 1] steering
 	// lock before sharpness multiplier
-	float steerRaw = (angle / (glm::pi<float>() / 2)) * ai.steeringSharpness;
+	float steerRaw = -(angle / (glm::pi<float>() / 2)); // *ai.steeringSharpness;
 	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
 
 	// ---- THROTTLE ----
 	if (distance <= ai.brakeDistance) {
 		// close enough to start braking, hand off to BRAKING state
-		ai.state = BRAKING;
+//		ai.state = BRAKING;
 		dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
 		return;
 	}
 	else {
 		float headingAlignment = glm::clamp(dot, 0.0f, 1.0f);
 		float t = distance / ai.brakeDistance;
-		controls.throttle = glm::clamp(t, 0.3f, 1.0f);
+		controls.throttle = glm::clamp(t, 0.3f, 0.5f);
 		controls.brake = 0.0f;
 	}
 
@@ -144,7 +167,7 @@ void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Tran
 	float distance = glm::length(vectorToTarget);
 
 	// if we've arrived, stop and go to IDLE
-	if (distance <= ai.arrivalRadius) {
+	/*if (distance <= ai.arrivalRadius) {
 		controls.throttle = 0.0f;
 		controls.steering = 0.0f;
 		controls.brake = 1.0f;
@@ -154,7 +177,7 @@ void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Tran
 		ai.state = IDLE;
 		dbug::log("AI", 0, "Entity: BRAKING -> IDLE (dist: %.1f)", distance);
 		return;
-	}
+	}*/
 
 	// ---- STEERING ----
 	glm::vec3 unitVectorToTarget = glm::normalize(vectorToTarget);
@@ -191,7 +214,7 @@ void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Tran
 	controls.shimmyL = false;
 	controls.shimmyR = false;
 
-	dbug::log("AI", 0, "Entity: BRAKING dist = %.1f steer=%.2f throttle = %.2f brake = %.2f", distance, controls.steering, controls.throttle, controls.brake);
+	dbug::log("AI", 1, "Entity: BRAKING dist = %.1f steer=%.2f throttle = %.2f brake = %.2f", distance, controls.steering, controls.throttle, controls.brake);
 	return;
 }
 

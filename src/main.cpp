@@ -160,23 +160,23 @@ int main() {
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
+	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(50); // First point of first path (only one path for now)
+
 	// create spark with new system
-	PxVec3 startLoc = PxVec3(5.000000000f, -0.000000000f, -40.0f);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z - 5.f);
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-
-	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
-	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(60); // First point of first path (only one path for now)
 	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths, // set of paths
 		trackPaths.at(0).curvePoints, // planned route
-		61, // index of starting position
-		60, // index of current position
+		55, // index of target position
+		50, // index of current position
 		1.0f, // arrival radius
 		2.0f, // steering sharpness
 		2.0f // brake distance
