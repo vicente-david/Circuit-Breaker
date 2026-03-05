@@ -35,11 +35,11 @@ void AIControllerSys::update(GameState& game) {
 		
 		float halfDist = glm::distance(ai.route.at(ai.targetIdx), ai.route.at(ai.currentPosIdx)) / 2.f;
 		if (distToTarget <= halfDist) {
-			ai.targetIdx = (ai.targetIdx + lookAheadSteps) % ai.route.size();
+			
 		}
-		
+		ai.targetIdx = (ai.currentPosIdx + lookAheadSteps) % ai.route.size();
 	
-		dbug::log("AI", 0, "CURRENT IDX: %d, TARGET IDX: %d", ai.currentPosIdx, ai.targetIdx);
+		dbug::log("AI", 1, "CURRENT IDX: %d, TARGET IDX: %d", ai.currentPosIdx, ai.targetIdx);
 		
 		
 		if (ai.state == IDLE)
@@ -57,9 +57,9 @@ void AIControllerSys::update(GameState& game) {
 
 		glm::vec3 indLoc = ai.route.at(ai.currentPosIdx);
 		glm::vec3 targLoc = ai.route.at(ai.targetIdx);
-		dbug::log("AI", 1, "LOC: (%.1f, %.1f, %.1f) IDX: (%.1f, %.1f, %.1f) TARGET: (%.1f, %.1f, %.1f)",
-			transform.pos.x, transform.pos.y, transform.pos.z,
-			indLoc.x, indLoc.y, indLoc.z, targLoc.x, targLoc.y, targLoc.z);
+		//dbug::log("AI", 1, "LOC: (%.1f, %.1f, %.1f) IDX: (%.1f, %.1f, %.1f) TARGET: (%.1f, %.1f, %.1f)",
+		//	transform.pos.x, transform.pos.y, transform.pos.z,
+		//	indLoc.x, indLoc.y, indLoc.z, targLoc.x, targLoc.y, targLoc.z);
 
 
 	}
