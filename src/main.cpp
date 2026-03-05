@@ -138,10 +138,11 @@ int main() {
 		// set the shape as a trigger
 		triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+		triggerRect->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
 		triggerRect->setFlag(PxShapeFlag::eVISUALIZATION, true);
 
 		triggerActor->attachShape(*triggerRect);
-		// physicsManager->gScene->addActor(*triggerActor);
+		physicsManager->gScene->addActor(*triggerActor);
 
 		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH, COLLISION_FLAG_CHASSIS, 0,0);
 		// finishLineTriggerFilterData.word0 =
@@ -154,7 +155,7 @@ int main() {
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
 	testSound.setLooping(true);
-	// testSound.start();
+	testSound.start();
 	float soundX = 0;
 
 	glEnable(GL_BLEND);
