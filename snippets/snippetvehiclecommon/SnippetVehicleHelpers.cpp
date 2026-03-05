@@ -27,10 +27,12 @@
 // Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
 
 
+#include <cstdio>
 #include <ctype.h>
 #include <iostream>
 
 #include "../snippetvehiclecommon/SnippetVehicleHelpers.h"
+#include "PxFiltering.h"
 
 
 using namespace physx;
@@ -48,33 +50,45 @@ namespace snippetvehicle
 		PxPairFlags& pairFlags, const void* constantBlock, PxU32 constantBlockSize)
 	{
 		// PX_UNUSED(attributes0);
-		PX_UNUSED(filterData0);
-		PX_UNUSED(attributes1);
-		PX_UNUSED(filterData1);
-		PX_UNUSED(pairFlags);
+		// PX_UNUSED(attributes1);
+		// PX_UNUSED(filterData0);
+		// PX_UNUSED(filterData1);
+		// PX_UNUSED(pairFlags);
 		PX_UNUSED(constantBlock);
-		// PX_UNUSED(constantBlockSize);
+		PX_UNUSED(constantBlockSize);
 
+		// ignore wheel colisions
+	if (filterData0.word0 == COLLISION_FLAG_WHEEL || filterData1.word0==COLLISION_FLAG_WHEEL){
+		printf("wheel!\n");
+		return PxFilterFlag::eKILL;
+	}
+	// if (filterData0.word0 == COLLISION_FLAG_CHASSIS || filterData1.word0==COLLISION_FLAG_CHASSIS){
+	// 	printf("chassis!\n");
+	// 	return PxFilterFlag::eSUPPRESS;
+	// }
+	// if (filterData0.word0 == COLLISION_FLAG_WHEEL || filterData1.word0==COLLISION_FLAG_WHEEL){
+	// 	printf("wheel!\n");
+	// 	return PxFilterFlag::eSUPPRESS;
+	// }
 	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
 
-	// // if(filterData0.word0 & filterData1.word0
-	// if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
-	// 		(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_OBSTACLE)) {
-	// 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
-	// 		std::cout << "Collision Detected" << std::endl;
-	// }
+	if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+			(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == COLLISION_FLAG_OBSTACLE)) {
+			pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+			std::cout << "Collision Detected" << std::endl;
+	}
 
 	// // finish line collision
 	// if ((filterData0.word0 == 99 && filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
 	// 	(filterData0.word0 == COLLISION_FLAG_CHASSIS && filterData1.word0 == 99)) 
 	// {
-	// 	pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+	// 	pairFlags = PxPairFlag::eNOTIFY_TOUCH_FOUND;
 	// 	std::cout << "Finish Line Crossed!" << std::endl;
 	// }
 
 	// done
-	// return PxFilterFlag::eSUPPRESS;
 	return PxFilterFlags();
+		// return PxFilterFlag::eSUPPRESS;
 }
 
 

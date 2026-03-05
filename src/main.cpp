@@ -1,6 +1,7 @@
 #include "GameState.h"
 #include "GLFW/glfw3.h"
 #include "InputSystem.h"
+#include "PxShape.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
@@ -34,7 +35,7 @@ int main() {
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	//dbug::logIgnore("AI");
+	dbug::logIgnore("AI");
 	//dbug::logListType = dbug::WHITE_LIST;
 	// dbug::logIgnore("ECS");
 	//dbug::logIgnoreType = dbug::WHITE_LIST;
@@ -137,14 +138,15 @@ int main() {
 		// set the shape as a trigger
 		triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+		triggerRect->setFlag(PxShapeFlag::eVISUALIZATION, true);
 
 		triggerActor->attachShape(*triggerRect);
 		// physicsManager->gScene->addActor(*triggerActor);
 
-		PxFilterData finishLineTriggerFilterData;
-		finishLineTriggerFilterData.word0 =
-			99; // it detects only the player vehicle
-		triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
+		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH, COLLISION_FLAG_CHASSIS, 0,0);
+		// finishLineTriggerFilterData.word0 =
+			// COLLISION_FLAG_FINISH; // it detects only the player vehicle
+		triggerRect->setSimulationFilterData(finishLineFilter);
 		// Clean up
 		triggerRect->release();
 	}
@@ -152,7 +154,7 @@ int main() {
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
 	testSound.setLooping(true);
-	testSound.start();
+	// testSound.start();
 	float soundX = 0;
 
 	glEnable(GL_BLEND);

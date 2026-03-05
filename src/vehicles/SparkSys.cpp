@@ -11,7 +11,9 @@
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
+#include "geometry/PxGeometry.h"
 #include "graphics/Model.h"
+#include "physics/PhysicsManager.h"
 #include <cstdio>
 #include <memory>
 
@@ -153,20 +155,30 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	PxTransform startPose(startP, PxQuat(PxIdentity));
 	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
 							   sData.mVehicleName);
-	// Create vehicle filter
-	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS,
-							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
 
 	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 
+	// Create vehicle filter
+	PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS,
+							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
+	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, COLLISION_FLAG_GROUND, 0, 0);
+	// PxFilterData tireFilter(0, 0, 0, 0);
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
 	for (PxU32 i = 0; i < shapes; i++) {
+		//
 		PxShape *shape = NULL;
 		rBody->getShapes(&shape, 1, i);
+		// printf("i:%d na:%d\n", i, shape->getGeometry().getType());
 
-		shape->setSimulationFilterData(
-			vehicleFilter); // Add filter data to shader
+		// add filter to tires/chasis depending on type
+		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
+			shape->setSimulationFilterData(
+				chassisFilter); 
+		} else {
+			shape->setSimulationFilterData(
+				tireFilter); 
+		}
 
 		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
@@ -230,7 +242,9 @@ void SparkSys::reloadSparkParams(GameState &game) {
 		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
 		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
 								   sData.mVehicle->mBaseParams);
-		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
+		printf("scene scale %f, car scale:%f\n",
+			   game.physics->gPhysics->getTolerancesScale().length,
+			   sData.mVehicleSimContext.scale.scale);
 	}
 }
 
