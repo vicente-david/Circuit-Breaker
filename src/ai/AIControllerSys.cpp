@@ -133,7 +133,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 
 	// map the angle to [-1, 1] steering
 	// lock before sharpness multiplier
-	float steerRaw = -(angle / (glm::pi<float>() / 2)); // *ai.steeringSharpness;
+	float steerRaw = -(angle / (glm::pi<float>() / 2)) * ai.steeringSharpness;
 	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
 
 	// ---- THROTTLE ----
@@ -146,7 +146,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	else {
 		float headingAlignment = glm::clamp(dot, 0.0f, 1.0f);
 		float t = distance / ai.brakeDistance;
-		controls.throttle = glm::clamp(t, 0.3f, 0.5f);
+		controls.throttle = glm::clamp(t, 0.3f, 0.8f);
 		controls.brake = 0.0f;
 	}
 
