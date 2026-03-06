@@ -19,6 +19,7 @@
 #include "vehicles/SparkSys.h"
 #include "ai/AISparkComponents.h"
 #include "ai/AIControllerSys.h"
+#include "world/RespawnSystem.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
@@ -55,6 +56,7 @@ int main() {
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
 	gameState.coordinator->registerComponent<AIController>();
+	gameState.coordinator->registerComponent<Respawnable>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -63,6 +65,7 @@ int main() {
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
+	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
 	// create physics manager
@@ -168,9 +171,11 @@ int main() {
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
+	gameState.coordinator->addComponent(sparkEntity, Respawnable);
 
 	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
+	gameState.coordinator->addComponent(testSpark2, Respawnable);
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths, // set of paths
