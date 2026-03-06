@@ -80,7 +80,11 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
 		dbug::log("PHYS", -1, "Finish line close");
 	}
-	if ((filterData0.word0 == COLLISION_FLAG_GROUND &&
+
+	// callback if chassis hit another chassis, or the ground/wall
+	if ( (filterData0.word0 == COLLISION_FLAG_CHASSIS &&
+		 filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+			(filterData0.word0 == COLLISION_FLAG_GROUND &&
 		 filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
 		(filterData0.word0 == COLLISION_FLAG_CHASSIS &&
 		 filterData1.word0 == COLLISION_FLAG_GROUND)) {

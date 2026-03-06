@@ -6,6 +6,7 @@
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "graphics/Mesh.h"
+#include "physics/Callbacks.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
@@ -24,6 +25,7 @@ class PhysicsManager {
 	PxScene *gScene = NULL;
 	PxMaterial *gMaterial = NULL;
 	PxPvd *gPvd = NULL;
+	std::shared_ptr<PhysXCallbacks> callbacks;
 
 	// The mapping between PxMaterial and friction.
 	PxVehiclePhysXMaterialFriction gPhysXMaterialFrictions[16];

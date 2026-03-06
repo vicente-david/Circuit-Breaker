@@ -13,12 +13,15 @@
 #include "ecs/EntityManager.h"
 #include "geometry/PxGeometry.h"
 #include "graphics/Model.h"
-#include "physics/PhysicsManager.h"
 #include "physics/CollisionData.h"
+#include "physics/PhysicsManager.h"
 #include <cstdio>
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
+	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
+		printf("bonk, ouch!\n");
+	}
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -174,11 +177,9 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 		// add filter to tires/chasis depending on type
 		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
-			shape->setSimulationFilterData(
-				chassisFilter); 
+			shape->setSimulationFilterData(chassisFilter);
 		} else {
-			shape->setSimulationFilterData(
-				tireFilter); 
+			shape->setSimulationFilterData(tireFilter);
 		}
 
 		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
@@ -224,13 +225,10 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, rBody);
 	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
-
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
 	return sparkEntity;
 }
-
-
 
 // updates the drive params of all the active sparks
 void SparkSys::reloadSparkParams(GameState &game) {

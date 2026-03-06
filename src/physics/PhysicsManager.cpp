@@ -1,7 +1,6 @@
 
 #include "PhysicsManager.h"
 #include "../snippets/snippetcommon/SnippetPVD.h"
-#include "Callbacks.h"
 #include "GameState.h"
 #include "PxActor.h"
 #include "PxPhysics.h"
@@ -13,6 +12,7 @@
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
 #include "graphics/Model.h"
+#include "physics/Callbacks.h"
 #include "vehicles/SparkComponents.h"
 #include <memory>
 
@@ -48,9 +48,10 @@ void PhysicsManager::initPhysX() {
 	sceneDesc.cpuDispatcher = gDispatcher;
 	sceneDesc.filterShader = VehicleFilterShader;
 
-	ContactReportCallback *gContactReportCallback = new ContactReportCallback();
+	callbacks = std::make_shared<PhysXCallbacks>();
+	// PhysXCallbacks *gContactReportCallback = new PhysXCallbacks();
 	sceneDesc.simulationEventCallback =
-		gContactReportCallback; // Assign callback to scene
+		callbacks.get(); // Assign callback to scene
 
 	gScene = gPhysics->createScene(sceneDesc);
 

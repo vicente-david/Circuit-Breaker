@@ -135,6 +135,7 @@ int main() {
 	physicsManager->createTestObjs(*gameState.coordinator);
 
 	// create finish line trigger box
+	CollisionData finishCollisionData{FINISH_LINE, -1};
 	{
 		PxVec3 finishLinePosition(0.0f, 0.0f,
 								  10.0f); // finish line position in world space
@@ -157,12 +158,12 @@ int main() {
 		triggerRect->setFlag(PxShapeFlag::eVISUALIZATION, true);
 
 		triggerActor->attachShape(*triggerRect);
+		triggerActor->userData = &finishCollisionData;
 		physicsManager->gScene->addActor(*triggerActor);
 
+		// give flag for finish, and it only collides with chassis 
 		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH,
 									  COLLISION_FLAG_CHASSIS, 0, 0);
-		// finishLineTriggerFilterData.word0 =
-		// COLLISION_FLAG_FINISH; // it detects only the player vehicle
 		triggerRect->setSimulationFilterData(finishLineFilter);
 		// Clean up
 		triggerRect->release();
@@ -220,6 +221,7 @@ int main() {
 		while (accumulator >= dt) {
 
 			sparkSys->updateSparks(dt, gameState);
+			gameState.physics->callbacks->resetLists();
 			physicsSystem->updatePhysics(dt, gameState);
 			cameraSys->update(gameState, dt);
 			accumulator -= dt;
