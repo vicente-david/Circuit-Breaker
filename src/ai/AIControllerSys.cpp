@@ -94,18 +94,21 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	
 	dbug::log("AI", 0, "CURVE: %.2f, CURRENT SPEED: %.2f, TARGET SPEED: %.2f, LOOK: %d", curvature, spark.speed, targetSpeed, ai.lookAheadSteps);
 
-
-	if (curvature >= curveAngleThresh && spark.speed > targetSpeed) {
+	std::cout << "fwd y dir: " << transform.forwardD.y << std::endl;
+	if ((curvature < 0.12f && spark.currBoost >= 25.f) ||	// Boost along straight path if boost meter isn't running out
+		(transform.forwardD.y > 0.20f)) {					// OR boost if driving up steep hill
+		
+		ai.state = BOOSTING;
+		return;
+	}
+	else if (curvature >= curveAngleThresh && spark.speed > targetSpeed) {
 		// angle of curve steeper than threshold: slow speed for upcoming turn
 		ai.state = BRAKING;
 		dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
 		return;
 		
 	}
-	else if (curvature < 0.12f && spark.currBoost >= 25.f) {
-		ai.state = BOOSTING;
-		return;
-	}
+	
 	else {
 		controls.throttle = 1.0f;
 		controls.brake = 0.0f;
@@ -179,8 +182,8 @@ void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Tra
 	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.currBoost);
 
 	float curvature = ai.angles.at(ai.targetIdx);
-	if (curvature > curveAngleThresh) {
-		ai.state = BRAKING;
+	if (curvature > curveAngleThresh && transform.forwardD.y < .2f) {
+		ai.state = BRAKING; // If curvature of lookahead is passed threshold, and the spark is not climbing a hill, go straight to braking
 		controls.boost = false;
 		return;
 	}
