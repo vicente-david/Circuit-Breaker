@@ -19,11 +19,26 @@
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
+	for (auto const &pair : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 = game.coordinator->getComponent<SparkData>(pair.first);
+		auto &rBody1 = game.coordinator->getComponent<PxRigidBody *>(pair.first);
+		auto &sData2 = game.coordinator->getComponent<SparkData>(pair.second);
+		auto &rBody2 = game.coordinator->getComponent<PxRigidBody *>(pair.second);
+
+		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
+
+		sData2.health-=velDiff.magnitude();
+		sData1.health-=velDiff.magnitude();
+
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
+
+	}
 	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		sData.health-=rBody->getLinearVelocity().magnitude();
-		printf("bonk, ouch!\n");
+		dbug::log("GAME", 0, "Hit a wall!");
+		printf("!\n");
 
 	}
 	for (auto const &entity : entities) {
