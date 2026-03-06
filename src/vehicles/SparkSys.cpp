@@ -20,7 +20,11 @@
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
+		sData.health-=rBody->getLinearVelocity().magnitude();
 		printf("bonk, ouch!\n");
+
 	}
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
@@ -78,6 +82,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
+
+		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}
 
 	// reload the tuning stuff from debug panel

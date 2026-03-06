@@ -6,11 +6,19 @@
 #include "imgui_stdlib.h"
 #include <cstdio>
 #include <filesystem>
-#include <iostream>
 #include <string>
+#include <vector>
 // #include <unistd.h>
 
+struct SparkUI {
+	int id;
+	float health;
+	float boost;
+};
+
 namespace dbugPanel {
+// local variables
+std::vector<SparkUI> sparkData;
 
 // tuning values
 namespace tuning {
@@ -84,6 +92,24 @@ void vehicleTuningPanel() {
 	ImGui::Checkbox("Show Colliders", &tuning::physicsShapes);
 	ImGui::End();
 }
+void sparkInfo(int id, float health, float boost) {
+	// reset if we are looping
+	if(sparkData.size()>0 && sparkData[0].id==id){
+		sparkData.clear();
+	}
+	sparkData.push_back(SparkUI{id, health, boost});
+}
+void drawSparkInfo() {
+	ImGui::Begin("Vehicle Info");
+	ImGui::Text("Imagine this is an actual ui");
+	for (auto sp : sparkData) {
+
+		ImGui::Text("-- EID:%d", sp.id);
+		ImGui::Text("  Health:%.2f  Boost:%.2f", sp.health, sp.boost);
+	}
+	ImGui::End();
+}
+
 void render() {
 	// Start the Dear ImGui frame
 	ImGui_ImplOpenGL3_NewFrame();
@@ -94,6 +120,7 @@ void render() {
 	// ImGui::ShowDemoWindow();
 	vehicleTuningPanel();
 	debugPanel();
+	drawSparkInfo();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
