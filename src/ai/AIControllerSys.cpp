@@ -52,7 +52,7 @@ void AIControllerSys::update(GameState& game) {
 		else if (ai.state == DRIFTING)
 			AI_DRIFTING(ai, controls, transform);
 		else if (ai.state == BOOSTING)
-			AI_BOOSTING(ai, controls, transform);
+			AI_BOOSTING(ai, controls, transform, spark);
 		else if (ai.state == ATTACKING)
 			AI_ATTACKING(ai, controls, transform);
 
@@ -101,6 +101,10 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 		dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
 		return;
 		
+	}
+	else if (curvature < 0.12f && spark.currBoost >= 25.f) {
+		ai.state = BOOSTING;
+		return;
 	}
 	else {
 		controls.throttle = 1.0f;
@@ -165,8 +169,26 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 	return;
 }
 
-void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform) {
+void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
 	// TODO: add boost logic for AI
+	calcSteering(ai, controls, transform);
+
+	controls.throttle = 1.0f;
+	controls.brake = 0.0f;
+	controls.boost = true;
+	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.currBoost);
+
+	float curvature = ai.angles.at(ai.targetIdx);
+	if (curvature > curveAngleThresh) {
+		ai.state = BRAKING;
+		controls.boost = false;
+		return;
+	}
+	else if (curvature > 0.12f || spark.currBoost < 25.f) {
+		ai.state = DRIVING;
+		controls.boost = false;
+	}
+
 	return;
 }
 

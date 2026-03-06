@@ -16,7 +16,7 @@ class AIControllerSys : public System {
 		void AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 		void AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 		void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform);
-		void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform);
+		void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 		void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform);
 
 private:
