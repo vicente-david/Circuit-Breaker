@@ -103,7 +103,8 @@ int main() {
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
-	renderer->setTrackBounds(plMesh.GetBounds());
+	
+	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
