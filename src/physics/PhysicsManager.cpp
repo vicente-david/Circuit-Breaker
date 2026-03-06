@@ -83,7 +83,7 @@ void PhysicsManager::initMaterialFrictionTable() {
 	// is used by all tires.
 	gPhysXMaterialFrictions[0].friction = 1.0f;
 	gPhysXMaterialFrictions[0].material = gMaterial;
-	gPhysXDefaultMaterialFriction = 1.0f;
+	gPhysXDefaultMaterialFriction = 40.0f;
 	gNbPhysXMaterialFrictions = 1;
 }
 
@@ -118,18 +118,18 @@ PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
 	PxTriangleMeshGeometry triGeom(triangleMesh, scale,
 								   PxMeshGeometryFlag::eTIGHT_BOUNDS);
 
+	PxFilterData groundFilter(COLLISION_FLAG_GROUND,
+							  COLLISION_FLAG_GROUND_AGAINST, 0, 0);
 	PxShape *triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+		triMeshShape->setSimulationFilterData(groundFilter);
 	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
 	actor->attachShape(*triMeshShape);
 
-	PxFilterData groundFilter(COLLISION_FLAG_GROUND,
-							  COLLISION_FLAG_GROUND_AGAINST, 0, 0);
 	// add ground collision filter to all the shapes on the ground mesh
 	for (PxU32 i = 0; i < actor->getNbShapes(); i++) {
 		PxShape *shape = NULL;
 		actor->getShapes(&shape, 1, i);
-		shape->setSimulationFilterData(groundFilter);
-		// printf("i:%d na:%d\n", i, shape->getGeometry().getType());
+		printf("i:%d na:%d\n", i, shape->getGeometry().getType());
 	}
 	gScene->addActor(*actor);
 	triMeshShape->release();

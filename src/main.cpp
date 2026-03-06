@@ -131,8 +131,6 @@ int main() {
 		dbug::log(0, "track entity id:%d", track);
 	}
 
-	// create test object pyramid
-	physicsManager->createTestObjs(*gameState.coordinator);
 
 	// create finish line trigger box
 	CollisionData finishCollisionData{FINISH_LINE, -1};
@@ -182,22 +180,27 @@ int main() {
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
+	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(50); // First point of first path (only one path for now)
+
 	// create spark with new system
-	PxVec3 startLoc = PxVec3(5.000000000f, -0.000000000f, -40.0f);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z - 5.f);
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 
-	PxVec3 startLoc2 = PxVec3(2.000000000f, -0.000000000f, -30.0f);
+	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
-	gameState.coordinator->addComponent(
-		testSpark2, AIController{
-						AIState::IDLE,				   // start AI in idle state
-						glm::vec3(2.0f, 0.0f, -20.0f), // target position
-						1.0f,						   // arrival radius
-						2.0f,						   // steering sharpness
-						2.0f						   // brake distance
-					});
+	gameState.coordinator->addComponent(testSpark2, AIController{
+		AIState::IDLE, // start AI in idle state
+		trackPaths.at(0).curvePoints, // planned route
+		trackPaths.at(0).curvatures, // angles at each point in route
+		55, // index of target position
+		50, // index of current position
+		5, // lookahead steps
+		8.0f, // arrival radius
+		2.0f, // steering sharpness
+		});
 
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");

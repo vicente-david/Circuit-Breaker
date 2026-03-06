@@ -43,8 +43,9 @@ namespace snippetvehicle {
 // this is a filter shader for the entire scene, not just the vehicle!
 // it should probably be moved to physics becuase its not really vehicle code
 //
-// its also probably important to note that this islike a 1st pass for collision, so
-// things aren't always colliding. use the callbacks for actual collision logic
+// its also probably important to note that this is like a 1st pass for
+// collision, so things aren't always colliding. use the callbacks for actual
+// collision logic
 PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 								  PxFilterData filterData0,
 								  PxFilterObjectAttributes attributes1,
@@ -82,15 +83,15 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 	}
 
 	// callback if chassis hit another chassis, or the ground/wall
-	if ( (filterData0.word0 == COLLISION_FLAG_CHASSIS &&
+	if ((filterData0.word0 == COLLISION_FLAG_CHASSIS &&
 		 filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
-			(filterData0.word0 == COLLISION_FLAG_GROUND &&
+		(filterData0.word0 == COLLISION_FLAG_GROUND &&
 		 filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
 		(filterData0.word0 == COLLISION_FLAG_CHASSIS &&
 		 filterData1.word0 == COLLISION_FLAG_GROUND)) {
-		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
 		// notify callbacks to handle crashing into a wall
-		dbug::log("GAME", 0, "BONK?");
+		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		// dbug::log("GAME", 0, "BONK?");
 	}
 
 	// done

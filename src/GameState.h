@@ -27,6 +27,7 @@ class GameState {
 
 	// Flags
 	bool gameEnded = false;
+	bool raceStart = true;
 
 	// Game Parameters
 	int numPlayers = 1;

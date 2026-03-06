@@ -40,6 +40,8 @@ struct SparkData {
 	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
 
+	float speed = 0.0f;
+
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;

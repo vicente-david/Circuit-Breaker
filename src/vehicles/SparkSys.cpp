@@ -36,6 +36,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		const PxReal speed = linVel.dot(forwardDir);
 		const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
+		sData.speed = speed;
 
 		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
 		sData.mVehicle->mCommandState.nbBrakes = 1;
