@@ -212,8 +212,8 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 	// };
 
 	//printf("nlines:%d\n", physXRBuffer.getNbLines());
-	for (PxU32 i = 0; i < physXRBuffer.getNbLines() * 2; i++) {
-		int arrIdx = i * 2;
+	for (PxU32 i = 0; i < physXRBuffer.getNbLines(); i++) {
+		// int arrIdx = i * 2;
 		auto line = physXRBuffer.getLines()[i];
 		glm::vec3 p1(line.pos0.x, line.pos0.y, line.pos0.z);
 		glm::vec3 p2(line.pos1.x, line.pos1.y, line.pos1.z);
