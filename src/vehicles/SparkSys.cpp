@@ -16,6 +16,7 @@
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
+	bool reload = false;
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -28,6 +29,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
 
 		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
+		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
 		sData.mVehicle->mCommandState.nbBrakes = 1;
 		sData.mVehicle->mCommandState.throttle = controls.throttle;
 		sData.mVehicle->mCommandState.steer = controls.steering;
@@ -72,10 +74,11 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
+		reload = controls.reload;
 	}
 
 	// reload the tuning stuff from debug panel
-	if (dbugPanel::tuning::reloadSpark) {
+	if (dbugPanel::tuning::reloadSpark || reload) {
 		dbugPanel::tuning::setFolder = false;
 		for (auto const &entity : entities) {
 			auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -130,11 +133,14 @@ Entity SparkSys::createSpark(GameState &game) {
 	// SparkData sData;
 	// Load the params from json or set directly.
 	sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
-	readBaseParamsFromJsonFile(sData.mVehicleDataPath,
-							   dbugPanel::tuning::basePath.c_str(),
-							   sData.mVehicle->mBaseParams);
+
+	readBaseParamsFromJsonFile(
+		sData.mVehicleDataPath, 
+		dbugPanel::tuning::basePath.c_str(), 
+		sData.mVehicle->mBaseParams);
 	readEngineDrivetrainParamsFromJsonFile(
-		sData.mVehicleDataPath, dbugPanel::tuning::enginePath.c_str(),
+		sData.mVehicleDataPath, 
+		dbugPanel::tuning::enginePath.c_str(),
 		sData.mVehicle->mEngineDriveParams);
 	setPhysXIntegrationParams(
 		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
@@ -222,15 +228,20 @@ void SparkSys::reloadSparkParams(GameState &game) {
 	for (auto const &entity : entities) {
 		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		 
+		// load params for vehicle base
+		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
+		readBaseParamsFromJsonFile(
+			sData.mVehicleDataPath,
+			baseFileName,
+			sData.mVehicle->mBaseParams);
 		// Changes the parameters of the engine
 		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
 		readEngineDrivetrainParamsFromJsonFile(
-			sData.mVehicleDataPath, engineFileName,
+			sData.mVehicleDataPath, 
+			engineFileName,
 			sData.mVehicle->mEngineDriveParams);
-		// load params for vehicle base
-		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
-		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
-								   sData.mVehicle->mBaseParams);
+
 		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
 	}
 }

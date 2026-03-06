@@ -52,8 +52,9 @@ struct Actions {
 	bool shimmyLeft = false;
 	bool respawn = false;
 	bool kRespawn = false;
+	bool handBrake = false;
 
-
+	bool reload = false;
 	float cameraReset = true;
 
 	// raw inputs

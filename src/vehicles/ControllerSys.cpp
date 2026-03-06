@@ -26,11 +26,13 @@ void ControllerSys::update(GameState &game) {
 			game.coordinator->getComponent<SparkControls>(entity);
 
 		sControl.brake = input.moveBackward;
+		sControl.handbrake = input.handBrake;
 		sControl.throttle = input.moveForward;
 		sControl.steering = input.xRotation;
 		sControl.boost = input.boost;
 		sControl.shimmyL = input.shimmyLeft;
 		sControl.shimmyR = input.shimmyRight;
 		sControl.reset = input.respawn;
+		sControl.reload = input.reload;
 	}
 }
