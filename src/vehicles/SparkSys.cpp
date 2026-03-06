@@ -14,6 +14,7 @@
 #include "geometry/PxGeometry.h"
 #include "graphics/Model.h"
 #include "physics/PhysicsManager.h"
+#include "physics/CollisionData.h"
 #include <cstdio>
 #include <memory>
 
@@ -39,7 +40,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// boosting
 		if (controls.boost && sData.currBoost > 0) {
-			dbug::log("GAME", 0, "boosting!");
+			dbug::log("GAME", -1, "boosting!");
 			boost(rBody, sData);
 		} else if (sData.currBoost < 100) {
 			sData.currBoost += sData.boostRegenSpeed * dt;
@@ -207,7 +208,8 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	sData.mVehicleSimContext.frame.latAxis = PxVehicleAxes::ePosX;
 	sData.mVehicleSimContext.frame.vrtAxis = PxVehicleAxes::ePosY;
 	sData.mVehicleSimContext.scale.scale = 1.0f;
-	// sData.mVehicleSimContext.scale.scale = 100f;
+	sData.physData.entity = sparkEntity;
+	rBody->userData = &sData.physData;
 
 	sData.mVehicleSimContext.gravity = game.physics->gGravity;
 	sData.mVehicleSimContext.physxScene = game.physics->gScene;
@@ -222,10 +224,13 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, rBody);
 	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
+
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
 	return sparkEntity;
 }
+
+
 
 // updates the drive params of all the active sparks
 void SparkSys::reloadSparkParams(GameState &game) {

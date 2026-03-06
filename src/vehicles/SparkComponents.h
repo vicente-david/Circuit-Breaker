@@ -3,6 +3,7 @@
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
 #include <memory>
+#include "physics/CollisionData.h"
 
 using namespace snippetvehicle;
 
@@ -49,6 +50,7 @@ struct SparkData {
 	const char *mVehicleDataPath = NULL;
 	const char *mVehicleName = "unnamed_vehicle";
 
+	CollisionData physData = CollisionData{SPARK, -1};
 	void destroy() {
 		mVehicle->destroy();
 	}

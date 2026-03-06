@@ -2,6 +2,8 @@
 #include "GLFW/glfw3.h"
 #include "InputSystem.h"
 #include "PxShape.h"
+#include "ai/AIControllerSys.h"
+#include "ai/AISparkComponents.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
@@ -18,15 +20,13 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
-#include "ai/AISparkComponents.h"
-#include "ai/AIControllerSys.h"
+#include "world/Track.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
-#include "world/Track.h"
 
 int main() {
 
@@ -34,11 +34,11 @@ int main() {
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
-	dbug::logIgnore("GAME");
+	// dbug::logIgnore("GAME");
 	dbug::logIgnore("AI");
-	//dbug::logListType = dbug::WHITE_LIST;
-	// dbug::logIgnore("ECS");
-	//dbug::logIgnoreType = dbug::WHITE_LIST;
+	// dbug::logListType = dbug::WHITE_LIST;
+	//  dbug::logIgnore("ECS");
+	// dbug::logIgnoreType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 
@@ -56,6 +56,7 @@ int main() {
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
 	gameState.coordinator->registerComponent<AIController>();
+	gameState.coordinator->registerComponent<CollisionData>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -63,7 +64,8 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
-	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
+	auto aiControllerSys =
+		AIControllerSys::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
 	// create physics manager
@@ -97,24 +99,37 @@ int main() {
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); //loads model and paths
+	Track Track("assets/track1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	renderer->setTrackBounds(plMesh.GetBounds());
 
 	// create track as a static mesh with baked physics
-	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+	{
+		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+		Entity track = gameState.coordinator->createEntity();
+		CollisionData trackPhys{GROUND, track};
+		gameState.coordinator->addComponent(track, none);
+		gameState.coordinator->addComponent(track, Track.model);
+		gameState.coordinator->addComponent(track, trackPhys);
 
-	Entity track = gameState.coordinator->createEntity();
-	gameState.coordinator->addComponent(track, none);
-	gameState.coordinator->addComponent(track, Track.model);
-	Entity plane = gameState.coordinator->createEntity();
-	gameState.coordinator->addComponent(plane, none);
-	gameState.coordinator->addComponent(plane, planeModel);
-	physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
-	physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
-	dbug::log(0, "track entity id:%d", track);
+		Entity plane = gameState.coordinator->createEntity();
+		CollisionData planePhys{GROUND, plane};
+		gameState.coordinator->addComponent(plane, none);
+		gameState.coordinator->addComponent(plane, planeModel);
+		gameState.coordinator->addComponent(track, planePhys);
+
+		auto trackActor =
+			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
+		trackActor->userData = &trackPhys;
+
+		auto planeActor =
+			physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
+
+		planeActor->userData = &planePhys;
+		dbug::log(0, "track entity id:%d", track);
+	}
 
 	// create test object pyramid
 	physicsManager->createTestObjs(*gameState.coordinator);
@@ -144,9 +159,10 @@ int main() {
 		triggerActor->attachShape(*triggerRect);
 		physicsManager->gScene->addActor(*triggerActor);
 
-		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH, COLLISION_FLAG_CHASSIS, 0,0);
+		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH,
+									  COLLISION_FLAG_CHASSIS, 0, 0);
 		// finishLineTriggerFilterData.word0 =
-			// COLLISION_FLAG_FINISH; // it detects only the player vehicle
+		// COLLISION_FLAG_FINISH; // it detects only the player vehicle
 		triggerRect->setSimulationFilterData(finishLineFilter);
 		// Clean up
 		triggerRect->release();
@@ -173,13 +189,14 @@ int main() {
 
 	PxVec3 startLoc2 = PxVec3(2.000000000f, -0.000000000f, -30.0f);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
-	gameState.coordinator->addComponent(testSpark2, AIController{
-		AIState::IDLE, // start AI in idle state
-		glm::vec3(2.0f, 0.0f, -20.0f), // target position
-		1.0f, // arrival radius
-		2.0f, // steering sharpness
-		2.0f // brake distance
-		});
+	gameState.coordinator->addComponent(
+		testSpark2, AIController{
+						AIState::IDLE,				   // start AI in idle state
+						glm::vec3(2.0f, 0.0f, -20.0f), // target position
+						1.0f,						   // arrival radius
+						2.0f,						   // steering sharpness
+						2.0f						   // brake distance
+					});
 
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");

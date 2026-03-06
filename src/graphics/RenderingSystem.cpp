@@ -221,7 +221,7 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 		lines.push_back(p2);
 
 	}
-	std::cout << "lines size: " << lines.size() << std::endl;
+	// std::cout << "lines size: " << lines.size() << std::endl;
 	// bind shader and stuff
 	solidColour->use();
 	glBindVertexArray(linesVAO);

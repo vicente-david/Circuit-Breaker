@@ -2,6 +2,7 @@
 
 #include "../snippets/snippetvehiclecommon/SnippetVehicleHelpers.h"
 #include "PxPhysics.h"
+#include "PxRigidStatic.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "graphics/Mesh.h"
@@ -38,7 +39,7 @@ class PhysicsManager {
 	void initMaterialFrictionTable();
 
 	PxTriangleMesh *cookTriangleMesh(Mesh mesh);
-	void initStaticMesh(Mesh mesh, Transform transform);
+	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform);
 
 	void updatePhysics(double dt);
 
