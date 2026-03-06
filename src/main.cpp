@@ -24,6 +24,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include "world/CurveLoader.h"
+#include "world/LapSystem.h"
 
 int main() {
 
@@ -53,6 +54,7 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<LapCounter>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -60,6 +62,8 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
+	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
+
 
 	// initialize debug panel
 	// create physics manager
@@ -91,6 +95,8 @@ int main() {
 	Model spark("assets/spark.obj");
 	Model trackModel("assets/track1.obj"); // temporary track model
 	Model planeModel("assets/plane.obj");
+
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -163,6 +169,7 @@ int main() {
 	auto sparkEntity = sparkSys->createSpark(gameState);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
+	gameState.coordinator->addComponent(sparkEntity, LapCounter());
 
 	//auto testSpark2 = sparkSys->createSpark(gameState);
 
@@ -213,12 +220,17 @@ int main() {
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 		}
 
+		// after physics update
+		lapSys->update(gameState);
+		
+
 		if (t >= 1.0) {
 			fps =
 				std::to_string(static_cast<int>(std::round(framesPassed / t)));
 			t -= 1.0;
 			framesPassed = 0;
 		}
+
 
 		// rendering
 
