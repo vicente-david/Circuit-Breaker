@@ -26,6 +26,8 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include "world/CurveLoader.h"
+#include "world/LapSystem.h"
 #include "world/Track.h"
 
 int main() {
@@ -55,6 +57,7 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<LapCounter>();
 	gameState.coordinator->registerComponent<AIController>();
 	gameState.coordinator->registerComponent<Respawnable>();
 
@@ -66,6 +69,8 @@ int main() {
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
 	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
+	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
+
 
 	// initialize debug panel
 	// create physics manager
@@ -96,6 +101,8 @@ int main() {
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
 	Model planeModel("assets/plane.obj");
+
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -172,10 +179,12 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 	gameState.coordinator->addComponent(sparkEntity, Respawnable);
+	gameState.coordinator->addComponent(sparkEntity, LapCounter());
 
 	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
 	gameState.coordinator->addComponent(testSpark2, Respawnable);
+	gameState.coordinator->addComponent(testSpark2, LapCounter);
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths, // set of paths
@@ -233,6 +242,10 @@ int main() {
 			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 		}
+
+		// after physics update
+		lapSys->update(gameState);
+		
 
 		if (t >= 1.0) {
 			fps =
