@@ -1,6 +1,9 @@
 #include "GameState.h"
 #include "GLFW/glfw3.h"
 #include "InputSystem.h"
+#include "PxShape.h"
+#include "ai/AIControllerSys.h"
+#include "ai/AISparkComponents.h"
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
@@ -17,6 +20,7 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
+#include "world/Track.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
@@ -28,16 +32,15 @@
 
 int main() {
 
-	// method is static so you can just call it
-	std::vector<TrackCurve> track1Curves = CurveLoader::loadCurve("assets/trck1.obj");
-	std::cout << "Number of curves found in track1: " << track1Curves.size() << std::endl;
-
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
-	dbug::logIgnore("GAME");
-	dbug::logListType = dbug::WHITE_LIST;
+	// dbug::logIgnore("GAME");
+	dbug::logIgnore("AI");
+	// dbug::logListType = dbug::WHITE_LIST;
+	//  dbug::logIgnore("ECS");
+	// dbug::logIgnoreType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 
@@ -55,6 +58,8 @@ int main() {
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
 	gameState.coordinator->registerComponent<LapCounter>();
+	gameState.coordinator->registerComponent<AIController>();
+	gameState.coordinator->registerComponent<CollisionData>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -64,6 +69,8 @@ int main() {
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
 
+	auto aiControllerSys =
+		AIControllerSys::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
 	// create physics manager
@@ -93,35 +100,48 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model trackModel("assets/track1.obj"); // temporary track model
 	Model planeModel("assets/plane.obj");
 
 	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
+	Track Track("assets/track1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
-	renderer->setTrackBounds(plMesh.GetBounds());
+	
+	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
 
 	// create track as a static mesh with baked physics
-	Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+	{
+		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+		Entity track = gameState.coordinator->createEntity();
+		CollisionData trackPhys{GROUND, track};
+		gameState.coordinator->addComponent(track, none);
+		gameState.coordinator->addComponent(track, Track.model);
+		gameState.coordinator->addComponent(track, trackPhys);
 
-	Entity track = gameState.coordinator->createEntity();
-	gameState.coordinator->addComponent(track, none);
-	gameState.coordinator->addComponent(track, trackModel);
-	Entity plane = gameState.coordinator->createEntity();
-	gameState.coordinator->addComponent(plane, none);
-	gameState.coordinator->addComponent(plane, planeModel);
-	physicsManager->initStaticMesh(trackModel.GetMesh()[0], none);
-	physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
-	dbug::log(0, "track entity id:%d", track);
+		Entity plane = gameState.coordinator->createEntity();
+		CollisionData planePhys{GROUND, plane};
+		gameState.coordinator->addComponent(plane, none);
+		gameState.coordinator->addComponent(plane, planeModel);
+		gameState.coordinator->addComponent(track, planePhys);
 
-	// create test object pyramid
-	physicsManager->createTestObjs(*gameState.coordinator);
+		auto trackActor =
+			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
+		trackActor->userData = &trackPhys;
+
+		auto planeActor =
+			physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
+
+		planeActor->userData = &planePhys;
+		dbug::log(0, "track entity id:%d", track);
+	}
+
 
 	// create finish line trigger box
+	CollisionData finishCollisionData{FINISH_LINE, -1};
 	{
 		PxVec3 finishLinePosition(0.0f, 0.0f,
 								  10.0f); // finish line position in world space
@@ -140,14 +160,17 @@ int main() {
 		// set the shape as a trigger
 		triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+		triggerRect->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+		triggerRect->setFlag(PxShapeFlag::eVISUALIZATION, true);
 
 		triggerActor->attachShape(*triggerRect);
-		// physicsManager->gScene->addActor(*triggerActor);
+		triggerActor->userData = &finishCollisionData;
+		physicsManager->gScene->addActor(*triggerActor);
 
-		PxFilterData finishLineTriggerFilterData;
-		finishLineTriggerFilterData.word0 =
-			99; // it detects only the player vehicle
-		triggerRect->setSimulationFilterData(finishLineTriggerFilterData);
+		// give flag for finish, and it only collides with chassis 
+		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH,
+									  COLLISION_FLAG_CHASSIS, 0, 0);
+		triggerRect->setSimulationFilterData(finishLineFilter);
 		// Clean up
 		triggerRect->release();
 	}
@@ -165,13 +188,28 @@ int main() {
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
+	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(50); // First point of first path (only one path for now)
+
 	// create spark with new system
-	auto sparkEntity = sparkSys->createSpark(gameState);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z - 5.f);
+	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 	gameState.coordinator->addComponent(sparkEntity, LapCounter());
 
-	//auto testSpark2 = sparkSys->createSpark(gameState);
+	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
+	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
+	gameState.coordinator->addComponent(testSpark2, AIController{
+		AIState::IDLE, // start AI in idle state
+		trackPaths.at(0).curvePoints, // planned route
+		trackPaths.at(0).curvatures, // angles at each point in route
+		55, // index of target position
+		50, // index of current position
+		5, // lookahead steps
+		8.0f, // arrival radius
+		2.0f, // steering sharpness
+		});
 
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
@@ -195,6 +233,7 @@ int main() {
 		while (accumulator >= dt) {
 
 			sparkSys->updateSparks(dt, gameState);
+			gameState.physics->callbacks->resetLists();
 			physicsSystem->updatePhysics(dt, gameState);
 			cameraSys->update(gameState, dt);
 			accumulator -= dt;
@@ -231,6 +270,8 @@ int main() {
 			framesPassed = 0;
 		}
 
+		// AI
+		aiControllerSys->update(gameState);
 
 		// rendering
 

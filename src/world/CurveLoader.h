@@ -19,6 +19,7 @@ struct TrackCurve {
 	std::vector<glm::vec3> curvePoints; // ordered list of points
 	// curvePoints.front() defines the start of the curve
 	// curvePoints.back() define the end of the curve
+	std::vector<float> curvatures; // predicted curvature angle at each point in the curve
 
 };
 
@@ -27,4 +28,6 @@ public:
 	// returns a list of trackcurves in order of .obj appearance
 	static std::vector<TrackCurve> loadCurve(const std::string path);
 
+private:
+	static std::vector<float> calculateCurveAngles(std::vector<glm::vec3> curvePoints);
 };

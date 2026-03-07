@@ -3,6 +3,7 @@
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
 #include <memory>
+#include "physics/CollisionData.h"
 
 using namespace snippetvehicle;
 
@@ -32,11 +33,14 @@ struct SparkControls {
 // this is basically the current state of the spark. things can sometimes break
 // if you forget to use refences to this stuff because physx makes no sense
 struct SparkData {
+	float health = 100;
 	float currBoost = 100;
 	float boostRegenSpeed = 10.0f;
 
 	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
+
+	float speed = 0.0f;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
@@ -49,6 +53,7 @@ struct SparkData {
 	const char *mVehicleDataPath = NULL;
 	const char *mVehicleName = "unnamed_vehicle";
 
+	CollisionData physData = CollisionData{SPARK, -1};
 	void destroy() {
 		mVehicle->destroy();
 	}

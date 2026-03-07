@@ -11,11 +11,36 @@
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
+#include "geometry/PxGeometry.h"
 #include "graphics/Model.h"
+#include "physics/CollisionData.h"
+#include "physics/PhysicsManager.h"
 #include <cstdio>
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
+	for (auto const &pair : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 = game.coordinator->getComponent<SparkData>(pair.first);
+		auto &rBody1 = game.coordinator->getComponent<PxRigidBody *>(pair.first);
+		auto &sData2 = game.coordinator->getComponent<SparkData>(pair.second);
+		auto &rBody2 = game.coordinator->getComponent<PxRigidBody *>(pair.second);
+
+		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
+
+		sData2.health-=velDiff.magnitude();
+		sData1.health-=velDiff.magnitude();
+
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
+
+	}
+	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
+		sData.health-=rBody->getLinearVelocity().magnitude();
+		dbug::log("GAME", 0, "Hit a wall!");
+		printf("!\n");
+
+	}
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -26,6 +51,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		const PxReal speed = linVel.dot(forwardDir);
 		const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
+		sData.speed = speed;
 
 		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
 		sData.mVehicle->mCommandState.nbBrakes = 1;
@@ -37,7 +63,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// boosting
 		if (controls.boost && sData.currBoost > 0) {
-			dbug::log("GAME", 0, "boosting!");
+			dbug::log("GAME", -1, "boosting!");
 			boost(rBody, sData);
 		} else if (sData.currBoost < 100) {
 			sData.currBoost += sData.boostRegenSpeed * dt;
@@ -72,6 +98,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
+
+		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}
 
 	// reload the tuning stuff from debug panel
@@ -116,7 +144,7 @@ void SparkSys::respawn(PxRigidBody *rBody) {
 	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
 }
 
-Entity SparkSys::createSpark(GameState &game) {
+Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	Entity sparkEntity = game.coordinator->createEntity();
 
@@ -150,24 +178,31 @@ Entity SparkSys::createSpark(GameState &game) {
 	}
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
-	PxTransform startPose(PxVec3(5.000000000f, -0.000000000f, -40.0f),
-						  PxQuat(PxIdentity));
+	PxTransform startPose(startP, PxQuat(PxIdentity));
 	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
 							   sData.mVehicleName);
-	// Create vehicle filter
-	PxFilterData vehicleFilter(COLLISION_FLAG_CHASSIS,
-							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
 
 	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 
+	// Create vehicle filter
+	PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS,
+							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
+	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, COLLISION_FLAG_GROUND, 0, 0);
+	// PxFilterData tireFilter(0, 0, 0, 0);
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
 	for (PxU32 i = 0; i < shapes; i++) {
+		//
 		PxShape *shape = NULL;
 		rBody->getShapes(&shape, 1, i);
+		// printf("i:%d na:%d\n", i, shape->getGeometry().getType());
 
-		shape->setSimulationFilterData(
-			vehicleFilter); // Add filter data to shader
+		// add filter to tires/chasis depending on type
+		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
+			shape->setSimulationFilterData(chassisFilter);
+		} else {
+			shape->setSimulationFilterData(tireFilter);
+		}
 
 		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
@@ -196,7 +231,8 @@ Entity SparkSys::createSpark(GameState &game) {
 	sData.mVehicleSimContext.frame.latAxis = PxVehicleAxes::ePosX;
 	sData.mVehicleSimContext.frame.vrtAxis = PxVehicleAxes::ePosY;
 	sData.mVehicleSimContext.scale.scale = 1.0f;
-	// sData.mVehicleSimContext.scale.scale = 100f;
+	sData.physData.entity = sparkEntity;
+	rBody->userData = &sData.physData;
 
 	sData.mVehicleSimContext.gravity = game.physics->gGravity;
 	sData.mVehicleSimContext.physxScene = game.physics->gScene;
@@ -231,7 +267,9 @@ void SparkSys::reloadSparkParams(GameState &game) {
 		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
 		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
 								   sData.mVehicle->mBaseParams);
-		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
+		printf("scene scale %f, car scale:%f\n",
+			   game.physics->gPhysics->getTolerancesScale().length,
+			   sData.mVehicleSimContext.scale.scale);
 	}
 }
 

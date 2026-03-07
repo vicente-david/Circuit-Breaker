@@ -1,23 +1,26 @@
 
 #include "PhysicsManager.h"
 #include "../snippets/snippetcommon/SnippetPVD.h"
-#include "Callbacks.h"
 #include "GameState.h"
+#include "PxActor.h"
 #include "PxPhysics.h"
 #include "PxRigidDynamic.h"
+#include "PxRigidStatic.h"
 #include "PxVisualizationParameter.h"
 #include "debugUtils/Logger.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
 #include "graphics/Model.h"
+#include "physics/Callbacks.h"
+#include "vehicles/SparkComponents.h"
 #include <memory>
 
 // this class acts as an interface between physx and the rest of the game. it
 // holds the physx scene, and other global physics things that systems might
 // need (for example to create a new physics object)
 //
-// It may be handy to make some method to just make a rigidbody for you without 
+// It may be handy to make some method to just make a rigidbody for you without
 // needling like 1000 steps like it is currenlty, but i haven't done that yet
 PhysicsManager::PhysicsManager() {
 
@@ -45,9 +48,10 @@ void PhysicsManager::initPhysX() {
 	sceneDesc.cpuDispatcher = gDispatcher;
 	sceneDesc.filterShader = VehicleFilterShader;
 
-	ContactReportCallback *gContactReportCallback = new ContactReportCallback();
+	callbacks = std::make_shared<PhysXCallbacks>();
+	// PhysXCallbacks *gContactReportCallback = new PhysXCallbacks();
 	sceneDesc.simulationEventCallback =
-		gContactReportCallback; // Assign callback to scene
+		callbacks.get(); // Assign callback to scene
 
 	gScene = gPhysics->createScene(sceneDesc);
 
@@ -62,11 +66,12 @@ void PhysicsManager::initPhysX() {
 	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
 
 	PxInitVehicleExtension(*gFoundation); // Initialize vehicle extension
-										  
-	// debug info 
+
+	// debug info
 	// TODO: make this disabled by default, because it's bad for performance
 	gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1);
-	gScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1);
+	gScene->setVisualizationParameter(
+		PxVisualizationParameter::eCOLLISION_SHAPES, 1);
 }
 
 void PhysicsManager::initMaterialFrictionTable() {
@@ -78,7 +83,7 @@ void PhysicsManager::initMaterialFrictionTable() {
 	// is used by all tires.
 	gPhysXMaterialFrictions[0].friction = 1.0f;
 	gPhysXMaterialFrictions[0].material = gMaterial;
-	gPhysXDefaultMaterialFriction = 1.0f;
+	gPhysXDefaultMaterialFriction = 40.0f;
 	gNbPhysXMaterialFrictions = 1;
 }
 
@@ -106,19 +111,29 @@ PxTriangleMesh *PhysicsManager::cookTriangleMesh(Mesh mesh) {
 	return gPhysics->createTriangleMesh(readBuffer);
 }
 
-void PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
+PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
 	PxTriangleMesh *triangleMesh = cookTriangleMesh(mesh);
 
 	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
 	PxTriangleMeshGeometry triGeom(triangleMesh, scale,
 								   PxMeshGeometryFlag::eTIGHT_BOUNDS);
 
+	PxFilterData groundFilter(COLLISION_FLAG_GROUND,
+							  COLLISION_FLAG_GROUND_AGAINST, 0, 0);
 	PxShape *triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+		triMeshShape->setSimulationFilterData(groundFilter);
 	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
 	actor->attachShape(*triMeshShape);
 
+	// add ground collision filter to all the shapes on the ground mesh
+	for (PxU32 i = 0; i < actor->getNbShapes(); i++) {
+		PxShape *shape = NULL;
+		actor->getShapes(&shape, 1, i);
+		printf("i:%d na:%d\n", i, shape->getGeometry().getType());
+	}
 	gScene->addActor(*actor);
 	triMeshShape->release();
+	return actor;
 }
 
 void PhysicsManager::createTestObjs(Coordinator &coordinator) {
@@ -162,7 +177,12 @@ void PhysicsManager::createTestObjs(Coordinator &coordinator) {
 			} else {
 				coordinator.addComponent(ent, spark);
 			}
+
 			dbug::log("PHYS", 0, "Box id:%d", ent);
+
+			// add collision info to physics actor
+			CollisionData collData{UserPhysicsType::TESTING, ent};
+			body->userData = &collData;
 		}
 	}
 	shape->release();

@@ -113,8 +113,8 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
-	float near_plane = -100.0f, far_plane = 200.0f;
-	glm::mat4 lightProj = glm::ortho(bounds.first.x, bounds.second.x, bounds.first.z, bounds.second.z, near_plane, far_plane);
+	float near_plane = -70.f, far_plane = 15.0f;
+	glm::mat4 lightProj = glm::ortho(bounds.first.x, bounds.second.x + 60.f, bounds.first.z, bounds.second.z + 60.f, near_plane, far_plane);
 	
 	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
@@ -221,7 +221,7 @@ void RenderingSystem::drawPhysxDebug(GameState &game, glm::mat4 &view,
 		lines.push_back(p2);
 
 	}
-	std::cout << "lines size: " << lines.size() << std::endl;
+	// std::cout << "lines size: " << lines.size() << std::endl;
 	// bind shader and stuff
 	solidColour->use();
 	glBindVertexArray(linesVAO);

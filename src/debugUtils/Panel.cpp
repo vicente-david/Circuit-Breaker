@@ -6,11 +6,19 @@
 #include "imgui_stdlib.h"
 #include <cstdio>
 #include <filesystem>
-#include <iostream>
 #include <string>
-//#include <unistd.h>
+#include <vector>
+// #include <unistd.h>
+
+struct SparkUI {
+	int id;
+	float health;
+	float boost;
+};
 
 namespace dbugPanel {
+// local variables
+std::vector<SparkUI> sparkData;
 
 // tuning values
 namespace tuning {
@@ -24,7 +32,9 @@ std::string basePath = "SparkBase.json";
 } // namespace tuning
 namespace debug {
 float updateTime;
-}
+float volume = 1;
+bool updateVol = false;
+} // namespace debug
 
 void createPanel(GLFWwindow *window) {
 	IMGUI_CHECKVERSION();
@@ -44,6 +54,11 @@ void createPanel(GLFWwindow *window) {
 void debugPanel() {
 	ImGui::Begin("Debug");
 
+	float startV = debug::volume;
+	ImGui::SliderFloat("Volume", &debug::volume, 0, 1);
+	if (startV != debug::volume) {
+		debug::updateVol = true;
+	}
 	ImGui::InputInt("Log level", &dbug::minLogSeverity);
 	ImGui::Checkbox("Log whiteList", (bool *)&dbug::logListType);
 	std::string tags = "Logging tags [";
@@ -66,17 +81,35 @@ void vehicleTuningPanel() {
 	// tuning::setFolder = ImGui::Button("Set Folder");
 	// set path to <projdir>/assets/vehicledata instead of the build version
 	if (ImGui::Button("Find project config folder")) {
-		
+
 		std::string path = std::filesystem::current_path().string();
 		dbug::log(0, "CWD: %s", path.c_str());
 		int idx = path.rfind("out");
-		path = path.substr(0,idx)+"assets/vehicledata";
+		path = path.substr(0, idx) + "assets/vehicledata";
 		tuning::configFolder = path;
 	}
 
 	ImGui::Checkbox("Show Colliders", &tuning::physicsShapes);
 	ImGui::End();
 }
+void sparkInfo(int id, float health, float boost) {
+	// reset if we are looping
+	if(sparkData.size()>0 && sparkData[0].id==id){
+		sparkData.clear();
+	}
+	sparkData.push_back(SparkUI{id, health, boost});
+}
+void drawSparkInfo() {
+	ImGui::Begin("Vehicle Info");
+	ImGui::Text("Imagine this is an actual ui");
+	for (auto sp : sparkData) {
+
+		ImGui::Text("-- EID:%d", sp.id);
+		ImGui::Text("  Health:%.2f  Boost:%.2f", sp.health, sp.boost);
+	}
+	ImGui::End();
+}
+
 void render() {
 	// Start the Dear ImGui frame
 	ImGui_ImplOpenGL3_NewFrame();
@@ -87,6 +120,7 @@ void render() {
 	// ImGui::ShowDemoWindow();
 	vehicleTuningPanel();
 	debugPanel();
+	drawSparkInfo();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }

@@ -15,13 +15,16 @@ class SparkSys : public System {
 	static std::shared_ptr<SparkSys>
 	registerSystem(std::shared_ptr<Coordinator> &coord);
 
+	static void sparkWallCollision(Entity s, GameState& game);
+	static void sparkSparkCollision(Entity s1,Entity s2, GameState& game);
+
 	// updates all the sparks in the game
 	void updateSparks(double dt, GameState &gameState);
 
 
 	// very convinient function to just make a spark instead of needing to go
 	// though whatever physX makes you to do
-	Entity createSpark(GameState &game);
+	Entity createSpark(GameState &game, PxVec3 startP);
 
 	bool init();
 	void cleanup();

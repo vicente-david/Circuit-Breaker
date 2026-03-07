@@ -1,4 +1,5 @@
 #include "CurveLoader.h"
+#include <glm/glm.hpp>
 
 // open a file
 // assume it's .obj
@@ -32,6 +33,7 @@ std::vector<TrackCurve> CurveLoader::loadCurve(const std::string path) {
 			if (!(trackCurve.curvePoints.empty() || !isCurve)) {
 				// if trackpoints are non empty and it is a curve
 				curves.push_back(trackCurve);
+				trackCurve.curvatures = calculateCurveAngles(trackCurve.curvePoints);
 			}
 			trackCurve.curvePoints.clear(); // new vector time
 			isCurve = true; // assume curve 
@@ -56,10 +58,38 @@ std::vector<TrackCurve> CurveLoader::loadCurve(const std::string path) {
 	// if eof but no o
 	if (!(trackCurve.curvePoints.empty() || !isCurve)) {
 		// if trackpoints are non empty and it is a curve
+		trackCurve.curvatures = calculateCurveAngles(trackCurve.curvePoints);
 		curves.push_back(trackCurve);
+		
 	}
 	
+	
+
 	trackFile.close();
 
 	return curves;
+}
+
+
+// Calculate angle at each point in the curve to predict how much a spark must turn to continue along track
+std::vector<float> CurveLoader::calculateCurveAngles(std::vector<glm::vec3> curvePoints) {
+	std::vector<float> angles;
+	
+	for (int i = 0; i < curvePoints.size(); i++) {
+		glm::vec3 point = curvePoints.at(i);
+
+		// direction to target
+		glm::vec3 behind = curvePoints.at((i - 4) % curvePoints.size());
+		behind = point - behind;
+		// direction leaving target
+		glm::vec3 ahead = curvePoints.at((i + 2) % curvePoints.size());
+		ahead = ahead - point;
+
+		float curvature = glm::acos(glm::dot(behind, ahead) / (glm::length(behind) * glm::length(ahead))); // curvature 0 = straight, 1 = curve
+
+		angles.push_back(curvature);
+	}
+
+	return angles;
+	
 }

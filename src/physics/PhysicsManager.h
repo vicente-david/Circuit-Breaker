@@ -2,9 +2,11 @@
 
 #include "../snippets/snippetvehiclecommon/SnippetVehicleHelpers.h"
 #include "PxPhysics.h"
+#include "PxRigidStatic.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "graphics/Mesh.h"
+#include "physics/Callbacks.h"
 
 using namespace physx;
 using namespace physx::vehicle2;
@@ -23,6 +25,7 @@ class PhysicsManager {
 	PxScene *gScene = NULL;
 	PxMaterial *gMaterial = NULL;
 	PxPvd *gPvd = NULL;
+	std::shared_ptr<PhysXCallbacks> callbacks;
 
 	// The mapping between PxMaterial and friction.
 	PxVehiclePhysXMaterialFriction gPhysXMaterialFrictions[16];
@@ -38,7 +41,7 @@ class PhysicsManager {
 	void initMaterialFrictionTable();
 
 	PxTriangleMesh *cookTriangleMesh(Mesh mesh);
-	void initStaticMesh(Mesh mesh, Transform transform);
+	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform);
 
 	void updatePhysics(double dt);
 
