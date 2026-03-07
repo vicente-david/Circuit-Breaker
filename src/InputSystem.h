@@ -51,9 +51,14 @@ struct Actions {
 	bool kboost = false;
 	bool shimmyRight = false;
 	bool shimmyLeft = false;
-	bool respawn = false;
-	bool kRespawn = false;
 	bool handBrake = false;
+	bool respawn = false;
+
+	// keyboar raw inputs to be ored with controller for full input
+	bool kshimmyRight = false;
+	bool kshimmyLeft = false;
+	bool khandBrake = false;
+	bool kRespawn = false;
 
 	bool reload = false;
 	float cameraReset = true;
