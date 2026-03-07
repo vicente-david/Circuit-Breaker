@@ -1,6 +1,5 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "../world/CurveLoader.h"
 
 // FSM states for AI sparks
 enum AIState {

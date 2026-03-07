@@ -20,13 +20,17 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
-#include "world/Track.h"
+
+#include "world/RespawnSystem.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include "world/CurveLoader.h"
+#include "world/LapSystem.h"
+#include "world/Track.h"
 
 int main() {
 
@@ -55,8 +59,10 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<LapCounter>();
 	gameState.coordinator->registerComponent<AIController>();
 	gameState.coordinator->registerComponent<CollisionData>();
+	gameState.coordinator->registerComponent<Respawnable>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -64,8 +70,10 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
-	auto aiControllerSys =
-		AIControllerSys::registerSystem(gameState.coordinator);
+	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
+	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
+	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
+
 
 	// initialize debug panel
 	// create physics manager
@@ -96,6 +104,8 @@ int main() {
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
 	Model planeModel("assets/plane.obj");
+
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -189,9 +199,13 @@ int main() {
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
+	gameState.coordinator->addComponent(sparkEntity, LapCounter());
+	gameState.coordinator->addComponent(sparkEntity, Respawnable());
 
 	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
+	gameState.coordinator->addComponent(testSpark2, LapCounter());
+	gameState.coordinator->addComponent(testSpark2, Respawnable());
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
@@ -251,15 +265,19 @@ int main() {
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 		}
 
+		// AI
+		aiControllerSys->update(gameState);
+		// after physics update
+		lapSys->update(gameState);
+		respawnSystem->update(gameState);
+		
+
 		if (t >= 1.0) {
 			fps =
 				std::to_string(static_cast<int>(std::round(framesPassed / t)));
 			t -= 1.0;
 			framesPassed = 0;
 		}
-
-		// AI
-		aiControllerSys->update(gameState);
 
 		// rendering
 

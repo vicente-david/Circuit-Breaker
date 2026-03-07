@@ -138,7 +138,7 @@ void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Tran
 		controls.brake = 0.0f;
 		ai.state = DRIVING;
 		return;
-	}
+	}*/
 
 	// amount of throttle/brake to add per unit difference in speed
  	float throttleGain = 0.6f;
