@@ -47,6 +47,7 @@ struct Actions {
 
 	// actions
 	bool boost = false;
+	bool boostJustPressed = false;
 	bool kboost = false;
 	bool shimmyRight = false;
 	bool shimmyLeft = false;

@@ -227,9 +227,13 @@ void InputSystem::updateGamepad() {
 		actions.controllerXRot = 0.0;
 
 
-	if (button_B || actions.kboost)
+	if (button_B || actions.kboost){
+		actions.boostJustPressed = 0;
+		if(!actions.boost)
+			actions.boostJustPressed = 1;
+
 		actions.boost = 1;
-	else
+	}else
 		actions.boost = 0;
 
 	if (button_Y || actions.kRespawn)

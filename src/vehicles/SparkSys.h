@@ -33,6 +33,6 @@ class SparkSys : public System {
   private:
 	// helper functions for doing the movements
 	void shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir);
-	void boost(PxRigidBody *rBody, SparkData &sData);
+	void boost(PxRigidBody *rBody, SparkData &sData, bool useHealth, float dt);
 	void respawn(PxRigidBody *rBody);
 };

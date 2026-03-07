@@ -2,6 +2,7 @@
 #include "vehicles/ControllerSys.h"
 #include "GameState.h"
 #include "InputSystem.h"
+#include "debugUtils/Logger.h"
 #include "ecs/Coordinator.h"
 #include "vehicles/SparkComponents.h"
 
@@ -25,12 +26,21 @@ void ControllerSys::update(GameState &game) {
 		SparkControls &sControl =
 			game.coordinator->getComponent<SparkControls>(entity);
 
+		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
+
 		sControl.brake = input.moveBackward;
 		sControl.throttle = input.moveForward;
 		sControl.steering = input.xRotation;
-		sControl.boost = input.boost;
 		sControl.shimmyL = input.shimmyLeft;
 		sControl.shimmyR = input.shimmyRight;
 		sControl.reset = input.respawn;
+		sControl.boost = input.boost;
+
+		// activate health override when you start boosting with no boost left
+		if (!input.boost) {
+			sControl.boostWithHealth = false;
+		} else if (input.boostJustPressed && sData.currBoost < 1) {
+			sControl.boostWithHealth = true;
+		}
 	}
 }

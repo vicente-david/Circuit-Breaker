@@ -30,13 +30,13 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// don't do damage from hitting each other if sliding or boosting
 		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting) {
 			sData1.health -= colData.magnitude;
-		}else{
+		} else {
 			dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
 		}
 
 		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting) {
 			sData2.health -= colData.magnitude;
-		}else{
+		} else {
 			dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
 		}
 		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id,
@@ -47,7 +47,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			game.coordinator->getComponent<SparkData>(colData.sparkId);
 		// auto &rBody = game.coordinator->getComponent<PxRigidBody
 		// *>(entity.sparkId);
-		sData.health -= colData.magnitude;
+		sData.health -= colData.magnitude * 0.75;
 		dbug::log("GAME", 0, "Hit a wall!");
 	}
 	for (auto const &entity : entities) {
@@ -72,15 +72,16 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// boosting
 		sData.isBoosting = false;
-		if (controls.boost && sData.currBoost > 0) {
-			dbug::log("GAME", -1, "boosting!");
-			boost(rBody, sData);
-			sData.isBoosting = true;
-		} else if (sData.currBoost < 100) {
+		if (controls.boost) {
+			// try to boost
+			boost(rBody, sData, controls.boostWithHealth, dt);
+		}
+		// regen boost for testing (should be with drifting actually)
+		float maxBoost = 100 - sData.health;
+		if (sData.currBoost < maxBoost && !controls.boost) {
 			sData.currBoost += sData.boostRegenSpeed * dt;
-
-			if (sData.currBoost > 100) {
-				sData.currBoost = 100;
+			if (sData.currBoost > maxBoost) {
+				sData.currBoost = maxBoost;
 				dbug::log("GAME", 0, "boost full");
 			}
 		}
@@ -99,7 +100,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		} else if (sData.shimmyTimer > 0) {
 			sData.shimmyTimer -= dt;
 		}
-		if (controls.reset) {
+		if (controls.reset || sData.health <= 0) {
+			sData.health = 100;
+			sData.currBoost = 0;
 			respawn(rBody);
 		}
 
@@ -141,13 +144,44 @@ void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
 	sData.shimmyTimer = sData.ShimmyCooldown;
 }
 
-void SparkSys::boost(PxRigidBody *rBody, SparkData &sData) {
+void SparkSys::boost(PxRigidBody *rBody, SparkData &sData, bool useHealth,
+					 float dt) {
+	// don't use boost if you should be dead (this stops you from reviing by
+	// using a boost)
+	if (sData.health <= 0) {
+		dbug::log("GAME", 0, "you're dead, no boost for you :(");
+		return;
+	}
+	// stop boosting if we've run out of normal boost
+	if (sData.currBoost <= 0 && !useHealth) {
+		sData.isBoosting = false;
+		dbug::log("GAME", -1, "No boost!");
+		return;
+	}
+
+	// do the boost
 	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
 	float boostStrength = 10.f;
 
-	sData.currBoost -= 0.5f;
+	// use boost meter
+	if (sData.currBoost > 0) {
+		sData.currBoost -= dt * 10;
+		// dbug::log("GAME", 0, "boosting");
+		// use health if theres no boost meter
+	} else {
+		if (sData.health <= 1) {
+			return;
+		}
+		sData.health -= dt * 5;
+		dbug::log("GAME", -1, "health boosting");
+	}
+	// don't kill yourself from boosting
+	if (sData.health <= 1) {
+		sData.health = 1;
+	}
 
 	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+	sData.isBoosting = true;
 }
 
 void SparkSys::respawn(PxRigidBody *rBody) {
