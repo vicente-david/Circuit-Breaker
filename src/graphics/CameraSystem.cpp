@@ -36,6 +36,8 @@ void CameraSystem::update(GameState &game, float dt) {
 
 		// move camera to where it's proper position/orientation
 
+		camData.yaw += game.inputActions.camXRot;
+		camData.pitch -= game.inputActions.camYRot;
 		// get the position the camera wants to be based on car position
 		camData.carPosition = transform.pos;
 		auto targetPos = camData.targetPosition(transform.rot);
