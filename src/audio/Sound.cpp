@@ -26,7 +26,7 @@ void Sound::stop() {
 		return;
 	}
 	alSourceStop(source);
-	AudioEngine::checkALErrors("playing " + soundName);
+	AudioEngine::checkALErrors("stopping " + soundName);
 }
 
 void Sound::setLooping(bool loop) {

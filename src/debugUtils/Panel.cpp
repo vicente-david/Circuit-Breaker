@@ -32,8 +32,8 @@ std::string basePath = "SparkBase.json";
 } // namespace tuning
 namespace debug {
 float updateTime;
-float volume = 1;
-bool updateVol = false;
+float volume = 0.5;
+bool updateVol = true;
 } // namespace debug
 
 void createPanel(GLFWwindow *window) {

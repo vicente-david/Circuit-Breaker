@@ -7,6 +7,7 @@
 #include "PxRigidDynamic.h"
 #include "PxShape.h"
 #include "SparkComponents.h"
+#include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
@@ -16,6 +17,7 @@
 #include "physics/CollisionData.h"
 #include "physics/PhysicsManager.h"
 #include <cstdio>
+#include <glm/fwd.hpp>
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
@@ -34,8 +36,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 	}
 	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
-		auto &sData = game.coordinator->getComponent<SparkData>(entity);
-		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
+		auto &sData = game.coordinator->getComponent<SparkData>(entity.sparkId);
+		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity.sparkId);
 		sData.health-=rBody->getLinearVelocity().magnitude();
 		dbug::log("GAME", 0, "Hit a wall!");
 		printf("!\n");
@@ -96,8 +98,13 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
-		// rBody->addForce(forwardDir *controls.throttle,
-		// PxForceMode::eACCELERATION);
+
+		// update sound
+		auto &sound = game.coordinator->getComponent<Sound>(entity);
+		auto pos = rBody->getGlobalPose().p;
+		sound.position =glm::vec3(pos.x,pos.y,pos.z);
+		auto vel = rBody->getGlobalPose().p;
+		sound.position =glm::vec3(vel.x,vel.y,vel.z);
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}
@@ -246,6 +253,11 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
 	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
+	Sound sound = game.audio->createSound("engine");
+	sound.position = glm::vec3(startP.x, startP.y, startP.z);
+	sound.start();
+
+	game.coordinator->addComponent(sparkEntity, sound);
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
@@ -282,7 +294,8 @@ SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	Signature sig;
 	sig.set(coord->getComponentType<SparkControls>());
 	sig.set(coord->getComponentType<SparkData>());
-	// sig.set(coord->getComponentType<physx::PxRigidDynamic *>());
+	sig.set(coord->getComponentType<physx::PxRigidBody *>());
+	sig.set(coord->getComponentType<Sound>());
 	coord->setSystemSignature<SparkSys>(sig);
 
 	return system;

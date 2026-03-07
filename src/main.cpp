@@ -5,6 +5,7 @@
 #include "ai/AIControllerSys.h"
 #include "ai/AISparkComponents.h"
 #include "audio/AudioEngine.h"
+#include "audio/AudioSystem.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
@@ -57,6 +58,7 @@ int main() {
 	gameState.coordinator->registerComponent<CameraComp>();
 	gameState.coordinator->registerComponent<AIController>();
 	gameState.coordinator->registerComponent<CollisionData>();
+	gameState.coordinator->registerComponent<Sound>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -66,6 +68,7 @@ int main() {
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 	auto aiControllerSys =
 		AIControllerSys::registerSystem(gameState.coordinator);
+	auto audioSystem = AudioSystem::registerSystem(gameState.coordinator);
 
 	// initialize debug panel
 	// create physics manager
@@ -169,6 +172,7 @@ int main() {
 
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
+	alSourcef(testSound.source, AL_GAIN, 0.6f);
 	testSound.setLooping(true);
 	testSound.start();
 	float soundX = 0;
@@ -227,6 +231,7 @@ int main() {
 			gameState.physics->callbacks->resetLists();
 			physicsSystem->updatePhysics(dt, gameState);
 			cameraSys->update(gameState, dt);
+			audioSystem->updateSounds(gameState);
 			accumulator -= dt;
 			t += dt;
 
@@ -234,20 +239,20 @@ int main() {
 			// this stuff would  go in whatever is playing a sound (ex. physics
 			// collision and like gamestate stuff for
 
-			// test moving the sound left/right
-			float soundVel = 0;
-			if (gameActions.shimmyLeft) {
-				soundX -= 0.5f;
-				soundVel = -15;
-				gameActions.shimmyLeft = false;
-			}
-			if (gameActions.shimmyRight) {
-				soundX += 0.5f;
-				soundVel = 15;
-				gameActions.shimmyRight = false;
-			}
-			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
-			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
+			// // test moving the sound left/right
+			// float soundVel = 0;
+			// if (gameActions.shimmyLeft) {
+			// 	soundX -= 0.5f;
+			// 	soundVel = -15;
+			// 	gameActions.shimmyLeft = false;
+			// }
+			// if (gameActions.shimmyRight) {
+			// 	soundX += 0.5f;
+			// 	soundVel = 15;
+			// 	gameActions.shimmyRight = false;
+			// }
+			// gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
+			// gameState.audio->updateSoundVel(testSound, 0, 0, 0);
 		}
 
 		if (t >= 1.0) {
