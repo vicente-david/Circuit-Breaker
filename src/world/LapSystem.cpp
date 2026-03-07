@@ -200,16 +200,16 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 		distOnSeg = distOnSeg * result.second;
 
 		// we only want to update forward progress so if the above distance isn't posiitve, just continue through the loop
-		if (trackDistances[i] + distOnSeg < lapProg.progress) continue;
+		if (trackDistances[modInt(i, trackDistances.size())] + distOnSeg < lapProg.progress) continue;
 
-		glm::vec3 P = result.first - A; // vector of closest point on segment to player
+		glm::vec3 P = result.first - eTransform.pos; // vector of closest point on segment to player
 		float dotP = glm::dot(P, P);
 		
 		// we can optimize by comparing squared distances
 		if (dotP < minDist) {
 			minDist = dotP;
-			closestSegment = i;
-			progDist = trackDistances[i] + distOnSeg;
+			closestSegment = modInt(i, trackPoints[0].curvePoints.size());
+			progDist = trackDistances[modInt(i, trackDistances.size())] + distOnSeg;
 		}
 
 	}
