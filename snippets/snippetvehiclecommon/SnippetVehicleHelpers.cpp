@@ -62,6 +62,13 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 		return PxFilterFlag::eSUPPRESS;
 	}
 
+	// if ((filterData0.word0 == COLLISION_FLAG_WHEEL &&
+	// 	 filterData1.word0 != COLLISION_FLAG_GROUND) ||
+	// 	(filterData1.word0 == COLLISION_FLAG_WHEEL &&
+	// 	 filterData0.word0 != COLLISION_FLAG_GROUND)) {
+	// 	return PxFilterFlag::eSUPPRESS;
+	// }
+
 	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
 
 	// if ((filterData0.word0 == COLLISION_FLAG_OBSTACLE &&
@@ -79,7 +86,6 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 		 filterData1.word0 == COLLISION_FLAG_FINISH)) {
 		// notify callbacks to handle finish line
 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
-		dbug::log("PHYS", -1, "Finish line close");
 	}
 
 	// callback if chassis hit another chassis, or the ground/wall
@@ -91,6 +97,7 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 		 filterData1.word0 == COLLISION_FLAG_GROUND)) {
 		// notify callbacks to handle crashing into a wall
 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		pairFlags |= PxPairFlag::eNOTIFY_CONTACT_POINTS;
 		// dbug::log("GAME", 0, "BONK?");
 	}
 

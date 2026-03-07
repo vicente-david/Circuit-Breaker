@@ -21,26 +21,22 @@
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
-	for (auto const &pair : game.physics->callbacks->sparkSparkCol) {
-		auto &sData1 = game.coordinator->getComponent<SparkData>(pair.first);
-		auto &rBody1 = game.coordinator->getComponent<PxRigidBody *>(pair.first);
-		auto &sData2 = game.coordinator->getComponent<SparkData>(pair.second);
-		auto &rBody2 = game.coordinator->getComponent<PxRigidBody *>(pair.second);
+	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
+		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
 
-		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
 
-		sData2.health-=velDiff.magnitude();
-		sData1.health-=velDiff.magnitude();
+		sData2.health-=colData.magnitude;
+		sData1.health-=colData.magnitude;
 
-		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id, colData.spark2Id);
 
 	}
-	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
-		auto &sData = game.coordinator->getComponent<SparkData>(entity.sparkId);
-		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity.sparkId);
-		sData.health-=rBody->getLinearVelocity().magnitude();
+	for (auto const &colData : game.physics->callbacks->sparkWallCol) {
+		auto &sData = game.coordinator->getComponent<SparkData>(colData.sparkId);
+		// auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity.sparkId);
+		sData.health-=colData.magnitude;
 		dbug::log("GAME", 0, "Hit a wall!");
-		printf("!\n");
 
 	}
 	for (auto const &entity : entities) {
@@ -102,6 +98,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// update sound
 		auto &sound = game.coordinator->getComponent<Sound>(entity);
 		auto pos = rBody->getGlobalPose().p;
+		rBody->getLinearVelocity();
 		sound.position =glm::vec3(pos.x,pos.y,pos.z);
 		auto vel = rBody->getGlobalPose().p;
 		sound.position =glm::vec3(vel.x,vel.y,vel.z);
