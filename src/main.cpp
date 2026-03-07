@@ -37,7 +37,7 @@ int main() {
 	dbug::minLogSeverity = 0;
 	// dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	//dbug::logIgnore("AI");
+	dbug::logIgnore("AI");
 	//dbug::logListType = dbug::WHITE_LIST;
 	// dbug::logIgnore("ECS");
 	//dbug::logIgnoreType = dbug::WHITE_LIST;
@@ -178,13 +178,13 @@ int main() {
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
-	gameState.coordinator->addComponent(sparkEntity, Respawnable);
 	gameState.coordinator->addComponent(sparkEntity, LapCounter());
+	gameState.coordinator->addComponent(sparkEntity, Respawnable());
 
 	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
-	gameState.coordinator->addComponent(testSpark2, Respawnable);
-	gameState.coordinator->addComponent(testSpark2, LapCounter);
+	gameState.coordinator->addComponent(testSpark2, LapCounter());
+	gameState.coordinator->addComponent(testSpark2, Respawnable());
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths, // set of paths
@@ -243,8 +243,11 @@ int main() {
 			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
 		}
 
+		// AI
+		aiControllerSys->update(gameState);
 		// after physics update
 		lapSys->update(gameState);
+		respawnSystem->update(gameState);
 		
 
 		if (t >= 1.0) {
@@ -253,9 +256,6 @@ int main() {
 			t -= 1.0;
 			framesPassed = 0;
 		}
-
-		// AI
-		aiControllerSys->update(gameState);
 
 		// rendering
 

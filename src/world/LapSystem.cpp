@@ -97,6 +97,7 @@ void LapSystem::update(GameState& game) {
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = nextCheckpoint;
 			
+			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
 		}
 
 	}
