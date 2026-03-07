@@ -41,6 +41,7 @@ struct SparkData {
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
+	bool isBoosting = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;

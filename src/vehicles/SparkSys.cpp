@@ -22,22 +22,33 @@
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
-		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
-		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
+		auto &sData1 =
+			game.coordinator->getComponent<SparkData>(colData.spark1Id);
+		auto &sData2 =
+			game.coordinator->getComponent<SparkData>(colData.spark2Id);
 
+		// don't do damage from hitting each other if sliding or boosting
+		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting) {
+			sData1.health -= colData.magnitude;
+		}else{
+			dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
+		}
 
-		sData2.health-=colData.magnitude;
-		sData1.health-=colData.magnitude;
-
-		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id, colData.spark2Id);
-
+		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting) {
+			sData2.health -= colData.magnitude;
+		}else{
+			dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
+		}
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id,
+				  colData.spark2Id);
 	}
 	for (auto const &colData : game.physics->callbacks->sparkWallCol) {
-		auto &sData = game.coordinator->getComponent<SparkData>(colData.sparkId);
-		// auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity.sparkId);
-		sData.health-=colData.magnitude;
+		auto &sData =
+			game.coordinator->getComponent<SparkData>(colData.sparkId);
+		// auto &rBody = game.coordinator->getComponent<PxRigidBody
+		// *>(entity.sparkId);
+		sData.health -= colData.magnitude;
 		dbug::log("GAME", 0, "Hit a wall!");
-
 	}
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
@@ -60,9 +71,11 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 				  controls.throttle, controls.brake, controls.steering);
 
 		// boosting
+		sData.isBoosting = false;
 		if (controls.boost && sData.currBoost > 0) {
 			dbug::log("GAME", -1, "boosting!");
 			boost(rBody, sData);
+			sData.isBoosting = true;
 		} else if (sData.currBoost < 100) {
 			sData.currBoost += sData.boostRegenSpeed * dt;
 
@@ -99,9 +112,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		auto &sound = game.coordinator->getComponent<Sound>(entity);
 		auto pos = rBody->getGlobalPose().p;
 		rBody->getLinearVelocity();
-		sound.position =glm::vec3(pos.x,pos.y,pos.z);
+		sound.position = glm::vec3(pos.x, pos.y, pos.z);
 		auto vel = rBody->getGlobalPose().p;
-		sound.position =glm::vec3(vel.x,vel.y,vel.z);
+		sound.position = glm::vec3(vel.x, vel.y, vel.z);
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}

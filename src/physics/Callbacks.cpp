@@ -90,6 +90,9 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 // 	// return total;
 // }
 
+
+//TODO: use the impulse here instead of just linear velocity.
+//stuff above should work, but the numbers don't seem right to me so idk
 float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 									  PxVec3 velocity) {
 	// get collision data for every shape that intersects
@@ -115,6 +118,9 @@ float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 			  minDot / velocity.magnitude());
 	return velocity.magnitude() - minDot;
 }
+
+
+
 void PhysXCallbacks::resetLists() {
 	sparkFinishCol.clear();
 	sparkWallCol.clear();
