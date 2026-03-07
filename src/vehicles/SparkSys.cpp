@@ -46,7 +46,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// Apply handbrake
 		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
-		sData.mVehicle->mCommandState.throttle *= (controls.handbrake) ? 0.5f : 1.f;
 
 		// boosting
 		if (controls.boost && sData.currBoost > 0) {
