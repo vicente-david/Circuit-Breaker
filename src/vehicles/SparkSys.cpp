@@ -36,6 +36,13 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				  controls.throttle, controls.brake, controls.steering);
+		
+		// Check for reverse (brake + throttle when stopped)
+		if (speed < 0.1f && controls.brake && controls.throttle) {
+			sData.mVehicle->mCommandState.brakes[0] = 0.f;
+			sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
+				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
+		}
 
 		// boosting
 		if (controls.boost && sData.currBoost > 0) {
