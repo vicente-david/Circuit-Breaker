@@ -23,12 +23,14 @@ struct SparkControls {
 	float brake;
 	float reverse; // [0-1] for going backwards
 
+	bool handbrake;
 	bool boost;
 	bool boostWithHealth;
 	bool shimmyL;
 	bool shimmyR;
 
 	bool reset;
+	bool reload;
 };
 
 // this is basically the current state of the spark. things can sometimes break

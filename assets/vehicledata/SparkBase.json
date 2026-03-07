@@ -33,7 +33,7 @@
         ]
     },
     "HandbrakeCommandResponseParams": {
-        "MaxResponse": 0.0,
+        "MaxResponse": 6000.0,
         "WheelResponseMultipliers": [
             0.0,
 			0.0,
@@ -64,9 +64,9 @@
             "WheelId": 0,
             "SuspensionAttachment": {
                 "Pos": [
-                    -0.7952629923820496,
-                    -0.10795199871063233,
-                    1.269219994544983
+                    -0.5,
+                    -0.12,
+                    0.85
                 ],
                 "Quat": [
                     0.0,
@@ -75,12 +75,8 @@
                     1.0
                 ]
             },
-            "SuspensionTravelDir": [
-                0.0,
-                -1.0,
-                0.0
-            ],
-            "SuspensionTravelDist": 0.221110999584198,
+            "SuspensionTravelDir": [ -0.087, -0.9948, 0.0521 ],
+            "SuspensionTravelDist": 0.22,
             "WheelAttachment": {
                 "Pos": [
                     0.0,
@@ -99,9 +95,9 @@
             "WheelId": 1,
             "SuspensionAttachment": {
                 "Pos": [
-                    0.7952629923820496,
-                    -0.10795000195503235,
-                    1.269219994544983
+                    0.5,
+                    -0.12,
+                    0.85
                 ],
                 "Quat": [
                     0.0,
@@ -110,12 +106,8 @@
                     1.0
                 ]
             },
-            "SuspensionTravelDir": [
-                0.0,
-                -1.0,
-                0.0
-            ],
-            "SuspensionTravelDist": 0.221110999584198,
+            "SuspensionTravelDir": [ 0.087, -0.9948, 0.0521 ],
+            "SuspensionTravelDist": 0.22,
             "WheelAttachment": {
                 "Pos": [
                     0.0,
@@ -134,9 +126,9 @@
             "WheelId": 2,
             "SuspensionAttachment": {
                 "Pos": [
-                    -0.7952629923820496,
-                    -0.10795199871063233,
-                    -1.593999981880188
+                    -0.5,
+                    -0.12,
+                    -0.4
                 ],
                 "Quat": [
                     0.0,
@@ -145,12 +137,8 @@
                     1.0
                 ]
             },
-            "SuspensionTravelDir": [
-                0.0,
-                -1.0,
-                0.0
-            ],
-            "SuspensionTravelDist": 0.221110999584198,
+            "SuspensionTravelDir": [ -0.087, -0.9948, -0.0521 ],
+            "SuspensionTravelDist": 0.22,
             "WheelAttachment": {
                 "Pos": [
                     0.0,
@@ -169,9 +157,9 @@
             "WheelId": 3,
             "SuspensionAttachment": {
                 "Pos": [
-                    0.7952629923820496,
-                    -0.10795299708843231,
-                    -1.593999981880188
+                    0.5,
+                    -0.12,
+                    -0.4
                 ],
                 "Quat": [
                     0.0,
@@ -180,12 +168,8 @@
                     1.0
                 ]
             },
-            "SuspensionTravelDir": [
-                0.0,
-                -1.0,
-                0.0
-            ],
-            "SuspensionTravelDist": 0.221110999584198,
+            "SuspensionTravelDir": [0.087, -0.9948, -0.0521],
+            "SuspensionTravelDist": 0.22,
             "WheelAttachment": {
                 "Pos": [
                     0.0,
@@ -215,10 +199,8 @@
                 ]
             ],
             "WheelCamberAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, -0.1 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -242,10 +224,8 @@
                 ]
             ],
             "WheelCamberAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, 0.1 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -269,10 +249,8 @@
                 ]
             ],
             "WheelCamberAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, -0.1 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -296,10 +274,8 @@
                 ]
             ],
             "WheelCamberAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, 0.1 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -344,10 +320,10 @@
     "TireForceParams": [
         {
             "WheelId": 0,
-            "LongitudinalStiffness": 24525.0,
+            "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 0.009999999776482582,
-            "LateralStiffnessY": 118699.637252138,
-            "CamberStiffness": 0.0,
+            "LateralStiffnessY": 136505,
+            "CamberStiffness": 0.5,
             "RestLoad": 5628.72314453125,
             "FrictionVsSlip": [
                 [
@@ -356,11 +332,11 @@
                 ],
                 [
                     0.10000000149011612,
-                    1.0
+                    1.4
                 ],
                 [
                     1.0,
-                    1.0
+                    1.2
                 ]
             ],
             "TireLoadFilter": [
@@ -376,10 +352,10 @@
         },
         {
             "WheelId": 1,
-            "LongitudinalStiffness": 24525.0,
+            "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 0.009999999776482582,
-            "LateralStiffnessY": 118699.637252138,
-            "CamberStiffness": 0.0,
+            "LateralStiffnessY": 136505,
+            "CamberStiffness": 0.5,
             "RestLoad": 5628.72314453125,
             "FrictionVsSlip": [
                 [
@@ -388,11 +364,11 @@
                 ],
                 [
                     0.10000000149011612,
-                    1.0
+                    1.4
                 ],
                 [
                     1.0,
-                    1.0
+                    1.2
                 ]
             ],
             "TireLoadFilter": [
@@ -408,10 +384,10 @@
         },
         {
             "WheelId": 2,
-            "LongitudinalStiffness": 24525.0,
+            "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 0.009999999776482582,
-            "LateralStiffnessY": 143930.84033118,
-            "CamberStiffness": 0.0,
+            "LateralStiffnessY": 165600,
+            "CamberStiffness": 0.5,
             "RestLoad": 4604.3134765625,
             "FrictionVsSlip": [
                 [
@@ -420,11 +396,11 @@
                 ],
                 [
                     0.10000000149011612,
-                    1.0
+                    1.4
                 ],
                 [
                     1.0,
-                    1.0
+                    1.2
                 ]
             ],
             "TireLoadFilter": [
@@ -440,10 +416,10 @@
         },
         {
             "WheelId": 3,
-            "LongitudinalStiffness": 24525.0,
+            "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 0.009999999776482582,
-            "LateralStiffnessY": 143930.84033118,
-            "CamberStiffness": 0.0,
+            "LateralStiffnessY": 165600,
+            "CamberStiffness": 0.5,
             "RestLoad": 4604.3134765625,
             "FrictionVsSlip": [
                 [
@@ -452,11 +428,11 @@
                 ],
                 [
                     0.10000000149011612,
-                    1.0
+                    1.4
                 ],
                 [
                     1.0,
-                    1.0
+                    1.2
                 ]
             ],
             "TireLoadFilter": [
@@ -474,32 +450,32 @@
     "WheelParams": [
         {
             "WheelId": 0,
-            "HalfWidth": 0.1,
-            "Radius": 0.75,
+            "HalfWidth": 0.15,
+            "Radius": 0.5,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25
         },
         {
             "WheelId": 1,
-            "HalfWidth": 0.1,
-            "Radius": 0.75,
+            "HalfWidth": 0.15,
+            "Radius": 0.5,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25
         },
         {
             "WheelId": 2,
-            "HalfWidth": 0.1,
-            "Radius": 0.75,
+            "HalfWidth": 0.15,
+            "Radius": 0.5,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25
         },
         {
             "WheelId": 3,
-            "HalfWidth": 0.1,
-            "Radius": 0.75,
+            "HalfWidth": 0.15,
+            "Radius": 0.5,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25

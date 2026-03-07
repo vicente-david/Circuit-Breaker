@@ -7,17 +7,12 @@
 #include "PxRigidDynamic.h"
 #include "PxShape.h"
 #include "SparkComponents.h"
-#include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
-#include "geometry/PxGeometry.h"
 #include "graphics/Model.h"
-#include "physics/CollisionData.h"
-#include "physics/PhysicsManager.h"
 #include <cstdio>
-#include <glm/fwd.hpp>
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
@@ -50,6 +45,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.health -= colData.magnitude * 0.75;
 		dbug::log("GAME", 0, "Hit a wall!");
 	}
+	bool reload = false;
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -111,6 +107,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 
+		// rBody->addForce(forwardDir *controls.throttle,
+		// PxForceMode::eACCELERATION);
 		// update sound
 		auto &sound = game.coordinator->getComponent<Sound>(entity);
 		auto pos = rBody->getGlobalPose().p;
