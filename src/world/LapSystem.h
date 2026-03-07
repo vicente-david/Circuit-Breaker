@@ -17,6 +17,7 @@ struct LapCounter {
 	int lastCheckpointID = 0; // used for detecting the next valid checkpoint
 	int currentLap = 1; // used for which lap the entity is currently on (player will pass this to UI)
 	float progress = 0.0f; // progress along the track curve (measured by distance of the line segments)
+	int closestTrackPoint = 0; //index of the closest track point, used to limit the search space for the projection
 };
 
 
@@ -29,6 +30,7 @@ public:
 
 
 private:
+	int nearestCheckpoints(LapCounter& lapProg); // find the next checkpoints to test for
 
 	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
 	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
