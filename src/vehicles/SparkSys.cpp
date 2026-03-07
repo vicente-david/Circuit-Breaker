@@ -30,7 +30,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
 		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
-		sData.mVehicle->mCommandState.nbBrakes = 1;
+		sData.mVehicle->mCommandState.nbBrakes = 2;
 		sData.mVehicle->mCommandState.throttle = controls.throttle;
 		sData.mVehicle->mCommandState.steer = controls.steering;
 
@@ -43,6 +43,10 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
 				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
 		}
+
+		// Apply handbrake
+		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
+		sData.mVehicle->mCommandState.throttle *= (controls.handbrake) ? 0.5f : 1.f;
 
 		// boosting
 		if (controls.boost && sData.currBoost > 0) {
