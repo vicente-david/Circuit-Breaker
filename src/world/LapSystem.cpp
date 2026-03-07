@@ -32,8 +32,9 @@ float sphereSDF(glm::vec3 p, float r) {
 }
 
 // a mod b
-int modInt(float a, float b) {
-	return a - b * floor(a / b);
+int modInt(int a, int b) {
+	if (a % b < 0) return b + (a % b);
+	else return a % b;
 }
 
 
@@ -125,6 +126,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform) {
 		// the > 0 check is to make sure they don't immediately increment lap on race start
 		if (lapProg.lastCheckpointID > 0 && nextCheckpoint == 0) {
 			lapProg.currentLap++;
+			lapProg.progress = 0.0f;
 			std::cout << "on lap: " << lapProg.currentLap << std::endl;
 		}
 
@@ -175,6 +177,8 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 	closeIndexS = closeIndexS * checkpointPlacement; 
 	// map it to the track point we wish to start from
 	closeIndexF = closeIndexF * checkpointPlacement;
+
+	std::cout << modInt(closeIndexS, trackSize) << std::endl;
 	
 	int closestSegment = modInt(closeIndexS, trackSize); // index of the start point of the closest track segment to the player
 	float progDist = trackDistances[closestSegment];
