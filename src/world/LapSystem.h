@@ -32,7 +32,7 @@ public:
 private:
 	int nearestCheckpoints(LapCounter& lapProg); // find the next checkpoints to test for
 
-	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
+	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints); // update the checkpoint for the entity
 	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
 	void updateProgress(LapCounter& lapProg, Transform& eTransform); // update the progress along the track
 	

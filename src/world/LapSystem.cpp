@@ -44,7 +44,7 @@ int modInt(int a, int b) {
 int LapSystem::nearestCheckpoints(LapCounter& lapProg) {
 	// the first part determines the search window for the projection
 	float checkpointBounds = skipThresholdRatio * trackDistance; // next checkpoint must fall within this distance
-	int nextCheckpoints = 0; // count of how many checkpoints ahead of the current checkpoint are allowed
+	int nextCheckpoints = 1; // count of how many checkpoints ahead of the current checkpoint are allowed
 	int startIndex = lapProg.lastCheckpointID + 1; // start index/id of the next checkpoint
 
 	if (startIndex >= checkPoints.size()) startIndex = 0; // if index exceeds capacity, reset to 0
@@ -138,34 +138,35 @@ void LapSystem::generateCheckpoints(const std::string path) {
 // authoritative over progress (meaning that checkpoints will
 // ultimately decide lap completion and stuff and not progressupdate)
 // sequential update as well, you cannot skip checkpoints
-void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform) {
-	// check which should be the next checkpoint, we'll assume for now you can't skip any checkpoints
-	int nextCheckpoint = lapProg.lastCheckpointID + 1;
-
+// next checkpoints defines the range of checkpoints to check collision for
+void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints) {
+	for (int i = 0; i < nextCheckpoints; i++) {
 	// more sophisticated if we want shortcuts, this is where the distance comes into play
 	// track the forward progress the player has made on the track
 	// and then if that is within an allowable range, let them reach the next checkpoint
+	int indexI = lapProg.lastCheckpointID + i;
 
 	// if out of bounds, then we want to cross the finish line
-	if (nextCheckpoint >= checkPoints.size()) {
-		nextCheckpoint = 0;
-	}
-
-	// check if vehicle is inside the next checkpoint
-	if (sphereSDF(checkPoints[nextCheckpoint] - eTransform.pos, 10.0f) < 0.0f) {
-		// if they are check if their target isn't the start/finish line
-		// the > 0 check is to make sure they don't immediately increment lap on race start
-		if (lapProg.lastCheckpointID > 0 && nextCheckpoint == 0) {
-			lapProg.currentLap++;
-			lapProg.progress = 0.0f;
-			std::cout << "on lap: " << lapProg.currentLap << std::endl;
+		if (indexI >= checkPoints.size()) {
+			indexI = 0;
 		}
 
-		std::cout << "checkpoint: " << nextCheckpoint << std::endl;
-		// update the vehicle checkpoint
-		lapProg.lastCheckpointID = nextCheckpoint;
+		// check if vehicle is inside the next checkpoint
+		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 10.0f) < 0.0f) {
+			// if they are check if their target isn't the start/finish line
+			// the > 0 check is to make sure they don't immediately increment lap on race start
+			if (lapProg.lastCheckpointID > 0 && indexI == 0) {
+				lapProg.currentLap++;
+				lapProg.progress = 0.0f;
+				std::cout << "on lap: " << lapProg.currentLap << std::endl;
+			}
 
+			std::cout << "checkpoint: " << indexI << std::endl;
+			// update the vehicle checkpoint
+			lapProg.lastCheckpointID = indexI;
+		}
 	}
+	
 }
 
 // updates both checkpoint and distnace progressed along the track
@@ -181,19 +182,28 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 	int startIndex = lapProg.closestTrackPoint - 2; // start of search for projection
 	int endIndex = lapProg.closestTrackPoint + 3; // end of search for projection
 
+	int newClosestIndex = lapProg.closestTrackPoint;
+	int newProg = lapProg.progress;
+
 	for (int i = startIndex; i < endIndex-1; i++) {
 		int indexI = modInt(i, trackSize); // guaranteed non negative
 		std::pair<glm::vec3, float> result = closestPoint(trackPoints[0].curvePoints[indexI], trackPoints[0].curvePoints[(indexI+1) % trackSize], eTransform.pos);
 		if (result.second < 0.0 || result.second > 1.0) continue; // just means the player position is not closest to this segment
 
 		// if the player position is closest to this segment, then update both progress and closest segment
-
-		lapProg.closestTrackPoint = indexI;
-		lapProg.progress = trackDistances[indexI] + result.second*(trackDistances[(indexI + 1) % trackSize] - trackDistances[indexI]);
+		newClosestIndex = indexI;
+		newProg = trackDistances[indexI] + result.second*(trackDistances[(indexI + 1) % trackSize] - trackDistances[indexI]);
 
 	}
 
-	std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
+	// only update the progress and index if it is before the next checkpoint(s)
+	bool updateProg = false;
+
+
+	// updateCheckpoints
+	LapSystem::updateCheckpoints(lapProg, eTransform, nextCheckpoints);
+
+	//std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
 
 
 }
@@ -225,8 +235,6 @@ void LapSystem::update(GameState& game) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 
-		updateCheckpoints(lapProg, eTransform);
-		updateProgress(lapProg, eTransform);
 		updateCheckpointsWithProgress(lapProg, eTransform);
 
 	}
