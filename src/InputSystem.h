@@ -72,7 +72,9 @@ struct Actions {
 
 	// camera rotation (raw input)
 	float keyboardXRot = 0.0;
+	float keyboardYRot = 0.0;
 	float controllerXRot = 0.0;
+	float controllerYRot = 0.0;
 
 };
 

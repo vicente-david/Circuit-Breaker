@@ -169,6 +169,10 @@ void InputSystem::combineInputs() {
 	else
 		actions.camXRot = actions.keyboardXRot;
 
+	if (glm::abs(actions.controllerYRot) > glm::abs(actions.keyboardYRot))
+		actions.camYRot = actions.controllerYRot;
+	else
+		actions.camYRot = actions.keyboardYRot;
 
 	// steering
 	if (glm::abs(actions.controllerDir) > glm::abs(actions.keyboardDir))
@@ -230,6 +234,11 @@ void InputSystem::updateGamepad() {
 		actions.controllerXRot = rightx;
 	else if (abs(rightx) < strickTriggerThreshold)
 		actions.controllerXRot = 0.0;
+
+	if (glm::abs(righty) >= strickTriggerThreshold)
+		actions.controllerYRot = righty;
+	else if (abs(righty) < strickTriggerThreshold)
+		actions.controllerYRot = 0.0;
 
 
 	if (button_B || actions.kboost)
