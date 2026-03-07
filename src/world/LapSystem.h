@@ -7,6 +7,9 @@
 #include "../ecs/Component.h"
 #include "../GameState.h"
 #include "CurveLoader.h"
+#include <glm/gtx/projection.hpp>
+
+
 
 
 // Lap component
@@ -26,8 +29,16 @@ public:
 
 
 private:
+
+	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
+	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
+	void updateProgress(LapCounter& lapProg, Transform& eTransform); // update the progress along the track
+	
 	std::vector<glm::vec3> checkPoints; // will need to be more sophisticated for multiple branching paths
+	int checkpointPlacement = 10; // every x amount of points along the track, place 1 checkpoint
+
 	std::vector<TrackCurve> trackPoints; // vector of all track points
+	std::vector<float> trackDistances; // tracks cumulative distance along the track (same order as the trackPoints)
 	float trackDistance; // length of the track curve
 	float skipThresholdRatio = 0.1f; // How much of the track you can skip (0-1.0f)
 	
