@@ -163,7 +163,7 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 		}
 	}
 
-	// now we have our search space
+	// now we have our search space for forward checkpoints
 
 	// our next step is to find the closest track segment to the player
 	// we have our search window, we check that many back, and that many forward
