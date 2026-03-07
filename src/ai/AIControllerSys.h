@@ -21,7 +21,7 @@ class AIControllerSys : public System {
 
 private:
 	float curveAngleThresh = 0.15f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
-	float maxTargetSpeed = 15.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
+	float maxTargetSpeed = 6.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
 	
 	void calcSteering(AIController& ai, SparkControls& controls, Transform& transform);
 };

@@ -112,7 +112,7 @@ int main() {
 	Track Track("assets/track1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
-	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
+	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	
 	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
 
@@ -214,7 +214,7 @@ int main() {
 		50, // index of current position
 		5, // lookahead steps
 		8.0f, // arrival radius
-		2.0f, // steering sharpness
+		0.5f, // steering sharpness
 		});
 
 	// RENDER LOOP
