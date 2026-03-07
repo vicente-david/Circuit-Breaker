@@ -27,6 +27,7 @@ void ControllerSys::update(GameState &game) {
 
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
 		sControl.brake = input.moveBackward;
+		sControl.handbrake = input.handBrake;
 		sControl.throttle = input.moveForward;
 		sControl.steering = input.xRotation;
 		sControl.boost = input.boost;

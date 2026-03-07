@@ -59,12 +59,16 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.speed = speed;
 
 		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
-		sData.mVehicle->mCommandState.nbBrakes = 1;
+		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
+		sData.mVehicle->mCommandState.nbBrakes = 2;
 		sData.mVehicle->mCommandState.throttle = controls.throttle;
 		sData.mVehicle->mCommandState.steer = controls.steering;
+		// less acceleration when driftin
+		sData.mVehicle->mCommandState.throttle *= (controls.handbrake) ? 0.5f : 1.f;
 
-		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
-				  controls.throttle, controls.brake, controls.steering);
+
+		dbug::log("INPUT", 1, "Spark commands: hand: %d, brk: %f, trn: %f",controls.handbrake,
+				  controls.throttle, controls.brake);
 
 		// boosting
 		sData.isBoosting = false;
