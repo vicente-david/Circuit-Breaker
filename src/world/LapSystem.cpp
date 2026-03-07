@@ -73,7 +73,7 @@ void LapSystem::update(GameState& game) {
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 
 		// check which should be the next checkpoint, we'll assume for now you can't skip any checkpoints
-		int nextCheckpoint = lapProg.lastCheckpointID+1;
+		int nextCheckpoint = lapProg.lastCheckpointID + 1;
 
 		// more sophisticated if we want shortcuts, this is where the distance comes into play
 		// track the forward progress the player has made on the track
@@ -96,9 +96,21 @@ void LapSystem::update(GameState& game) {
 			std::cout << "checkpoint: " << nextCheckpoint << std::endl;
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = nextCheckpoint;
-			
-			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
-		}
 
+			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
+
+			// compute the track forward direction at this checkpoint used for respawning
+			// use the vector from this checkpoint to the next one
+			int followingCheckpoint = lapProg.lastCheckpointID + 1;
+			if (followingCheckpoint >= checkPoints.size()) {
+				followingCheckpoint = 0; // wrap around for the last checkpoint
+			}
+			glm::vec3 dir = checkPoints[followingCheckpoint] - checkPoints[lapProg.lastCheckpointID];
+			dir.y = 0.0f; // project onto XZ plane so the vehicle stays upright
+			if (glm::length(dir) > 0.001f) {
+				lapProg.lastCheckpointDir = glm::normalize(dir);
+			}
+
+		}
 	}
 }

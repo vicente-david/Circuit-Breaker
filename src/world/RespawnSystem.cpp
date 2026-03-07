@@ -28,17 +28,24 @@ void RespawnSystem::update(GameState& game) {
 			continue;
 
 		// entity fell below yDeadzone, respawn at last checkpoint
-		dbug::log("GAME", 0, "Respawning entity %d", entity);
+		dbug::log("RESPAWN", 0, "Respawning entity %d", entity);
 
 		// compute the respawn position: last checkpoint + deltaY above it
 		glm::vec3 respawnPos = lapProg.lastCheckpointPos;
 		respawnPos.y += deltaY;
 
+		// compute the respawn rotation so the vehicle faces along the track
+		// the vehicle's forward axis is +Z, so we need the angle from +Z to lastCheckpointDir
+		glm::vec3 trackDir = lapProg.lastCheckpointDir; // already XZ-normalized by LapSystem
+		float yawAngle = glm::atan(trackDir.x, trackDir.z); // angle from +Z toward +X
+		// PxQuat(angle, axis) creates a rotation of 'angle' radians around 'axis'
+		physx::PxQuat respawnRot(yawAngle, physx::PxVec3(0.0f, 1.0f, 0.0f)); // rotate around Y axis
+
 		// teleport the PhysX rigid body to the respawn position
 		auto& rBody = game.coordinator->getComponent<physx::PxRigidBody*>(entity);
 		physx::PxTransform respawnPose(
 			physx::PxVec3(respawnPos.x, respawnPos.y, respawnPos.z),
-			physx::PxQuat(physx::PxIdentity) // reset rotation to upright
+			respawnRot
 		);
 		rBody->setGlobalPose(respawnPose);
 

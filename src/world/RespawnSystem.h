@@ -16,6 +16,6 @@ public:
 
 
 private:
-	float yDeadzone = -10.0f; // Y value which dictates when we respawn
+	float yDeadzone = -20.0f; // Y value which dictates when we respawn
 	float deltaY = 2.0f; // "how much further above should we respawn over the last checkpoint?"
 };
