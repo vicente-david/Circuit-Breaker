@@ -240,7 +240,6 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 }
 
 void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
-	// TODO: add boost logic for AI
 	calcSteering(ai, controls, transform, spark);
 
 	controls.throttle = 1.0f;
