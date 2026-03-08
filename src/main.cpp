@@ -253,8 +253,9 @@ int main() {
 			// 	soundVel = 15;
 			// 	gameActions.shimmyRight = false;
 			// }
-			// gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
-			// gameState.audio->updateSoundVel(testSound, 0, 0, 0);
+			// position at 0,0,0 for testing
+			gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
+			gameState.audio->updateSoundVel(testSound, 0, 0, 0);
 		}
 
 		if (t >= 1.0) {
