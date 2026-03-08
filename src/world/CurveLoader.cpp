@@ -81,11 +81,13 @@ std::vector<float> CurveLoader::calculateCurveAngles(std::vector<glm::vec3> curv
 		// direction to target
 		glm::vec3 behind = curvePoints.at((i - 4) % curvePoints.size());
 		behind = point - behind;
+		glm::vec2 dirIn(behind.x, behind.z);
 		// direction leaving target
 		glm::vec3 ahead = curvePoints.at((i + 2) % curvePoints.size());
 		ahead = ahead - point;
+		glm::vec2 dirOut(ahead.x, ahead.z);
 
-		float curvature = glm::acos(glm::dot(behind, ahead) / (glm::length(behind) * glm::length(ahead))); // curvature 0 = straight, 1 = curve
+		float curvature = glm::acos(glm::dot(dirIn, dirOut) / (glm::length(dirIn) * glm::length(dirOut))); // curvature 0 = straight, 1 = curve
 
 		angles.push_back(curvature);
 	}

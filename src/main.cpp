@@ -213,8 +213,8 @@ int main() {
 		55, // index of target position
 		50, // index of current position
 		5, // lookahead steps
-		8.0f, // arrival radius
-		0.5f, // steering sharpness
+		10.0f, // arrival radius
+		4.0f, // steering sharpness
 		});
 
 	// RENDER LOOP

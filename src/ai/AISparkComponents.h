@@ -24,5 +24,6 @@ struct AIController {
 	int lookAheadSteps = 8;
 	float arrivalRadius = 10.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
 	float steeringSharpness = 1.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
+
 };
 
