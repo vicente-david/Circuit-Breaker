@@ -11,7 +11,9 @@
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
+#include "foundation/PxMath.h"
 #include "graphics/Model.h"
+#include <cmath>
 #include <cstdio>
 #include <memory>
 
@@ -64,11 +66,11 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mCommandState.throttle = controls.throttle;
 		sData.mVehicle->mCommandState.steer = controls.steering;
 		// less acceleration when driftin
-		sData.mVehicle->mCommandState.throttle *= (controls.handbrake) ? 0.5f : 1.f;
+		sData.mVehicle->mCommandState.throttle *=
+			(controls.handbrake) ? 0.5f : 1.f;
 
-
-		dbug::log("INPUT", 1, "Spark commands: hand: %d, brk: %f, trn: %f",controls.handbrake,
-				  controls.throttle, controls.brake);
+		dbug::log("INPUT", -1, "Spark commands: hand: %d, brk: %f, trn: %f",
+				  controls.handbrake, controls.throttle, controls.brake);
 
 		// boosting
 		sData.isBoosting = false;
@@ -76,13 +78,32 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			// try to boost
 			boost(rBody, sData, controls.boostWithHealth, dt);
 		}
-		// regen boost for testing (should be with drifting actually)
+
+		// in degrees
+		float driftAngle =
+			PxAcos(linVel.getNormalized().dot(forwardDir.getNormalized())) *
+			(180 / PxPi);
+
+		// regen boost if you're drifting
 		float maxBoost = 100 - sData.health;
-		if (sData.currBoost < maxBoost && !controls.boost) {
-			sData.currBoost += sData.boostRegenSpeed * dt;
+		if (entity == 2)
+			dbug::log("GAME", -1, "player drift angle:%.2f, vel:%.2f",
+					  driftAngle, linVel.magnitude());
+
+		if (driftAngle > 20 && linVel.magnitude() > 10) {
+			// how 'hard' of a drift (90 degrees gives full regen, 0 degrees
+			// gives none)
+			// cap at 90 degrees
+			if(driftAngle>90){
+				driftAngle = 90;
+			}
+			float multi = driftAngle / 90.f;
+			if (entity == 2)
+				dbug::log("GAME", -1, "drifin' (mulit:%.2f)", multi);
+
+			sData.currBoost += sData.boostRegenSpeed * dt * multi;
 			if (sData.currBoost > maxBoost) {
 				sData.currBoost = maxBoost;
-				dbug::log("GAME", 0, "boost full");
 			}
 		}
 

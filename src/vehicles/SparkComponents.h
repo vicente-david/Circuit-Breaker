@@ -38,7 +38,7 @@ struct SparkControls {
 struct SparkData {
 	float health = 100;
 	float currBoost = 0;
-	float boostRegenSpeed = 5.0f;
+	float boostRegenSpeed = 10.0f;
 
 	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
