@@ -33,12 +33,6 @@ float sphereSDF(glm::vec3 p, float r) {
 	return glm::length(p) - r;
 }
 
-// a mod b
-int modInt(int a, int b) {
-	if (a % b < 0) return b + (a % b);
-	else return a % b;
-}
-
 // used for finding the next checkpoints reachable by an entity
 // used for limiting which checkpoints to test for
 int LapSystem::nearestCheckpoints(LapCounter& lapProg) {
@@ -70,6 +64,7 @@ int LapSystem::nearestCheckpoints(LapCounter& lapProg) {
 
 
 
+// potential optimization by precomputing the length of the line segments
 // given a line segment b-a (from a to b), return the closest point (and where the point is along the segment)
 std::pair<glm::vec3, float> closestPoint(glm::vec3 a, glm::vec3 b, glm::vec3 p) {
 	glm::vec3 lineSeg = b - a; // start at a, end at b
@@ -158,12 +153,14 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 			if (lapProg.lastCheckpointID > 0 && indexI == 0) {
 				lapProg.currentLap++;
 				lapProg.progress = 0.0f;
+				lapProg.closestTrackPoint = 0;
 				std::cout << "on lap: " << lapProg.currentLap << std::endl;
 			}
 
 			std::cout << "checkpoint: " << indexI << std::endl;
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = indexI;
+			break;
 		}
 	}
 	
@@ -180,51 +177,72 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 
 	// find closest track segment, we'll limit our search space to 2 adjacent track segments
 	int startIndex = lapProg.closestTrackPoint - 2; // start of search for projection
+	// clamp the start index to start from the start line
+	startIndex = glm::max(startIndex, 0);
 	int endIndex = lapProg.closestTrackPoint + 3; // end of search for projection
+	// clamp the end index to the finish line if overflow
+	endIndex = glm::min(endIndex, trackSize); 
 
 	int newClosestIndex = lapProg.closestTrackPoint;
 	int newProg = lapProg.progress;
 
+	float closestDistSquared = FLT_MAX; 
+
 	for (int i = startIndex; i < endIndex-1; i++) {
-		int indexI = modInt(i, trackSize); // guaranteed non negative
-		std::pair<glm::vec3, float> result = closestPoint(trackPoints[0].curvePoints[indexI], trackPoints[0].curvePoints[(indexI+1) % trackSize], eTransform.pos);
+		std::pair<glm::vec3, float> result = closestPoint(trackPoints[0].curvePoints[i], trackPoints[0].curvePoints[(i+1) % trackSize], eTransform.pos);
 		if (result.second < 0.0 || result.second > 1.0) continue; // just means the player position is not closest to this segment
 
 		// if the player position is closest to this segment, then update both progress and closest segment
-		newClosestIndex = indexI;
-		newProg = trackDistances[indexI] + result.second*(trackDistances[(indexI + 1) % trackSize] - trackDistances[indexI]);
+		float newDistSquared = glm::dot(result.first-eTransform.pos, result.first - eTransform.pos);// player distance to projected point
+
+		if (newDistSquared < closestDistSquared) {
+			newClosestIndex = i;
+			newProg = trackDistances[i] + result.second * (trackDistances[(i + 1) % trackSize] - trackDistances[i]);
+			closestDistSquared = newDistSquared;
+		}
+
+		
 
 	}
 
-	// only update the progress and index if it is before the next checkpoint(s)
-	bool updateProg = false;
+	// find the last reachable track segment, clamp it maximally to the last track segment
+
+	int lastCPReach = lapProg.lastCheckpointID + nextCheckpoints;// index of furthest checkpoint reachable
+	int lastSegment;
+
+	// if it's into the next lap, then just don't check past the finish line
+	if (lastCPReach >= checkPoints.size()) {
+		lastSegment = trackPoints[0].curvePoints.size() - 1; // starts here and wraps into the first point
+	}
+	else {
+		// otherwise if it's valid, just set it to the point behind the checkpoint
+		lastSegment = glm::max(lastCPReach * checkpointPlacement - 1, 0);
+
+	}
+
+	/*
+	float deltaDist = newProg - lapProg.progress; // detect forward or backward
+
+	if (deltaDist < 0.0) {
+		//std::cout << "backwards oml" << std::endl;
+	}
+	*/
+	
+	// upper limit
+	if (newProg > trackDistances[lastSegment]) newProg = trackDistances[lastSegment];
+
+	lapProg.progress = newProg;
+	lapProg.closestTrackPoint = newClosestIndex;
+		
+
 
 
 	// updateCheckpoints
 	LapSystem::updateCheckpoints(lapProg, eTransform, nextCheckpoints);
 
-	//std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
+	std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
 
 
-}
-
-// constantly update lap progress 
-void LapSystem::updateProgress(LapCounter& lapProg, Transform& eTransform) {
-	// we update the progress by projecting the player position onto the closest line segment
-
-	// the trouble is how do we know which is the closest track segment?
-	// well we can always loop through all of them in the worst case scenario (pretty bad for performance)
-
-	// so instead we'll limit the search space
-	// we have a ratio of how much of the track we can skip at a time
-	
-	// so we just check from the current checkpoint in two directions (forward and back) by the ratio
-	// take the minimum distance of that and we have found the closest track segment
-
-	// a glaring issue with this approach is we never update checkpoints when going in reverse
-	// so if a player starts driving backwards, then should the progress update or not?
-
-	
 }
 
 // update
