@@ -100,13 +100,37 @@ void sparkInfo(int id, float health, float boost) {
 	sparkData.push_back(SparkUI{id, health, boost});
 }
 void drawSparkInfo() {
-	ImGui::Begin("Vehicle Info");
-	ImGui::Text("Imagine this is an actual ui");
-	for (auto sp : sparkData) {
+	if (sparkData.empty())
+		return;
 
-		ImGui::Text("-- EID:%d", sp.id);
-		ImGui::Text("  Health:%.2f  Boost:%.2f", sp.health, sp.boost);
-	}
+	// ---- Local player HUD (top-left corner) ----
+	ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_Always);
+	ImGui::SetNextWindowSize(ImVec2(220, 0));
+	ImGui::SetNextWindowBgAlpha(0.6f);
+	ImGui::Begin("Player HUD", nullptr,
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_NoCollapse |
+		ImGuiWindowFlags_NoTitleBar);
+
+	auto& player = sparkData[0];
+
+	// Health bar (green)
+	ImGui::Text("Health");
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram,
+		ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
+	ImGui::ProgressBar(player.health / 100.0f, ImVec2(-1, 20));
+	ImGui::PopStyleColor();
+
+	ImGui::Spacing();
+
+	// Boost bar (blue)
+	ImGui::Text("Boost");
+	ImGui::PushStyleColor(ImGuiCol_PlotHistogram,
+		ImVec4(0.2f, 0.5f, 1.0f, 1.0f));
+	ImGui::ProgressBar(player.boost / 100.0f, ImVec2(-1, 20));
+	ImGui::PopStyleColor();
+
 	ImGui::End();
 }
 
