@@ -141,7 +141,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glm::mat4 view = glm::mat4(1.0f);
 	view = c1->GetViewMatrix();
 	glm::mat4 proj;
-	proj = glm::perspective(glm::radians(45.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 200.0f);
 
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));

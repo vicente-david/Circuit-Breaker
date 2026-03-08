@@ -1,6 +1,6 @@
 # Blender 5.0.1
 # www.blender.org
-mtllib biggertrack1SubdividedTwice.mtl
+mtllib biggertrack1.mtl
 o Cube
 v 24.720167 0.562450 102.255302
 v 24.726433 0.054815 102.255058
