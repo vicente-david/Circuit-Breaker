@@ -26,7 +26,7 @@ void AIControllerSys::update(GameState& game) {
 		
 		// update current position index
 		int i = ai.currentPosIdx;
-		while (glm::distance(transform.pos, ai.route.at(i)) < ai.arrivalRadius) {
+		while (glm::distance(transform.pos, ai.route.at(i)) < arrivalRadius) {
 			i = (i + 1) % ai.route.size();
 		}
 		ai.currentPosIdx = i;
@@ -100,23 +100,23 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 
 	// ---- THROTTLE ----
 	float curvature = ai.angles.at(ai.targetIdx); // curvature 0 = straight, 1 = curve
-	float targetSpeed = glm::mix(maxTargetSpeed, 1.0f, curvature);
+	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
 	float curveIn = ai.angles.at(ai.currentPosIdx);
 	dbug::log("AI", 0, "CURVE: %.2f, CURRENT SPEED: %.2f, TARGET SPEED: %.2f, LOOK: %d", curvature, spark.speed, targetSpeed, ai.lookAheadSteps);
 
 
 	// Boost for speed if along straight path, not running out of boost, not facing downwards and not when steering
-	if (curvature < curveBoostThresh && spark.currBoost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
+	if (curvature < ai.curveBoostThresh && spark.currBoost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
 	
 		ai.state = BOOSTING;
 		return;
 	}
-	else if (curvature >= curveBrakeThresh && (spark.speed - targetSpeed) > 15.f && curveIn < curvature) {
+	else if (curvature >= ai.curveBrakeThresh && (spark.speed - targetSpeed) > 15.f && curveIn < curvature) {
 		ai.state = BRAKING;
 		dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
 		return;
 	}
-	else if (curvature >= curveBrakeThresh && spark.speed > targetSpeed) {
+	else if (curvature >= ai.curveBrakeThresh && spark.speed > targetSpeed) {
 		// angle of curve steeper than threshold: slow speed for upcoming turn
 		ai.state = DRIFTING;
 		dbug::log("AI", 0, "Entity: DRIVING -> DRIFTING (dist: %.1f)", distance);
@@ -148,7 +148,7 @@ void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Tran
 
 	// Brake based on difference in current speed and target speed
 	float curvature = ai.angles.at(ai.targetIdx);
-	float targetSpeed = glm::mix(maxTargetSpeed, 1.0f, curvature);
+	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
 	
 	if (targetSpeed <= 0.0f) {
 		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
@@ -198,7 +198,7 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 
 	// Brake based on difference in current speed and target speed
 	float curvature = ai.angles.at(ai.targetIdx);
-	float targetSpeed = glm::mix(maxTargetSpeed, 1.0f, curvature);
+	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
 
 	if (targetSpeed <= 0.0f) {
 		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
@@ -248,12 +248,12 @@ void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Tra
 	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.currBoost);
 
 	float curvature = ai.angles.at(ai.targetIdx);
-	if (curvature > curveBrakeThresh) {
+	if (curvature > ai.curveBrakeThresh) {
 		ai.state = BRAKING; // If curvature of lookahead is passed threshold, and the spark is not climbing a hill, go straight to braking
 		controls.boost = false;
 		return;
 	}
-	else if (curvature >= curveBoostThresh || spark.currBoost < 25.f) {
+	else if (curvature >= ai.curveBoostThresh || spark.currBoost < 25.f) {
 		ai.state = DRIVING;
 		controls.boost = false;
 	}
