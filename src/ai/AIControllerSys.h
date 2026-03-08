@@ -22,7 +22,7 @@ class AIControllerSys : public System {
 private:
 	float curveBrakeThresh = 0.40f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
 	float maxTargetSpeed = 14.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
-	float curveBoostThresh = 0.10f; // max angle for ai to consider boosting
+	float curveBoostThresh = 0.01f; // max angle for ai to consider boosting
 
 	void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 };

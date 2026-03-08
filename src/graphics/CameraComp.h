@@ -15,7 +15,7 @@ struct CameraComp {
 
 	// target location realitive to the target
 	// (in the coordinate frame of the car)
-	glm::vec3 targetOffset = glm::vec3(0.0f, 1.00f, -3.f);
+	glm::vec3 targetOffset = glm::vec3(0.0f, 2.00f, -5.f);
 
 	// how far ahead of the car to look
 	float lookAtdistance = 2;

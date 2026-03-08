@@ -103,13 +103,13 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model planeModel("assets/plane.obj");
+	//Model planeModel("assets/plane.obj");
 
-	lapSys->generateCheckpoints("assets/track1.obj");
+	lapSys->generateCheckpoints("assets/biggertrack1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); // loads model and paths
+	Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
@@ -128,17 +128,16 @@ int main() {
 		Entity plane = gameState.coordinator->createEntity();
 		CollisionData planePhys{GROUND, plane};
 		gameState.coordinator->addComponent(plane, none);
-		gameState.coordinator->addComponent(plane, planeModel);
+		//gameState.coordinator->addComponent(plane, planeModel);
 		gameState.coordinator->addComponent(track, planePhys);
 
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
 		trackActor->userData = &trackPhys;
 
-		auto planeActor =
-			physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
+		//auto planeActor = physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
 
-		planeActor->userData = &planePhys;
+		//planeActor->userData = &planePhys;
 		dbug::log(0, "track entity id:%d", track);
 	}
 
@@ -192,17 +191,17 @@ int main() {
 	std::string fps = std::to_string(0);
 
 	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
-	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(50); // First point of first path (only one path for now)
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// create spark with new system
-	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z - 5.f);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z - 5.f);
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 	gameState.coordinator->addComponent(sparkEntity, LapCounter());
 	gameState.coordinator->addComponent(sparkEntity, Respawnable());
 
-	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
+	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
 	gameState.coordinator->addComponent(testSpark2, LapCounter());
 	gameState.coordinator->addComponent(testSpark2, Respawnable());
@@ -213,7 +212,7 @@ int main() {
 		55, // index of target position
 		50, // index of current position
 		5, // lookahead steps
-		10.0f, // arrival radius
+		14.0f, // arrival radius
 		4.0f, // steering sharpness
 		});
 
