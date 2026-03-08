@@ -110,6 +110,7 @@ int main() {
 	// create the track. this should eventually be moved to its own
 	// class/function
 	Track Track("assets/biggertrack1.obj"); // loads model and paths
+	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
@@ -125,19 +126,22 @@ int main() {
 		gameState.coordinator->addComponent(track, Track.model);
 		gameState.coordinator->addComponent(track, trackPhys);
 
-		Entity plane = gameState.coordinator->createEntity();
-		CollisionData planePhys{GROUND, plane};
-		gameState.coordinator->addComponent(plane, none);
-		//gameState.coordinator->addComponent(plane, planeModel);
+		Model wallsModel("assets/walls.obj"); // loads model and paths
+		Entity walls = gameState.coordinator->createEntity();
+		CollisionData planePhys{GROUND, walls};
+		gameState.coordinator->addComponent(walls, none);
+		gameState.coordinator->addComponent(walls, wallsModel);
 		gameState.coordinator->addComponent(track, planePhys);
 
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
 		trackActor->userData = &trackPhys;
 
-		//auto planeActor = physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
+		for(auto& i : wallsModel.GetMesh()){
+			auto actor = physicsManager->initStaticMesh(i, none);
+			actor->userData = &planePhys;
+		}
 
-		//planeActor->userData = &planePhys;
 		dbug::log(0, "track entity id:%d", track);
 	}
 
