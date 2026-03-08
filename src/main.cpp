@@ -100,16 +100,16 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model planeModel("assets/plane.obj");
+	//Model planeModel("assets/plane.obj");
 
-	lapSys->generateCheckpoints("assets/track1.obj");
+	lapSys->generateCheckpoints("assets/biggertrack1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); // loads model and paths
+	Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
-	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
+	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	
 	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
 
@@ -125,17 +125,16 @@ int main() {
 		Entity plane = gameState.coordinator->createEntity();
 		CollisionData planePhys{GROUND, plane};
 		gameState.coordinator->addComponent(plane, none);
-		gameState.coordinator->addComponent(plane, planeModel);
+		//gameState.coordinator->addComponent(plane, planeModel);
 		gameState.coordinator->addComponent(track, planePhys);
 
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
 		trackActor->userData = &trackPhys;
 
-		auto planeActor =
-			physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
+		//auto planeActor = physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
 
-		planeActor->userData = &planePhys;
+		//planeActor->userData = &planePhys;
 		dbug::log(0, "track entity id:%d", track);
 	}
 
