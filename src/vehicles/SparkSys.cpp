@@ -259,7 +259,11 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
-	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
+	if (sparkEntity == 3) {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
+	}
+	else
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
