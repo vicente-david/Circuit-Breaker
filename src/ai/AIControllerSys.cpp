@@ -33,16 +33,20 @@ void AIControllerSys::update(GameState& game) {
 		// update target based on current position and the lookAheadSteps value
 		ai.targetIdx = (ai.currentPosIdx + ai.lookAheadSteps) % ai.route.size();
 		
-		dbug::log("AI", 0, "CURRENT IDX: %d, TARGET IDX: %d", ai.currentPosIdx, ai.targetIdx);
+		//dbug::log("AI", 0, "CURRENT IDX: %d, TARGET IDX: %d", ai.currentPosIdx, ai.targetIdx);
 		
 		// Adjust lookahead target based on speed
 		
-		if (spark.speed < 20.0f)
-			ai.lookAheadSteps = 2;
-		else if (spark.speed < 24.0f)
+		if (spark.speed < 8.0f)
 			ai.lookAheadSteps = 4;
-		else if (spark.speed <= 28.0f)
+		else if (spark.speed < 14.0f)
 			ai.lookAheadSteps = 6;
+		else if (spark.speed < 26.f)
+			ai.lookAheadSteps = 8;
+		else if (spark.speed < 32.f)
+			ai.lookAheadSteps = 12;
+		else if (spark.speed >= 32.f)
+			ai.lookAheadSteps = 20;
 
 
 		if (ai.state == IDLE)
@@ -88,6 +92,11 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	
 
 	calcSteering(ai, controls, transform, spark);
+	if (abs(controls.steering) > 1.0f) {
+		// spark most likely has lost steering control
+		ai.state = BRAKING;
+		return;
+	}
 
 	// ---- THROTTLE ----
 	float curvature = ai.angles.at(ai.targetIdx); // curvature 0 = straight, 1 = curve
@@ -96,12 +105,13 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 	dbug::log("AI", 0, "CURVE: %.2f, CURRENT SPEED: %.2f, TARGET SPEED: %.2f, LOOK: %d", curvature, spark.speed, targetSpeed, ai.lookAheadSteps);
 
 
-	if (curvature < curveBoostThresh && spark.currBoost >= 25.f && transform.pos.y > -0.05f) {					// Boost along straight path if boost meter isn't running out
+	// Boost for speed if along straight path, not running out of boost, not facing downwards and not when steering
+	if (curvature < curveBoostThresh && spark.currBoost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
 	
 		ai.state = BOOSTING;
 		return;
 	}
-	else if (curvature >= curveBrakeThresh && spark.speed > targetSpeed && curveIn < (curvature - 10.f)) {
+	else if (curvature >= curveBrakeThresh && (spark.speed - targetSpeed) > 15.f && curveIn < curvature) {
 		ai.state = BRAKING;
 		dbug::log("AI", 0, "Entity: DRIVING -> BRAKING (dist: %.1f)", distance);
 		return;
@@ -150,11 +160,16 @@ void AIControllerSys::AI_BRAKING(AIController& ai, SparkControls& controls, Tran
 
 	// amount of throttle/brake to add per unit difference in speed
  	float throttleGain = 0.3f;
-	float brakeGain = 0.2f;
+	float brakeGain = 0.5f;
 
 	float speedDiff = targetSpeed - spark.speed;
 
-	controls.brake = glm::clamp(-speedDiff * brakeGain, 0.0f, 1.0f);
+	if (speedDiff > 20.f) { // if speed differenece is very high, do not slam on brakes
+		controls.brake = 0.f;
+		controls.throttle = 0.f;
+	}
+	else 
+		controls.brake = glm::clamp(-speedDiff * brakeGain, 0.0f, 1.0f);
 
 	if (controls.brake > 0.05) 
 		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
@@ -188,7 +203,7 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 	if (targetSpeed <= 0.0f) {
 		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
 		controls.throttle = 1.0f;
-		controls.handbrake = 0.0f;
+		controls.handbrake = false;
 		ai.state = DRIVING;
 		return;
 	}
@@ -199,15 +214,16 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 
 	float speedDiff = targetSpeed - spark.speed;
 
-	controls.handbrake = glm::clamp(-speedDiff * brakeGain, 0.0f, 1.0f);
+	controls.handbrake = true;
 
-	if (controls.handbrake > 0.05)
+	if (controls.handbrake)
 		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
 	else controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
 
-	dbug::log("AI", 0, "HAND BRAKE: %0.2f", controls.handbrake);
+	dbug::log("AI", 0, "-----> DRIFT ----> HAND BRAKE: %d", controls.handbrake);
 
 	if (spark.speed <= targetSpeed) {
+		controls.handbrake = false;
 		ai.state = DRIVING;
 	}
 
@@ -270,6 +286,7 @@ void AIControllerSys::calcSteering(AIController& ai, SparkControls& controls, Tr
 	float cross = sparkForward.x * unitVectorToTarget.z - sparkForward.z * unitVectorToTarget.x;
 	float dot = sparkForward.x * unitVectorToTarget.x + sparkForward.z * unitVectorToTarget.z;
 	float angle = glm::atan(cross, dot);
+	dbug::log("AI", 0, "ANGLE: %.3f", angle);
 
 	// map the angle to [-1, 1] steering
 	// lock before sharpness multiplier

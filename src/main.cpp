@@ -209,11 +209,7 @@ int main() {
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		55, // index of target position
-		50, // index of current position
-		5, // lookahead steps
-		14.0f, // arrival radius
-		4.0f, // steering sharpness
+		
 		});
 
 	// RENDER LOOP
