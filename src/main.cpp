@@ -188,7 +188,7 @@ int main() {
 	std::string fps = std::to_string(0);
 
 	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
-	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(50); // First point of first path (only one path for now)
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z - 5.f);
