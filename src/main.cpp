@@ -186,7 +186,7 @@ int main() {
 
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
-	alSourcef(testSound.source, AL_GAIN, 0.6f);
+	// alSourcef(testSound.source, AL_GAIN, 0.6f);
 	testSound.setLooping(true);
 	testSound.start();
 	float soundX = 0;
