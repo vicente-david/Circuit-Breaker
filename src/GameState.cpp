@@ -3,6 +3,7 @@
 #include "ecs/EntityManager.h"
 #include <cstdio>
 #include <memory>
+#include "vehicles/SparkComponents.h"
 
 GameState gameState;
 
@@ -16,7 +17,9 @@ void GameState::endGame(Entity gameWinner) {
 								
 								// TODO: probably do some UI/game management stuff here to give endscreen, etc.
 	std::cout << "winner was found " << std::endl;
-	uiText = uiSystem->changeToWinScreen(); // todo fix lol 
+
+	if (coordinator->getComponent<SparkData>(gameWinner).isHuman) uiText = uiSystem->changeToWinScreen(); // todo fix lol
+	else uiText = uiSystem->changeToLoseScreen();
 
 	gameEnded = true;			// end the game
 }

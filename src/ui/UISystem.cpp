@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "UISystem.h"
 
 std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
@@ -26,11 +26,11 @@ void UISystem::update() {
 
 // raceUI should just be lap counter
 // keep it simple for now
-TextUI UISystem::raceUI() {
+TextUI UISystem::raceUI(int lapcount) {
 	// render text
 	// render no rect
 	TextUI text1;
-	text1.textContent = "Racing currently";
+	text1.textContent = "Current Lap: "+std::to_string(lapcount);
 	text1.col = glm::vec3(1.0f);
 	text1.scale = 1.0f;
 	text1.xPos = 400.0f;
@@ -43,11 +43,25 @@ TextUI UISystem::changeToWinScreen() {
 	// render text 
 	// render a rect
 	TextUI text1;
-	text1.textContent = "Win";
+	text1.textContent = "You Win!";
 	text1.col = glm::vec3(1.0f);
-	text1.scale = 1.0f;
-	text1.xPos = 400.0f;
-	text1.yPos = 1380.0f;
+	text1.scale = 5.0f;
+	text1.xPos = 300.0f;
+	text1.yPos = 450.0f;
 	
+	return text1;
+}
+
+TextUI UISystem::changeToLoseScreen() {
+	// render text
+	// render no rect
+	TextUI text1;
+	text1.textContent = "You Lose!";
+	text1.col = glm::vec3(1.0f);
+	text1.scale = 5.0f;
+	text1.xPos = 200.0f;
+	text1.yPos = 1380.0f / 2;
+
+
 	return text1;
 }

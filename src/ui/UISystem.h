@@ -8,6 +8,7 @@
 // for nested ui's for example pause menu + settings we can store via a stack
 
 #pragma once
+#include <string>
 #include "UISystemComponents.h"
 #include "../ecs/System.h"
 #include "../ecs/Coordinator.h"
@@ -19,11 +20,12 @@ class UISystem : public System{
 public:
 	static std::shared_ptr<UISystem> registerSystem(std::shared_ptr<Coordinator>& coord); // ecs shenanigans
 	
-	TextUI raceUI();
+	TextUI raceUI(int lapcount);
 
 	void update();
 
 	TextUI changeToWinScreen(); // change to win screen when that event triggers
+	TextUI changeToLoseScreen(); // change to win screen when that event triggers
 
 private:
 

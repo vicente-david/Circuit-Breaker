@@ -147,7 +147,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 		}
 
 		// check if vehicle is inside the next checkpoint
-		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 10.0f) < 0.0f) {
+		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 15.0f) < 0.0f) {
 			// if they are check if their target isn't the start/finish line
 			// the > 0 check is to make sure they don't immediately increment lap on race start
 			if (lapProg.lastCheckpointID > 0 && indexI == 0) {
@@ -155,10 +155,10 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 				lapProg.progress = 0.0f;
 				lapProg.closestTrackPoint = 0;
 				std::cout << "on lap: " << lapProg.currentLap << std::endl;
-				if (lapProg.currentLap >= 2) game.endGame(entity);
+				if (lapProg.currentLap >= 3 && !game.gameEnded) game.endGame(entity);
 			}
 
-//			std::cout << "checkpoint: " << indexI << std::endl;
+			//std::cout << "checkpoint: " << indexI << std::endl;
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = indexI;
 			break;

@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdio>
 #include <memory>
+#include "../world/LapSystem.h"
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
@@ -403,6 +404,7 @@ SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	sig.set(coord->getComponentType<SparkData>());
 	sig.set(coord->getComponentType<physx::PxRigidBody *>());
 	sig.set(coord->getComponentType<Sound>());
+	sig.set(coord->getComponentType<LapCounter>());
 	coord->setSystemSignature<SparkSys>(sig);
 
 	return system;
