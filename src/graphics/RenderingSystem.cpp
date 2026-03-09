@@ -47,12 +47,35 @@ void RenderingSystem::initializeShaders() {
 											   "shaders/testText.frag");
 	solidColour = std::make_unique<ShaderProgram>("shaders/lines.vert",
 												  "shaders/lines.frag");
+	
+	// ui initialization
+	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
+	
+	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
+	uiShader->use(); // use it first
+	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+
+	glGenVertexArrays(1, &uiVAO);
+	glBindVertexArray(uiVAO);
+
+	glGenBuffers(1, &uiVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
+	
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+
 	textFont = initFont("assets/miamanueva.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f,
 						 static_cast<float>(1440));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 					   GL_FALSE, glm::value_ptr(textMat));
+
 	initShadowMap();
 }
 
@@ -107,6 +130,52 @@ void RenderingSystem::initializeText() {
 	glBindVertexArray(0);
 }
 
+/* keep for reference for now
+void RenderingSystem::renderUI(GameState& game) {
+	uiShader->use();
+	// recalc based on screen size (probably not necessary every frame, only on screen resize)
+	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
+	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+
+	RectUI r1 = game.activeUIRect;
+	// rendering only rect rn
+	// r1.pos is center of rectangle
+	glm::vec2 verts[6] = {
+	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
+	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y - r1.height / 2),
+	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
+	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
+	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
+	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y + r1.height / 2),
+	};
+
+	std::vector<float> rectData;
+
+	// 6 vertices
+	for (int i = 0; i < 6; i++) {
+		rectData.push_back(verts[i].x);
+		rectData.push_back(verts[i].y);
+		rectData.push_back(r1.col.x);
+		rectData.push_back(r1.col.y);
+		rectData.push_back(r1.col.z);
+	}
+
+	glBindVertexArray(uiVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, rectData.size() * sizeof(float), rectData.data(), GL_DYNAMIC_DRAW);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+}
+*/
+
+void RenderingSystem::renderUI(GameState& game) {
+	// pretend this is the ui shader we're using
+	textProg->use();
+	RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
+}
+
 void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
 	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
 
@@ -159,6 +228,9 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	textProg->use();
 	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
 			   1.0f, glm::vec3(1.0f), textFont);
+
+	// render ui
+	renderUI(game);
 
 	if (dbugPanel::tuning::physicsShapes) {
 		// this makes the last entity get drawn wrong idk why

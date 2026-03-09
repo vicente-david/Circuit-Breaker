@@ -29,6 +29,7 @@
 #include <memory>
 #include "world/CurveLoader.h"
 #include "world/LapSystem.h"
+#include "ui/UISystem.h"
 
 int main() {
 
@@ -60,6 +61,8 @@ int main() {
 	gameState.coordinator->registerComponent<LapCounter>();
 	gameState.coordinator->registerComponent<AIController>();
 	gameState.coordinator->registerComponent<CollisionData>();
+	gameState.coordinator->registerComponent<UIComponent>();
+	gameState.coordinator->registerComponent<RectUI>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -68,6 +71,12 @@ int main() {
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
 	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
+	auto uiSys = UISystem::registerSystem(gameState.coordinator);
+
+	Entity r1 = gameState.coordinator->createEntity();
+	gameState.coordinator->addComponent<RectUI>(r1, RectUI());
+	gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
+	gameState.uiText = gameState.uiSystem->raceUI();
 
 	auto aiControllerSys =
 		AIControllerSys::registerSystem(gameState.coordinator);
