@@ -5,6 +5,7 @@
 #include "ai/AIControllerSys.h"
 #include "ai/AISparkComponents.h"
 #include "audio/AudioEngine.h"
+#include "audio/AudioSystem.h"
 #include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
@@ -20,13 +21,17 @@
 #include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include "vehicles/SparkSys.h"
-#include "world/Track.h"
+
+#include "world/RespawnSystem.h"
 #include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include "world/CurveLoader.h"
+#include "world/LapSystem.h"
+#include "world/Track.h"
 
 int main() {
 
@@ -55,8 +60,11 @@ int main() {
 	gameState.coordinator->registerComponent<SparkData>();
 	gameState.coordinator->registerComponent<HumanController>();
 	gameState.coordinator->registerComponent<CameraComp>();
+	gameState.coordinator->registerComponent<LapCounter>();
 	gameState.coordinator->registerComponent<AIController>();
 	gameState.coordinator->registerComponent<CollisionData>();
+	gameState.coordinator->registerComponent<Sound>();
+	gameState.coordinator->registerComponent<Respawnable>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -64,8 +72,11 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
-	auto aiControllerSys =
-		AIControllerSys::registerSystem(gameState.coordinator);
+	auto audioSystem = AudioSystem::registerSystem(gameState.coordinator);
+	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
+	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
+	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
+
 
 	// initialize debug panel
 	// create physics manager
@@ -95,15 +106,19 @@ int main() {
 	// Create models
 	Model cube("assets/cube.obj");
 	Model spark("assets/spark.obj");
-	Model planeModel("assets/plane.obj");
+	//Model planeModel("assets/plane.obj");
+
+	lapSys->generateCheckpoints("assets/biggertrack1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); // loads model and paths
+	Track Track("assets/biggertrack1.obj"); // loads model and paths
+	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
-	Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
-	renderer->setTrackBounds(plMesh.GetBounds());
+	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
+	
+	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
@@ -114,20 +129,22 @@ int main() {
 		gameState.coordinator->addComponent(track, Track.model);
 		gameState.coordinator->addComponent(track, trackPhys);
 
-		Entity plane = gameState.coordinator->createEntity();
-		CollisionData planePhys{GROUND, plane};
-		gameState.coordinator->addComponent(plane, none);
-		gameState.coordinator->addComponent(plane, planeModel);
+		Model wallsModel("assets/walls.obj"); // loads model and paths
+		Entity walls = gameState.coordinator->createEntity();
+		CollisionData planePhys{GROUND, walls};
+		gameState.coordinator->addComponent(walls, none);
+		gameState.coordinator->addComponent(walls, wallsModel);
 		gameState.coordinator->addComponent(track, planePhys);
 
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
 		trackActor->userData = &trackPhys;
 
-		auto planeActor =
-			physicsManager->initStaticMesh(planeModel.GetMesh()[0], none);
+		for(auto& i : wallsModel.GetMesh()){
+			auto actor = physicsManager->initStaticMesh(i, none);
+			actor->userData = &planePhys;
+		}
 
-		planeActor->userData = &planePhys;
 		dbug::log(0, "track entity id:%d", track);
 	}
 
@@ -169,6 +186,7 @@ int main() {
 
 	// place holder test sounds
 	Sound testSound = gameState.audio->createSound("muteCity");
+	// alSourcef(testSound.source, AL_GAIN, 0.6f);
 	testSound.setLooping(true);
 	testSound.start();
 	float soundX = 0;
@@ -181,27 +199,42 @@ int main() {
 	std::string fps = std::to_string(0);
 
 	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
-	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(50); // First point of first path (only one path for now)
+	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// create spark with new system
-	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z - 5.f);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z - 6.f);
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
+	gameState.coordinator->addComponent(sparkEntity, LapCounter());
+	gameState.coordinator->addComponent(sparkEntity, Respawnable());
 
-	PxVec3 startLoc2 = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	auto testSpark2 = sparkSys->createSpark(gameState, startLoc2);
+	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
+	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
+	gameState.coordinator->addComponent(testSpark2, LapCounter());
+	gameState.coordinator->addComponent(testSpark2, Respawnable());
 	gameState.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		55, // index of target position
-		50, // index of current position
-		5, // lookahead steps
-		8.0f, // arrival radius
-		2.0f, // steering sharpness
 		});
 
+	startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
+	gameState.coordinator->addComponent(testSpark3, LapCounter());
+	gameState.coordinator->addComponent(testSpark3, Respawnable());
+	gameState.coordinator->addComponent(testSpark3, AIController{
+		AIState::IDLE, // start AI in idle state
+		trackPaths.at(0).curvePoints, // planned route
+		trackPaths.at(0).curvatures, // angles at each point in route
+		0.10f, // curveBrakeThresh
+		22.0f, // maxTargetSpeed
+		0.02f, // curveBoostThresh
+		8, // steeringSharpness
+		});
+
+	// extra spark to bully around
+	 sparkSys->createSpark(gameState, PxVec3(-10,0,-40));
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
@@ -227,6 +260,7 @@ int main() {
 			gameState.physics->callbacks->resetLists();
 			physicsSystem->updatePhysics(dt, gameState);
 			cameraSys->update(gameState, dt);
+			audioSystem->updateSounds(gameState);
 			accumulator -= dt;
 			t += dt;
 
@@ -234,21 +268,29 @@ int main() {
 			// this stuff would  go in whatever is playing a sound (ex. physics
 			// collision and like gamestate stuff for
 
-			// test moving the sound left/right
-			float soundVel = 0;
-			if (gameActions.shimmyLeft) {
-				soundX -= 0.5f;
-				soundVel = -15;
-				gameActions.shimmyLeft = false;
-			}
-			if (gameActions.shimmyRight) {
-				soundX += 0.5f;
-				soundVel = 15;
-				gameActions.shimmyRight = false;
-			}
-			gameState.audio->updateSoundLoc(testSound, soundX, 0, 0);
-			gameState.audio->updateSoundVel(testSound, soundVel, 0, 0);
+			// // test moving the sound left/right
+			// float soundVel = 0;
+			// if (gameActions.shimmyLeft) {
+			// 	soundX -= 0.5f;
+			// 	soundVel = -15;
+			// 	gameActions.shimmyLeft = false;
+			// }
+			// if (gameActions.shimmyRight) {
+			// 	soundX += 0.5f;
+			// 	soundVel = 15;
+			// 	gameActions.shimmyRight = false;
+			// }
+			// position at 0,0,0 for testing
+			gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
+			gameState.audio->updateSoundVel(testSound, 0, 0, 0);
 		}
+
+		// AI
+		aiControllerSys->update(gameState);
+		// after physics update
+		lapSys->update(gameState);
+		respawnSystem->update(gameState);
+		
 
 		if (t >= 1.0) {
 			fps =
@@ -256,9 +298,6 @@ int main() {
 			t -= 1.0;
 			framesPassed = 0;
 		}
-
-		// AI
-		aiControllerSys->update(gameState);
 
 		// rendering
 

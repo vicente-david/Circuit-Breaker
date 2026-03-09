@@ -15,13 +15,13 @@ class AIControllerSys : public System {
 		void AI_IDLE(AIController &ai, SparkControls &controls, GameState& game);
 		void AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 		void AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
-		void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform);
-		void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform);
+		void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
+		void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 		void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform);
 
 private:
-	float curveAngleThresh = 0.15f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
-	float maxTargetSpeed = 15.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
 	
-	void calcSteering(AIController& ai, SparkControls& controls, Transform& transform);
+	float arrivalRadius = 14.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
+
+	void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 };

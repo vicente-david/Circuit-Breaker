@@ -11,36 +11,43 @@
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/EntityManager.h"
-#include "geometry/PxGeometry.h"
+#include "foundation/PxMath.h"
 #include "graphics/Model.h"
-#include "physics/CollisionData.h"
-#include "physics/PhysicsManager.h"
+#include <cmath>
 #include <cstdio>
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
-	for (auto const &pair : game.physics->callbacks->sparkSparkCol) {
-		auto &sData1 = game.coordinator->getComponent<SparkData>(pair.first);
-		auto &rBody1 = game.coordinator->getComponent<PxRigidBody *>(pair.first);
-		auto &sData2 = game.coordinator->getComponent<SparkData>(pair.second);
-		auto &rBody2 = game.coordinator->getComponent<PxRigidBody *>(pair.second);
+	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 =
+			game.coordinator->getComponent<SparkData>(colData.spark1Id);
+		auto &sData2 =
+			game.coordinator->getComponent<SparkData>(colData.spark2Id);
 
-		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
+		// don't do damage from hitting each other if sliding or boosting
+		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting) {
+			sData1.health -= colData.magnitude;
+		} else {
+			dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
+		}
 
-		sData2.health-=velDiff.magnitude();
-		sData1.health-=velDiff.magnitude();
-
-		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
-
+		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting) {
+			sData2.health -= colData.magnitude;
+		} else {
+			dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
+		}
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id,
+				  colData.spark2Id);
 	}
-	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
-		auto &sData = game.coordinator->getComponent<SparkData>(entity);
-		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
-		sData.health-=rBody->getLinearVelocity().magnitude();
+	for (auto const &colData : game.physics->callbacks->sparkWallCol) {
+		auto &sData =
+			game.coordinator->getComponent<SparkData>(colData.sparkId);
+		// auto &rBody = game.coordinator->getComponent<PxRigidBody
+		// *>(entity.sparkId);
+		sData.health -= colData.magnitude * 0.75;
 		dbug::log("GAME", 0, "Hit a wall!");
-		printf("!\n");
-
 	}
+	bool reload = false;
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -54,23 +61,59 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.speed = speed;
 
 		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
-		sData.mVehicle->mCommandState.nbBrakes = 1;
+		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
+		sData.mVehicle->mCommandState.nbBrakes = 2;
 		sData.mVehicle->mCommandState.throttle = controls.throttle;
 		sData.mVehicle->mCommandState.steer = controls.steering;
+		// less acceleration when driftin
+		sData.mVehicle->mCommandState.throttle *=
+			(controls.handbrake) ? 0.5f : 1.f;
 
 		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				  controls.throttle, controls.brake, controls.steering);
+		
+		// Check for reverse (brake + throttle when stopped)
+		if (speed < 0.1f && controls.brake && controls.throttle) {
+			sData.mVehicle->mCommandState.brakes[0] = 0.f;
+			sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
+				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
+		}
+
+		// Apply handbrake
+		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
 
 		// boosting
-		if (controls.boost && sData.currBoost > 0) {
-			dbug::log("GAME", -1, "boosting!");
-			boost(rBody, sData);
-		} else if (sData.currBoost < 100) {
-			sData.currBoost += sData.boostRegenSpeed * dt;
+		sData.isBoosting = false;
+		if (controls.boost) {
+			// try to boost
+			boost(rBody, sData, controls.boostWithHealth, dt);
+		}
 
-			if (sData.currBoost > 100) {
-				sData.currBoost = 100;
-				dbug::log("GAME", 0, "boost full");
+		// in degrees
+		float driftAngle =
+			PxAcos(linVel.getNormalized().dot(forwardDir.getNormalized())) *
+			(180 / PxPi);
+
+		// regen boost if you're drifting
+		float maxBoost = 100 - sData.health;
+		if (entity == 2)
+			dbug::log("GAME", -1, "player drift angle:%.2f, vel:%.2f",
+					  driftAngle, linVel.magnitude());
+
+		if (driftAngle > 20 && linVel.magnitude() > 10) {
+			// how 'hard' of a drift (90 degrees gives full regen, 0 degrees
+			// gives none)
+			// cap at 90 degrees
+			if(driftAngle>90){
+				driftAngle = 90;
+			}
+			float multi = driftAngle / 90.f;
+			if (entity == 2)
+				dbug::log("GAME", -1, "drifin' (mulit:%.2f)", multi);
+
+			sData.currBoost += sData.boostRegenSpeed * dt * multi;
+			if (sData.currBoost > maxBoost) {
+				sData.currBoost = maxBoost;
 			}
 		}
 
@@ -88,7 +131,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		} else if (sData.shimmyTimer > 0) {
 			sData.shimmyTimer -= dt;
 		}
-		if (controls.reset) {
+		if (controls.reset || sData.health <= 0) {
+			sData.health = 100;
+			sData.currBoost = 0;
 			respawn(rBody);
 		}
 
@@ -96,14 +141,23 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
+
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
+		// update sound
+		auto &sound = game.coordinator->getComponent<Sound>(entity);
+		auto pos = rBody->getGlobalPose().p;
+		rBody->getLinearVelocity();
+		sound.position = glm::vec3(pos.x, pos.y, pos.z);
+		auto vel = rBody->getGlobalPose().p;
+		sound.position = glm::vec3(vel.x, vel.y, vel.z);
+		reload = controls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}
 
 	// reload the tuning stuff from debug panel
-	if (dbugPanel::tuning::reloadSpark) {
+	if (dbugPanel::tuning::reloadSpark || reload) {
 		dbugPanel::tuning::setFolder = false;
 		for (auto const &entity : entities) {
 			auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -124,13 +178,44 @@ void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
 	sData.shimmyTimer = sData.ShimmyCooldown;
 }
 
-void SparkSys::boost(PxRigidBody *rBody, SparkData &sData) {
+void SparkSys::boost(PxRigidBody *rBody, SparkData &sData, bool useHealth,
+					 float dt) {
+	// don't use boost if you should be dead (this stops you from reviing by
+	// using a boost)
+	if (sData.health <= 0) {
+		dbug::log("GAME", 0, "you're dead, no boost for you :(");
+		return;
+	}
+	// stop boosting if we've run out of normal boost
+	if (sData.currBoost <= 0 && !useHealth) {
+		sData.isBoosting = false;
+		dbug::log("GAME", -1, "No boost!");
+		return;
+	}
+
+	// do the boost
 	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
 	float boostStrength = 10.f;
 
-	sData.currBoost -= 0.5f;
+	// use boost meter
+	if (sData.currBoost > 0) {
+		sData.currBoost -= dt * 10;
+		// dbug::log("GAME", 0, "boosting");
+		// use health if theres no boost meter
+	} else {
+		if (sData.health <= 1) {
+			return;
+		}
+		sData.health -= dt * 5;
+		dbug::log("GAME", -1, "health boosting");
+	}
+	// don't kill yourself from boosting
+	if (sData.health <= 1) {
+		sData.health = 1;
+	}
 
 	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
+	sData.isBoosting = true;
 }
 
 void SparkSys::respawn(PxRigidBody *rBody) {
@@ -158,11 +243,14 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// SparkData sData;
 	// Load the params from json or set directly.
 	sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
-	readBaseParamsFromJsonFile(sData.mVehicleDataPath,
-							   dbugPanel::tuning::basePath.c_str(),
-							   sData.mVehicle->mBaseParams);
+
+	readBaseParamsFromJsonFile(
+		sData.mVehicleDataPath, 
+		dbugPanel::tuning::basePath.c_str(), 
+		sData.mVehicle->mBaseParams);
 	readEngineDrivetrainParamsFromJsonFile(
-		sData.mVehicleDataPath, dbugPanel::tuning::enginePath.c_str(),
+		sData.mVehicleDataPath, 
+		dbugPanel::tuning::enginePath.c_str(),
 		sData.mVehicle->mEngineDriveParams);
 	setPhysXIntegrationParams(
 		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
@@ -192,10 +280,8 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
 	for (PxU32 i = 0; i < shapes; i++) {
-		//
 		PxShape *shape = NULL;
 		rBody->getShapes(&shape, 1, i);
-		// printf("i:%d na:%d\n", i, shape->getGeometry().getType());
 
 		// add filter to tires/chasis depending on type
 		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
@@ -245,10 +331,20 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
-	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
+	// different model for p3
+	if (sparkEntity == 3) {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
+	}
+	else
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
+
+	// add engine sound
+	Sound sound = game.audio->createSound("engine");
+	sound.position = glm::vec3(startP.x, startP.y, startP.z);
+	sound.start();
+	game.coordinator->addComponent(sparkEntity, sound);
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
-
 	return sparkEntity;
 }
 
@@ -258,18 +354,21 @@ void SparkSys::reloadSparkParams(GameState &game) {
 	for (auto const &entity : entities) {
 		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		 
+		// load params for vehicle base
+		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
+		readBaseParamsFromJsonFile(
+			sData.mVehicleDataPath,
+			baseFileName,
+			sData.mVehicle->mBaseParams);
 		// Changes the parameters of the engine
 		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
 		readEngineDrivetrainParamsFromJsonFile(
-			sData.mVehicleDataPath, engineFileName,
+			sData.mVehicleDataPath, 
+			engineFileName,
 			sData.mVehicle->mEngineDriveParams);
-		// load params for vehicle base
-		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
-		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
-								   sData.mVehicle->mBaseParams);
-		printf("scene scale %f, car scale:%f\n",
-			   game.physics->gPhysics->getTolerancesScale().length,
-			   sData.mVehicleSimContext.scale.scale);
+
+		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
 	}
 }
 
@@ -282,7 +381,8 @@ SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	Signature sig;
 	sig.set(coord->getComponentType<SparkControls>());
 	sig.set(coord->getComponentType<SparkData>());
-	// sig.set(coord->getComponentType<physx::PxRigidDynamic *>());
+	sig.set(coord->getComponentType<physx::PxRigidBody *>());
+	sig.set(coord->getComponentType<Sound>());
 	coord->setSystemSignature<SparkSys>(sig);
 
 	return system;

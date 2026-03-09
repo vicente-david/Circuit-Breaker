@@ -61,17 +61,23 @@ class TestInput1 : public CallbackInterface {
 		}
 
 		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-			actions->shimmyRight = true;
+			actions->kshimmyRight = true;
 		}
 		else{
-			actions->shimmyRight = false;
+			actions->kshimmyRight = false;
 		}
 
 		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
-			actions->shimmyLeft = true;
+			actions->kshimmyLeft = true;
 		}
 		else{
-			actions->shimmyLeft = false;
+			actions->kshimmyLeft = false;
+		}
+		if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+			actions->khandBrake = true;
+		}
+		else{
+			actions->khandBrake = false;
 		}
 
 		if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
@@ -169,6 +175,10 @@ void InputSystem::combineInputs() {
 	else
 		actions.camXRot = actions.keyboardXRot;
 
+	if (glm::abs(actions.controllerYRot) > glm::abs(actions.keyboardYRot))
+		actions.camYRot = actions.controllerYRot;
+	else
+		actions.camYRot = actions.keyboardYRot;
 
 	// steering
 	if (glm::abs(actions.controllerDir) > glm::abs(actions.keyboardDir))
@@ -190,7 +200,7 @@ void InputSystem::combineInputs() {
 void InputSystem::updateGamepad() {
 	glfwGetGamepadState(GLFW_JOYSTICK_1, &controllerState);
 	float triggerThreshold = 0.1f;
-	float strickTriggerThreshold = 0.3f;
+	float strickTriggerThreshold = 0.1f;
 	float rightTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER];
 	float leftTrigger = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_TRIGGER];
 	float rightx = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_X];
@@ -199,6 +209,11 @@ void InputSystem::updateGamepad() {
 	float lefty = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
 	bool button_B = controllerState.buttons[GLFW_GAMEPAD_BUTTON_B];
 	bool button_Y = controllerState.buttons[GLFW_GAMEPAD_BUTTON_Y];
+	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
+	bool button_RB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
+	bool button_LB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
+	bool button_BACK = controllerState.buttons[GLFW_GAMEPAD_BUTTON_BACK];
+
 	
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
@@ -226,16 +241,45 @@ void InputSystem::updateGamepad() {
 	else if (abs(rightx) < strickTriggerThreshold)
 		actions.controllerXRot = 0.0;
 
+	if (glm::abs(righty) >= strickTriggerThreshold)
+		actions.controllerYRot = righty;
+	else if (abs(righty) < strickTriggerThreshold)
+		actions.controllerYRot = 0.0;
 
-	if (button_B || actions.kboost)
+
+	if (button_B || actions.kboost){
+		actions.boostJustPressed = 0;
+		if(!actions.boost)
+			actions.boostJustPressed = 1;
+
 		actions.boost = 1;
-	else
+	}else
 		actions.boost = 0;
 
 	if (button_Y || actions.kRespawn)
 		actions.respawn = true;
 	else
 		actions.respawn = false;
+
+	if (button_A || actions.khandBrake)
+		actions.handBrake = true;
+	else
+		actions.handBrake = false;
+
+	if (button_RB ||actions.kshimmyRight)
+		actions.shimmyRight = true;
+	else
+		actions.shimmyRight = false;
+
+	if (button_LB || actions.kshimmyLeft)
+		actions.shimmyLeft = true;
+	else
+		actions.shimmyLeft = false;
+	
+	if (button_BACK)
+		actions.reload = true;
+	else
+		actions.reload = false;
 }
 
 void InputSystem::keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

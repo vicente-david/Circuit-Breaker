@@ -47,13 +47,20 @@ struct Actions {
 
 	// actions
 	bool boost = false;
+	bool boostJustPressed = false;
 	bool kboost = false;
 	bool shimmyRight = false;
 	bool shimmyLeft = false;
+	bool handBrake = false;
 	bool respawn = false;
+
+	// keyboar raw inputs to be ored with controller for full input
+	bool kshimmyRight = false;
+	bool kshimmyLeft = false;
+	bool khandBrake = false;
 	bool kRespawn = false;
 
-
+	bool reload = false;
 	float cameraReset = true;
 
 	// raw inputs
@@ -71,7 +78,9 @@ struct Actions {
 
 	// camera rotation (raw input)
 	float keyboardXRot = 0.0;
+	float keyboardYRot = 0.0;
 	float controllerXRot = 0.0;
+	float controllerYRot = 0.0;
 
 };
 

@@ -2,24 +2,37 @@
 
 #include "PxSimulationEventCallback.h"
 #include "ecs/EntityManager.h"
+#include "foundation/PxVec3.h"
 #include <utility>
 #include <vector>
 
 using namespace physx;
 
-// this is probably way to abstracted, but i couldn't think of a better way to make this work
-// you kinda need to jump through like 9999 hoops just to detect a collision, sorry 
+// aaaaaah
+struct SparkWallColData {
+	Entity sparkId;
+	float magnitude;
+};
+struct SparkSparkColData {
+	Entity spark1Id;
+	Entity spark2Id;
+	float magnitude;
+};
+
+// this is probably way to abstracted, but i couldn't think of a better way to
+// make this work. you kinda need to jump through a few hoops just to detect a
+// collision, sorry
 class PhysXCallbacks : public PxSimulationEventCallback {
 
-	public:
+  public:
 	std::vector<Entity> sparkFinishCol;
-	std::vector<Entity> sparkWallCol;
-	std::vector<std::pair<Entity, Entity>> sparkSparkCol;
-	//... add arrays for the collisions you need to detect
+	std::vector<SparkWallColData> sparkWallCol;
+	std::vector<SparkSparkColData> sparkSparkCol;
+	//... add arrays with the data for whatever collision you need to detect
 
 	void resetLists();
 
-	protected:
+  protected:
 	void onContact(const PxContactPairHeader &pairHeader,
 				   const PxContactPair *pairs, PxU32 nbPairs);
 
@@ -32,4 +45,8 @@ class PhysXCallbacks : public PxSimulationEventCallback {
 				   const physx::PxTransform *poseBuffer,
 				   const physx::PxU32 count) {}
 
+  private:
+	// PxVec3 getCollStrength(const PxContactPair *pairs, PxU32 nbPairs);
+	float getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
+						  PxVec3 velocity);
 };
