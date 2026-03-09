@@ -218,6 +218,7 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, LapCounter());
 	gameState.coordinator->addComponent(sparkEntity, Respawnable());
 	gameState.coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0==1);
+	gameState.coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 
 	gameState.uiText = gameState.uiSystem->raceUI(gameState.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
@@ -313,7 +314,6 @@ int main() {
 		}
 
 		// rendering
-		if (gameState.gameEnded != false) gameState.uiText = gameState.uiSystem->raceUI(gameState.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
 		renderer->update(gameState, fps, cameraSys);
 

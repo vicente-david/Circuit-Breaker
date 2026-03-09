@@ -21,6 +21,7 @@ struct LapCounter {
 	glm::vec3 lastCheckpointPos = { 0.0f, 0.0f, 0.0f }; // used for keeping track of the position of the last checkpoint
 	glm::vec3 lastCheckpointDir = { 0.0f, 0.0f, 1.0f }; // forward direction of the track at the last checkpoint
 
+	bool isPlayer = false;
 
 
 };
