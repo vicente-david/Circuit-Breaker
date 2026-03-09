@@ -81,9 +81,9 @@ int main() {
 	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
 	auto uiSys = UISystem::registerSystem(gameState.coordinator);
 
-	Entity r1 = gameState.coordinator->createEntity();
-	gameState.coordinator->addComponent<RectUI>(r1, RectUI());
-	gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
+	//Entity r1 = gameState.coordinator->createEntity();
+	//gameState.coordinator->addComponent<RectUI>(r1, RectUI());
+	//gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
 	gameState.uiText = gameState.uiSystem->raceUI();
 
 
