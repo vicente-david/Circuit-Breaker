@@ -1,6 +1,5 @@
 #pragma once
 #include <glm/glm.hpp>
-#include "../world/CurveLoader.h"
 
 // FSM states for AI sparks
 enum AIState {
@@ -16,14 +15,17 @@ enum AIState {
 struct AIController {
 	AIState state = IDLE;
 
-	//std::vector<TrackCurve> paths{}; // set of paths along track
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route
-	int targetIdx = 50; // index of target position
-	int currentPosIdx = 50; // approx index current position of spark
+	float curveBrakeThresh = 0.10f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
+	float maxTargetSpeed = 20.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
+	float curveBoostThresh = 0.03f; // max angle for ai to consider boosting
+	float steeringSharpness = 4.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
+
+	// No reason to set these, default values are fine
+	int targetIdx = 0; // index of target position
+	int currentPosIdx = 0; // approx index current position of spark
+	int lookAheadSteps = 8; // how far to look ahead on the track curve
 	
-	int lookAheadSteps = 8;
-	float arrivalRadius = 10.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
-	float steeringSharpness = 3.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
 };
 

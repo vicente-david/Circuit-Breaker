@@ -69,8 +69,18 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mCommandState.throttle *=
 			(controls.handbrake) ? 0.5f : 1.f;
 
-		dbug::log("INPUT", -1, "Spark commands: hand: %d, brk: %f, trn: %f",
-				  controls.handbrake, controls.throttle, controls.brake);
+		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
+				  controls.throttle, controls.brake, controls.steering);
+		
+		// Check for reverse (brake + throttle when stopped)
+		if (speed < 0.1f && controls.brake && controls.throttle) {
+			sData.mVehicle->mCommandState.brakes[0] = 0.f;
+			sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
+				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
+		}
+
+		// Apply handbrake
+		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
 
 		// boosting
 		sData.isBoosting = false;
@@ -141,12 +151,13 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sound.position = glm::vec3(pos.x, pos.y, pos.z);
 		auto vel = rBody->getGlobalPose().p;
 		sound.position = glm::vec3(vel.x, vel.y, vel.z);
+		reload = controls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}
 
 	// reload the tuning stuff from debug panel
-	if (dbugPanel::tuning::reloadSpark) {
+	if (dbugPanel::tuning::reloadSpark || reload) {
 		dbugPanel::tuning::setFolder = false;
 		for (auto const &entity : entities) {
 			auto &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -232,11 +243,14 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// SparkData sData;
 	// Load the params from json or set directly.
 	sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
-	readBaseParamsFromJsonFile(sData.mVehicleDataPath,
-							   dbugPanel::tuning::basePath.c_str(),
-							   sData.mVehicle->mBaseParams);
+
+	readBaseParamsFromJsonFile(
+		sData.mVehicleDataPath, 
+		dbugPanel::tuning::basePath.c_str(), 
+		sData.mVehicle->mBaseParams);
 	readEngineDrivetrainParamsFromJsonFile(
-		sData.mVehicleDataPath, dbugPanel::tuning::enginePath.c_str(),
+		sData.mVehicleDataPath, 
+		dbugPanel::tuning::enginePath.c_str(),
 		sData.mVehicle->mEngineDriveParams);
 	setPhysXIntegrationParams(
 		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
@@ -266,10 +280,8 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
 	for (PxU32 i = 0; i < shapes; i++) {
-		//
 		PxShape *shape = NULL;
 		rBody->getShapes(&shape, 1, i);
-		// printf("i:%d na:%d\n", i, shape->getGeometry().getType());
 
 		// add filter to tires/chasis depending on type
 		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
@@ -325,6 +337,11 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	sound.start();
 
 	game.coordinator->addComponent(sparkEntity, sound);
+	if (sparkEntity == 3) {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
+	}
+	else
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
@@ -337,18 +354,21 @@ void SparkSys::reloadSparkParams(GameState &game) {
 	for (auto const &entity : entities) {
 		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		 
+		// load params for vehicle base
+		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
+		readBaseParamsFromJsonFile(
+			sData.mVehicleDataPath,
+			baseFileName,
+			sData.mVehicle->mBaseParams);
 		// Changes the parameters of the engine
 		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
 		readEngineDrivetrainParamsFromJsonFile(
-			sData.mVehicleDataPath, engineFileName,
+			sData.mVehicleDataPath, 
+			engineFileName,
 			sData.mVehicle->mEngineDriveParams);
-		// load params for vehicle base
-		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
-		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
-								   sData.mVehicle->mBaseParams);
-		printf("scene scale %f, car scale:%f\n",
-			   game.physics->gPhysics->getTolerancesScale().length,
-			   sData.mVehicleSimContext.scale.scale);
+
+		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
 	}
 }
 

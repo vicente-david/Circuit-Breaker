@@ -113,8 +113,8 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
-	float near_plane = -100.0f, far_plane = 200.0f;
-	glm::mat4 lightProj = glm::ortho(bounds.first.x, bounds.second.x, bounds.first.z, bounds.second.z, near_plane, far_plane);
+	float near_plane = -70.f, far_plane = 25.0f;
+	glm::mat4 lightProj = glm::ortho(bounds.first.x - 50.f, bounds.second.x + 50.f, bounds.first.z - 50.f, bounds.second.z + 50.f, near_plane, far_plane);
 	
 	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
@@ -141,7 +141,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glm::mat4 view = glm::mat4(1.0f);
 	view = c1->GetViewMatrix();
 	glm::mat4 proj;
-	proj = glm::perspective(glm::radians(45.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 200.0f);
 
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
