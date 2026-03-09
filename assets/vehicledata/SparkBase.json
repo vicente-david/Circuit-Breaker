@@ -320,20 +320,11 @@
             "LateralStiffnessX": 3,
             "LateralStiffnessY": 136505,
             "CamberStiffness": 0.5,
-            "RestLoad": 5628.72314453125,
+            "RestLoad": 5600,
             "FrictionVsSlip": [
-                [
-                    0.0,
-                    1.0
-                ],
-                [
-                    0.10000000149011612,
-                    1.4
-                ],
-                [
-                    1.0,
-                    1.2
-                ]
+                [ 0.0, 2.0 ],
+                [ 0.1, 2.4 ],
+                [ 1.0, 2.8 ]
             ],
             "TireLoadFilter": [
                 [
@@ -352,20 +343,11 @@
             "LateralStiffnessX": 3,
             "LateralStiffnessY": 136505,
             "CamberStiffness": 0.5,
-            "RestLoad": 5628.72314453125,
+            "RestLoad": 5600,
             "FrictionVsSlip": [
-                [
-                    0.0,
-                    1.0
-                ],
-                [
-                    0.10000000149011612,
-                    1.4
-                ],
-                [
-                    1.0,
-                    1.2
-                ]
+                [ 0.0, 2.0 ],
+                [ 0.1, 2.4 ],
+                [ 1.0, 2.8 ]
             ],
             "TireLoadFilter": [
                 [
@@ -384,20 +366,11 @@
             "LateralStiffnessX": 3,
             "LateralStiffnessY": 165600,
             "CamberStiffness": 0.5,
-            "RestLoad": 4604.3134765625,
+            "RestLoad": 4600,
             "FrictionVsSlip": [
-                [
-                    0.0,
-                    1.0
-                ],
-                [
-                    0.10000000149011612,
-                    1.4
-                ],
-                [
-                    1.0,
-                    1.2
-                ]
+                [ 0.0, 2.0 ],
+                [ 0.1, 2.4 ],
+                [ 1.0, 3.8 ]
             ],
             "TireLoadFilter": [
                 [
@@ -416,20 +389,11 @@
             "LateralStiffnessX": 3,
             "LateralStiffnessY": 165600,
             "CamberStiffness": 0.5,
-            "RestLoad": 4604.3134765625,
+            "RestLoad": 4600,
             "FrictionVsSlip": [
-                [
-                    0.0,
-                    1.0
-                ],
-                [
-                    0.10000000149011612,
-                    1.4
-                ],
-                [
-                    1.0,
-                    1.2
-                ]
+                [ 0.0, 2.0 ],
+                [ 0.1, 2.4 ],
+                [ 1.0, 3.8 ]
             ],
             "TireLoadFilter": [
                 [
