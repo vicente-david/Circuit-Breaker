@@ -32,6 +32,7 @@
 #include "world/CurveLoader.h"
 #include "world/LapSystem.h"
 #include "world/Track.h"
+#include "ui/UISystem.h"
 
 int main() {
 
@@ -65,6 +66,8 @@ int main() {
 	gameState.coordinator->registerComponent<CollisionData>();
 	gameState.coordinator->registerComponent<Sound>();
 	gameState.coordinator->registerComponent<Respawnable>();
+	gameState.coordinator->registerComponent<UIComponent>();
+	gameState.coordinator->registerComponent<RectUI>();
 
 	// register systems
 	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
@@ -76,6 +79,12 @@ int main() {
 	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
 	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
 	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
+	auto uiSys = UISystem::registerSystem(gameState.coordinator);
+
+	Entity r1 = gameState.coordinator->createEntity();
+	gameState.coordinator->addComponent<RectUI>(r1, RectUI());
+	gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
+	gameState.uiText = gameState.uiSystem->raceUI();
 
 
 	// initialize debug panel

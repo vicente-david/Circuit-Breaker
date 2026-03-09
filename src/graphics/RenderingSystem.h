@@ -23,6 +23,13 @@ public:
 	void renderScene(GameState& game, GLuint& shaderID);
 	void setTrackBounds(std::pair<glm::vec3, glm::vec3> trackBounds);
 
+	// ui functions
+	void renderUI(GameState& game); // render ui, takes the current Ui objects, converts to screen space, and renders
+	// not sure how to actually do multiple UI elements, or just load images and do it that way
+	// gameState contains which UI elements to display
+	// acc we could create multiple Basic UI components and just have their own create vert function instead of manually doing it here
+
+
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
@@ -31,9 +38,12 @@ public:
 	unsigned int textVAO;
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
+	unsigned int uiVAO, uiVBO;
 
 	std::map<char, Character> textFont;
 	glm::mat4 textMat;
+
+	glm::mat4 uiMat;
 
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
@@ -42,6 +52,7 @@ public:
 
 	std::unique_ptr<ShaderProgram> shadowShader;
 
+	std::unique_ptr<ShaderProgram> uiShader;
 
 private:
 	std::pair<glm::vec3, glm::vec3> bounds;
