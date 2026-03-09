@@ -84,7 +84,7 @@ int main() {
 	//Entity r1 = gameState.coordinator->createEntity();
 	//gameState.coordinator->addComponent<RectUI>(r1, RectUI());
 	//gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
-	gameState.uiText = gameState.uiSystem->raceUI();
+	
 
 
 	// initialize debug panel
@@ -219,6 +219,9 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, Respawnable());
 	gameState.coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0==1);
 
+	gameState.uiText = gameState.uiSystem->raceUI(gameState.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
+
+
 	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
 	gameState.coordinator->addComponent(testSpark2, LapCounter());
@@ -310,7 +313,7 @@ int main() {
 		}
 
 		// rendering
-
+		gameState.uiText = gameState.uiSystem->raceUI(gameState.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
 		renderer->update(gameState, fps, cameraSys);
 

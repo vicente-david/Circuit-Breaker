@@ -155,7 +155,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 				lapProg.progress = 0.0f;
 				lapProg.closestTrackPoint = 0;
 				std::cout << "on lap: " << lapProg.currentLap << std::endl;
-				if (lapProg.currentLap >= 2 && !game.gameEnded) game.endGame(entity);
+				if (lapProg.currentLap >= 3 && !game.gameEnded) game.endGame(entity);
 			}
 
 			//std::cout << "checkpoint: " << indexI << std::endl;
