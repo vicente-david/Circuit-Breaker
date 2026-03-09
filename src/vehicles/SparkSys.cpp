@@ -331,20 +331,20 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
-	game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
-	Sound sound = game.audio->createSound("engine");
-	sound.position = glm::vec3(startP.x, startP.y, startP.z);
-	sound.start();
-
-	game.coordinator->addComponent(sparkEntity, sound);
+	// different model for p3
 	if (sparkEntity == 3) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	}
 	else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
-	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
+	// add engine sound
+	Sound sound = game.audio->createSound("engine");
+	sound.position = glm::vec3(startP.x, startP.y, startP.z);
+	sound.start();
+	game.coordinator->addComponent(sparkEntity, sound);
 
+	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 	return sparkEntity;
 }
 

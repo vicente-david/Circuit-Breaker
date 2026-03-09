@@ -72,8 +72,6 @@ int main() {
 	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
 	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
 	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
-	auto aiControllerSys =
-		AIControllerSys::registerSystem(gameState.coordinator);
 	auto audioSystem = AudioSystem::registerSystem(gameState.coordinator);
 	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
 	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
