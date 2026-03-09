@@ -204,23 +204,17 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
 		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.1f, -0.2f), PxQuat(PxIdentity));
 
-		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.15f, 0.5f));
-		PxShape* leftSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
-		PxShape* rightSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
-		PxTransform leftSideBoxLocalPose(PxVec3(0.37f, 0.1f, 0.27f), PxQuat(0.940f, 0.0f, 0.342f, 0.0f));
-		PxTransform rightSideBoxLocalPose(PxVec3(-0.37f, 0.1f, 0.27f), PxQuat(0.940f, 0.0f, -0.342f, 0.0f));
+		PxBoxGeometry midBoxGeom(PxVec3(0.6f, 0.15f, 0.1f));
+		PxShape* midBox = game.physics->gPhysics->createShape(midBoxGeom, *game.physics->gMaterial, true);
+		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.1f, 0.1f), PxQuat(PxIdentity));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		rBody->attachShape(*rearBox);
 		rearBox->release();
 
-		leftSideBox->setLocalPose(leftSideBoxLocalPose);
-		rBody->attachShape(*leftSideBox);
-		leftSideBox->release();
-
-		rightSideBox->setLocalPose(rightSideBoxLocalPose);
-		rBody->attachShape(*rightSideBox);
-		rightSideBox->release();
+		midBox->setLocalPose(midBoxLocalPose);
+		rBody->attachShape(*midBox);
+		midBox->release();
 
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
 		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
