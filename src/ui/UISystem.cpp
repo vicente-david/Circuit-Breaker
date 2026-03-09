@@ -51,3 +51,16 @@ TextUI UISystem::changeToWinScreen() {
 	
 	return text1;
 }
+
+TextUI UISystem::changeToLoseScreen() {
+	// render text 
+	// render a rect
+	TextUI text1;
+	text1.textContent = "Lose";
+	text1.col = glm::vec3(1.0f);
+	text1.scale = 1.0f;
+	text1.xPos = 400.0f;
+	text1.yPos = 1380.0f;
+
+	return text1;
+}

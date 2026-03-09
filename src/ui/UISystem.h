@@ -24,6 +24,7 @@ public:
 	void update();
 
 	TextUI changeToWinScreen(); // change to win screen when that event triggers
+	TextUI changeToLoseScreen(); // change to win screen when that event triggers
 
 private:
 

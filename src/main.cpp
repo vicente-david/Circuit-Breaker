@@ -217,6 +217,7 @@ int main() {
 	gameState.coordinator->addComponent(sparkEntity, CameraComp());
 	gameState.coordinator->addComponent(sparkEntity, LapCounter());
 	gameState.coordinator->addComponent(sparkEntity, Respawnable());
+	gameState.coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0==1);
 
 	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
@@ -309,6 +310,7 @@ int main() {
 		}
 
 		// rendering
+
 
 		renderer->update(gameState, fps, cameraSys);
 

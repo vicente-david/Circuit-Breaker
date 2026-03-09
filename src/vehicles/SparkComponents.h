@@ -61,4 +61,6 @@ struct SparkData {
 	void destroy() {
 		mVehicle->destroy();
 	}
+
+	bool isHuman = false;
 };
