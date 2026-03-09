@@ -246,8 +246,7 @@ int main() {
 		8, // steeringSharpness
 		});
 
-	// extra spark to bully around
-	 sparkSys->createSpark(gameState, PxVec3(-10,0,-40));
+	
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
