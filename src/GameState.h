@@ -37,7 +37,7 @@ class GameState {
 	int numPlayers = 1;
 	int numSparks = 8;
 	int numActivePlayers = 8;
-	int numLaps = 4;
+	int numLaps = 3;
 
 	// temp UI
 	RectUI activeUIRect; 
