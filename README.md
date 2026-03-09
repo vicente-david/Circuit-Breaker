@@ -45,6 +45,14 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     ```
 
 ---
+## Game Rules
+- In order to win the race, a player must complete 3 full laps around the race track.
+- Each player begins with maximum health points (HP), and zero boost.
+    - The amount of boost that a player has is inversely proportional to the amount of health that they have.
+    - To regain boost, a player must drift.
+- If a player loses all their health, they are destroyed and are forfeited from the race.
+      - A player can deplete another players' health by driving or ramming into them. This can also be done by shimmying into another player.  
+
 ## Controls:
 
 ### Controller:
