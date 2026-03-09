@@ -150,7 +150,7 @@ void SparkSys::respawn(PxRigidBody *rBody) {
 	dbug::log("GAME", 0, "resetting");
 
 	rBody->setGlobalPose(
-		PxTransform(PxVec3(0.f, 0.f, -50.f), PxQuat(PxIdentity)));
+		PxTransform(PxVec3(0.f, 1.f, -50.f), PxQuat(PxIdentity)));
 
 	PxRigidDynamic *dynamicBody = rBody->is<PxRigidDynamic>();
 	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
