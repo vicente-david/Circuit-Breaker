@@ -243,10 +243,8 @@
 		{
             "WheelId": 2,
             "WheelToeAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, 0.03 ]
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
@@ -268,10 +266,8 @@
 		{
             "WheelId": 3,
             "WheelToeAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, -0.03 ]
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
