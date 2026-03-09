@@ -51,19 +51,25 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     - L-Stick: Turn 
     - R-Stick: Rotate Camera 
     - R-Trigger: accelerate
-    - L-Trigger: brake
+    - LB/L1: Shimmy left
+    - RB/R1: Shimmy right
+    - L-Trigger: Brake
+    - LT + RT: Reverse
     - B/◯: Boost
     - Y/△: Reset
+    - A/X: Drift
 
 ### Keyboard:
-    - A/D: Turn 
-    - Q/E: Rotate Camer 
-    - W: accelerate
-    - S: accelerate
-    - J/L: Shimmy
+    - A/D: Turn
+    - Q/E: Rotate Camera
+    - W: Accelerate
+    - S: Brake
+    - J: Shimmy left
+    - L: Shimmy right
     - Space: Boost
     - Back Space: Reset
     - C: Camera Reset Toggle
+    - K: Drift
 
 
 ---
