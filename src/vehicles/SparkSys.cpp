@@ -129,9 +129,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
 	const PxVec3 latDir = rBody->getGlobalPose().q.getBasisVector0();
 	int flip = (rightDir) ? -1 : 1;
-	float shimmyForce = 24000.f;
+	float shimmyForce = 15.f;
 
-	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
+	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
 	dbug::log("GAME", 0, "Weeeeeeee!");
 
 	sData.shimmyTimer = sData.ShimmyCooldown;
