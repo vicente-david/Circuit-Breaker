@@ -170,9 +170,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
 	const PxVec3 latDir = rBody->getGlobalPose().q.getBasisVector0();
 	int flip = (rightDir) ? -1 : 1;
-	float shimmyForce = 24000.f;
+	float shimmyForce = 15.f;
 
-	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eIMPULSE);
+	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
 	dbug::log("GAME", 0, "Weeeeeeee!");
 
 	sData.shimmyTimer = sData.ShimmyCooldown;
@@ -222,7 +222,7 @@ void SparkSys::respawn(PxRigidBody *rBody) {
 	dbug::log("GAME", 0, "resetting");
 
 	rBody->setGlobalPose(
-		PxTransform(PxVec3(0.f, 0.f, -50.f), PxQuat(PxIdentity)));
+		PxTransform(PxVec3(0.f, 1.f, -50.f), PxQuat(PxIdentity)));
 
 	PxRigidDynamic *dynamicBody = rBody->is<PxRigidDynamic>();
 	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
@@ -271,6 +271,26 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 							   sData.mVehicleName);
 
 	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+	{
+		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.25f, 0.2f));
+		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
+		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f), PxQuat(PxIdentity));
+
+		PxBoxGeometry midBoxGeom(PxVec3(0.6f, 0.25f, 0.1f));
+		PxShape* midBox = game.physics->gPhysics->createShape(midBoxGeom, *game.physics->gMaterial, true);
+		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.0f, 0.1f), PxQuat(PxIdentity));
+
+		rearBox->setLocalPose(rearBoxLocalPose);
+		rBody->attachShape(*rearBox);
+		rearBox->release();
+
+		midBox->setLocalPose(midBoxLocalPose);
+		rBody->attachShape(*midBox);
+		midBox->release();
+
+		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
+		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
+	}
 
 	// Create vehicle filter
 	PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS,

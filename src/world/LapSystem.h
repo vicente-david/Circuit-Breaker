@@ -35,9 +35,8 @@ public:
 private:
 	int nearestCheckpoints(LapCounter& lapProg); // find the next checkpoints to test for
 
-	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints); // update the checkpoint for the entity
-	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform); // update the checkpoint for the entity
-	void updateProgress(LapCounter& lapProg, Transform& eTransform); // update the progress along the track
+	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints, GameState& game, const Entity& entity); // update the checkpoint for the entity
+	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	
 	std::vector<glm::vec3> checkPoints; // will need to be more sophisticated for multiple branching paths
 	int checkpointPlacement = 10; // every x amount of points along the track, place 1 checkpoint

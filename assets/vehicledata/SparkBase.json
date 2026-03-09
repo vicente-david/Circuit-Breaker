@@ -243,10 +243,8 @@
 		{
             "WheelId": 2,
             "WheelToeAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, 0.03 ]
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
@@ -268,10 +266,8 @@
 		{
             "WheelId": 3,
             "WheelToeAngle": [
-                [
-                    0.0,
-                    0.0
-                ]
+                [ 0.0, 0.0 ],
+                [ 1.0, -0.03 ]
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
@@ -321,7 +317,7 @@
         {
             "WheelId": 0,
             "LongitudinalStiffness": 30656.0,
-            "LateralStiffnessX": 0.009999999776482582,
+            "LateralStiffnessX": 3,
             "LateralStiffnessY": 136505,
             "CamberStiffness": 0.5,
             "RestLoad": 5628.72314453125,
@@ -353,7 +349,7 @@
         {
             "WheelId": 1,
             "LongitudinalStiffness": 30656.0,
-            "LateralStiffnessX": 0.009999999776482582,
+            "LateralStiffnessX": 3,
             "LateralStiffnessY": 136505,
             "CamberStiffness": 0.5,
             "RestLoad": 5628.72314453125,
@@ -385,7 +381,7 @@
         {
             "WheelId": 2,
             "LongitudinalStiffness": 30656.0,
-            "LateralStiffnessX": 0.009999999776482582,
+            "LateralStiffnessX": 3,
             "LateralStiffnessY": 165600,
             "CamberStiffness": 0.5,
             "RestLoad": 4604.3134765625,
@@ -417,7 +413,7 @@
         {
             "WheelId": 3,
             "LongitudinalStiffness": 30656.0,
-            "LateralStiffnessX": 0.009999999776482582,
+            "LateralStiffnessX": 3,
             "LateralStiffnessY": 165600,
             "CamberStiffness": 0.5,
             "RestLoad": 4604.3134765625,
@@ -451,7 +447,7 @@
         {
             "WheelId": 0,
             "HalfWidth": 0.15,
-            "Radius": 0.5,
+            "Radius": 0.35,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25
@@ -459,7 +455,7 @@
         {
             "WheelId": 1,
             "HalfWidth": 0.15,
-            "Radius": 0.5,
+            "Radius": 0.35,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25
@@ -467,7 +463,7 @@
         {
             "WheelId": 2,
             "HalfWidth": 0.15,
-            "Radius": 0.5,
+            "Radius": 0.35,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25
@@ -475,7 +471,7 @@
         {
             "WheelId": 3,
             "HalfWidth": 0.15,
-            "Radius": 0.5,
+            "Radius": 0.35,
             "Mass": 2.0,
             "MOI": 1,
             "DampingRate": 0.25

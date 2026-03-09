@@ -15,7 +15,9 @@ void GameState::endGame(Entity gameWinner) {
 	winner = gameWinner;		// assign the game winner
 								
 								// TODO: probably do some UI/game management stuff here to give endscreen, etc.
-								
+	std::cout << "winner was found " << std::endl;
+	uiText = uiSystem->changeToWinScreen(); // todo fix lol 
+
 	gameEnded = true;			// end the game
 }
 
