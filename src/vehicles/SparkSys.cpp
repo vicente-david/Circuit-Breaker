@@ -200,13 +200,13 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 	{
-		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.15f, 0.2f));
+		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.25f, 0.2f));
 		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
-		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.1f, -0.2f), PxQuat(PxIdentity));
+		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f), PxQuat(PxIdentity));
 
-		PxBoxGeometry midBoxGeom(PxVec3(0.6f, 0.15f, 0.1f));
+		PxBoxGeometry midBoxGeom(PxVec3(0.6f, 0.25f, 0.1f));
 		PxShape* midBox = game.physics->gPhysics->createShape(midBoxGeom, *game.physics->gMaterial, true);
-		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.1f, 0.1f), PxQuat(PxIdentity));
+		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.0f, 0.1f), PxQuat(PxIdentity));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		rBody->attachShape(*rearBox);
