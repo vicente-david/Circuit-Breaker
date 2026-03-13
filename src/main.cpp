@@ -32,7 +32,6 @@
 #include <memory>
 #include "world/CurveLoader.h"
 #include "world/LapSystem.h"
-#include "world/Track.h"
 #include "ui/UISystem.h"
 #include "Game.h"
 
@@ -49,10 +48,9 @@ int main() {
 	// dbug::logIgnoreType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
-
-	GameState gameState;
 	
 	Game game = Game();
+	GameState& gameState = game.gameState;
 	game.initializeGame();
 
 	std::shared_ptr<PhysicsSystem> physicsSystem = game.physicsSys;
@@ -110,81 +108,10 @@ int main() {
 	Model spark("assets/spark.obj");
 	//Model planeModel("assets/plane.obj");
 
-	lapSys->generateCheckpoints("assets/biggertrack1.obj");
+	game.initializeTrack();
+	game.initializeFinishLine();
 
-	// create the track. this should eventually be moved to its own
-	// class/function
-	Track Track("assets/biggertrack1.obj"); // loads model and paths
-	// Track Track("assets/biggertrack1.obj"); // loads model and paths
-
-	// Find max/min xyz coords of track for size of shadow map texture.
-	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	
-	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
-
-	// create track as a static mesh with baked physics
-	{
-		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
-		Entity track = game.coordinator->createEntity();
-		CollisionData trackPhys{GROUND, track};
-		game.coordinator->addComponent(track, none);
-		game.coordinator->addComponent(track, Track.model);
-		game.coordinator->addComponent(track, trackPhys);
-
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = game.coordinator->createEntity();
-		CollisionData planePhys{GROUND, walls};
-		game.coordinator->addComponent(walls, none);
-		game.coordinator->addComponent(walls, wallsModel);
-		game.coordinator->addComponent(track, planePhys);
-
-		auto trackActor =
-			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
-		trackActor->userData = &trackPhys;
-
-		for(auto& i : wallsModel.GetMesh()){
-			auto actor = physicsManager->initStaticMesh(i, none);
-			actor->userData = &planePhys;
-		}
-
-		dbug::log(0, "track entity id:%d", track);
-	}
-
-
-	// create finish line trigger box
-	CollisionData finishCollisionData{FINISH_LINE, -1};
-	{
-		PxVec3 finishLinePosition(0.0f, 0.0f,
-								  10.0f); // finish line position in world space
-		PxVec3 triggerLengths(
-			255.637f, 100.0f,
-			1.0f); // width, height, and depth of the finish line
-		PxRigidStatic *triggerActor =
-			physicsManager->gPhysics->createRigidStatic(
-				PxTransform(finishLinePosition)); // create static rigid body
-												  // for the trigger box
-
-		auto material = physicsManager->gPhysics->createMaterial(0, 0, 0);
-		physx::PxShape *triggerRect = physicsManager->gPhysics->createShape(
-			physx::PxBoxGeometry(triggerLengths), *material, true);
-
-		// set the shape as a trigger
-		triggerRect->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
-		triggerRect->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
-		triggerRect->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
-		triggerRect->setFlag(PxShapeFlag::eVISUALIZATION, true);
-
-		triggerActor->attachShape(*triggerRect);
-		triggerActor->userData = &finishCollisionData;
-		physicsManager->gScene->addActor(*triggerActor);
-
-		// give flag for finish, and it only collides with chassis 
-		PxFilterData finishLineFilter(COLLISION_FLAG_FINISH,
-									  COLLISION_FLAG_CHASSIS, 0, 0);
-		triggerRect->setSimulationFilterData(finishLineFilter);
-		// Clean up
-		triggerRect->release();
-	}
 
 	// place holder test sounds
 	Sound testSound = game.audio->createSound("muteCity");
@@ -200,45 +127,7 @@ int main() {
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
-	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
-
-	// create spark with new system
-	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z - 6.f);
-	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
-	game.coordinator->addComponent(sparkEntity, HumanController{0});
-	game.coordinator->addComponent(sparkEntity, CameraComp());
-	game.coordinator->addComponent(sparkEntity, LapCounter());
-	game.coordinator->addComponent(sparkEntity, Respawnable());
-	game.coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0==1);
-	game.coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
-
-	gameState.uiText = game.uiSystem->raceUI(game.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
-
-
-	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
-	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
-	game.coordinator->addComponent(testSpark2, LapCounter());
-	game.coordinator->addComponent(testSpark2, Respawnable());
-	game.coordinator->addComponent(testSpark2, AIController{
-		AIState::IDLE, // start AI in idle state
-		trackPaths.at(0).curvePoints, // planned route
-		trackPaths.at(0).curvatures, // angles at each point in route
-		});
-
-	startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
-	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
-	game.coordinator->addComponent(testSpark3, LapCounter());
-	game.coordinator->addComponent(testSpark3, Respawnable());
-	game.coordinator->addComponent(testSpark3, AIController{
-		AIState::IDLE, // start AI in idle state
-		trackPaths.at(0).curvePoints, // planned route
-		trackPaths.at(0).curvatures, // angles at each point in route
-		0.10f, // curveBrakeThresh
-		22.0f, // maxTargetSpeed
-		0.02f, // curveBoostThresh
-		8, // steeringSharpness
-		});
+	//gameState.uiText = game.uiSystem->raceUI(game.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
 	
 	// RENDER LOOP

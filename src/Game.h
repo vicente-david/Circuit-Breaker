@@ -7,9 +7,11 @@
 // this Game class will talk between the subsystems
 
 // it will pass around the game state as means of communication
+#pragma once
 #include "AllComponents.h"
 #include "AllSystem.h"
 #include "ecs/Coordinator.h"
+#include "world/Track.h"
 
 class Game{
 
@@ -25,6 +27,8 @@ public:
 
 	void initializeGame();
 	void initializeECS();
+	void initializeTrack();
+	void initializeFinishLine(); // ???
 
 	// shared pointers to all the existing systems
 	std::shared_ptr<PhysicsSystem> physicsSys;
@@ -38,4 +42,5 @@ public:
 	std::shared_ptr<LapSystem> lapSys;
 	std::shared_ptr<UISystem> uiSys;
 
+	GameState gameState;
 };
