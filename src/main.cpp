@@ -51,6 +51,7 @@ int main() {
 	
 	Game game = Game();
 	GameState& gameState = game.gameState;
+
 	game.initializeGame();
 
 	std::shared_ptr<PhysicsSystem> physicsSystem = game.physicsSys;
@@ -126,8 +127,6 @@ int main() {
 
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
-
-	//gameState.uiText = game.uiSystem->raceUI(game.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
 	
 	// RENDER LOOP

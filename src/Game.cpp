@@ -130,6 +130,9 @@ void Game::initializeTrack() {
 		8, // steeringSharpness
 		});
 
+
+	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
+
 }
 
 void Game::initializeFinishLine() {
