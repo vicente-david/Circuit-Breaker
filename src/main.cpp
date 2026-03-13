@@ -1,3 +1,4 @@
+#pragma once
 #include "GameState.h"
 #include "GLFW/glfw3.h"
 #include "InputSystem.h"
@@ -33,6 +34,7 @@
 #include "world/LapSystem.h"
 #include "world/Track.h"
 #include "ui/UISystem.h"
+#include "Game.h"
 
 int main() {
 
@@ -49,37 +51,23 @@ int main() {
 	dbug::loggerInit();
 
 	GameState gameState;
-	// create the coordinator
-	// initialize coordinator
-	gameState.coordinator->Init();
+	
+	Game game = Game();
+	game.initializeGame();
 
-	// register components
-	gameState.coordinator->registerComponent<Transform>();
-	gameState.coordinator->registerComponent<physx::PxRigidBody *>();
-	gameState.coordinator->registerComponent<Model>();
-	gameState.coordinator->registerComponent<SparkControls>();
-	gameState.coordinator->registerComponent<SparkData>();
-	gameState.coordinator->registerComponent<HumanController>();
-	gameState.coordinator->registerComponent<CameraComp>();
-	gameState.coordinator->registerComponent<LapCounter>();
-	gameState.coordinator->registerComponent<AIController>();
-	gameState.coordinator->registerComponent<CollisionData>();
-	gameState.coordinator->registerComponent<Sound>();
-	gameState.coordinator->registerComponent<Respawnable>();
-	gameState.coordinator->registerComponent<UIComponent>();
-	gameState.coordinator->registerComponent<RectUI>();
+	std::shared_ptr<PhysicsSystem> physicsSystem = game.physicsSys;
+	std::shared_ptr<RenderingSystem> renderer = game.renderer;
+	std::shared_ptr<SparkSys> sparkSys = game.sparkSys;
+	std::shared_ptr<ControllerSys> controllerSys = game.controllerSys;
+	std::shared_ptr<CameraSystem> cameraSys = game.cameraSys;
+	std::shared_ptr<AudioSystem> audioSystem = game.audioSys;
+	std::shared_ptr<AIControllerSys> aiControllerSys = game.aiControllerSys;
+	std::shared_ptr<RespawnSystem> respawnSystem = game.respawnSys;
+	std::shared_ptr<LapSystem> lapSys = game.lapSys;
+	std::shared_ptr<UISystem> uiSys = game.uiSys;
 
-	// register systems
-	auto physicsSystem = PhysicsSystem::registerSystem(gameState.coordinator);
-	auto renderer = RenderingSystem::registerSystem(gameState.coordinator);
-	auto sparkSys = SparkSys::registerSystem(gameState.coordinator);
-	auto controllerSys = ControllerSys::registerSystem(gameState.coordinator);
-	auto cameraSys = CameraSystem::registerSystem(gameState.coordinator);
-	auto audioSystem = AudioSystem::registerSystem(gameState.coordinator);
-	auto aiControllerSys = AIControllerSys::registerSystem(gameState.coordinator);
-	auto respawnSystem = RespawnSystem::registerSystem(gameState.coordinator);
-	auto lapSys = LapSystem::registerSystem(gameState.coordinator);
-	auto uiSys = UISystem::registerSystem(gameState.coordinator);
+	
+
 
 	//Entity r1 = gameState.coordinator->createEntity();
 	//gameState.coordinator->addComponent<RectUI>(r1, RectUI());
@@ -91,7 +79,12 @@ int main() {
 	// create physics manager
 	std::shared_ptr<PhysicsManager> physicsManager =
 		std::make_shared<PhysicsManager>();
-	gameState.physics = physicsManager;
+	game.physics = physicsManager;
+
+	gameState.physics = game.physics;
+	gameState.coordinator = game.coordinator;
+	gameState.audio = game.audio;
+	gameState.uiSystem = game.uiSystem;
 
 	InputSystem inputSystem;
 	inputSystem.attachWindow(renderer->window);
@@ -132,18 +125,18 @@ int main() {
 	// create track as a static mesh with baked physics
 	{
 		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
-		Entity track = gameState.coordinator->createEntity();
+		Entity track = game.coordinator->createEntity();
 		CollisionData trackPhys{GROUND, track};
-		gameState.coordinator->addComponent(track, none);
-		gameState.coordinator->addComponent(track, Track.model);
-		gameState.coordinator->addComponent(track, trackPhys);
+		game.coordinator->addComponent(track, none);
+		game.coordinator->addComponent(track, Track.model);
+		game.coordinator->addComponent(track, trackPhys);
 
 		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = gameState.coordinator->createEntity();
+		Entity walls = game.coordinator->createEntity();
 		CollisionData planePhys{GROUND, walls};
-		gameState.coordinator->addComponent(walls, none);
-		gameState.coordinator->addComponent(walls, wallsModel);
-		gameState.coordinator->addComponent(track, planePhys);
+		game.coordinator->addComponent(walls, none);
+		game.coordinator->addComponent(walls, wallsModel);
+		game.coordinator->addComponent(track, planePhys);
 
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
@@ -194,7 +187,7 @@ int main() {
 	}
 
 	// place holder test sounds
-	Sound testSound = gameState.audio->createSound("muteCity");
+	Sound testSound = game.audio->createSound("muteCity");
 	// alSourcef(testSound.source, AL_GAIN, 0.6f);
 	testSound.setLooping(true);
 	testSound.start();
@@ -213,21 +206,21 @@ int main() {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z - 6.f);
 	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
-	gameState.coordinator->addComponent(sparkEntity, HumanController{0});
-	gameState.coordinator->addComponent(sparkEntity, CameraComp());
-	gameState.coordinator->addComponent(sparkEntity, LapCounter());
-	gameState.coordinator->addComponent(sparkEntity, Respawnable());
-	gameState.coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0==1);
-	gameState.coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
+	game.coordinator->addComponent(sparkEntity, HumanController{0});
+	game.coordinator->addComponent(sparkEntity, CameraComp());
+	game.coordinator->addComponent(sparkEntity, LapCounter());
+	game.coordinator->addComponent(sparkEntity, Respawnable());
+	game.coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0==1);
+	game.coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 
-	gameState.uiText = gameState.uiSystem->raceUI(gameState.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
+	gameState.uiText = game.uiSystem->raceUI(game.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
 
 	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
 	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
-	gameState.coordinator->addComponent(testSpark2, LapCounter());
-	gameState.coordinator->addComponent(testSpark2, Respawnable());
-	gameState.coordinator->addComponent(testSpark2, AIController{
+	game.coordinator->addComponent(testSpark2, LapCounter());
+	game.coordinator->addComponent(testSpark2, Respawnable());
+	game.coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
@@ -235,9 +228,9 @@ int main() {
 
 	startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
 	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
-	gameState.coordinator->addComponent(testSpark3, LapCounter());
-	gameState.coordinator->addComponent(testSpark3, Respawnable());
-	gameState.coordinator->addComponent(testSpark3, AIController{
+	game.coordinator->addComponent(testSpark3, LapCounter());
+	game.coordinator->addComponent(testSpark3, Respawnable());
+	game.coordinator->addComponent(testSpark3, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
@@ -270,7 +263,7 @@ int main() {
 		while (accumulator >= dt) {
 
 			sparkSys->updateSparks(dt, gameState);
-			gameState.physics->callbacks->resetLists();
+			game.physics->callbacks->resetLists();
 			physicsSystem->updatePhysics(dt, gameState);
 			cameraSys->update(gameState, dt);
 			audioSystem->updateSounds(gameState);
@@ -294,8 +287,8 @@ int main() {
 			// 	gameActions.shimmyRight = false;
 			// }
 			// position at 0,0,0 for testing
-			gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
-			gameState.audio->updateSoundVel(testSound, 0, 0, 0);
+			game.audio->updateSoundLoc(testSound, 0, 0, 0);
+			game.audio->updateSoundVel(testSound, 0, 0, 0);
 		}
 
 		// AI
@@ -316,9 +309,9 @@ int main() {
 
 		renderer->update(gameState, fps, cameraSys);
 
-		gameState.audio->update(dt);
+		game.audio->update(dt);
 	}
-	gameState.audio->close();
+	game.audio->close();
 	dbugPanel::cleanup();
 	glfwTerminate();
 
