@@ -427,8 +427,8 @@ bool CustomTireVehicle::initialize(PxPhysics& physics, const PxCookingParams& co
 
 	//Adjust some non custom parameters given that the model should be higher fidelity.
 	mBaseParams.suspensionStateCalculationParams.limitSuspensionExpansionVelocity = true;
-	mBaseParams.suspensionStateCalculationParams.suspensionJounceCalculationType = PxVehicleSuspensionJounceCalculationType::eSWEEP;
-	mPhysXParams.physxRoadGeometryQueryParams.roadGeometryQueryType = PxVehiclePhysXRoadGeometryQueryType::eSWEEP;
+	mBaseParams.suspensionStateCalculationParams.suspensionJounceCalculationType = PxVehicleSuspensionJounceCalculationType::eRAYCAST;
+	mPhysXParams.physxRoadGeometryQueryParams.roadGeometryQueryType = PxVehiclePhysXRoadGeometryQueryType::eRAYCAST;
 
 	//Recreate PhysX actor and shapes since related properties changed
 	mPhysXState.destroy();
