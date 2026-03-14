@@ -275,6 +275,18 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	sData.mVehicleSimContext.physxActorUpdateMode =
 		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
+	
+	// Tire sweeps instead of raycasts
+	sData.mCylinderSweepMesh = PxVehicleUnitCylinderSweepMeshCreate(sData.mVehicleSimContext.frame,
+		*game.physics->gPhysics, PxCookingParams(PxTolerancesScale()));
+	
+	if (!sData.mCylinderSweepMesh) 
+		return false;
+	sData.mVehicleSimContext.physxUnitCylinderSweepMesh = sData.mCylinderSweepMesh;
+
+	//Larger lateral damping factor than default to avoid drift when nearly rest
+	sData.mVehicleSimContext.tireStickyParams.stickyParams[PxVehicleTireDirectionModes::eLATERAL].damping = 1.0f;
+
 
 	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());

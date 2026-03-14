@@ -52,11 +52,17 @@ struct SparkData {
 	PxU32 mNbMaterialFrictions = 0;
 	PxReal mDefaultMaterialFriction = 1.0f;
 
+	// sweeps for wheels instead of ground collision detection (cylinder with unit size)
+	PxConvexMesh *mCylinderSweepMesh = NULL;
+
 	const char *mVehicleDataPath = NULL;
 	const char *mVehicleName = "unnamed_vehicle";
 
 	CollisionData physData = CollisionData{SPARK, -1};
 	void destroy() {
+		if (mCylinderSweepMesh)
+			PxVehicleUnitCylinderSweepMeshDestroy(mCylinderSweepMesh);
+
 		mVehicle->destroy();
 	}
 };
