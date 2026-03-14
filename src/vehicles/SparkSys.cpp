@@ -166,7 +166,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// defintely didn't take hours to debug. I love c)
 	game.coordinator->addComponent(sparkEntity, SparkData());
 	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
-	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
+	sData.mVehicle = std::make_shared<CustomTireVehicle>();
 
 	// SparkData sData;
 	// Load the params from json or set directly.
@@ -186,6 +186,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		sData.mVehicle->mPhysXParams);
 
 	// Set the states to default.
+	// Creates the first and main shape of the chassis and wheels
 	if (!sData.mVehicle->initialize(
 			*game.physics->gPhysics, PxCookingParams(PxTolerancesScale()),
 			*game.physics->gMaterial,
@@ -195,10 +196,11 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
 	PxTransform startPose(startP, PxQuat(PxIdentity));
-	sData.mVehicle->setUpActor(*game.physics->gScene, startPose,
-							   sData.mVehicleName);
+	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName);
 
 	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+
+	// Adds to the shape of the chassis
 	{
 		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.25f, 0.2f));
 		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);

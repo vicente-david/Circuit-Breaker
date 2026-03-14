@@ -1,5 +1,5 @@
 #pragma once
-#include "../snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
+#include "../snippets/snippetvehiclecustomtire/CustomTireVehicle.h"
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
 #include <memory>
@@ -45,7 +45,7 @@ struct SparkData {
 	float speed = 0.0f;
 
 	// this is stuff for physx magic
-	std::shared_ptr<EngineDriveVehicle> mVehicle;
+	std::shared_ptr<CustomTireVehicle> mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;
 
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];

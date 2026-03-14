@@ -30,7 +30,7 @@
 
 #include "PxPhysicsAPI.h"
 
-#include "../snippetvehiclecommon/directdrivetrain/DirectDrivetrain.h"
+#include "../snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
 
 #include "CustomTire.h"
 
@@ -49,11 +49,11 @@ using namespace physx::vehicle2;
 //See BaseVehicle for more details on the snippet code design.
 //
 class CustomTireVehicle
-	: public DirectDriveVehicle
+	: public EngineDriveVehicle
 	, public CustomTireComponent
 {
 public:
-	bool initialize(PxPhysics& physics, const PxCookingParams& params, PxMaterial& defaultMaterial, bool addPhysXBeginEndComponents = true);
+	bool initialize(PxPhysics& physics, const PxCookingParams& params, PxMaterial& defaultMaterial, Enum differentialType, bool addPhysXBeginEndComponents = true);
 	virtual void destroy();
 
 	virtual void initComponentSequence(bool addPhysXBeginEndComponents);
