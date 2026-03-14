@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 project(circuit-breaker)
 
+if(MSVC)
+    add_compile_options(/EHsc)
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 # run this if using debug version
