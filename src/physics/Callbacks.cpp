@@ -41,8 +41,7 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 		// get strength related to the angle of collision
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		// send data to spark system
-		sparkSparkCol.push_back(
-			SparkSparkColData{d1->entity, d2->entity, imp});
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
 	}
 }
 
@@ -63,6 +62,15 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 	} else if (d1->type == FINISH_LINE && d2->type == SPARK) {
 		dbug::log("GAME", 0, "finish!");
 		sparkFinishCol.push_back(d2->entity);
+	}
+
+	if (d1->type == SPARK && d2->type == HEAL) {
+		sparkHealCol.push_back(d1->entity);
+		printf("heal\n");
+
+	} else if (d1->type == HEAL && d2->type == SPARK) {
+		sparkHealCol.push_back(d2->entity);
+		printf("heal\n");
 	}
 }
 // PxVec3 PhysXCallbacks::getCollStrength(const PxContactPair *pairs,
@@ -90,9 +98,8 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 // 	// return total;
 // }
 
-
-//TODO: use the impulse here instead of just linear velocity.
-//stuff above should work, but the numbers don't seem right to me so idk
+// TODO: use the impulse here instead of just linear velocity.
+// stuff above should work, but the numbers don't seem right to me so idk
 float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 									  PxVec3 velocity) {
 	// get collision data for every shape that intersects
@@ -118,8 +125,6 @@ float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 			  minDot / velocity.magnitude());
 	return velocity.magnitude() - minDot;
 }
-
-
 
 void PhysXCallbacks::resetLists() {
 	sparkFinishCol.clear();

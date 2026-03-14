@@ -111,6 +111,38 @@ PxTriangleMesh *PhysicsManager::cookTriangleMesh(Mesh mesh) {
 	return gPhysics->createTriangleMesh(readBuffer);
 }
 
+PxRigidStatic *PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
+	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
+		auto material = gPhysics->createMaterial(0, 0, 0);
+	PxTriangleMesh *triangleMesh = cookTriangleMesh(mesh);
+
+	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
+	PxTriangleMeshGeometry triGeom(triangleMesh, scale,
+								   PxMeshGeometryFlag::eTIGHT_BOUNDS);
+
+	PxFilterData groundFilter(COLLISION_FLAG_HEAL,
+							  COLLISION_FLAG_CHASSIS, 0, 0);
+
+
+	PxShape *triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+	// triMeshShape->setSimulationFilterData(groundFilter);
+	actor->attachShape(*triMeshShape);
+
+
+	// add ground collision filter to all the shapes on the ground mesh
+	for (PxU32 i = 0; i < actor->getNbShapes(); i++) {
+		PxShape *shape = NULL;
+		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+		shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		actor->getShapes(&shape, 1, i);
+		printf("i:%d na:%d\n", i, shape->getGeometry().getType());
+	}
+	gScene->addActor(*actor);
+	triMeshShape->release();
+	return actor;
+}
 PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
 	PxTriangleMesh *triangleMesh = cookTriangleMesh(mesh);
 

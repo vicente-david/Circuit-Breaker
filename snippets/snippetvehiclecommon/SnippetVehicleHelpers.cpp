@@ -56,6 +56,11 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 	PX_UNUSED(constantBlock);
 	PX_UNUSED(constantBlockSize);
 
+	if ((filterData0.word0 == COLLISION_FLAG_HEAL ||
+		 filterData1.word0 == COLLISION_FLAG_HEAL)) {
+		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		printf("aaaaaa\n");
+	}
 	// ignore wheel colisions because they break everything
 	if (filterData0.word0 == COLLISION_FLAG_WHEEL ||
 		filterData1.word0 == COLLISION_FLAG_WHEEL) {
@@ -86,6 +91,15 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 		 filterData1.word0 == COLLISION_FLAG_FINISH)) {
 		// notify callbacks to handle finish line
 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+	}
+	// // finish line collision
+	if ((filterData0.word0 == COLLISION_FLAG_HEAL &&
+		 filterData1.word0 == COLLISION_FLAG_CHASSIS) ||
+		(filterData0.word0 == COLLISION_FLAG_CHASSIS &&
+		 filterData1.word0 == COLLISION_FLAG_HEAL)) {
+		// notify callbacks to handle finish line
+		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
+		printf("h close\n");
 	}
 
 	// callback if chassis hit another chassis, or the ground/wall

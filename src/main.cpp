@@ -143,7 +143,7 @@ int main() {
 		CollisionData planePhys{GROUND, walls};
 		gameState.coordinator->addComponent(walls, none);
 		gameState.coordinator->addComponent(walls, wallsModel);
-		gameState.coordinator->addComponent(track, planePhys);
+		gameState.coordinator->addComponent(walls, planePhys);
 
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
@@ -155,6 +155,19 @@ int main() {
 		}
 
 		dbug::log(0, "track entity id:%d", track);
+
+		Model healModel("assets/heals.obj"); // loads model and paths
+		Entity heal = gameState.coordinator->createEntity();
+		CollisionData healPhys{HEAL, heal};
+		gameState.coordinator->addComponent(heal, none);
+		gameState.coordinator->addComponent(heal, healModel);
+		gameState.coordinator->addComponent(heal, healPhys);
+		PxFilterData healFilter(COLLISION_FLAG_HEAL,
+									  COLLISION_FLAG_CHASSIS, 0, 0);
+		for(auto& i : healModel.GetMesh()){
+			auto actor = physicsManager->initHealZones(i, none);
+			actor->userData = &trackPhys;
+		}
 	}
 
 

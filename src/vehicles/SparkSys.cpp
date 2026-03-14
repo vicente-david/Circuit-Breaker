@@ -19,6 +19,10 @@
 #include "../world/LapSystem.h"
 
 void SparkSys::updateSparks(double dt, GameState &game) {
+	for (auto const &colData : game.physics->callbacks->sparkHealCol) {
+		auto &sData = game.coordinator->getComponent<SparkData>(colData);
+		sData.health+=10*dt;
+	}
 	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
 		auto &sData1 =
 			game.coordinator->getComponent<SparkData>(colData.spark1Id);
