@@ -166,7 +166,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// defintely didn't take hours to debug. I love c)
 	game.coordinator->addComponent(sparkEntity, SparkData());
 	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
-	sData.mVehicle = std::make_shared<CustomTireVehicle>();
+	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
 
 	// SparkData sData;
 	// Load the params from json or set directly.
