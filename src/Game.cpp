@@ -171,3 +171,94 @@ void Game::initializeFinishLine() {
 		triggerRect->release();
 	}
 }
+
+void Game::initializeAudio() {
+	// place holder test sounds
+	testSound = gameState.audio->createSound("muteCity");
+	// alSourcef(testSound.source, AL_GAIN, 0.6f);
+	testSound.setLooping(true);
+	testSound.start();
+	//float soundX = 0;
+}
+
+// update stuff
+void Game::update() {
+	
+	updateTime();
+	updatePhysics();
+	// AI
+	aiControllerSys->update(gameState);
+	// after physics update
+	lapSys->update(gameState);
+	respawnSys->update(gameState);
+
+	updateFPS();
+
+	updateRendering();
+
+}
+
+void Game::updateTime() {
+	// time
+	double newTime = glfwGetTime();
+	double frameTime = newTime - currentTime;
+	currentTime = newTime;
+	accumulator += frameTime;
+	accumulator = std::min(accumulator, 1 / minFps);
+	framesPassed++;
+}
+
+void Game::updatePhysics() {
+
+	// physics
+	while (accumulator >= dt) {
+
+		sparkSys->updateSparks(dt, gameState);
+		gameState.physics->callbacks->resetLists();
+		physicsSys->updatePhysics(dt, gameState);
+		cameraSys->update(gameState, dt);
+		audioSys->updateSounds(gameState);
+		accumulator -= dt;
+		t += dt;
+
+		// dopler shift test
+		// this stuff would  go in whatever is playing a sound (ex. physics
+		// collision and like gamestate stuff for
+
+		// // test moving the sound left/right
+		// float soundVel = 0;
+		// if (gameActions.shimmyLeft) {
+		// 	soundX -= 0.5f;
+		// 	soundVel = -15;
+		// 	gameActions.shimmyLeft = false;
+		// }
+		// if (gameActions.shimmyRight) {
+		// 	soundX += 0.5f;
+		// 	soundVel = 15;
+		// 	gameActions.shimmyRight = false;
+		// }
+		// position at 0,0,0 for testing
+		gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
+		gameState.audio->updateSoundVel(testSound, 0, 0, 0);
+	}
+
+}
+
+void Game::updateFPS() {
+
+	if (t >= 1.0) {
+		fps =
+			std::to_string(static_cast<int>(std::round(framesPassed / t)));
+		t -= 1.0;
+		framesPassed = 0;
+	}
+}
+
+void Game::updateRendering() {
+	// rendering
+	renderer->update(gameState, fps, cameraSys);
+}
+
+void Game::updateAudio() {
+	gameState.audio->update(dt);
+}

@@ -92,15 +92,6 @@ int main() {
 	// add debug imgui panel (needs to be after input callbacks are set)
 	dbugPanel::createPanel(renderer->window);
 
-	// time
-	double t = 0.0;
-	const double dt = 1.0 / 60.0; // simulate at 60fps
-	// if its slower than this, just slow down the game instead of lagging even
-	// more
-	const double minFps = 30.0;
-	double currentTime = glfwGetTime();
-	double accumulator = 0.0;
-
 	renderer->initializeShaders(); // Create shader programs
 	renderer->initializeText();
 
@@ -114,90 +105,27 @@ int main() {
 
 	
 
-	// place holder test sounds
-	Sound testSound = game.audio->createSound("muteCity");
-	// alSourcef(testSound.source, AL_GAIN, 0.6f);
-	testSound.setLooping(true);
-	testSound.start();
-	float soundX = 0;
+	game.initializeAudio();
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_DEPTH_TEST);
-
-	int framesPassed = 0;
-	std::string fps = std::to_string(0);
 
 	
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(renderer->window)) {
 
-		// time
-		double newTime = glfwGetTime();
-		double frameTime = newTime - currentTime;
-		currentTime = newTime;
-		accumulator += frameTime;
-		accumulator = std::min(accumulator, 1 / minFps);
-		framesPassed++;
-		dbugPanel::debug::updateTime = frameTime;
+		
+		//dbugPanel::debug::updateTime = frameTime;
 
 		// input
 		gameActions = inputSystem.getActions();
 		gameState.inputActions = gameActions;
 		controllerSys->update(gameState);
 
-		// physics
-		while (accumulator >= dt) {
-
-			sparkSys->updateSparks(dt, gameState);
-			game.physics->callbacks->resetLists();
-			physicsSystem->updatePhysics(dt, gameState);
-			cameraSys->update(gameState, dt);
-			audioSystem->updateSounds(gameState);
-			accumulator -= dt;
-			t += dt;
-
-			// dopler shift test
-			// this stuff would  go in whatever is playing a sound (ex. physics
-			// collision and like gamestate stuff for
-
-			// // test moving the sound left/right
-			// float soundVel = 0;
-			// if (gameActions.shimmyLeft) {
-			// 	soundX -= 0.5f;
-			// 	soundVel = -15;
-			// 	gameActions.shimmyLeft = false;
-			// }
-			// if (gameActions.shimmyRight) {
-			// 	soundX += 0.5f;
-			// 	soundVel = 15;
-			// 	gameActions.shimmyRight = false;
-			// }
-			// position at 0,0,0 for testing
-			game.audio->updateSoundLoc(testSound, 0, 0, 0);
-			game.audio->updateSoundVel(testSound, 0, 0, 0);
-		}
-
-		// AI
-		aiControllerSys->update(gameState);
-		// after physics update
-		lapSys->update(gameState);
-		respawnSystem->update(gameState);
+		game.update();
 		
-
-		if (t >= 1.0) {
-			fps =
-				std::to_string(static_cast<int>(std::round(framesPassed / t)));
-			t -= 1.0;
-			framesPassed = 0;
-		}
-
-		// rendering
-
-		renderer->update(gameState, fps, cameraSys);
-
-		game.audio->update(dt);
 	}
 	game.audio->close();
 	dbugPanel::cleanup();

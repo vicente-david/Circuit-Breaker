@@ -2,9 +2,9 @@
 
 // will contain all the subsystems
 
-// gamestate will purely hold the state of the game
-
-// this Game class will talk between the subsystems
+// gamestate will purely be updating the state of the game
+// it could hold some states that are necessary
+// gamestate will just be a channel where systems can talk to other systems
 
 // it will pass around the game state as means of communication
 #pragma once
@@ -25,10 +25,25 @@ public:
 	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
 	std::shared_ptr<AudioEngine> audio;
 
+	// currently these are pretty disconnected
+	// so make it so we can call initializeGame()
 	void initializeGame();
 	void initializeECS();
 	void initializeTrack();
 	void initializeFinishLine(); // ???
+	void initializeAudio();
+
+	//void resetGame(); // todo: implement
+
+	// update every frame 
+	void update(); // calls the various updates, ex first update physics then rendering
+	void updateTime(); 
+	void updatePhysics();
+	void updateFPS();
+	void updateRendering();
+	void updateAudio();
+
+	// update not every frame (used for things that don't need to be updated every frame)
 
 	// shared pointers to all the existing systems
 	std::shared_ptr<PhysicsSystem> physicsSys;
@@ -43,4 +58,19 @@ public:
 	std::shared_ptr<UISystem> uiSys;
 
 	GameState gameState;
+
+	// time stuff
+	double t = 0.0;
+	const double dt = 1.0 / 60.0; // simulate at 60fps
+	// if its slower than this, just slow down the game instead of lagging even
+	// more
+	const double minFps = 30.0;
+	double currentTime = glfwGetTime();
+	double accumulator = 0.0;
+	int framesPassed = 0;
+	std::string fps = std::to_string(0);
+
+	// sound
+	Sound testSound;
+
 };
