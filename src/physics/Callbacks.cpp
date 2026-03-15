@@ -24,6 +24,15 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	// dbug::log("PHYS", 0, "impulse:", pairHeader.pairs[0].contactImpulses);
 
 	// do things
+	if ( d2->type == HEAL) {
+		sparkHealCol.push_back(d1->entity);
+		printf("heal\n");
+
+	} else if (d1->type == HEAL ){
+		sparkHealCol.push_back(d2->entity);
+		printf("heal\n");
+	}
+
 	if (d1->type == SPARK && d2->type == GROUND) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
@@ -64,14 +73,6 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 		sparkFinishCol.push_back(d2->entity);
 	}
 
-	if (d1->type == SPARK && d2->type == HEAL) {
-		sparkHealCol.push_back(d1->entity);
-		printf("heal\n");
-
-	} else if (d1->type == HEAL && d2->type == SPARK) {
-		sparkHealCol.push_back(d2->entity);
-		printf("heal\n");
-	}
 }
 // PxVec3 PhysXCallbacks::getCollStrength(const PxContactPair *pairs,
 // 									   PxU32 nbPairs) {

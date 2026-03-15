@@ -137,36 +137,36 @@ int main() {
 		gameState.coordinator->addComponent(track, none);
 		gameState.coordinator->addComponent(track, Track.model);
 		gameState.coordinator->addComponent(track, trackPhys);
-
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = gameState.coordinator->createEntity();
-		CollisionData planePhys{GROUND, walls};
-		gameState.coordinator->addComponent(walls, none);
-		gameState.coordinator->addComponent(walls, wallsModel);
-		gameState.coordinator->addComponent(walls, planePhys);
-
 		auto trackActor =
 			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
 		trackActor->userData = &trackPhys;
 
-		for(auto& i : wallsModel.GetMesh()){
-			auto actor = physicsManager->initStaticMesh(i, none);
-			actor->userData = &planePhys;
-		}
-
+		// Model wallsModel("assets/walls.obj"); // loads model and paths
+		// Entity walls = gameState.coordinator->createEntity();
+		// CollisionData planePhys{GROUND, walls};
+		// gameState.coordinator->addComponent(walls, none);
+		// gameState.coordinator->addComponent(walls, wallsModel);
+		// gameState.coordinator->addComponent(walls, planePhys);
+		//
+		//
+		// for(auto& i : wallsModel.GetMesh()){
+		// 	auto actor = physicsManager->initStaticMesh(i, none);
+		// 	actor->userData = &planePhys;
+		// }
+		//
 		dbug::log(0, "track entity id:%d", track);
 
-		Model healModel("assets/heals.obj"); // loads model and paths
+		Model healModel("assets/walls.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
 		CollisionData healPhys{HEAL, heal};
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
 		gameState.coordinator->addComponent(heal, healPhys);
-		PxFilterData healFilter(COLLISION_FLAG_HEAL,
-									  COLLISION_FLAG_CHASSIS, 0, 0);
+		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
+		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
 		for(auto& i : healModel.GetMesh()){
 			auto actor = physicsManager->initHealZones(i, none);
-			actor->userData = &trackPhys;
+			actor->userData = &healPhys;
 		}
 	}
 
