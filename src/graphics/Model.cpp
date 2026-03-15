@@ -8,8 +8,19 @@ void Model::Draw(GLuint& shaderID) {
 	}
 }
 
-std::vector<Mesh> Model::GetMesh() {
+std::vector<Mesh> Model::GetMeshes() {
 	return meshes;
+}
+
+Mesh Model::GetMesh(std::string name) {
+	for (auto& mesh : meshes) {
+		if (mesh.name == name) {
+			return mesh;
+		}
+	}
+	std::cout << "ERROR: Model contains no mesh named " << name << std::endl;
+	throw std::runtime_error("Mesh fetch failure");
+
 }
 
 void Model::loadModel(std::string path) {

@@ -127,7 +127,7 @@ int main() {
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	
-	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
+	renderer->setTrackBounds(Track.model.GetMesh("Cube").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
@@ -138,7 +138,7 @@ int main() {
 		gameState.coordinator->addComponent(track, Track.model);
 		gameState.coordinator->addComponent(track, trackPhys);
 		auto trackActor =
-			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
+			physicsManager->initStaticMesh(Track.model.GetMesh("Cube"), none);
 		trackActor->userData = &trackPhys;
 
 		// Model wallsModel("assets/walls.obj"); // loads model and paths
@@ -164,7 +164,7 @@ int main() {
 		gameState.coordinator->addComponent(heal, healPhys);
 		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
 		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
-		for(auto& i : healModel.GetMesh()){
+		for(auto& i : healModel.GetMeshes()){
 			auto actor = physicsManager->initHealZones(i, none);
 			actor->userData = &healPhys;
 		}
