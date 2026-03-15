@@ -5,12 +5,10 @@
 #include <memory>
 #include "vehicles/SparkComponents.h"
 
-GameState gameState;
+GameState::GameState() {
+	// what's up i'm a useful function
+}
 
-GameState::GameState(){
-		coordinator = std::make_shared<Coordinator>();
-		audio = std::make_unique<AudioEngine>();
-	}
 
 void GameState::endGame(Entity gameWinner) {
 	winner = gameWinner;		// assign the game winner
@@ -23,6 +21,7 @@ void GameState::endGame(Entity gameWinner) {
 
 	gameEnded = true;			// end the game
 }
+
 
 void GameState::resetGameState() {
 	winner = -1;			// reset winner

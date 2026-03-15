@@ -1,7 +1,5 @@
 #pragma once
-
 #include "InputSystem.h"
-#pragma once
 #include "audio/AudioEngine.h"
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
@@ -13,12 +11,6 @@
 
 class GameState {
   public:
-	// general managers that things will often need to play sounds, add
-	// entities, etc.
-	std::shared_ptr<Coordinator> coordinator;
-	std::shared_ptr<PhysicsManager> physics;
-	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
-	std::unique_ptr<AudioEngine> audio;
 	Actions inputActions;
 
 	// Public functions
@@ -43,4 +35,9 @@ class GameState {
 	RectUI activeUIRect; 
 	TextUI uiText;
 
+	//temporary to make everything work
+	std::shared_ptr<Coordinator> coordinator;
+	std::shared_ptr<UISystem> uiSystem;
+	std::shared_ptr<PhysicsManager> physics;
+	std::shared_ptr<AudioEngine> audio;
 };
