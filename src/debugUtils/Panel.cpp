@@ -128,7 +128,6 @@ void drawSparkInfo() {
 	ImGui::Text("Boost");
 	ImGui::PushStyleColor(ImGuiCol_PlotHistogram,
 		ImVec4(0.2f, 0.5f, 1.0f, 1.0f));
-	printf("boot:%f\n", player.boost);
 	ImGui::ProgressBar(player.boost / 100.0f, ImVec2(-1, 20));
 	ImGui::PopStyleColor();
 

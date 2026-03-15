@@ -25,6 +25,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	for (auto const &colData : game.physics->callbacks->sparkHealCol) {
 		auto &sData = game.coordinator->getComponent<SparkData>(colData);
 		sData.health += 10 * dt;
+		if (sData.health > 100) {
+			sData.health = 100;
+		}
 	}
 	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
 		auto &sData1 =

@@ -24,11 +24,11 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	// dbug::log("PHYS", 0, "impulse:", pairHeader.pairs[0].contactImpulses);
 
 	// do things
-	if ( d2->type == HEAL) {
+	if (d2->type == HEAL) {
 		sparkHealCol.push_back(d1->entity);
 		printf("heal\n");
 
-	} else if (d1->type == HEAL ){
+	} else if (d1->type == HEAL) {
 		sparkHealCol.push_back(d2->entity);
 		printf("heal\n");
 	}
@@ -72,7 +72,6 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 		dbug::log("GAME", 0, "finish!");
 		sparkFinishCol.push_back(d2->entity);
 	}
-
 }
 // PxVec3 PhysXCallbacks::getCollStrength(const PxContactPair *pairs,
 // 									   PxU32 nbPairs) {

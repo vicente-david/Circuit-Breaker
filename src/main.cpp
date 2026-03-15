@@ -156,7 +156,7 @@ int main() {
 		//
 		dbug::log(0, "track entity id:%d", track);
 
-		Model healModel("assets/walls.obj"); // loads model and paths
+		Model healModel("assets/heals.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
 		CollisionData healPhys{HEAL, heal};
 		gameState.coordinator->addComponent(heal, none);
@@ -170,6 +170,7 @@ int main() {
 		}
 	}
 
+	
 
 	// create finish line trigger box
 	CollisionData finishCollisionData{FINISH_LINE, -1};
