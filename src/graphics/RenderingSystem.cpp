@@ -172,24 +172,28 @@ void RenderingSystem::renderUI(GameState& game) {
 }
 */
 
-void RenderingSystem::renderUI(GameState& game) {
-	// pretend this is the ui shader we're using
+void RenderingSystem::renderUI(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
+	// render text
 	textProg->use();
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
+		1.0f, glm::vec3(1.0f), textFont);
+
+	// pretend this is the ui shader we're using
+	//textProg->use();
 	RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
+
+	
 }
 
-void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
-	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+// TODO: split the rendering passes
+void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
 	// Render pass 1: depth to texture
 	float near_plane = -70.f, far_plane = 25.0f;
 	glm::mat4 lightProj = glm::ortho(bounds.first.x - 50, bounds.second.x + 50.f, bounds.first.z - 50.f, bounds.second.z + 50.f, near_plane, far_plane);
-	
+
 	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
-	
+
 	shadowShader->use();
 	unsigned int lightSpaceLoc = glGetUniformLocation(shadowShader->id, "lightSpaceMat");
 	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
@@ -200,6 +204,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	renderScene(game, shadowShader->id);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
 	// Render pass 2: render scene as normal
 
@@ -226,17 +231,32 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	renderScene(game, basicShader->id);
 
-	// render text
-	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
-			   1.0f, glm::vec3(1.0f), textFont);
-
-	// render ui
-	renderUI(game);
-
 	if (dbugPanel::tuning::physicsShapes) {
 		drawPhysxDebug(game, view, proj);
 	}
+
+}
+
+void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
+	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	
+	// render shadows + scene
+	//renderShadows(game, fps ,camSystem);
+	
+
+	for (auto renderPass : renderPasses) {
+		(this->*renderPass)(game, fps, camSystem);
+	}
+
+	
+
+	// render ui
+	renderUI(game, fps, camSystem);
+
+	
 
 	glfwPollEvents();
 	dbugPanel::render();

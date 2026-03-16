@@ -24,6 +24,7 @@ void Game::initializeGame() {
 
 	initializeAudio();
 
+	renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 }
 
 void Game::initializeECS() {
