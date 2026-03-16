@@ -6,11 +6,24 @@ Game::Game() {
 	gameState = GameState();
 }
 
+// in theory this should initialize all internal systems
+// should not do any track loading or spawning of entities
 void Game::initializeGame() {
 	initializeECS(); //initialize ecs
-	// initialize entities
-	// construct track 
-	// bake physics
+
+	// initialize debug panel
+	// create physics manager
+	std::shared_ptr<PhysicsManager> physicsManager =
+		std::make_shared<PhysicsManager>();
+	physics = physicsManager;
+
+	gameState.physics = physics;
+	gameState.coordinator = coordinator;
+	gameState.audio = audio;
+	gameState.uiSystem = uiSystem;
+
+	initializeAudio();
+
 }
 
 void Game::initializeECS() {
@@ -93,21 +106,32 @@ void Game::initializeTrack() {
 	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
+	// initialize players
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -6.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, 0.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(4.0f, 2.0f, -3.0f));
+
+
+	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
+
+}
+
+void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt) {
 	// create spark with new system
-	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z - 6.f);
-	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(sparkEntity, HumanController{ 0 });
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());
 	coordinator->addComponent(sparkEntity, Respawnable());
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
+	player = sparkEntity;
+}
 
-	
-
-
-	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
-	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
+void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt) {
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, AIController{
@@ -115,8 +139,10 @@ void Game::initializeTrack() {
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
 		});
+}
 
-	startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
+void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt) {
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
@@ -129,10 +155,6 @@ void Game::initializeTrack() {
 		0.02f, // curveBoostThresh
 		8, // steeringSharpness
 		});
-
-
-	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
-
 }
 
 void Game::initializeFinishLine() {
