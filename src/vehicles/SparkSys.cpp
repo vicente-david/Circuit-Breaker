@@ -52,7 +52,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// PxForceMode::eACCELERATION);
 		reload = sControls.reload;
 
-		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
+		dbugPanel::sparkInfo(entity, sData.health, sData.boost);
 	}
 
 	// reload the tuning stuff from debug panel
@@ -72,14 +72,8 @@ void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
 	sData.shimmyTimer = sData.ShimmyCooldown;
 }
 
-void SparkSys::boost(PxRigidBody *rBody, SparkData &sData) {
-	const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
-	float boostStrength = 10.f;
 
-	sData.currBoost -= 0.5f;
 
-	rBody->addForce(forwardDir * boostStrength, PxForceMode::eACCELERATION);
-}
 
 void SparkSys::respawn(PxRigidBody *rBody) {
 	dbug::log("GAME", 0, "resetting");
@@ -310,7 +304,6 @@ void SparkSys::wallCollision(GameState &game) {
 }
 
 void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt) {
-	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 
 	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
 	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
@@ -332,19 +325,10 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
 
 	// boosting
-	if (sControls.boost && sData.currBoost > 0) {
-		dbug::log("GAME", -1, "boosting!");
-		boost(rBody, sData);
-	}
-	else if (sData.currBoost < 100) {
-		sData.currBoost += sData.boostRegenSpeed * dt;
+	updateMaxBoost(sData);
+	boost(sData, sControls, dt);
 
-		if (sData.currBoost > 100) {
-			sData.currBoost = 100;
-			dbug::log("GAME", 0, "boost full");
-		}
-	}
-
+	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 	// shimmying
 	if (sData.shimmyTimer <= 0) {
 		if (sControls.shimmyL) {
@@ -364,5 +348,33 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	// Respawn
 	if (sControls.reset) {
 		respawn(rBody);
+	}
+}
+
+void SparkSys::updateMaxBoost(SparkData& sData) {
+	sData.maxBoost = sData.maxHealth - sData.health;
+}
+
+void SparkSys::applyBoost(SparkData& sData) {
+	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+	const PxVec3 forwardVector = rBody->getGlobalPose().q.getBasisVector2();
+	
+	sData.boost -= sData.boostUseRate;
+
+	rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
+}
+
+void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
+	if (sControls.boost && sData.boost > 0) {
+		dbug::log("GAME", -1, "boosting!");
+		applyBoost(sData);
+	}
+	else if (sData.boost < sData.maxBoost) {
+		sData.boost += sData.boostRegenRate * dt;
+
+		if (sData.boost > sData.maxBoost) {
+			sData.boost = sData.maxBoost;
+			dbug::log("GAME", 0, "boost full");
+		}
 	}
 }

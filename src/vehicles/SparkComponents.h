@@ -35,10 +35,15 @@ struct SparkControls {
 // this is basically the current state of the spark. things can sometimes break
 // if you forget to use refences to this stuff because physx makes no sense
 struct SparkData {
-	float health = 100;
-	float currBoost = 100;
-	float boostRegenSpeed = 10.0f;
+	const float maxHealth = 100.f;
+	float health = maxHealth;
 
+	const float boostUseRate = 5.f;
+	const float boostStrength = 10.f;
+	const float boostRegenRate = 10.0f;
+	float maxBoost = 0.f;
+	float boost = maxBoost;
+	
 	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
 

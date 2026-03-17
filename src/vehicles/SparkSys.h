@@ -36,6 +36,8 @@ class SparkSys : public System {
 
 	// helper functions for doing the movements
 	void shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir);
-	void boost(PxRigidBody *rBody, SparkData &sData);
+	void updateMaxBoost(SparkData &sData);
+	void applyBoost(SparkData &sData);
+	void boost(SparkData &sData, SparkControls &sControls, double dt);
 	void respawn(PxRigidBody *rBody);
 };
