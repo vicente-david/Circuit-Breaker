@@ -1,38 +1,13 @@
 #pragma once
-#include "GameState.h"
+#include "glad/gl.h"
 #include "GLFW/glfw3.h"
-#include "InputSystem.h"
-#include "PxShape.h"
-#include "ai/AIControllerSys.h"
-#include "ai/AISparkComponents.h"
-#include "audio/AudioEngine.h"
-#include "audio/AudioSystem.h"
-#include "audio/Sound.h"
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
-#include "ecs/Component.h"
-#include "ecs/EntityManager.h"
-#include "glad/gl.h"
-#include "graphics/CameraComp.h"
-#include "graphics/CameraSystem.h"
-#include "graphics/Model.h"
-#include "graphics/RenderingSystem.h"
-#include "physics/PhysicsManager.h"
-#include "physics/PhysicsSystem.h"
-#include "vehicles/ControllerSys.h"
-#include "vehicles/SparkComponents.h"
-#include "vehicles/SparkSys.h"
-
-#include "world/RespawnSystem.h"
-#include <AL/al.h>
 #include <cstdio>
 #include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
-#include "world/CurveLoader.h"
-#include "world/LapSystem.h"
-#include "ui/UISystem.h"
 #include "Game.h"
 
 int main() {
