@@ -180,6 +180,7 @@ int main() {
 		PxVec3 triggerLengths(
 			255.637f, 100.0f,
 			1.0f); // width, height, and depth of the finish line
+
 		PxRigidStatic *triggerActor =
 			physicsManager->gPhysics->createRigidStatic(
 				PxTransform(finishLinePosition)); // create static rigid body

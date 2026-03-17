@@ -306,12 +306,25 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
 		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
 	}
+	{
+		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.2f));
+		PxShape *groundBox = game.physics->gPhysics->createShape(
+			groundBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.0f),
+									   PxQuat(PxIdentity));
+
+		groundBox->setLocalPose(groundBoxLocalPose);
+		rBody->attachShape(*groundBox);
+		groundBox->release();
+	}
 
 	// Create vehicle filter
 	PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS,
 							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
-	PxFilterData tireFilter(COLLISION_FLAG_WHEEL,
-							COLLISION_FLAG_GROUND | COLLISION_FLAG_HEAL, 0, 0);
+	// wheels have no collision
+	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, 0, 0, 0);
+	PxFilterData groundFilter(COLLISION_FLAG_SPARK_GROUND,
+							  COLLISION_FLAG_SPARK_GROUND_AGAINST, 0, 0);
 	// PxFilterData tireFilter(0, 0, 0, 0);
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
@@ -321,15 +334,26 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 		// add filter to tires/chasis depending on type
 		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
+			// printf("box i:%d\n", i);
 			shape->setSimulationFilterData(chassisFilter);
 		} else {
 			shape->setSimulationFilterData(tireFilter);
 		}
 
-		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-		shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		// special ground trigger
+		if (i == 7) {
+			shape->setSimulationFilterData(groundFilter);
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		} else {
+
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		}
 	}
 
 	// Set the vehicle in 1st gear.
@@ -382,7 +406,6 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 	return sparkEntity;
 }
-
 // updates the drive params of all the active sparks
 void SparkSys::reloadSparkParams(GameState &game) {
 	dbug::log("GAME", 0, "Reloading spark config");
