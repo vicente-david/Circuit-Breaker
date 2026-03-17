@@ -22,12 +22,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		sparkInputs(sData, sControls, dt);
 
-
-
-			}
-
-			}
-		}
+		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
+			sControls.throttle, sControls.brake, sControls.steering);
 
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
@@ -274,14 +270,10 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	sData.mVehicle->mCommandState.throttle = sControls.throttle;
 	sData.mVehicle->mCommandState.steer = sControls.steering;
 
-	dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
-		sControls.throttle, sControls.brake, sControls.steering);
-
 	// Check for reverse 
 	reverse(sData, sControls);
 
 	// boosting
-	//updateMaxBoost(sData);
 	boost(sData, sControls, dt);
 
 	// shimmying
@@ -305,6 +297,7 @@ void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 		sData.inReverse = false;
 	}
 }
+
 void SparkSys::updateMaxBoost(SparkData& sData) {
 	sData.maxBoost = sData.maxHealth - sData.health;
 }
@@ -319,6 +312,8 @@ void SparkSys::applyBoost(SparkData& sData) {
 }
 
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
+	//updateMaxBoost(sData);
+
 	if (sControls.boost && sData.boost > 0) {
 		dbug::log("GAME", -1, "boosting!");
 		applyBoost(sData);
