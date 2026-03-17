@@ -63,12 +63,13 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 	}
 
 
-	// if ((filterData0.word0 == COLLISION_FLAG_WHEEL &&
-	// 	 filterData1.word0 != COLLISION_FLAG_GROUND) ||
-	// 	(filterData1.word0 == COLLISION_FLAG_WHEEL &&
-	// 	 filterData0.word0 != COLLISION_FLAG_GROUND)) {
-	// 	return PxFilterFlag::eSUPPRESS;
-	// }
+	// ignore wheel-chassis collision, the real breaking everything
+	if ((filterData0.word0 == COLLISION_FLAG_WHEEL &&
+		 filterData1.word0 != COLLISION_FLAG_CHASSIS) ||
+		(filterData1.word0 == COLLISION_FLAG_WHEEL &&
+		 filterData0.word0 != COLLISION_FLAG_CHASSIS)) {
+		return PxFilterFlag::eSUPPRESS;
+	}
 
 	pairFlags = PxPairFlag::eCONTACT_DEFAULT;
 
