@@ -19,28 +19,10 @@
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
-	for (auto const &pair : game.physics->callbacks->sparkSparkCol) {
-		auto &sData1 = game.coordinator->getComponent<SparkData>(pair.first);
-		auto &rBody1 = game.coordinator->getComponent<PxRigidBody *>(pair.first);
-		auto &sData2 = game.coordinator->getComponent<SparkData>(pair.second);
-		auto &rBody2 = game.coordinator->getComponent<PxRigidBody *>(pair.second);
+	
+	sparkCollision(game);
+	wallCollision(game);
 
-		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
-
-		sData2.health-=velDiff.magnitude();
-		sData1.health-=velDiff.magnitude();
-
-		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
-
-	}
-	for (auto const &entity : game.physics->callbacks->sparkWallCol) {
-		auto &sData = game.coordinator->getComponent<SparkData>(entity);
-		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
-		sData.health-=rBody->getLinearVelocity().magnitude();
-		dbug::log("GAME", 0, "Hit a wall!");
-		printf("!\n");
-
-	}
 	bool reload = false;
 	for (auto const &entity : entities) {
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
@@ -117,11 +99,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 	// reload the tuning stuff from debug panel
 	if (dbugPanel::tuning::reloadSpark || reload) {
-		dbugPanel::tuning::setFolder = false;
-		for (auto const &entity : entities) {
-			auto &sData = game.coordinator->getComponent<SparkData>(entity);
-			sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
-		}
 		reloadSparkParams(game);
 	}
 }
@@ -276,6 +253,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	sData.mVehicleSimContext.physxActorUpdateMode =
 		PxVehiclePhysXActorUpdateMode::eAPPLY_ACCELERATION;
 
+	// TODO: make sure this works, applying logitudinally would be nice too
 	//Larger lateral damping factor than default to avoid drift when nearly rest
 	sData.mVehicleSimContext.tireStickyParams.stickyParams[PxVehicleTireDirectionModes::eLATERAL].damping = 1.0f;
 
@@ -298,8 +276,16 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 // updates the drive params of all the active sparks
 void SparkSys::reloadSparkParams(GameState &game) {
+	dbugPanel::tuning::setFolder = false;
+	
+	for (auto const &entity : entities) {
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
+	}
+
 	dbug::log("GAME", 0, "Reloading spark config");
 	for (auto const &entity : entities) {
+
 		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
 		 
@@ -309,6 +295,7 @@ void SparkSys::reloadSparkParams(GameState &game) {
 			sData.mVehicleDataPath,
 			baseFileName,
 			sData.mVehicle->mBaseParams);
+
 		// Changes the parameters of the engine
 		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
 		readEngineDrivetrainParamsFromJsonFile(
@@ -320,9 +307,10 @@ void SparkSys::reloadSparkParams(GameState &game) {
 	}
 }
 
-// helper to register the system
-std::shared_ptr<SparkSys>
-SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
+
+// ================================ HELPER FUNCTIONS ================================
+
+std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	// register system
 	auto system = coord->registerSystem<SparkSys>();
 	// create system signture (what components this system needs)
@@ -333,4 +321,33 @@ SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	coord->setSystemSignature<SparkSys>(sig);
 
 	return system;
+}
+
+void SparkSys::sparkCollision(GameState& game) {
+	for (auto const& pair : game.physics->callbacks->sparkSparkCol) {
+		auto& sData1 = game.coordinator->getComponent<SparkData>(pair.first);
+		auto& rBody1 = game.coordinator->getComponent<PxRigidBody*>(pair.first);
+		auto& sData2 = game.coordinator->getComponent<SparkData>(pair.second);
+		auto& rBody2 = game.coordinator->getComponent<PxRigidBody*>(pair.second);
+
+		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
+
+		sData2.health -= velDiff.magnitude();
+		sData1.health -= velDiff.magnitude();
+
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
+
+	}
+}
+
+void SparkSys::wallCollision(GameState &game) {
+	for (auto const& entity : game.physics->callbacks->sparkWallCol) {
+		auto& sData = game.coordinator->getComponent<SparkData>(entity);
+		auto& rBody = game.coordinator->getComponent<PxRigidBody*>(entity);
+		sData.health -= rBody->getLinearVelocity().magnitude();
+		dbug::log("GAME", 0, "Hit a wall!");
+		printf("!\n");
+
+	}
+}
 }

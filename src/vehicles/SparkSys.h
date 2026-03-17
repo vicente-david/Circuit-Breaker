@@ -15,9 +15,6 @@ class SparkSys : public System {
 	static std::shared_ptr<SparkSys>
 	registerSystem(std::shared_ptr<Coordinator> &coord);
 
-	static void sparkWallCollision(Entity s, GameState& game);
-	static void sparkSparkCollision(Entity s1,Entity s2, GameState& game);
-
 	// updates all the sparks in the game
 	void updateSparks(double dt, GameState &gameState);
 
@@ -31,6 +28,10 @@ class SparkSys : public System {
 	void reloadSparkParams( GameState& gameState);
 
   private:
+	// Helpers
+	void sparkCollision(GameState& game);
+	void wallCollision(GameState& game);
+
 	// helper functions for doing the movements
 	void shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir);
 	void boost(PxRigidBody *rBody, SparkData &sData);

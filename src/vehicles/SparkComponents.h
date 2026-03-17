@@ -52,7 +52,7 @@ struct SparkData {
 	PxU32 mNbMaterialFrictions = 0;
 	PxReal mDefaultMaterialFriction = 1.0f;
 
-	// sweeps for wheels instead of ground collision detection (cylinder with unit size)
+	// sweeps for wheels instead of ray cast (cylinder with unit size)
 	PxConvexMesh *mCylinderSweepMesh = NULL;
 
 	const char *mVehicleDataPath = NULL;
