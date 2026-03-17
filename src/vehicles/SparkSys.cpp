@@ -1,22 +1,6 @@
-
-#include "vehicles/SparkSys.h"
-#include "GameState.h"
-#include "PxActor.h"
-#include "PxForceMode.h"
-#include "PxRigidBody.h"
-#include "PxRigidDynamic.h"
-#include "PxShape.h"
-#include "SparkComponents.h"
-#include "debugUtils/Logger.h"
+#include "SparkSys.h"
 #include "debugUtils/Panel.h"
-#include "ecs/Component.h"
-#include "ecs/EntityManager.h"
-#include "geometry/PxGeometry.h"
 #include "graphics/Model.h"
-#include "physics/CollisionData.h"
-#include "physics/PhysicsManager.h"
-#include <cstdio>
-#include <memory>
 #include "world/LapSystem.h"
 
 void SparkSys::updateSparks(double dt, GameState &game) {

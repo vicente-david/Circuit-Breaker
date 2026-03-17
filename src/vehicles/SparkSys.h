@@ -1,11 +1,7 @@
 #pragma once
 
 #include "GameState.h"
-#include "PxRigidBody.h"
 #include "SparkComponents.h"
-#include "ecs/Coordinator.h"
-#include "ecs/EntityManager.h"
-#include "ecs/System.h"
 
 // this updates the sparks and turns the controls to actual movements and
 // gameplay.
