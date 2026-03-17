@@ -237,31 +237,31 @@ int main() {
 
 	gameState.uiText = gameState.uiSystem->raceUI(gameState.coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
 
-	//
-	// startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
-	// auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
-	// gameState.coordinator->addComponent(testSpark2, LapCounter());
-	// gameState.coordinator->addComponent(testSpark2, Respawnable());
-	// gameState.coordinator->addComponent(testSpark2, AIController{
-	// 	AIState::IDLE, // start AI in idle state
-	// 	trackPaths.at(0).curvePoints, // planned route
-	// 	trackPaths.at(0).curvatures, // angles at each point in route
-	// 	});
-	//
-	// startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
-	// auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
-	// gameState.coordinator->addComponent(testSpark3, LapCounter());
-	// gameState.coordinator->addComponent(testSpark3, Respawnable());
-	// gameState.coordinator->addComponent(testSpark3, AIController{
-	// 	AIState::IDLE, // start AI in idle state
-	// 	trackPaths.at(0).curvePoints, // planned route
-	// 	trackPaths.at(0).curvatures, // angles at each point in route
-	// 	0.10f, // curveBrakeThresh
-	// 	22.0f, // maxTargetSpeed
-	// 	0.02f, // curveBoostThresh
-	// 	8, // steeringSharpness
-	// 	});
-	//
+
+	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
+	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
+	gameState.coordinator->addComponent(testSpark2, LapCounter());
+	gameState.coordinator->addComponent(testSpark2, Respawnable());
+	gameState.coordinator->addComponent(testSpark2, AIController{
+		AIState::IDLE, // start AI in idle state
+		trackPaths.at(0).curvePoints, // planned route
+		trackPaths.at(0).curvatures, // angles at each point in route
+		});
+
+	startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
+	gameState.coordinator->addComponent(testSpark3, LapCounter());
+	gameState.coordinator->addComponent(testSpark3, Respawnable());
+	gameState.coordinator->addComponent(testSpark3, AIController{
+		AIState::IDLE, // start AI in idle state
+		trackPaths.at(0).curvePoints, // planned route
+		trackPaths.at(0).curvatures, // angles at each point in route
+		0.10f, // curveBrakeThresh
+		22.0f, // maxTargetSpeed
+		0.02f, // curveBoostThresh
+		8, // steeringSharpness
+		});
+
 	
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");

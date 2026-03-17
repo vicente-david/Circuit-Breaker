@@ -24,8 +24,8 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
-	// dbug::log("PHYS", 0, "impulse:", pairHeader.pairs[0].contactImpulses);
 
+	// spark/wall collisions
 	if (d1->type == SPARK && d2->type == GROUND) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
@@ -72,7 +72,7 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 				  pIdx, pairs[pIdx].status, trigData->type, trigData->entity,
 				  otherData->type, otherData->entity);
 
-		// collision for spark  ground stuff
+		// ground trigger box for the spark
 		if (trigData->type == SPARK) {
 			if (otherData->type == GROUND) {
 				updateEntityCollider(groundedSparks, status, trigData->entity);

@@ -306,11 +306,12 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
 		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
 	}
+	// collision box to detect heal zones/if youre grounded
 	{
-		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.4f));
+		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.3f));
 		PxShape *groundBox = game.physics->gPhysics->createShape(
 			groundBoxGeom, *game.physics->gMaterial, true);
-		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.0f),
+		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.1f),
 									   PxQuat(PxIdentity));
 
 		groundBox->setLocalPose(groundBoxLocalPose);
