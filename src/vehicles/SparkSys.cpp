@@ -61,20 +61,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	}
 }
 
-void SparkSys::shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir) {
-	const PxVec3 latDir = rBody->getGlobalPose().q.getBasisVector0();
-	int flip = (rightDir) ? -1 : 1;
-	float shimmyForce = 15.f;
-
-	rBody->addForce(latDir * shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
-	dbug::log("GAME", 0, "Weeeeeeee!");
-
-	sData.shimmyTimer = sData.ShimmyCooldown;
-}
-
-
-
-
 void SparkSys::respawn(PxRigidBody *rBody) {
 	dbug::log("GAME", 0, "resetting");
 
@@ -328,23 +314,10 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	updateMaxBoost(sData);
 	boost(sData, sControls, dt);
 
-	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 	// shimmying
-	if (sData.shimmyTimer <= 0) {
-		if (sControls.shimmyL) {
-			dbug::log("GAME", 0, "slide to the left");
-			shimmy(rBody, sData, false);
-		}
+	shimmy(sData, sControls, dt);
 
-		if (sControls.shimmyR) {
-			dbug::log("GAME", 0, "slide to the right");
-			shimmy(rBody, sData, true);
-		}
-	}
-	else if (sData.shimmyTimer > 0) {
-		sData.shimmyTimer -= dt;
-	}
-
+	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 	// Respawn
 	if (sControls.reset) {
 		respawn(rBody);
@@ -377,4 +350,33 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 			dbug::log("GAME", 0, "boost full");
 		}
 	}
+}
+
+void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
+	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+	const PxVec3 lateralVector = rBody->getGlobalPose().q.getBasisVector0();
+	
+	int flip = moveRight ? -1 : 1;
+	
+	rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
+
+	sData.shimmyTimer = sData.ShimmyCooldown;
+}
+
+void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
+	if (sData.shimmyTimer <= 0) {
+		if (sControls.shimmyL) {
+			dbug::log("GAME", 0, "slide to the left");
+			applyShimmy(sData, false);
+		}
+
+		if (sControls.shimmyR) {
+			dbug::log("GAME", 0, "slide to the right");
+			applyShimmy(sData, true);
+		}
+	}
+	else {
+		sData.shimmyTimer -= dt;
+	}
+
 }
