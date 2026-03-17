@@ -289,7 +289,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
 
 	// boosting
-	updateMaxBoost(sData);
+	//updateMaxBoost(sData);
 	boost(sData, sControls, dt);
 
 	// shimmying
