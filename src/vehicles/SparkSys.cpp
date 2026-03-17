@@ -9,6 +9,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	wallCollision(game);
 
 	bool reload = false;
+	bool isP1 = true;
 	for (const Entity &entity : entities) {
 		PxRigidBody *rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
@@ -22,9 +23,11 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		sparkInputs(sData, sControls, dt);
 
-		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
-			sControls.throttle, sControls.brake, sControls.steering);
-
+		if (isP1) {
+			dbug::log("INPUT", 1, "Spark commands: th: %f, brk: %f, trn: %f",
+				sControls.throttle, sControls.brake, sControls.steering);
+			isP1 = false;
+		}
 		// Respawn
 		if (sControls.reset)
 			respawnSpark(rBody, getRespawnPose(entity, game));
@@ -265,7 +268,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 
 	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
 	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
-	sData.mVehicle->mCommandState.nbBrakes = 2;
+	sData.mVehicle->mCommandState.nbBrakes = 1;
 	sData.mVehicle->mCommandState.throttle = sControls.throttle;
 	sData.mVehicle->mCommandState.steer = sControls.steering;
 
@@ -277,6 +280,52 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 
 	// shimmying
 	shimmy(sData, sControls, dt);
+
+	// Stabilizers
+	{
+		auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+		const PxVec3 linVel = rBody->getLinearVelocity();
+		
+		const PxVec3 travelDir = linVel.getNormalized();
+		const PxVec3 forward = rBody->getGlobalPose().q.getBasisVector2();
+		const PxVec3 lateral = rBody->getGlobalPose().q.getBasisVector0();
+
+		const float forwardSpeed = linVel.dot(forward);
+		const float lateralSpeed = linVel.dot(lateral);
+
+		const float driftAmount = sData.speed != 0.f ? lateralSpeed / forwardSpeed : 0.f; // in radians
+		const float driftAngle = PxAbs(driftAmount) * 90.f;
+
+		if (sControls.handbrake) {
+			sData.inDrift = true;
+			// Apply low friction to rear tires
+			for (int i = 2; i < 4; i++) {
+				sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 0.8;
+				sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 85600;
+			}
+		}
+		else {
+			// Reset friction params to original values from JSON
+			if (sData.inDrift) {
+				for (int i = 2; i < 4; i++) {
+					sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 3.8;
+					sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 145600;
+				}
+			}
+			sData.inDrift = false;
+		}
+
+
+		// ---------- YAW STABILITY ----------
+		// Prevents spin-outs
+		const PxVec3 angVel = rBody->getAngularVelocity();
+
+		float yawDamping = sControls.handbrake ? 0.f : sData.speed * 0.2f;
+
+		PxVec3 yawCorrection(0.f, -angVel.y * yawDamping, 0.f);
+
+		rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
+	}
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {

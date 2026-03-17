@@ -51,6 +51,7 @@ struct SparkData {
 	float speed = 0.0f;
 	
 	bool inReverse = false;
+	bool inDrift = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;

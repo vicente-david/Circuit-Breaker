@@ -318,7 +318,7 @@
             "WheelId": 0,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 136505,
+            "LateralStiffnessY": 116505,
             "CamberStiffness": 0.5,
             "RestLoad": 5600,
             "FrictionVsSlip": [
@@ -341,7 +341,7 @@
             "WheelId": 1,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 136505,
+            "LateralStiffnessY": 116505,
             "CamberStiffness": 0.5,
             "RestLoad": 5600,
             "FrictionVsSlip": [
@@ -364,9 +364,9 @@
             "WheelId": 2,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 165600,
+            "LateralStiffnessY": 145600,
             "CamberStiffness": 0.5,
-            "RestLoad": 4600,
+            "RestLoad": 6600,
             "FrictionVsSlip": [
                 [ 0.0, 2.0 ],
                 [ 0.1, 2.4 ],
@@ -387,9 +387,9 @@
             "WheelId": 3,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 165600,
+            "LateralStiffnessY": 145600,
             "CamberStiffness": 0.5,
-            "RestLoad": 4600,
+            "RestLoad": 6600,
             "FrictionVsSlip": [
                 [ 0.0, 2.0 ],
                 [ 0.1, 2.4 ],
