@@ -26,7 +26,7 @@ void Game::initializeGame() {
 
 	renderer->initializeShaders(); // Create shader programs
 	renderer->initializeText();
-	renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
+	
 
 	inputSystem.attachWindow(renderer->window);
 
@@ -67,6 +67,12 @@ void Game::initializeECS() {
 	lapSys = LapSystem::registerSystem(coordinator);
 	uiSys = UISystem::registerSystem(coordinator);
 
+}
+
+void Game::initializeRace() {
+	initializeTrack();
+	initializeFinishLine();
+	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
 }
 
 void Game::initializeTrack() {

@@ -28,7 +28,13 @@ public:
 
 	// currently these are pretty disconnected
 	// so make it so we can call initializeGame()
+
+	// in theory this should initialize all internal systems
+	// should not do any track loading or spawning of entities
 	void initializeGame();
+
+	// does all the track loading and spawning (should only run after menu)
+	void initializeRace();
 	void initializeECS();
 	void initializeTrack();
 	void initializeFinishLine(); // ???
