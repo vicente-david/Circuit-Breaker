@@ -41,5 +41,8 @@ class SparkSys : public System {
 	void updateMaxBoost(SparkData &sData);
 	void applyBoost(SparkData &sData);
 	void boost(SparkData &sData, SparkControls &sControls, double dt);
-	void respawn(PxRigidBody *rBody);
+	
+	// couldn't figure out a way to use the logic from RespawnSystem, so I just copied it here
+	void respawnSpark(PxRigidBody *rBody, PxTransform respawnPose);
+	PxTransform getRespawnPose(Entity entity, GameState &game); 
 };

@@ -17,6 +17,7 @@
 #include "physics/PhysicsManager.h"
 #include <cstdio>
 #include <memory>
+#include "world/LapSystem.h"
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	
@@ -53,23 +54,16 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		reload = sControls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.boost);
+		
+		// Respawn
+		if (sControls.reset)
+			respawnSpark(rBody, getRespawnPose(entity, game));
 	}
 
 	// reload the tuning stuff from debug panel
 	if (dbugPanel::tuning::reloadSpark || reload) {
 		reloadSparkParams(game);
 	}
-}
-
-void SparkSys::respawn(PxRigidBody *rBody) {
-	dbug::log("GAME", 0, "resetting");
-
-	rBody->setGlobalPose(
-		PxTransform(PxVec3(0.f, 1.f, -50.f), PxQuat(PxIdentity)));
-
-	PxRigidDynamic *dynamicBody = rBody->is<PxRigidDynamic>();
-	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
-	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
 }
 
 Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
@@ -316,12 +310,6 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 
 	// shimmying
 	shimmy(sData, sControls, dt);
-
-	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
-	// Respawn
-	if (sControls.reset) {
-		respawn(rBody);
-	}
 }
 
 void SparkSys::updateMaxBoost(SparkData& sData) {
@@ -379,4 +367,27 @@ void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
 		sData.shimmyTimer -= dt;
 	}
 
+}
+
+void SparkSys::respawnSpark(PxRigidBody* rBody, PxTransform respawnPose) {
+	dbug::log("GAME", 0, "resetting");
+
+	rBody->setGlobalPose(respawnPose);
+
+	PxRigidDynamic* dynamicBody = rBody->is<PxRigidDynamic>();
+	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
+	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
+}
+
+PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
+	// copied logic from RespawnSystem::update
+	LapCounter& prog = game.coordinator->getComponent<LapCounter>(entity);
+
+	glm::vec3 p = prog.lastCheckpointPos;
+	PxVec3 pos(p.x, p.y + 2, p.z);
+
+	glm::vec3 q = prog.lastCheckpointDir;
+	PxQuat quat(PxAtan2(q.x, q.z), PxVec3(0.f, 1.f, 0.f));
+
+	return PxTransform(pos, quat);
 }
