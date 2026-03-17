@@ -1,13 +1,16 @@
 #include "physics/Callbacks.h"
 #include "PxActor.h"
+#include "PxFiltering.h"
 #include "PxRigidBody.h"
 #include "PxSimulationEventCallback.h"
 #include "debugUtils/Logger.h"
+#include "ecs/EntityManager.h"
 #include "foundation/PxConstructor.h"
 #include "foundation/PxSimpleTypes.h"
 #include "foundation/PxVec3.h"
 #include "physics/CollisionData.h"
 #include <cstdio>
+#include <set>
 
 void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 								const PxContactPair *pairs, PxU32 nbPairs) {
@@ -23,18 +26,17 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 			  d1->type, d1->entity, d2->type, d2->entity);
 	// dbug::log("PHYS", 0, "impulse:", pairHeader.pairs[0].contactImpulses);
 
-
-	if (d1->type == SPARK_BODY && d2->type == GROUND) {
+	if (d1->type == SPARK && d2->type == GROUND) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
 
-	} else if (d1->type == GROUND && d2->type == SPARK_BODY) {
+	} else if (d1->type == GROUND && d2->type == SPARK) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
 
-	} else if (d1->type == SPARK_BODY && d2->type == SPARK_BODY) {
+	} else if (d1->type == SPARK && d2->type == SPARK) {
 		// get collision velocity
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity() -
 				   ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
@@ -45,31 +47,41 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	}
 }
 
+void updateEntityCollider(std::set<Entity> &set, PxPairFlag::Enum status,
+						  Entity e) {
+	if (status == physx::PxPairFlag::eNOTIFY_TOUCH_FOUND) {
+		set.insert(e);
+	} else if (status == physx::PxPairFlag::eNOTIFY_TOUCH_LOST) {
+		set.erase(e);
+	}
+}
 void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 							   physx::PxU32 count) {
-	CollisionData *d1 = (CollisionData *)pairs[0].triggerActor->userData;
-	CollisionData *d2 = (CollisionData *)pairs[0].otherActor->userData;
+
 	dbug::log("PHYS", -1,
 			  "Trigger touched! If this crashes, a physics object is "
 			  "likely missing it's CollisionData");
+	for (int pIdx = 0; pIdx < count; pIdx++) {
+		CollisionData *trigData =
+			(CollisionData *)pairs[pIdx].triggerActor->userData;
+		CollisionData *otherData =
+			(CollisionData *)pairs[pIdx].otherActor->userData;
+		auto status = pairs[pIdx].status;
+		dbug::log("PHYS", 0,
+				  "tIdx %d: status: %d [t] typ:%d id:%d [o] typ:%d id:%d ",
+				  pIdx, pairs[pIdx].status, trigData->type, trigData->entity,
+				  otherData->type, otherData->entity);
 
-	dbug::log("PHYS", 0, "trigger: status: %d [1] typ:%d id:%d [2] typ:%d id:%d ",pairs[0].status,
-			  d1->type, d1->entity, d2->type, d2->entity);
-
-	// do things
-	// if (d2->type == HEAL) {
-	// 	sparkHealCol.push_back(d1->entity);
-	//
-	// } else if (d1->type == HEAL) {
-	// 	sparkHealCol.push_back(d2->entity);
-	// }
-	// i don't think this is needed anymore, but idk
-	if (d1->type == SPARK_BODY && d2->type == FINISH_LINE) {
-		dbug::log("GAME", 0, "finish!");
-		sparkFinishCol.push_back(d1->entity);
-	} else if (d1->type == FINISH_LINE && d2->type == SPARK_BODY) {
-		dbug::log("GAME", 0, "finish!");
-		sparkFinishCol.push_back(d2->entity);
+		// collision for spark  ground stuff
+		if (trigData->type == SPARK) {
+			if (otherData->type == GROUND) {
+				updateEntityCollider(groundedSparks, status, trigData->entity);
+			}
+			if (otherData->type == HEAL) {
+				updateEntityCollider(groundedSparks, status, trigData->entity);
+				updateEntityCollider(healingSparks, status, trigData->entity);
+			}
+		}
 	}
 }
 // PxVec3 PhysXCallbacks::getCollStrength(const PxContactPair *pairs,

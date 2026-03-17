@@ -22,7 +22,7 @@
 #include <memory>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
-	for (auto const &colData : game.physics->callbacks->sparkHealCol) {
+	for (auto const &colData : game.physics->callbacks->healingSparks) {
 		auto &sData = game.coordinator->getComponent<SparkData>(colData);
 		sData.health += 10 * dt;
 		if (sData.health > 100) {
@@ -307,7 +307,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
 	}
 	{
-		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.2f));
+		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.4f));
 		PxShape *groundBox = game.physics->gPhysics->createShape(
 			groundBoxGeom, *game.physics->gMaterial, true);
 		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.0f),
