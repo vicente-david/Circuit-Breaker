@@ -141,19 +141,19 @@ int main() {
 			physicsManager->initStaticMesh(Track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
-		// Model wallsModel("assets/walls.obj"); // loads model and paths
-		// Entity walls = gameState.coordinator->createEntity();
-		// CollisionData planePhys{GROUND, walls};
-		// gameState.coordinator->addComponent(walls, none);
-		// gameState.coordinator->addComponent(walls, wallsModel);
-		// gameState.coordinator->addComponent(walls, planePhys);
-		//
-		//
-		// for(auto& i : wallsModel.GetMesh()){
-		// 	auto actor = physicsManager->initStaticMesh(i, none);
-		// 	actor->userData = &planePhys;
-		// }
-		//
+		Model wallsModel("assets/walls.obj"); // loads model and paths
+		Entity walls = gameState.coordinator->createEntity();
+		CollisionData planePhys{GROUND, walls};
+		gameState.coordinator->addComponent(walls, none);
+		gameState.coordinator->addComponent(walls, wallsModel);
+		gameState.coordinator->addComponent(walls, planePhys);
+
+
+		for(auto& i : wallsModel.GetMeshes()){
+			auto actor = physicsManager->initStaticMesh(i, none);
+			actor->userData = &planePhys;
+		}
+
 		dbug::log(0, "track entity id:%d", track);
 
 		Model healModel("assets/heals.obj"); // loads model and paths
