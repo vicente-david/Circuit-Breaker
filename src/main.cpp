@@ -117,17 +117,17 @@ int main() {
 	Model spark("assets/spark.obj");
 	//Model planeModel("assets/plane.obj");
 
-	lapSys->generateCheckpoints("assets/biggertrack1.obj");
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/biggertrack1.obj"); // loads model and paths
+	Track Track("assets/track1.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	
-	renderer->setTrackBounds(Track.model.GetMesh("Cube").GetBounds());
+	renderer->setTrackBounds(Track.model.GetMesh("Track").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
@@ -138,7 +138,7 @@ int main() {
 		gameState.coordinator->addComponent(track, Track.model);
 		gameState.coordinator->addComponent(track, trackPhys);
 		auto trackActor =
-			physicsManager->initStaticMesh(Track.model.GetMesh("Cube"), none);
+			physicsManager->initStaticMesh(Track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
 		// Model wallsModel("assets/walls.obj"); // loads model and paths
