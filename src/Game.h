@@ -75,6 +75,8 @@ public:
 
 	Actions gameActions;
 
+	bool isInitialized;
+
 
 	// time stuff
 	double t = 0.0;

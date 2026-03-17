@@ -225,6 +225,11 @@ void Game::update() {
 	gameState.inputActions = gameActions;
 	controllerSys->update(gameState);
 
+	if (gameActions.intializeGame) {
+		initializeRace();
+		gameActions.intializeGame = false;
+	}
+
 	updateTime();
 	updatePhysics();
 	// AI

@@ -82,6 +82,12 @@ struct Actions {
 	float controllerXRot = 0.0;
 	float controllerYRot = 0.0;
 
+	// controls which menu is being displayed right now
+	// -1 is main menu, 1 is normal gameplay (for now)
+	// 2 could be pause for example
+	int menuControl = -1; 
+	bool intializeGame = false;
+
 };
 
 
