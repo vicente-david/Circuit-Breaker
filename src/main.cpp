@@ -117,17 +117,17 @@ int main() {
 	Model spark("assets/spark.obj");
 	//Model planeModel("assets/plane.obj");
 
-	lapSys->generateCheckpoints("assets/biggertrack1.obj");
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/biggertrack1.obj"); // loads model and paths
+	Track Track("assets/track1.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 	
-	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
+	renderer->setTrackBounds(Track.model.GetMesh("Track").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
@@ -137,26 +137,40 @@ int main() {
 		gameState.coordinator->addComponent(track, none);
 		gameState.coordinator->addComponent(track, Track.model);
 		gameState.coordinator->addComponent(track, trackPhys);
+		auto trackActor =
+			physicsManager->initStaticMesh(Track.model.GetMesh("Track"), none);
+		trackActor->userData = &trackPhys;
 
 		Model wallsModel("assets/walls.obj"); // loads model and paths
 		Entity walls = gameState.coordinator->createEntity();
 		CollisionData planePhys{GROUND, walls};
 		gameState.coordinator->addComponent(walls, none);
 		gameState.coordinator->addComponent(walls, wallsModel);
-		gameState.coordinator->addComponent(track, planePhys);
+		gameState.coordinator->addComponent(walls, planePhys);
 
-		auto trackActor =
-			physicsManager->initStaticMesh(Track.model.GetMesh()[0], none);
-		trackActor->userData = &trackPhys;
 
-		for(auto& i : wallsModel.GetMesh()){
+		for(auto& i : wallsModel.GetMeshes()){
 			auto actor = physicsManager->initStaticMesh(i, none);
 			actor->userData = &planePhys;
 		}
 
 		dbug::log(0, "track entity id:%d", track);
+
+		Model healModel("assets/heals.obj"); // loads model and paths
+		Entity heal = gameState.coordinator->createEntity();
+		CollisionData healPhys{HEAL, heal};
+		gameState.coordinator->addComponent(heal, none);
+		gameState.coordinator->addComponent(heal, healModel);
+		gameState.coordinator->addComponent(heal, healPhys);
+		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
+		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
+		for(auto& i : healModel.GetMeshes()){
+			auto actor = physicsManager->initHealZones(i, none);
+			actor->userData = &healPhys;
+		}
 	}
 
+	
 
 	// create finish line trigger box
 	CollisionData finishCollisionData{FINISH_LINE, -1};
@@ -166,6 +180,7 @@ int main() {
 		PxVec3 triggerLengths(
 			255.637f, 100.0f,
 			1.0f); // width, height, and depth of the finish line
+
 		PxRigidStatic *triggerActor =
 			physicsManager->gPhysics->createRigidStatic(
 				PxTransform(finishLinePosition)); // create static rigid body

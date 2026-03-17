@@ -32,8 +32,8 @@ std::vector<TrackCurve> CurveLoader::loadCurve(const std::string path) {
 			// if empty or a curve, then reset without adding the trackCurve to list of curves
 			if (!(trackCurve.curvePoints.empty() || !isCurve)) {
 				// if trackpoints are non empty and it is a curve
-				curves.push_back(trackCurve);
 				trackCurve.curvatures = calculateCurveAngles(trackCurve.curvePoints);
+				curves.push_back(trackCurve);
 			}
 			trackCurve.curvePoints.clear(); // new vector time
 			isCurve = true; // assume curve 

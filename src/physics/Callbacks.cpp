@@ -23,26 +23,25 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 			  d1->type, d1->entity, d2->type, d2->entity);
 	// dbug::log("PHYS", 0, "impulse:", pairHeader.pairs[0].contactImpulses);
 
-	// do things
-	if (d1->type == SPARK && d2->type == GROUND) {
+
+	if (d1->type == SPARK_BODY && d2->type == GROUND) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
 
-	} else if (d1->type == GROUND && d2->type == SPARK) {
+	} else if (d1->type == GROUND && d2->type == SPARK_BODY) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
 
-	} else if (d1->type == SPARK && d2->type == SPARK) {
+	} else if (d1->type == SPARK_BODY && d2->type == SPARK_BODY) {
 		// get collision velocity
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity() -
 				   ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		// get strength related to the angle of collision
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		// send data to spark system
-		sparkSparkCol.push_back(
-			SparkSparkColData{d1->entity, d2->entity, imp});
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
 	}
 }
 
@@ -54,13 +53,21 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 			  "Trigger touched! If this crashes, a physics object is "
 			  "likely missing it's CollisionData");
 
-	dbug::log("PHYS", 0, "trigger: [1] typ:%d id:%d [2] typ:%d id:%d ",
+	dbug::log("PHYS", 0, "trigger: status: %d [1] typ:%d id:%d [2] typ:%d id:%d ",pairs[0].status,
 			  d1->type, d1->entity, d2->type, d2->entity);
 
-	if (d1->type == SPARK && d2->type == FINISH_LINE) {
+	// do things
+	// if (d2->type == HEAL) {
+	// 	sparkHealCol.push_back(d1->entity);
+	//
+	// } else if (d1->type == HEAL) {
+	// 	sparkHealCol.push_back(d2->entity);
+	// }
+	// i don't think this is needed anymore, but idk
+	if (d1->type == SPARK_BODY && d2->type == FINISH_LINE) {
 		dbug::log("GAME", 0, "finish!");
 		sparkFinishCol.push_back(d1->entity);
-	} else if (d1->type == FINISH_LINE && d2->type == SPARK) {
+	} else if (d1->type == FINISH_LINE && d2->type == SPARK_BODY) {
 		dbug::log("GAME", 0, "finish!");
 		sparkFinishCol.push_back(d2->entity);
 	}
@@ -90,9 +97,8 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 // 	// return total;
 // }
 
-
-//TODO: use the impulse here instead of just linear velocity.
-//stuff above should work, but the numbers don't seem right to me so idk
+// TODO: use the impulse here instead of just linear velocity.
+// stuff above should work, but the numbers don't seem right to me so idk
 float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 									  PxVec3 velocity) {
 	// get collision data for every shape that intersects
@@ -118,8 +124,6 @@ float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 			  minDot / velocity.magnitude());
 	return velocity.magnitude() - minDot;
 }
-
-
 
 void PhysXCallbacks::resetLists() {
 	sparkFinishCol.clear();
