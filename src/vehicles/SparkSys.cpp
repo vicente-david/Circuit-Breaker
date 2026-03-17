@@ -25,19 +25,18 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 			sControls.throttle, sControls.brake, sControls.steering);
 
+		// Respawn
+		if (sControls.reset)
+			respawnSpark(rBody, getRespawnPose(entity, game));
+
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
-		// rBody->addForce(forwardDir *controls.throttle,
-		// PxForceMode::eACCELERATION);
+
 		reload = sControls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.boost);
-		
-		// Respawn
-		if (sControls.reset)
-			respawnSpark(rBody, getRespawnPose(entity, game));
 	}
 
 	// reload the tuning stuff from debug panel
