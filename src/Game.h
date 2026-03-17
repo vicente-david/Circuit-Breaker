@@ -12,6 +12,7 @@
 #include "AllSystem.h"
 #include "ecs/Coordinator.h"
 #include "world/Track.h"
+#include "InputSystem.h"
 
 class Game{
 
@@ -63,7 +64,11 @@ public:
 	std::shared_ptr<LapSystem> lapSys;
 	std::shared_ptr<UISystem> uiSys;
 
+	InputSystem inputSystem;
 	GameState gameState;
+
+	Actions gameActions;
+
 
 	// time stuff
 	double t = 0.0;

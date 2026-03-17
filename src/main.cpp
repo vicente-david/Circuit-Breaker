@@ -57,15 +57,8 @@ int main() {
 	//gameState.coordinator->addComponent<RectUI>(r1, RectUI());
 	//gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
 
-	InputSystem inputSystem;
-	inputSystem.attachWindow(game.renderer->window);
-
-	Actions gameActions = inputSystem.getActions();
 	// add debug imgui panel (needs to be after input callbacks are set)
 	dbugPanel::createPanel(game.renderer->window);
-
-	game.renderer->initializeShaders(); // Create shader programs
-	game.renderer->initializeText();
 
 	// Create models
 	Model cube("assets/cube.obj");
@@ -84,15 +77,7 @@ int main() {
 	// RENDER LOOP
 	dbug::log(0, "Starting game loop");
 	while (!glfwWindowShouldClose(game.renderer->window)) {
-
-		
 		//dbugPanel::debug::updateTime = frameTime;
-
-		// input
-		gameActions = inputSystem.getActions();
-		game.gameState.inputActions = gameActions;
-		game.controllerSys->update(game.gameState);
-
 		game.update();
 		
 	}

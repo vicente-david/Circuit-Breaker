@@ -24,7 +24,14 @@ void Game::initializeGame() {
 
 	initializeAudio();
 
+	renderer->initializeShaders(); // Create shader programs
+	renderer->initializeText();
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
+
+	inputSystem.attachWindow(renderer->window);
+
+	gameActions = inputSystem.getActions();
+
 }
 
 void Game::initializeECS() {
@@ -206,7 +213,12 @@ void Game::initializeAudio() {
 
 // update stuff
 void Game::update() {
-	
+	// update inputs
+	// input
+	gameActions = inputSystem.getActions();
+	gameState.inputActions = gameActions;
+	controllerSys->update(gameState);
+
 	updateTime();
 	updatePhysics();
 	// AI
