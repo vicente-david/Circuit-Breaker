@@ -106,7 +106,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 
 
 	// Boost for speed if along straight path, not running out of boost, not facing downwards and not when steering
-	if (curvature < ai.curveBoostThresh && spark.currBoost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
+	if (curvature < ai.curveBoostThresh && spark.boost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
 	
 		ai.state = BOOSTING;
 		return;
@@ -245,7 +245,7 @@ void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Tra
 	controls.throttle = 1.0f;
 	controls.brake = 0.0f;
 	controls.boost = true;
-	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.currBoost);
+	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.boost);
 
 	float curvature = ai.angles.at(ai.targetIdx);
 	if (curvature > ai.curveBrakeThresh) {
@@ -253,7 +253,7 @@ void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Tra
 		controls.boost = false;
 		return;
 	}
-	else if (curvature >= ai.curveBoostThresh || spark.currBoost < 25.f) {
+	else if (curvature >= ai.curveBoostThresh || spark.boost < 25.f) {
 		ai.state = DRIVING;
 		controls.boost = false;
 	}
