@@ -32,6 +32,8 @@ class SparkSys : public System {
 	void sparkCollision(GameState& game);
 	void wallCollision(GameState& game);
 
+	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);
+
 	// helper functions for doing the movements
 	void shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir);
 	void boost(PxRigidBody *rBody, SparkData &sData);

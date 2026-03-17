@@ -24,66 +24,24 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	wallCollision(game);
 
 	bool reload = false;
-	for (auto const &entity : entities) {
-		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
-		auto &sData = game.coordinator->getComponent<SparkData>(entity);
-		auto &controls = game.coordinator->getComponent<SparkControls>(entity);
+	for (const Entity &entity : entities) {
+		PxRigidBody *rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
+		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
+		SparkControls &sControls = game.coordinator->getComponent<SparkControls>(entity);
 
 		const PxVec3 linVel = rBody->getLinearVelocity();
 		const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
 
-		const PxReal speed = linVel.dot(forwardDir);
-		const PxU8 nbSubsteps = (speed < 5.0f ? 3 : 1);
-		sData.speed = speed;
+		sData.speed = linVel.magnitude();
+		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
-		sData.mVehicle->mCommandState.brakes[0] = controls.brake;
-		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
-		sData.mVehicle->mCommandState.nbBrakes = 2;
-		sData.mVehicle->mCommandState.throttle = controls.throttle;
-		sData.mVehicle->mCommandState.steer = controls.steering;
+		sparkInputs(sData, sControls, dt);
 
-		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
-				  controls.throttle, controls.brake, controls.steering);
-		
-		// Check for reverse (brake + throttle when stopped)
-		if (speed < 0.1f && controls.brake && controls.throttle) {
-			sData.mVehicle->mCommandState.brakes[0] = 0.f;
-			sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
-				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
-		}
 
-		// Apply handbrake
-		sData.mVehicle->mCommandState.brakes[1] = controls.handbrake;
 
-		// boosting
-		if (controls.boost && sData.currBoost > 0) {
-			dbug::log("GAME", -1, "boosting!");
-			boost(rBody, sData);
-		} else if (sData.currBoost < 100) {
-			sData.currBoost += sData.boostRegenSpeed * dt;
-
-			if (sData.currBoost > 100) {
-				sData.currBoost = 100;
-				dbug::log("GAME", 0, "boost full");
-			}
-		}
-
-		// shimmying
-		if (sData.shimmyTimer <= 0) {
-			if (controls.shimmyL) {
-				dbug::log("GAME", 0, "slide to the left");
-				shimmy(rBody, sData, false);
 			}
 
-			if (controls.shimmyR) {
-				dbug::log("GAME", 0, "slide to the right");
-				shimmy(rBody, sData, true);
 			}
-		} else if (sData.shimmyTimer > 0) {
-			sData.shimmyTimer -= dt;
-		}
-		if (controls.reset) {
-			respawn(rBody);
 		}
 
 		// do the physx vehicle movement
@@ -92,7 +50,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
-		reload = controls.reload;
+		reload = sControls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
 	}
@@ -350,4 +308,61 @@ void SparkSys::wallCollision(GameState &game) {
 
 	}
 }
+
+void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt) {
+	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+
+	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
+	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
+	sData.mVehicle->mCommandState.nbBrakes = 2;
+	sData.mVehicle->mCommandState.throttle = sControls.throttle;
+	sData.mVehicle->mCommandState.steer = sControls.steering;
+
+	dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
+		sControls.throttle, sControls.brake, sControls.steering);
+
+	// Check for reverse (brake + throttle when stopped)
+	if (sData.speed < 0.1f && sControls.brake && sControls.throttle) {
+		sData.mVehicle->mCommandState.brakes[0] = 0.f;
+		sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
+			sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
+	}
+
+	// Apply handbrake
+	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
+
+	// boosting
+	if (sControls.boost && sData.currBoost > 0) {
+		dbug::log("GAME", -1, "boosting!");
+		boost(rBody, sData);
+	}
+	else if (sData.currBoost < 100) {
+		sData.currBoost += sData.boostRegenSpeed * dt;
+
+		if (sData.currBoost > 100) {
+			sData.currBoost = 100;
+			dbug::log("GAME", 0, "boost full");
+		}
+	}
+
+	// shimmying
+	if (sData.shimmyTimer <= 0) {
+		if (sControls.shimmyL) {
+			dbug::log("GAME", 0, "slide to the left");
+			shimmy(rBody, sData, false);
+		}
+
+		if (sControls.shimmyR) {
+			dbug::log("GAME", 0, "slide to the right");
+			shimmy(rBody, sData, true);
+		}
+	}
+	else if (sData.shimmyTimer > 0) {
+		sData.shimmyTimer -= dt;
+	}
+
+	// Respawn
+	if (sControls.reset) {
+		respawn(rBody);
+	}
 }
