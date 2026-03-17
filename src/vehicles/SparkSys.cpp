@@ -140,10 +140,9 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	}
 
 	// Set the vehicle in 1st gear.
-	sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
-		sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
-	sData.mVehicle->mEngineDriveState.gearboxState.targetGear =
-		sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear + 1;
+	sData.neutralGear = sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear;
+	sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear + 1;
+	sData.mVehicle->mEngineDriveState.gearboxState.targetGear = sData.neutralGear + 1;
 	// Set the vehicle to use the automatic gearbox.
 	sData.mVehicle->mTransmissionCommandState.targetGear =
 		PxVehicleEngineDriveTransmissionCommandState::eAUTOMATIC_GEAR;
@@ -278,15 +277,8 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 		sControls.throttle, sControls.brake, sControls.steering);
 
-	// Check for reverse (brake + throttle when stopped)
-	if (sData.speed < 0.1f && sControls.brake && sControls.throttle) {
-		sData.mVehicle->mCommandState.brakes[0] = 0.f;
-		sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
-			sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
-	}
-
-	// Apply handbrake
-	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
+	// Check for reverse 
+	reverse(sData, sControls);
 
 	// boosting
 	//updateMaxBoost(sData);
@@ -296,6 +288,23 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	shimmy(sData, sControls, dt);
 }
 
+void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
+	// Must be basically stopped or already in reverse
+	if ((sData.speed < 0.1f || sData.inReverse) && sControls.brake) {
+		sData.mVehicle->mCommandState.brakes[0] = sControls.throttle; // Brake becomes throttle
+		sData.mVehicle->mCommandState.throttle = sControls.brake; // Throttle becomes brake
+		sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear - 1; // Shifts to reverse
+		sData.inReverse = true;
+	}
+	// By necessity this can only happen if brake is fully released
+	else if (sControls.throttle) {
+		// Shifts into 1st throttle is applied immediately
+		if (sData.mVehicle->mEngineDriveState.gearboxState.currentGear <= sData.neutralGear) {
+			sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear + 1;
+		}
+		sData.inReverse = false;
+	}
+}
 void SparkSys::updateMaxBoost(SparkData& sData) {
 	sData.maxBoost = sData.maxHealth - sData.health;
 }

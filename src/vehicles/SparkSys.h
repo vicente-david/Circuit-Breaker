@@ -29,6 +29,7 @@ class SparkSys : public System {
 	void wallCollision(GameState& game);
 
 	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);
+	void reverse(SparkData& sData, SparkControls& sControls);
 
 	// helper functions for doing the movements
 	void applyShimmy(SparkData &sData, bool dir);

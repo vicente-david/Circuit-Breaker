@@ -49,10 +49,15 @@ struct SparkData {
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
+	
+	bool inReverse = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;
+
+	// Easy access to vehicle's neutral gear
+	PxU32 neutralGear = 0;
 
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];
 	PxU32 mNbMaterialFrictions = 0;
