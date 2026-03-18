@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "physics/CollisionData.h"
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
@@ -65,22 +66,22 @@ void Game::initializeTrack() {
 	{
 		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 		Entity track = gameState.coordinator->createEntity();
-		CollisionData trackPhys{GROUND, track};
 		gameState.coordinator->addComponent(track, none);
 		gameState.coordinator->addComponent(track, Track.model);
-		gameState.coordinator->addComponent(track, trackPhys);
+		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
+		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
+		auto trackActor =
+			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
+		trackActor->userData = &trackPhys;
 
 		// add walls
 		Model wallsModel("assets/walls.obj"); // loads model and paths
 		Entity walls = coordinator->createEntity();
-		CollisionData planePhys{ GROUND, walls };
 		coordinator->addComponent(walls, none);
 		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, planePhys);
+		coordinator->addComponent(track, CollisionData{GROUND, walls});
+		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
 
-		auto trackActor =
-			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
-		trackActor->userData = &trackPhys;
 
 		for (auto& i : wallsModel.GetMeshes()) {
 			auto actor = physics->initStaticMesh(i, none);
@@ -92,10 +93,10 @@ void Game::initializeTrack() {
 		// add heal zones
 		Model healModel("assets/heals.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
-		CollisionData healPhys{HEAL, heal};
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
-		gameState.coordinator->addComponent(heal, healPhys);
+		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
+		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
 		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
 		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
 		for(auto& i : healModel.GetMeshes()){

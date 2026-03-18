@@ -68,6 +68,7 @@ PxFilterFlags VehicleFilterShader(PxFilterObjectAttributes attributes0,
 		filterData1.word0 == COLLISION_FLAG_SPARK_GROUND) {
 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_FOUND;
 		pairFlags |= PxPairFlag::eNOTIFY_TOUCH_LOST;
+
 	}
 
 	if ((filterData0.word0 == COLLISION_FLAG_HEAL ||
