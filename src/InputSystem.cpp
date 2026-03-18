@@ -86,6 +86,31 @@ class TestInput1 : public CallbackInterface {
 		else {
 			actions->kRespawn = false;
 		}
+
+		if (actions->intializeGame) {
+			actions->intializeGame = false;
+		}
+
+		if (key == GLFW_KEY_ENTER && (action == GLFW_PRESS) && (action != GLFW_REPEAT)) {
+			// 2 paused, 1 normal gameplay, 0 is initialization, -1 title screen
+			if (actions->menuControl == 2) {
+				actions->menuControl = 1;
+				std::cout << "resume the game" << std::endl;
+			}
+			else if (actions->menuControl == 1) {
+				actions->menuControl = 2;
+				std::cout << "paused now" << std::endl;
+			}
+			else if (actions->menuControl == 0) {
+				actions->menuControl = 2;
+				std::cout << "first pause" << std::endl;
+			}
+			else if (actions->menuControl == -1) {
+				actions->menuControl = 0; 
+				actions->intializeGame = true;
+			}
+		}
+
 	}
 
 	void mouseButtonCallback(int button, int action, int mods) {

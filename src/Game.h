@@ -12,6 +12,7 @@
 #include "AllSystem.h"
 #include "ecs/Coordinator.h"
 #include "world/Track.h"
+#include "InputSystem.h"
 
 class Game{
 
@@ -27,11 +28,23 @@ public:
 
 	// currently these are pretty disconnected
 	// so make it so we can call initializeGame()
+
+	// in theory this should initialize all internal systems
+	// should not do any track loading or spawning of entities
 	void initializeGame();
+
+	// does all the track loading and spawning (should only run after menu)
+	void initializeRace();
 	void initializeECS();
 	void initializeTrack();
 	void initializeFinishLine(); // ???
 	void initializeAudio();
+
+	//void initializePlayers();
+	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
+	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // ai spark
+	void initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // to-do join above line together 
+
 
 	//void resetGame(); // todo: implement
 
@@ -57,7 +70,13 @@ public:
 	std::shared_ptr<LapSystem> lapSys;
 	std::shared_ptr<UISystem> uiSys;
 
+	InputSystem inputSystem;
 	GameState gameState;
+
+	Actions gameActions;
+
+	bool isInitialized;
+
 
 	// time stuff
 	double t = 0.0;
@@ -73,4 +92,6 @@ public:
 	// sound
 	Sound testSound;
 
+	Entity player; // player LOL
+	//Track activeTrack;
 };
