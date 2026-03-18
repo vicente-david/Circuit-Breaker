@@ -72,7 +72,7 @@ void Game::initializeECS() {
 
 void Game::initializeRace() {
 	initializeTrack();
-	initializeFinishLine();
+	// initializeFinishLine();
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
 }
 
@@ -139,7 +139,9 @@ void Game::initializeTrack() {
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -6.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, 0.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, 2.0f, 0.0f));
 	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(4.0f, 2.0f, -3.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, 2.0f, -3.0f));
 
 
 	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
@@ -188,6 +190,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pat
 }
 
 void Game::initializeFinishLine() {
+	// return;
 	// create finish line trigger box
 	CollisionData finishCollisionData{ FINISH_LINE, -1 };
 	{
