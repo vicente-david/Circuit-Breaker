@@ -24,8 +24,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sparkInputs(sData, sControls, dt);
 
 		if (isP1) {
-			dbug::log("INPUT", 1, "Spark commands: th: %f, brk: %f, trn: %f",
+			dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				sControls.throttle, sControls.brake, sControls.steering);
+			dbug::log("ROLL", 0, "%f\tSTEER: %f", rBody->getAngularVelocity().x, sControls.steering);
 			isP1 = false;
 		}
 		// Respawn
@@ -284,47 +285,65 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	// Stabilizers
 	{
 		auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
-		const PxVec3 linVel = rBody->getLinearVelocity();
 		
-		const PxVec3 travelDir = linVel.getNormalized();
+		const PxVec3 linVel = rBody->getLinearVelocity();
 		const PxVec3 forward = rBody->getGlobalPose().q.getBasisVector2();
 		const PxVec3 lateral = rBody->getGlobalPose().q.getBasisVector0();
+		const PxVec3 lateralDir = lateral.getNormalized();
 
-		const float forwardSpeed = linVel.dot(forward);
 		const float lateralSpeed = linVel.dot(lateral);
 
-		const float driftAmount = sData.speed != 0.f ? lateralSpeed / forwardSpeed : 0.f; // in radians
-		const float driftAngle = PxAbs(driftAmount) * 90.f;
 
 		if (sControls.handbrake) {
-			sData.inDrift = true;
-			// Apply low friction to rear tires
-			for (int i = 2; i < 4; i++) {
-				sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 0.8;
-				sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 85600;
+			if (!sData.inDrift) {
+				for (int i = 0; i < 4; i++) {
+					sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 2.4;
+					sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 105600;
+				}
+				sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = 0.523599029f;
 			}
+			sData.inDrift = true;
+			const int ccw = PxSign(rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
+			const int steerCcw = PxSign(sControls.steering); // steering ccw = 1 and cw = -1
+
+			
+			const float driftCurve =  2.1f * sControls.steering;
+			const float angleCurve =  1.4f * sControls.steering;
+			const float yawVel = rBody->getAngularVelocity().y;
+
+			// Opposite forces automatically apply due to opposite sign when counter-steering
+			PxVec3 driftDir = (forward + lateral * driftCurve);
+			const float forceStrength = ccw == steerCcw ? 600.f : 1400.f;
+			rBody->addForce(driftDir * forceStrength);
+
+			const float torqueStrength = ccw == steerCcw ? 200.f : 600.f;
+			rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
+
+			const float gripStrength = 240.f;
+			rBody->addForce(-lateralDir * lateralSpeed * gripStrength * yawVel);
+
+			const float rollDamping = sData.speed * 0.4f;
+			rBody->addTorque(PxVec3(0.f, 0.f, 1.f) * -rBody->getAngularVelocity().x * rollDamping);
 		}
 		else {
 			// Reset friction params to original values from JSON
 			if (sData.inDrift) {
-				for (int i = 2; i < 4; i++) {
+				for (int i = 0; i < 4; i++) {
 					sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 3.8;
 					sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 145600;
 				}
+				sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = 0.785398163f;
 			}
 			sData.inDrift = false;
+			
+			//sData.forwardDir = forwardDir;
+
+			// Helps prevent spin-outs
+			const float yawVel = rBody->getAngularVelocity().y;
+			float yawDamping = sData.speed * 0.15f;
+			PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
+			rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 		}
-
-
-		// ---------- YAW STABILITY ----------
-		// Prevents spin-outs
-		const PxVec3 angVel = rBody->getAngularVelocity();
-
-		float yawDamping = sControls.handbrake ? 0.f : sData.speed * 0.2f;
-
-		PxVec3 yawCorrection(0.f, -angVel.y * yawDamping, 0.f);
-
-		rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 	}
 }
 
