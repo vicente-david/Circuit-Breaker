@@ -3,7 +3,8 @@
 
 enum UserPhysicsType {
 	GROUND,
-	SPARK,
+	SPARK_BODY,
+	SPARK_GROUND,
 	FINISH_LINE,
 	HEAL,
 	TESTING,

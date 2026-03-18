@@ -49,17 +49,17 @@ void Game::initializeECS() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/biggertrack1.obj");
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/biggertrack1.obj"); // loads model and paths
+	Track Track("assets/track1.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 
-	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
+	renderer->setTrackBounds(Track.model.GetMesh("Track").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
@@ -77,17 +77,34 @@ void Game::initializeTrack() {
 		coordinator->addComponent(walls, wallsModel);
 		coordinator->addComponent(track, planePhys);
 
+		Model healModel("assets/heals.obj"); // loads model and paths
+		Entity heal = gameState.coordinator->createEntity();
+		CollisionData healPhys{ HEAL, heal };
+		coordinator->addComponent(heal, none);
+		coordinator->addComponent(heal, healModel);
+		coordinator->addComponent(heal, healPhys);
+		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
+		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
+		for (auto& i : healModel.GetMeshes()) {
+			auto actor = physics->initHealZones(i, none);
+			actor->userData = &healPhys;
+		}
+
 		auto trackActor =
-			physics->initStaticMesh(Track.model.GetMesh()[0], none);
+			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
-		for (auto& i : wallsModel.GetMesh()) {
+		for (auto& i : wallsModel.GetMeshes()) {
 			auto actor = physics->initStaticMesh(i, none);
 			actor->userData = &planePhys;
 		}
 
 		dbug::log(0, "track entity id:%d", track);
+
+
 	}
+
+
 
 
 	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths

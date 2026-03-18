@@ -24,34 +24,46 @@
 //
 // Copyright (c) 2008-2025 NVIDIA Corporation. All rights reserved.
 // Copyright (c) 2004-2008 AGEIA Technologies, Inc. All rights reserved.
-// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.  
-
+// Copyright (c) 2001-2004 NovodeX AG. All rights reserved.
 
 #include "PxPhysicsAPI.h"
 
+namespace snippetvehicle {
+enum Flags {
+	COLLISION_FLAG_GROUND = 1 << 0,
+	COLLISION_FLAG_WHEEL = 1 << 1,
+	COLLISION_FLAG_CHASSIS = 1 << 2,
+	COLLISION_FLAG_OBSTACLE = 1 << 3,
+	COLLISION_FLAG_FINISH = 1 << 4,
+	COLLISION_FLAG_HEAL = 1 << 5,
+	COLLISION_FLAG_SPARK_GROUND = 1 << 6,
 
-namespace snippetvehicle
-{
-	enum Flags {
-		COLLISION_FLAG_GROUND = 1 << 0,
-		COLLISION_FLAG_WHEEL = 1 << 1,
-		COLLISION_FLAG_CHASSIS = 1 << 2,
-		COLLISION_FLAG_OBSTACLE = 1 << 3,
-		COLLISION_FLAG_FINISH = 1 << 4,
+	COLLISION_FLAG_GROUND_AGAINST =
+		COLLISION_FLAG_CHASSIS | COLLISION_FLAG_OBSTACLE,
 
-		COLLISION_FLAG_GROUND_AGAINST = COLLISION_FLAG_CHASSIS | COLLISION_FLAG_OBSTACLE,
-		COLLISION_FLAG_CHASSIS_AGAINST = COLLISION_FLAG_GROUND | COLLISION_FLAG_WHEEL | COLLISION_FLAG_CHASSIS | COLLISION_FLAG_OBSTACLE,
-		COLLISION_FLAG_OBSTACLE_AGAINST = COLLISION_FLAG_GROUND | COLLISION_FLAG_WHEEL | COLLISION_FLAG_CHASSIS | COLLISION_FLAG_OBSTACLE
+	COLLISION_FLAG_CHASSIS_AGAINST =
+		COLLISION_FLAG_GROUND | COLLISION_FLAG_CHASSIS |
+		COLLISION_FLAG_OBSTACLE | COLLISION_FLAG_HEAL,
 
-	};
+	COLLISION_FLAG_OBSTACLE_AGAINST =
+		COLLISION_FLAG_GROUND | COLLISION_FLAG_WHEEL | COLLISION_FLAG_CHASSIS |
+		COLLISION_FLAG_OBSTACLE,
 
-physx::PxFilterFlags VehicleFilterShader(
-	physx::PxFilterObjectAttributes attributes0, physx::PxFilterData filterData0,
-	physx::PxFilterObjectAttributes attributes1, physx::PxFilterData filterData1,
-	physx::PxPairFlags& pairFlags, const void* constantBlock, physx::PxU32 constantBlockSize);
+	COLLISION_FLAG_SPARK_GROUND_AGAINST =
+		COLLISION_FLAG_HEAL | COLLISION_FLAG_GROUND
 
+};
 
-bool parseVehicleDataPath(int argc, const char *const* argv, const char* snippetName,
-	const char*& vehicleDataPath);
+physx::PxFilterFlags
+VehicleFilterShader(physx::PxFilterObjectAttributes attributes0,
+					physx::PxFilterData filterData0,
+					physx::PxFilterObjectAttributes attributes1,
+					physx::PxFilterData filterData1,
+					physx::PxPairFlags &pairFlags, const void *constantBlock,
+					physx::PxU32 constantBlockSize);
 
-}//namespace snippetvehicle
+bool parseVehicleDataPath(int argc, const char *const *argv,
+						  const char *snippetName,
+						  const char *&vehicleDataPath);
+
+} // namespace snippetvehicle

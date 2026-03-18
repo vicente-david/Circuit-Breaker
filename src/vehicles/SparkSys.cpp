@@ -1,5 +1,6 @@
 
 #include "vehicles/SparkSys.h"
+#include "../world/LapSystem.h"
 #include "GameState.h"
 #include "PxActor.h"
 #include "PxForceMode.h"
@@ -13,12 +14,21 @@
 #include "ecs/EntityManager.h"
 #include "foundation/PxMath.h"
 #include "graphics/Model.h"
+#include "physics/PhysicsManager.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <memory>
-#include "../world/LapSystem.h"
 
 void SparkSys::updateSparks(double dt, GameState &game) {
+	for (auto const &colData : game.physics->callbacks->sparkHealCol) {
+		auto &sData = game.coordinator->getComponent<SparkData>(colData);
+		sData.health += 10 * dt;
+		if (sData.health > 100) {
+			sData.health = 100;
+		}
+	}
 	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
 		auto &sData1 =
 			game.coordinator->getComponent<SparkData>(colData.spark1Id);
@@ -72,12 +82,13 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				  controls.throttle, controls.brake, controls.steering);
-		
+
 		// Check for reverse (brake + throttle when stopped)
 		if (speed < 0.1f && controls.brake && controls.throttle) {
 			sData.mVehicle->mCommandState.brakes[0] = 0.f;
 			sData.mVehicle->mEngineDriveState.gearboxState.currentGear =
-				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear - 1;
+				sData.mVehicle->mEngineDriveParams.gearBoxParams.neutralGear -
+				1;
 		}
 
 		// Apply handbrake
@@ -94,6 +105,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		float driftAngle =
 			PxAcos(linVel.getNormalized().dot(forwardDir.getNormalized())) *
 			(180 / PxPi);
+		driftAngle = std::abs(driftAngle);
 
 		// regen boost if you're drifting
 		float maxBoost = 100 - sData.health;
@@ -105,7 +117,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			// how 'hard' of a drift (90 degrees gives full regen, 0 degrees
 			// gives none)
 			// cap at 90 degrees
-			if(driftAngle>90){
+			if (driftAngle > 90) {
 				driftAngle = 90;
 			}
 			float multi = driftAngle / 90.f;
@@ -245,13 +257,11 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// Load the params from json or set directly.
 	sData.mVehicleDataPath = dbugPanel::tuning::configFolder.c_str();
 
-	readBaseParamsFromJsonFile(
-		sData.mVehicleDataPath, 
-		dbugPanel::tuning::basePath.c_str(), 
-		sData.mVehicle->mBaseParams);
+	readBaseParamsFromJsonFile(sData.mVehicleDataPath,
+							   dbugPanel::tuning::basePath.c_str(),
+							   sData.mVehicle->mBaseParams);
 	readEngineDrivetrainParamsFromJsonFile(
-		sData.mVehicleDataPath, 
-		dbugPanel::tuning::enginePath.c_str(),
+		sData.mVehicleDataPath, dbugPanel::tuning::enginePath.c_str(),
 		sData.mVehicle->mEngineDriveParams);
 	setPhysXIntegrationParams(
 		sData.mVehicle->mBaseParams.axleDescription, sData.mMaterialFrictions,
@@ -274,12 +284,16 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 	{
 		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.25f, 0.2f));
-		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
-		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f), PxQuat(PxIdentity));
+		PxShape *rearBox = game.physics->gPhysics->createShape(
+			rearBoxGeom, *game.physics->gMaterial, true);
+		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f),
+									 PxQuat(PxIdentity));
 
 		PxBoxGeometry midBoxGeom(PxVec3(0.6f, 0.25f, 0.1f));
-		PxShape* midBox = game.physics->gPhysics->createShape(midBoxGeom, *game.physics->gMaterial, true);
-		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.0f, 0.1f), PxQuat(PxIdentity));
+		PxShape *midBox = game.physics->gPhysics->createShape(
+			midBoxGeom, *game.physics->gMaterial, true);
+		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.0f, 0.1f),
+									PxQuat(PxIdentity));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		rBody->attachShape(*rearBox);
@@ -292,11 +306,25 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
 		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
 	}
+	{
+		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.2f));
+		PxShape *groundBox = game.physics->gPhysics->createShape(
+			groundBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.0f),
+									   PxQuat(PxIdentity));
+
+		groundBox->setLocalPose(groundBoxLocalPose);
+		rBody->attachShape(*groundBox);
+		groundBox->release();
+	}
 
 	// Create vehicle filter
 	PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS,
 							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
-	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, COLLISION_FLAG_GROUND, 0, 0);
+	// wheels have no collision
+	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, 0, 0, 0);
+	PxFilterData groundFilter(COLLISION_FLAG_SPARK_GROUND,
+							  COLLISION_FLAG_SPARK_GROUND_AGAINST, 0, 0);
 	// PxFilterData tireFilter(0, 0, 0, 0);
 	// Set flags
 	PxU32 shapes = rBody->getNbShapes();
@@ -306,15 +334,26 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 		// add filter to tires/chasis depending on type
 		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
+			// printf("box i:%d\n", i);
 			shape->setSimulationFilterData(chassisFilter);
 		} else {
 			shape->setSimulationFilterData(tireFilter);
 		}
 
-		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-		shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		// special ground trigger
+		if (i == 7) {
+			shape->setSimulationFilterData(groundFilter);
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		} else {
+
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		}
 	}
 
 	// Set the vehicle in 1st gear.
@@ -355,8 +394,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	// different model for p3
 	if (sparkEntity == 3) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
-	}
-	else
+	} else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
 	// add engine sound
@@ -368,28 +406,26 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 	return sparkEntity;
 }
-
 // updates the drive params of all the active sparks
 void SparkSys::reloadSparkParams(GameState &game) {
 	dbug::log("GAME", 0, "Reloading spark config");
 	for (auto const &entity : entities) {
 		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
-		 
+
 		// load params for vehicle base
 		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
-		readBaseParamsFromJsonFile(
-			sData.mVehicleDataPath,
-			baseFileName,
-			sData.mVehicle->mBaseParams);
+		readBaseParamsFromJsonFile(sData.mVehicleDataPath, baseFileName,
+								   sData.mVehicle->mBaseParams);
 		// Changes the parameters of the engine
 		const char *engineFileName = dbugPanel::tuning::enginePath.c_str();
 		readEngineDrivetrainParamsFromJsonFile(
-			sData.mVehicleDataPath, 
-			engineFileName,
+			sData.mVehicleDataPath, engineFileName,
 			sData.mVehicle->mEngineDriveParams);
 
-		printf("scene scale %f, car scale:%f\n", game.physics->gPhysics->getTolerancesScale().length, sData.mVehicleSimContext.scale.scale);
+		printf("scene scale %f, car scale:%f\n",
+			   game.physics->gPhysics->getTolerancesScale().length,
+			   sData.mVehicleSimContext.scale.scale);
 	}
 }
 
