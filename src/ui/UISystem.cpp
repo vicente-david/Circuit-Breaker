@@ -9,6 +9,8 @@ std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>&
 	sig.set(coord->getComponentType<UIComponent>());
 	sig.set(coord->getComponentType<RectUI>());
 
+	//sig.set(coord->getComponentType<UIElement>());
+
 	coord->setSystemSignature<UISystem>(sig);
 
 	return system;
@@ -21,6 +23,42 @@ void UISystem::update() {
 	for (auto& entity : entities) {
 		
 	}
+}
+
+UIPositions UISystem::calculateAnchorPositions(UIElement u1, int width, int height) {
+	UIPositions uF;  // ui triangle positions
+	float left, top, right, bottom, leftO, topO, rightO, bottomO;
+
+	// recall u1 stores  a vec4 of anchors in the following order (left, top, right, bottom)
+	
+	// 0,0 is top left corner
+
+	left = u1.anchors.x; 
+	top = u1.anchors.y; 
+	right = u1.anchors.z;
+	bottom = u1.anchors.w;
+
+	// offsets
+	leftO = u1.anchorOffsets.x;
+	topO = u1.anchorOffsets.y;
+	rightO = u1.anchorOffsets.z;
+	bottomO = u1.anchorOffsets.w;
+
+	// essentially the formula is very simple
+	// bottom left corner is influenced by left and bottom right
+	// so where is it located on left (left*width), and then offset it by leftOffset amount (leftO)
+	// same thing for bottom, (bottom*height) + bottomOffset
+
+	// start at bottom left then follow counter clockwise (bottom up) to build triangles
+	uF.p1 = glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f); // (left, bottom, 0.0)
+	uF.p2 = glm::vec3(right*width + rightO, bottom*height + bottomO, 0.0f); // (right, bottom, 0.0)
+	uF.p3 = glm::vec3(right*width + rightO, top*height + topO, 0.0f); // (right, top, 0.0)
+
+	uF.p4 = glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f); // (left, bottom, 0.0)
+	uF.p5 = glm::vec3(right*width + rightO, top*height + topO, 0.0f); // (right, top, 0.0)
+	uF.p6 = glm::vec3(left*width + leftO, top*height + topO, 0.0f); // (left, top, 0.0)
+	
+	return uF;
 }
 
 

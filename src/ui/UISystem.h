@@ -16,6 +16,17 @@
 #include <glm/gtx/projection.hpp>
 
 
+// positions of the triangle to render the quad
+struct UIPositions {
+	glm::vec3 p1;
+	glm::vec3 p2;
+	glm::vec3 p3;
+	glm::vec3 p4;
+	glm::vec3 p5;
+	glm::vec3 p6;
+};
+
+
 class UISystem : public System{
 public:
 	static std::shared_ptr<UISystem> registerSystem(std::shared_ptr<Coordinator>& coord); // ecs shenanigans
@@ -23,6 +34,8 @@ public:
 	TextUI raceUI(int lapcount);
 
 	void update();
+
+	UIPositions calculateAnchorPositions(UIElement u1, int width, int height);
 
 	TextUI changeToWinScreen(); // change to win screen when that event triggers
 	TextUI changeToLoseScreen(); // change to win screen when that event triggers
