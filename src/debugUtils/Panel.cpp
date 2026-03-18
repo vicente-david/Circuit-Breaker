@@ -25,7 +25,7 @@ namespace tuning {
 bool reloadSpark = false;
 bool setFolder = false;
 bool physicsShapes;
-std::string configFolder = "C:/Users/PC/Documents/School/585/Game/CPSC585-Games-Programming/assets/vehicledata";
+std::string configFolder = "assets/vehicledata";
 std::string enginePath = "SparkDrive.json";
 std::string basePath = "SparkBase.json";
 
