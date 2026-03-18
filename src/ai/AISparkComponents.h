@@ -2,7 +2,7 @@
 #include <glm/glm.hpp>
 
 // FSM states for AI sparks
-enum AIState {
+enum AIDriveState {
 	IDLE = 0,
 	DRIVING = 1,
 	BRAKING = 2,
@@ -13,7 +13,7 @@ enum AIState {
 
 // this component tells the controller system that its AI controlled.
 struct AIController {
-	AIState state = IDLE;
+	AIDriveState state = IDLE;
 
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route

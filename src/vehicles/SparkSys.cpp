@@ -307,15 +307,16 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
 	}
 	{
-		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.2f));
+		/*PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.2f));
 		PxShape *groundBox = game.physics->gPhysics->createShape(
 			groundBoxGeom, *game.physics->gMaterial, true);
 		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.0f),
 									   PxQuat(PxIdentity));
 
 		groundBox->setLocalPose(groundBoxLocalPose);
+		groundBox->setName("trigger");
 		rBody->attachShape(*groundBox);
-		groundBox->release();
+		groundBox->release();*/
 	}
 
 	// Create vehicle filter
@@ -341,7 +342,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		}
 
 		// special ground trigger
-		if (i == 7) {
+		if (shape->getName() == "trigger") {
 			shape->setSimulationFilterData(groundFilter);
 			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);

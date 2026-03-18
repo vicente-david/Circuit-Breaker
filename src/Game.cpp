@@ -128,7 +128,7 @@ void Game::initializeTrack() {
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, AIController{
-		AIState::IDLE, // start AI in idle state
+		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
 		});
@@ -138,7 +138,7 @@ void Game::initializeTrack() {
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
 	coordinator->addComponent(testSpark3, AIController{
-		AIState::IDLE, // start AI in idle state
+		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
 		0.10f, // curveBrakeThresh
