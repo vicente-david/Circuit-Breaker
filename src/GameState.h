@@ -19,6 +19,21 @@ class GameState {
 	void endGame(Entity gameWinner);
 	void resetGameState();
 
+	// i think these need to be moved up, setting inputs can stay here but the system management
+	// may need to be managed by Game.cpp and not gameState
+
+	/*
+	void setGame(); // wrapper to ready all systems for playing game
+
+	void setTitleRenderPasses(); // set render passes for title screen
+	void setGameRenderPasses(); // set render passes for the actual game (when playing)
+	void setPauseRenderPasses(); // pause menu
+
+	void setTitleInputs(); // swap actions to title menu
+	void setGameInputs(); // swap actions to in game actions
+	void setPauseInputs(); // swaps to pause inputs
+	*/
+
 	Entity winner = -1;
 
 	// Flags

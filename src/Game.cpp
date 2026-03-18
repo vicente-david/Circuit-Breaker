@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "physics/CollisionData.h"
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
@@ -6,11 +7,32 @@ Game::Game() {
 	gameState = GameState();
 }
 
+// in theory this should initialize all internal systems
+// should not do any track loading or spawning of entities
 void Game::initializeGame() {
 	initializeECS(); //initialize ecs
-	// initialize entities
-	// construct track 
-	// bake physics
+
+	// initialize debug panel
+	// create physics manager
+	std::shared_ptr<PhysicsManager> physicsManager =
+		std::make_shared<PhysicsManager>();
+	physics = physicsManager;
+
+	gameState.physics = physics;
+	gameState.coordinator = coordinator;
+	gameState.audio = audio;
+	gameState.uiSystem = uiSystem;
+
+	initializeAudio();
+
+	renderer->initializeShaders(); // Create shader programs
+	renderer->initializeText();
+	
+
+	inputSystem.attachWindow(renderer->window);
+
+	gameActions = inputSystem.getActions();
+
 }
 
 void Game::initializeECS() {
@@ -48,6 +70,12 @@ void Game::initializeECS() {
 
 }
 
+void Game::initializeRace() {
+	initializeTrack();
+	// initializeFinishLine();
+	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
+}
+
 void Game::initializeTrack() {
 	lapSys->generateCheckpoints("assets/track1.obj");
 
@@ -63,36 +91,24 @@ void Game::initializeTrack() {
 
 	// create track as a static mesh with baked physics
 	{
-		Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
-		Entity track = coordinator->createEntity();
-		CollisionData trackPhys{ GROUND, track };
-		coordinator->addComponent(track, none);
-		coordinator->addComponent(track, Track.model);
-		coordinator->addComponent(track, trackPhys);
-
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = coordinator->createEntity();
-		CollisionData planePhys{ GROUND, walls };
-		coordinator->addComponent(walls, none);
-		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, planePhys);
-
-		Model healModel("assets/heals.obj"); // loads model and paths
-		Entity heal = gameState.coordinator->createEntity();
-		CollisionData healPhys{ HEAL, heal };
-		coordinator->addComponent(heal, none);
-		coordinator->addComponent(heal, healModel);
-		coordinator->addComponent(heal, healPhys);
-		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
-		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
-		for (auto& i : healModel.GetMeshes()) {
-			auto actor = physics->initHealZones(i, none);
-			actor->userData = &healPhys;
-		}
-
+		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+		Entity track = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(track, none);
+		gameState.coordinator->addComponent(track, Track.model);
+		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
+		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
 		auto trackActor =
 			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
+
+		// add walls
+		Model wallsModel("assets/walls.obj"); // loads model and paths
+		Entity walls = coordinator->createEntity();
+		coordinator->addComponent(walls, none);
+		coordinator->addComponent(walls, wallsModel);
+		coordinator->addComponent(track, CollisionData{GROUND, walls});
+		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
+
 
 		for (auto& i : wallsModel.GetMeshes()) {
 			auto actor = physics->initStaticMesh(i, none);
@@ -101,30 +117,53 @@ void Game::initializeTrack() {
 
 		dbug::log(0, "track entity id:%d", track);
 
-
+		// add heal zones
+		Model healModel("assets/heals.obj"); // loads model and paths
+		Entity heal = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(heal, none);
+		gameState.coordinator->addComponent(heal, healModel);
+		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
+		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
+		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
+		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
+		for(auto& i : healModel.GetMeshes()){
+			auto actor = physics->initHealZones(i, none);
+			actor->userData = &healPhys;
+		}
 	}
-
-
 
 
 	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
+	// initialize players
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -6.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, 0.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, 2.0f, 0.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(4.0f, 2.0f, -3.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, 2.0f, -3.0f));
+
+
+	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
+
+}
+
+void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	// create spark with new system
-	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y + 2.f, pathStartPt.z - 6.f);
-	auto sparkEntity = sparkSys->createSpark(gameState, startLoc);
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(sparkEntity, HumanController{ 0 });
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());
 	coordinator->addComponent(sparkEntity, Respawnable());
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
+	player = sparkEntity;
+}
 
-	
-
-
-	startLoc = PxVec3(pathStartPt.x - 6.f, pathStartPt.y + 2.f, pathStartPt.z);
-	auto testSpark2 = sparkSys->createSpark(gameState, startLoc);
+void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, AIController{
@@ -132,8 +171,10 @@ void Game::initializeTrack() {
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
 		});
+}
 
-	startLoc = PxVec3(pathStartPt.x + 4.f, pathStartPt.y + 2.f, pathStartPt.z - 3.f);
+void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
+	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
@@ -146,13 +187,10 @@ void Game::initializeTrack() {
 		0.02f, // curveBoostThresh
 		8, // steeringSharpness
 		});
-
-
-	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(sparkEntity).currentLap);
-
 }
 
 void Game::initializeFinishLine() {
+	// return;
 	// create finish line trigger box
 	CollisionData finishCollisionData{ FINISH_LINE, -1 };
 	{
@@ -200,7 +238,17 @@ void Game::initializeAudio() {
 
 // update stuff
 void Game::update() {
-	
+	// update inputs
+	// input
+	gameActions = inputSystem.getActions();
+	gameState.inputActions = gameActions;
+	controllerSys->update(gameState);
+
+	if (gameActions.intializeGame) {
+		initializeRace();
+		gameActions.intializeGame = false;
+	}
+
 	updateTime();
 	updatePhysics();
 	// AI

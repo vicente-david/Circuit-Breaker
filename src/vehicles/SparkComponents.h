@@ -57,7 +57,7 @@ struct SparkData {
 	const char *mVehicleDataPath = NULL;
 	const char *mVehicleName = "unnamed_vehicle";
 
-	CollisionData physData = CollisionData{SPARK_BODY, -1};
+	CollisionData physData = CollisionData{SPARK, -1};
 	void destroy() {
 		mVehicle->destroy();
 	}
