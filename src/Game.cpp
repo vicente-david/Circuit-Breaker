@@ -50,7 +50,7 @@ void Game::initializeECS() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/biggertrack1.obj");
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
