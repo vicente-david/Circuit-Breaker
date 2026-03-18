@@ -289,10 +289,23 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 		const PxVec3 linVel = rBody->getLinearVelocity();
 		const PxVec3 forward = rBody->getGlobalPose().q.getBasisVector2();
 		const PxVec3 lateral = rBody->getGlobalPose().q.getBasisVector0();
-		const PxVec3 lateralDir = lateral.getNormalized();
+		//const PxVec3 vertical = rBody->getGlobalPose().q.getBasisVector1();
 
+		//const PxVec3 travelDir = linVel.getNormalized();
+		//const PxVec3 forwardDir = forward.getNormalized();
+		const PxVec3 lateralDir = lateral.getNormalized();
+		//const PxVec3 verticalDir = vertical.getNormalized();
+
+		////// Direction vectors projected on to the xz-plane
+		//const PxVec3 travelDirXZ = (travelDir - (travelDir.y * PxVec3(0.f, 1.f, 0.f))).getNormalized();
+		//const PxVec3 ForwardDirXZ = (forwardDir - (forwardDir.y * PxVec3(0.f, 1.f, 0.f))).getNormalized();
+		//const PxVec3 lateralDirXZ = (lateralDir - (lateralDir.y * PxVec3(0.f, 1.f, 0.f))).getNormalized();
+
+		//const float forwardSpeed = linVel.dot(forward);
 		const float lateralSpeed = linVel.dot(lateral);
 
+		//const float driftAmount = sData.speed != 0.f ? lateralSpeed / forwardSpeed : 0.f; // in radians
+		//const float driftAngle = PxAbs(driftAmount) * 90.f;
 
 		if (sControls.handbrake) {
 			if (!sData.inDrift) {
@@ -379,9 +392,9 @@ void SparkSys::applyBoost(SparkData& sData) {
 }
 
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
-	//updateMaxBoost(sData);
+	updateMaxBoost(sData);
 
-	if (sControls.boost && sData.boost > 0) {
+	if (sControls.boost && sData.boost > 0 && sData.inDrift) {
 		dbug::log("GAME", -1, "boosting!");
 		applyBoost(sData);
 	}

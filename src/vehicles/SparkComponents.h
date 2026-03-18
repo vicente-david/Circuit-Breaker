@@ -40,8 +40,8 @@ struct SparkData {
 
 	float boostUseRate = 0.5f;
 	float boostStrength = 10.f;
-	float boostRegenRate = 50.0f;
-	float maxBoost = 100.f;
+	float boostRegenRate = 10.0f;
+	float maxBoost = 0.f;
 	float boost = maxBoost;
 	
 	float shimmyForce = 15.f;
