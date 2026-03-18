@@ -45,26 +45,42 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     ```
 
 ---
+## Game Rules
+- In order to win the race, a player must complete 3 full laps around the race track.
+- Each player begins with maximum health points (HP), and zero boost.
+    - The amount of boost that a player has is inversely proportional to the amount of health that they have.
+    - To regain boost, a player must drift. Using the handbrake can help accomplish this.
+- If a player loses all their health, they are destroyed and are forfeited from the race.
+      - A player can deplete another players' health by driving or ramming into them. This can also be done by shimmying into another player.  
+
 ## Controls:
 
 ### Controller:
     - L-Stick: Turn 
     - R-Stick: Rotate Camera 
     - R-Trigger: accelerate
-    - L-Trigger: brake
+    - LB/L1: Shimmy left
+    - RB/R1: Shimmy right
+    - L-Trigger: Brake
+    - LT + RT: Reverse
     - B/◯: Boost
     - Y/△: Reset
+    - A/X: Handbrake
 
 ### Keyboard:
-    - A/D: Turn 
-    - Q/E: Rotate Camer 
-    - W: accelerate
-    - S: accelerate
-    - J/L: Shimmy
+    - A/D: Turn
+    - Q/E: Rotate Camera
+    - W: Accelerate
+    - S: Brake
+    - S + W: Reverse
+    - J: Shimmy left
+    - L: Shimmy right
     - Space: Boost
     - Back Space: Reset
     - C: Camera Reset Toggle
+    - K: Handbrake
 
+- Reversing happens when the brake and throttle are both active when the car is stationary.
 
 ---
 ## Members:

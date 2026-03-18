@@ -1,6 +1,8 @@
 #include "AudioEngine.h"
 #include "Sound.h"
 #include "WavData.h"
+#include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <algorithm>
@@ -10,8 +12,6 @@
 #include <stdbool.h>
 #include <string>
 #include <vector>
-#include "debugUtils/Logger.h"
-#include "debugUtils/Panel.h"
 
 // reference:
 // https://indiegamedev.net/2020/02/15/the-complete-guide-to-openal-with-c-part-1-playing-a-sound/
@@ -20,8 +20,7 @@
 
 AudioEngine::AudioEngine() {
 
-
-	dbug::log("AUDIO", 0, "intializing audio" );
+	dbug::log("AUDIO", 0, "intializing audio");
 	// use the deafult audio device
 	device = alcOpenDevice(NULL);
 
@@ -48,6 +47,8 @@ void AudioEngine::loadSounds() {
 	// sounds["hiya"].loop = true;
 	sounds.emplace("full", WavData("assets/sounds/aaa.wav"));
 	sounds.emplace("muteCity", WavData("assets/sounds/muteCityMono.wav"));
+	sounds.emplace("engine", WavData("assets/sounds/engine.wav"));
+	sounds["engine"].loop = true;
 }
 
 void AudioEngine::update(double dt) {
@@ -67,7 +68,7 @@ void AudioEngine::update(double dt) {
 		});
 	channels.erase(remIdx, channels.end());
 
-	if(dbugPanel::debug::updateVol){
+	if (dbugPanel::debug::updateVol) {
 		alListenerf(AL_GAIN, dbugPanel::debug::volume);
 	}
 }
@@ -89,8 +90,12 @@ void AudioEngine::updateListenerVel(float x, float y, float z) {
 	// printf("list vel. [%f, %f, %f]\n", x, y, z);
 }
 
+void AudioEngine::updateSoundLoc(Sound s) {
+	updateSoundLoc(s, s.position.x, s.position.y, s.position.z);
+}
 // move a sound instance to a specified location in world coordinates
-// Note: 3d sound only works with mono audio files. if you use sterio there aren't errors, but it just won't move in 3D
+// Note: 3d sound only works with mono audio files. if you use sterio there
+// aren't errors, but it just won't move in 3D
 void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	// point for sound loc
 	auto loc = glm::vec4(x, y, z, 1);
@@ -104,12 +109,14 @@ void AudioEngine::updateSoundLoc(Sound s, float x, float y, float z) {
 	// printf("trans loc: [%f, %f, %f]\n", alData[0], alData[1], alData[2]);
 }
 
+void AudioEngine::updateSoundVel(Sound s) {
+	updateSoundVel(s, s.velocity.x, s.velocity.y, s.velocity.z);
+}
 // update sound velocity for dopler shifting
 // this should be in world coordinates
 void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 	// get velocity relative to the camera (in world coordinates)
-	glm::vec4 vel(x - listener.velx, y - listener.vely,
-									 z - listener.velz, 0);
+	glm::vec4 vel(x - listener.velx, y - listener.vely, z - listener.velz, 0);
 	// transform to camera frame
 	vel = listener.viewMatrix * vel;
 	float alData[3] = {vel.x, vel.y, vel.x};
@@ -146,31 +153,32 @@ bool AudioEngine::checkALErrors(std::string location) {
 		return true;
 	}
 
-	dbug::log("AUDIO", 2, "Open Al Error at location %s\n", location.c_str() );
+	dbug::log("AUDIO", 2, "Open Al Error at location %s\n", location.c_str());
 	switch (err) {
 	case AL_INVALID_NAME:
 
-		dbug::log("AUDIO",2,
-				"AL_INVALID_NAME: invalid ID was passed to AL function.\n");
+		dbug::log("AUDIO", 2,
+				  "AL_INVALID_NAME: invalid ID was passed to AL function.\n");
 		break;
 
 	case AL_INVALID_ENUM:
-		dbug::log("AUDIO",2,
-				"AL_INVALID_ENUM: invalid enum was passed to AL function.\n");
+		dbug::log("AUDIO", 2,
+				  "AL_INVALID_ENUM: invalid enum was passed to AL function.\n");
 		break;
 	case AL_INVALID_VALUE:
-		dbug::log("AUDIO",2,
-				"AL_INVALID_VALUE: invalid value was passed to AL function.\n");
+		dbug::log(
+			"AUDIO", 2,
+			"AL_INVALID_VALUE: invalid value was passed to AL function.\n");
 		break;
 	case AL_INVALID_OPERATION:
-		dbug::log("AUDIO",2,
-				"AL_INVALID_OPERATION: requested operation is invalid.\n");
+		dbug::log("AUDIO", 2,
+				  "AL_INVALID_OPERATION: requested operation is invalid.\n");
 		break;
 	case AL_OUT_OF_MEMORY:
-		dbug::log("AUDIO",2, "AL_OUT_OF_MEMORY: openAL ran out of memory!.\n");
+		dbug::log("AUDIO", 2, "AL_OUT_OF_MEMORY: openAL ran out of memory!.\n");
 		break;
 	default:
-		dbug::log("AUDIO",2, "UNKNOWN AL ERROR: good luck :(\n");
+		dbug::log("AUDIO", 2, "UNKNOWN AL ERROR: good luck :(\n");
 		break;
 	}
 	return false;

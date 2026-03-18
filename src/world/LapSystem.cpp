@@ -134,7 +134,7 @@ void LapSystem::generateCheckpoints(const std::string path) {
 // ultimately decide lap completion and stuff and not progressupdate)
 // sequential update as well, you cannot skip checkpoints
 // next checkpoints defines the range of checkpoints to check collision for
-void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints) {
+void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints, GameState& game, const Entity& entity) {
 	for (int i = 0; i < nextCheckpoints; i++) {
 	// more sophisticated if we want shortcuts, this is where the distance comes into play
 	// track the forward progress the player has made on the track
@@ -147,27 +147,29 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 		}
 
 		// check if vehicle is inside the next checkpoint
-		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 10.0f) < 0.0f) {
+		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 15.0f) < 0.0f) {
 			// if they are check if their target isn't the start/finish line
 			// the > 0 check is to make sure they don't immediately increment lap on race start
 			if (lapProg.lastCheckpointID > 0 && indexI == 0) {
 				lapProg.currentLap++;
 				lapProg.progress = 0.0f;
 				lapProg.closestTrackPoint = 0;
-//				std::cout << "on lap: " << lapProg.currentLap << std::endl;
+				if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
+				std::cout << "on lap: " << lapProg.currentLap << std::endl;
+				if (lapProg.currentLap >= 4 && !game.gameEnded) game.endGame(entity);
 			}
 
-//			std::cout << "checkpoint: " << indexI << std::endl;
+			//std::cout << "checkpoint: " << indexI << std::endl;
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = indexI;
 			break;
 		}
 	}
-	
+
 }
 
 // updates both checkpoint and distnace progressed along the track
-void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform) {
+void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity) {
 
 	int nextCheckpoints = LapSystem::nearestCheckpoints(lapProg);
 
@@ -238,7 +240,7 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 
 
 	// updateCheckpoints
-	LapSystem::updateCheckpoints(lapProg, eTransform, nextCheckpoints);
+	LapSystem::updateCheckpoints(lapProg, eTransform, nextCheckpoints, game, entity);
 
 //	std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
 
@@ -253,7 +255,7 @@ void LapSystem::update(GameState& game) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 
-		updateCheckpointsWithProgress(lapProg, eTransform);
+		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
 		lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
 
 		// compute the track forward direction at this checkpoint used for respawning
@@ -267,6 +269,7 @@ void LapSystem::update(GameState& game) {
 		if (glm::length(dir) > 0.001f) {
 			lapProg.lastCheckpointDir = glm::normalize(dir);
 		}
+		
 
 	}
 }

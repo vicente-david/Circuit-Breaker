@@ -153,7 +153,7 @@ ALuint WavData::createSource() {
 		return -1;
 	}
 	alSourcei(channel, AL_BUFFER, buffer);
-	AudioEngine::checkALErrors("sending audio bufer");
+	AudioEngine::checkALErrors("sending audio buffer");
 	if (!loop) {
 		alSourcei(channel, AL_LOOPING, AL_FALSE);
 		AudioEngine::checkALErrors("setting no looping");
