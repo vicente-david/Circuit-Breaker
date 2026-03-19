@@ -73,20 +73,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 				dbug::log("GAME", 0, "slide to the left");
 				shimmy(rBody, sData, false);
 			}
-
-			if (controls.shimmyR) {
-				dbug::log("GAME", 0, "slide to the right");
-				shimmy(rBody, sData, true);
-			}
-		} else if (sData.shimmyTimer > 0) {
-			sData.shimmyTimer -= dt;
-		}
-
-		// TODO: modify reset
-		if (controls.reset || sData.health <= 0) {
-			sData.health = 100;
-			sData.currBoost = 0;
-			respawn(rBody);
 		}
 
 		// do the physx vehicle movement
@@ -479,12 +465,12 @@ void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
 void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
 	if (sData.shimmyTimer <= 0) {
 		if (sControls.shimmyL) {
-			dbug::log("GAME", 0, "slide to the left");
+			//dbug::log("GAME", 0, "slide to the left");
 			applyShimmy(sData, false);
 		}
 
 		if (sControls.shimmyR) {
-			dbug::log("GAME", 0, "slide to the right");
+			//dbug::log("GAME", 0, "slide to the right");
 			applyShimmy(sData, true);
 		}
 	}
