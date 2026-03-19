@@ -55,7 +55,8 @@ void AudioEngine::loadSounds() {
 	sounds.emplace("lowHealth", WavData("assets/sounds/lowHealth.wav"));
 	sounds["lowHealth"].loop = true;
 
-	sounds.emplace("clank", WavData("assets/sounds/clank.wav"));
+	sounds.emplace("shimmy", WavData("assets/sounds/clank.wav"));
+	sounds.emplace("crash", WavData("assets/sounds/crash.wav"));
 }
 
 void AudioEngine::update(double dt) {

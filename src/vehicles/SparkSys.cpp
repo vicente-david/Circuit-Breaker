@@ -34,6 +34,13 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			game.coordinator->getComponent<SparkData>(colData.spark1Id);
 		auto &sData2 =
 			game.coordinator->getComponent<SparkData>(colData.spark2Id);
+		auto &rBody =
+			game.coordinator->getComponent<PxRigidBody *>(colData.spark2Id);
+
+		// play sound
+		auto sound = game.audio->createSound("crash");
+		sound->updateFromRbody(rBody);
+		sound->start();
 
 		// don't do damage from hitting each other if sliding or boosting
 		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting) {
@@ -51,12 +58,16 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 				  colData.spark2Id);
 	}
 	for (auto const &colData : game.physics->callbacks->sparkWallCol) {
+		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(colData.sparkId);
 		auto &sData =
 			game.coordinator->getComponent<SparkData>(colData.sparkId);
 		// auto &rBody = game.coordinator->getComponent<PxRigidBody
 		// *>(entity.sparkId);
 		sData.health -= colData.magnitude * 0.75;
 		dbug::log("GAME", 0, "Hit a wall!");
+		auto sound = game.audio->createSound("crash");
+		sound->updateFromRbody(rBody);
+		sound->start();
 	}
 	bool reload = false;
 	for (auto const &entity : entities) {
