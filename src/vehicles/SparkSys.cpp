@@ -376,18 +376,19 @@ void SparkSys::updateMaxBoost(SparkData& sData) {
 
 void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
-	
-	if (sData.health <= 1)
-		return;
 
-	if (useHealth)
+	if (useHealth && sData.health > 1)
 		sData.health -= sData.boostUseRate * dt * 0.5f; // use half the boost usage rate
-	else
+	else if (sData.boost > 0)
 		sData.boost -= sData.boostUseRate * dt;
 
 	// don't kill yourself from boosting
-	if (sData.health <= 1)
+	if (sData.health < 1)
 		sData.health = 1;
+
+	// can't have negative boost
+	if (sData.boost < 0)
+		sData.boost = 0;
 	
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 }
