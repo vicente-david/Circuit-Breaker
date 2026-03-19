@@ -31,15 +31,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			isP1 = false;
 		}
 		// Respawn
-		if (sControls.reset || sData.health <= 0)
+		if (sControls.reset || sData.health <= 0) {
+			sparkValuesReset(sData);
 			respawnSpark(sData.rBody, getRespawnPose(entity, game));
-
-		// TODO: Put in helper (boosting with health)
-		// boosting
-		sData.isBoosting = false;
-		if (controls.boost) {
-			// try to boost
-			boost(rBody, sData, controls.boostWithHealth, dt);
 		}
 
 		// TODO: Put in helper (boost regen based off drift angle)
@@ -591,4 +585,15 @@ PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
 	PxQuat quat(PxAtan2(q.x, q.z), PxVec3(0.f, 1.f, 0.f));
 
 	return PxTransform(pos, quat);
+}
+
+void SparkSys::sparkValuesReset(SparkData& sData) {
+	sData.health = sData.maxHealth;
+	sData.maxBoost = 0.0f;
+	sData.boost = sData.maxBoost;
+	sData.shimmyTimer = 0;
+	sData.speed = 0.0f;
+	sData.inReverse = false;
+	sData.inDrift = false;
+	sData.isBoosting = false;
 }

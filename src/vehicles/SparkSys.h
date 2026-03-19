@@ -51,4 +51,6 @@ class SparkSys : public System {
 	// Respawn
 	void respawnSpark(PxRigidBody *rBody, PxTransform respawnPose);
 	PxTransform getRespawnPose(Entity entity, GameState &game); 
+
+	void sparkValuesReset(SparkData& sData);
 };
