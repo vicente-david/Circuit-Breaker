@@ -25,6 +25,8 @@ class SparkSys : public System {
 
   private:
 	// === Helpers ===
+	void checkDeath(SparkData& sData, double dt);
+
 	// Collision
 	void sparkCollision(GameState& game);
 	void wallCollision(GameState& game);
@@ -50,8 +52,8 @@ class SparkSys : public System {
 	void sparkHandling(SparkData& sData, SparkControls& sControls, double dt);
 
 	// Respawn
-	void respawnSpark(PxRigidBody *rBody, PxTransform respawnPose);
+	void respawnSpark(SparkData& sData, PxTransform respawnPose);
 	PxTransform getRespawnPose(Entity entity, GameState &game); 
-
 	void sparkValuesReset(SparkData& sData);
+	void respawn(Entity entity, GameState& game, double dt);
 };

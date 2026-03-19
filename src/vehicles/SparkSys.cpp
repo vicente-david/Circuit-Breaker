@@ -10,18 +10,17 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	healZoneCheck(game, dt);
 	
 	bool reload = false;
-	bool isP1 = true;
 	for (const Entity &entity : entities) {
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
 		SparkControls &sControls = game.coordinator->getComponent<SparkControls>(entity);
 
-		const PxVec3 linVel = sData.rBody->getLinearVelocity();
-		const PxVec3 forwardDir = sData.rBody->getGlobalPose().q.getBasisVector2();
-
-		sData.speed = linVel.magnitude();
+		sData.speed = sData.rBody->getLinearVelocity().magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
-		if (sData.health > 0) // cant do anything if your dead lol
+		// TODO: flash "Short Circuit" on screen (like you're dead)
+		checkDeath(sData, dt);
+
+		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, dt);
 
 		if (isP1) {
@@ -31,10 +30,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			isP1 = false;
 		}
 		// Respawn
-		if (sControls.reset || sData.health <= 0) {
-			sparkValuesReset(sData);
-			respawnSpark(sData.rBody, getRespawnPose(entity, game));
-		}
+		respawn(entity, game, dt);
 
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
@@ -283,6 +279,13 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	return system;
 }
 
+void SparkSys::checkDeath(SparkData& sData, double dt) {
+	if (sData.health <= 0 && !sData.isDead) {
+		sData.isDead = true;
+		sData.respawnTimer = sData.respawnCooldown;
+	}
+}
+
 // FLAG CHECKS
 void SparkSys::sparkCollision(GameState& game) {
 		for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
@@ -321,6 +324,7 @@ void SparkSys::healZoneCheck(GameState& game, double dt) {
 		
 		if (sData.health < sData.maxHealth) {
 			sData.health += 10 * dt; // TODO: add regen rate to spark data
+			sData.health += sData.healthRegenRate * dt;
 		
 			if (sData.health > sData.maxHealth)
 				sData.health = sData.maxHealth;
@@ -525,14 +529,16 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls, double 
 }
 
 // RESPAWN
-void SparkSys::respawnSpark(PxRigidBody* rBody, PxTransform respawnPose) {
+void SparkSys::respawnSpark(SparkData& sData, PxTransform respawnPose) {
 	dbug::log("GAME", 0, "resetting");
 
-	rBody->setGlobalPose(respawnPose);
+	sData.rBody->setGlobalPose(respawnPose);
 
-	PxRigidDynamic* dBody = rBody->is<PxRigidDynamic>();
+	PxRigidDynamic* dBody = sData.rBody->is<PxRigidDynamic>();
 	dBody->setLinearVelocity(PxVec3(PxIdentity));
 	dBody->setAngularVelocity(PxVec3(PxIdentity));
+
+	sData.respawnTimer = sData.respawnCooldown;
 }
 
 PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
@@ -557,4 +563,23 @@ void SparkSys::sparkValuesReset(SparkData& sData) {
 	sData.inReverse = false;
 	sData.inDrift = false;
 	sData.isBoosting = false;
+	sData.isDead = false;
+}
+
+void SparkSys::respawn(Entity entity, GameState& game, double dt) {
+	SparkData& sData = game.coordinator->getComponent<SparkData>(entity);
+	SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
+
+	if (sData.respawnTimer <= 0) {
+		if (sData.isDead) {
+			sparkValuesReset(sData);
+			sControls.reset = true;
+		}
+
+		if (sControls.reset)
+			respawnSpark(sData, getRespawnPose(entity, game));
+	}
+	else {
+		sData.respawnTimer -= dt;
+	}
 }

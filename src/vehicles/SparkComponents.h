@@ -37,6 +37,8 @@ struct SparkControls {
 struct SparkData {
 	float maxHealth = 100.0f;
 	float health = maxHealth;
+	double respawnCooldown = 3;
+	double respawnTimer = 0;
 
 	float boostUseRate = 0.5f;
 	float boostStrength = 10.0f;
@@ -54,6 +56,7 @@ struct SparkData {
 	bool inReverse = false;
 	bool inDrift = false;
 	bool isBoosting = false;
+	bool isDead = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
