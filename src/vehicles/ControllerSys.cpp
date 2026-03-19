@@ -40,7 +40,7 @@ void ControllerSys::update(GameState &game) {
 		// activate health override when you start boosting with no boost left
 		if (!input.boost) {
 			sControl.boostWithHealth = false;
-		} else if (input.boostJustPressed && sData.boost < 1) {
+		} else if (input.boostJustPressed && sData.boost < 0.01f) {
 			sControl.boostWithHealth = true;
 		}
 		sControl.reload = input.reload;

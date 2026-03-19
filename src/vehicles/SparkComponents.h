@@ -37,7 +37,7 @@ struct SparkControls {
 struct SparkData {
 	float maxHealth = 100.0f;
 	float health = maxHealth;
-	float healthRegenRate = 5.f;
+	float healthRegenRate = 10.f;
 	double respawnCooldown = 3;
 	double respawnTimer = 0;
 

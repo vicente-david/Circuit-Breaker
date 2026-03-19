@@ -378,7 +378,7 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	if (useHealth && sData.health > 1)
-		sData.health -= sData.boostUseRate * dt * 0.5f; // use half the boost usage rate
+		sData.health -= sData.boostUseRate * dt;
 	else if (sData.boost > 0)
 		sData.boost -= sData.boostUseRate * dt;
 
