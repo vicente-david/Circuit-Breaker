@@ -574,8 +574,10 @@ void SparkSys::respawn(Entity entity, GameState& game, double dt) {
 			sControls.reset = true;
 		}
 
-		if (sControls.reset)
+		if (sControls.reset) {
 			respawnSpark(sData, getRespawnPose(entity, game));
+			sControls.reset = false; // so AI doesn't get stuck in a loop
+		}
 	}
 	else {
 		sData.respawnTimer -= dt;
