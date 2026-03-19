@@ -544,7 +544,7 @@ PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
 	LapCounter& prog = game.coordinator->getComponent<LapCounter>(entity);
 
 	glm::vec3 p = prog.lastCheckpointPos;
-	PxVec3 pos(p.x, p.y + 2, p.z);
+	PxVec3 pos(p.x, p.y, p.z);
 
 	glm::vec3 q = prog.lastCheckpointDir;
 	PxQuat quat(PxAtan2(q.x, q.z), PxVec3(0.f, 1.f, 0.f));
