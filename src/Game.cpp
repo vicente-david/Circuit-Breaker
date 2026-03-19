@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "AllSystem.h"
 #include "physics/CollisionData.h"
 
 Game::Game() {
@@ -46,6 +47,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Model>();
 	coordinator->registerComponent<SparkControls>();
 	coordinator->registerComponent<SparkData>();
+	coordinator->registerComponent<SparkSounds>();
 	coordinator->registerComponent<HumanController>();
 	coordinator->registerComponent<CameraComp>();
 	coordinator->registerComponent<LapCounter>();
@@ -60,6 +62,7 @@ void Game::initializeECS() {
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
 	renderer = RenderingSystem::registerSystem(coordinator);
 	sparkSys = SparkSys::registerSystem(coordinator);
+	sparkSoundSys = SparkSoundSys::registerSystem(coordinator);
 	controllerSys = ControllerSys::registerSystem(coordinator);
 	cameraSys = CameraSystem::registerSystem(coordinator);
 	audioSys = AudioSystem::registerSystem(coordinator);
@@ -282,6 +285,7 @@ void Game::updatePhysics() {
 		gameState.physics->callbacks->resetLists();
 		physicsSys->updatePhysics(dt, gameState);
 		cameraSys->update(gameState, dt);
+		sparkSoundSys->updateSounds(dt, gameState);
 		audioSys->updateSounds(gameState);
 		accumulator -= dt;
 		t += dt;

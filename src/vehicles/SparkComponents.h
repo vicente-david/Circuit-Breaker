@@ -2,6 +2,7 @@
 #include "../snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
+#include "audio/Sound.h"
 #include "physics/CollisionData.h"
 #include <memory>
 
@@ -63,4 +64,10 @@ struct SparkData {
 	}
 
 	bool isHuman = false;
+};
+struct SparkSounds{
+	Sound engine;
+	Sound lowHealth;
+	Sound boost;
+
 };

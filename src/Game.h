@@ -62,6 +62,7 @@ public:
 	std::shared_ptr<PhysicsSystem> physicsSys;
 	std::shared_ptr<RenderingSystem> renderer;
 	std::shared_ptr<SparkSys> sparkSys;
+	std::shared_ptr<SparkSoundSys> sparkSoundSys;
 	std::shared_ptr<ControllerSys> controllerSys;
 	std::shared_ptr<CameraSystem> cameraSys;
 	std::shared_ptr<AudioSystem> audioSys;

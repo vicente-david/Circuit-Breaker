@@ -157,13 +157,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// rBody->addForce(forwardDir *controls.throttle,
 		// PxForceMode::eACCELERATION);
-		// update sound
-		auto &sound = game.coordinator->getComponent<Sound>(entity);
-		auto pos = rBody->getGlobalPose().p;
-		rBody->getLinearVelocity();
-		sound.position = glm::vec3(pos.x, pos.y, pos.z);
-		auto vel = rBody->getGlobalPose().p;
-		sound.position = glm::vec3(vel.x, vel.y, vel.z);
 		reload = controls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.currBoost);
@@ -392,17 +385,12 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
+	game.coordinator->addComponent(sparkEntity, SparkSounds());
 	// different model for p3
 	if (sparkEntity == 3) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	} else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
-
-	// add engine sound
-	Sound sound = game.audio->createSound("engine");
-	sound.position = glm::vec3(startP.x, startP.y, startP.z);
-	sound.start();
-	game.coordinator->addComponent(sparkEntity, sound);
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 	return sparkEntity;
@@ -440,7 +428,6 @@ SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	sig.set(coord->getComponentType<SparkControls>());
 	sig.set(coord->getComponentType<SparkData>());
 	sig.set(coord->getComponentType<physx::PxRigidBody *>());
-	sig.set(coord->getComponentType<Sound>());
 	sig.set(coord->getComponentType<LapCounter>());
 	coord->setSystemSignature<SparkSys>(sig);
 

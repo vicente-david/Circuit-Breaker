@@ -9,3 +9,4 @@
 #include "ai/AIControllerSys.h"
 #include "world/LapSystem.h"
 #include "ui/UISystem.h"
+#include "vehicles/SparkSoundsSys.h"
