@@ -15,8 +15,7 @@ void DefenseState::run(AIController& ai, SparkControls& controls, Transform& tra
 		AI_DRIFTING(ai, controls, transform, spark);
 	else if (ai.state == BOOSTING)
 		AI_BOOSTING(ai, controls, transform, spark);
-	else if (ai.state == ATTACKING)
-		AI_ATTACKING(ai, controls, transform);
+	
 }
 
 /*
@@ -28,7 +27,7 @@ void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& tr
 
 
 	dbug::log("AI", 0, "!!!!! in overtake state");
-	OvertakeState::detect(ai, controls, transform, spark, body);
+	PxSweepBuffer hitInfo = OvertakeState::detect(ai, controls, transform, spark, body); // Line of sight sweep
 
 	if (ai.state == DRIVING)
 		AI_DRIVING(ai, controls, transform, spark);
@@ -39,7 +38,7 @@ void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& tr
 	else if (ai.state == BOOSTING)
 		AI_BOOSTING(ai, controls, transform, spark);
 	else if (ai.state == ATTACKING)
-		AI_ATTACKING(ai, controls, transform);
+		AI_ATTACKING(ai, controls, transform, spark, hitInfo);
 }
 
 /*
@@ -56,12 +55,11 @@ void MaintainState::run(AIController& ai, SparkControls& controls, Transform& tr
 		AI_DRIFTING(ai, controls, transform, spark);
 	else if (ai.state == BOOSTING)
 		AI_BOOSTING(ai, controls, transform, spark);
-	else if (ai.state == ATTACKING)
-		AI_ATTACKING(ai, controls, transform);
+	
 }
 
 // Detect if there is another player spark in line of sight
-void OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+PxSweepBuffer OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
 	PxScene* scene = body->getScene();
 	
 	PxSweepBuffer hitInfo;
@@ -79,7 +77,13 @@ void OvertakeState::detect(AIController& ai, SparkControls& controls, Transform&
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
 		std::cout << "hit?" << std::endl;
+		ai.state = ATTACKING;
 	}
+	else if (ai.state == ATTACKING) {
+		ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
+	}
+
+	return hitInfo;
 }
 
 // DRIVING STATES ==============================================================================================================
@@ -240,18 +244,63 @@ void AIState::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& 
 	return;
 }
 
-void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform) {
-	// TODO: add logic for attacking other players
+void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxSweepBuffer& hitInfo) {
 
+	if (spark.currBoost > 0.0f) {
+		PxVec3 t = hitInfo.block.position;
+		glm::vec3 target(t.x, t.y, t.z);
+		calcSteering(ai, controls, transform, spark, target); // steer to position of collision point
+		
+		float distTo = glm::length(target - transform.pos);
 
+		// Boost towards target
+		controls.throttle = 1.0f;
+		controls.brake = 0.0f;
+		controls.boost = true;
+		dbug::log("AI", 0, "[ATTACKING] -> DIST TO TARGET: %.2f, BOOST: %.2f, HEALTH: %.2f", distTo, spark.currBoost, spark.health);
+
+	}
+
+	if (spark.currBoost <= 0.0f) {
+		ai.state = DRIVING; // out of boost: exit attack
+	}
+	
 
 	return;
 }
 
 
+// TODO: fix this terribleness
 // Steering calculations used in many of the above
 void AIState::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
 	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
+	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
+	vectorToTarget.y = 0.0f;
+	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
+
+
+	// ---- STEERING ----
+	// compute the signed angle between car forward and direction to target, both projected onto XZ plane
+	// Z = forward, X = lateral, Y = vertical 
+	glm::vec3 unitVectorToTarget = glm::normalize(vectorToTarget);
+	glm::vec3 sparkForward = glm::normalize(transform.forwardD);
+
+	// 2D cross product gives sin of the angle (sign gives turn direction, + = right, - = left)
+	// 2D dot product gives cos of the angle
+	float cross = sparkForward.x * unitVectorToTarget.z - sparkForward.z * unitVectorToTarget.x;
+	float dot = sparkForward.x * unitVectorToTarget.x + sparkForward.z * unitVectorToTarget.z;
+	float angle = glm::atan(cross, dot);
+	dbug::log("AI", 0, "ANGLE: %.3f", angle);
+
+	// map the angle to [-1, 1] steering
+	// lock before sharpness multiplier
+	float steerRaw = -(angle / (glm::pi<float>() / 2)) * ai.steeringSharpness;
+	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
+
+	return;
+}
+
+void AIState::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos) {
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f;
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance

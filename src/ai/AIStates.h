@@ -18,10 +18,11 @@ public:
 	static void AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
-	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform);
+	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxSweepBuffer& hitInfo);
 
 private:
 	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
+	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
 
 };
 
@@ -39,7 +40,7 @@ class OvertakeState : public AIState {
 
 public:
 	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
-	static void detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+	static PxSweepBuffer detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
 };
 
 class MaintainState : public AIState {
