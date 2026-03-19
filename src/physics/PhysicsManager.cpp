@@ -111,7 +111,7 @@ PxTriangleMesh *PhysicsManager::cookTriangleMesh(Mesh mesh) {
 	return gPhysics->createTriangleMesh(readBuffer);
 }
 
-PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
+PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, PxMaterial *material) {
 	PxTriangleMesh *triangleMesh = cookTriangleMesh(mesh);
 
 	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
@@ -120,7 +120,7 @@ PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
 
 	PxFilterData groundFilter(COLLISION_FLAG_GROUND,
 							  COLLISION_FLAG_GROUND_AGAINST, 0, 0);
-	PxShape *triMeshShape = gPhysics->createShape(triGeom, *gMaterial);
+	PxShape *triMeshShape = gPhysics->createShape(triGeom, *material);
 		triMeshShape->setSimulationFilterData(groundFilter);
 	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
 	actor->attachShape(*triMeshShape);
@@ -134,6 +134,9 @@ PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
 	gScene->addActor(*actor);
 	triMeshShape->release();
 	return actor;
+}
+PxRigidStatic* PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
+	return initStaticMesh(mesh, transform, gMaterial);
 }
 
 void PhysicsManager::createTestObjs(Coordinator &coordinator) {
