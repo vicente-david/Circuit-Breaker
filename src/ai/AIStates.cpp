@@ -27,7 +27,7 @@ void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& tr
 
 
 	dbug::log("AI", 0, "!!!!! in overtake state");
-	PxSweepBuffer hitInfo = OvertakeState::detect(ai, controls, transform, spark, body); // Line of sight sweep
+	glm::vec3 hitPos = OvertakeState::detect(ai, controls, transform, spark, body); // Line of sight sweep
 
 	if (ai.state == DRIVING)
 		AI_DRIVING(ai, controls, transform, spark);
@@ -38,7 +38,7 @@ void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& tr
 	else if (ai.state == BOOSTING)
 		AI_BOOSTING(ai, controls, transform, spark);
 	else if (ai.state == ATTACKING)
-		AI_ATTACKING(ai, controls, transform, spark, hitInfo);
+		AI_ATTACKING(ai, controls, transform, spark, hitPos);
 }
 
 /*
@@ -58,10 +58,9 @@ void MaintainState::run(AIController& ai, SparkControls& controls, Transform& tr
 	
 }
 
-// Detect if there is another player spark in line of sight
-PxSweepBuffer OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+std::pair<bool, glm::vec3> AIState::lookFwd(Transform& transform, PxRigidBody* body) {
 	PxScene* scene = body->getScene();
-	
+
 	PxSweepBuffer hitInfo;
 	PxVec3 forwardDir(transform.forwardD.x, transform.forwardD.y, transform.forwardD.z); // sweep in front facing direction
 	PxBoxGeometry sweepBox(1.f, 0.5f, 0.5f); // geometry to sweep
@@ -73,17 +72,36 @@ PxSweepBuffer OvertakeState::detect(AIController& ai, SparkControls& controls, T
 	//filter.flags |= PxQueryFlag::eANY_HIT;
 	//filter.data.word0 = COLLISION_FLAG_CHASSIS;
 	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 75.f, hitInfo, outFlags, filter);
-	
+
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
-		std::cout << "hit?" << std::endl;
+		std::cout << "hit fwd" << std::endl;
+
+		PxVec3 t = hitInfo.block.position;
+		glm::vec3 target(t.x, t.y, t.z);
+
+		return { true, target };
+	}
+	else
+		return { false, glm::vec3(0.f) };
+
+}
+
+// Detect if there is another player spark in line of sight
+glm::vec3 OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+	
+	std::pair<bool, glm::vec3> result = AIState::lookFwd(transform, body);
+	
+	// Check if hit returned true and if the hit was not itself
+	if (result.first) {
 		ai.state = ATTACKING;
 	}
 	else if (ai.state == ATTACKING) {
 		ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
+		controls.boost = false; // ensure false
 	}
 
-	return hitInfo;
+	return result.second; // return position of hit point (returns (0, 0, 0) if no hit detected.
 }
 
 // DRIVING STATES ==============================================================================================================
@@ -241,14 +259,12 @@ void AIState::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& 
 	return;
 }
 
-void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxSweepBuffer& hitInfo) {
+void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& hitTargetPos) {
 
 	if (spark.currBoost > 0.0f) {
-		PxVec3 t = hitInfo.block.position;
-		glm::vec3 target(t.x, t.y, t.z);
-		calcSteering(ai, controls, transform, spark, target); // steer to position of collision point
+		calcSteering(ai, controls, transform, spark, hitTargetPos); // steer to position of collision point
 		
-		float distTo = glm::length(target - transform.pos);
+		float distTo = glm::length(hitTargetPos - transform.pos);
 
 		// Boost towards target
 		controls.throttle = 1.0f;
@@ -259,6 +275,7 @@ void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform&
 	}
 
 	if (spark.currBoost <= 0.0f) {
+		controls.boost = false;
 		ai.state = DRIVING; // out of boost: exit attack
 	}
 	
