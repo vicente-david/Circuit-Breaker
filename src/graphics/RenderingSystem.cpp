@@ -38,6 +38,7 @@ RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
 
 void RenderingSystem::initializeShaders() {
 	dbug::log("REND", 0, "loading shaders");
+
 	// Create shader program
 	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert",
 												  "shaders/basic.frag");
@@ -47,12 +48,35 @@ void RenderingSystem::initializeShaders() {
 											   "shaders/testText.frag");
 	solidColour = std::make_unique<ShaderProgram>("shaders/lines.vert",
 												  "shaders/lines.frag");
+	
+	// ui initialization
+	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
+	
+	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
+	uiShader->use(); // use it first
+	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+
+	glGenVertexArrays(1, &uiVAO);
+	glBindVertexArray(uiVAO);
+
+	glGenBuffers(1, &uiVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, NULL, GL_DYNAMIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
+	
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+
+
 	textFont = initFont("assets/miamanueva.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f,
 						 static_cast<float>(1440));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 					   GL_FALSE, glm::value_ptr(textMat));
+
 	initShadowMap();
 }
 
@@ -67,9 +91,10 @@ void RenderingSystem::initShadowMap() {
 		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderCol[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderCol);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
 	glDrawBuffer(GL_NONE); // no colour data to render
@@ -107,18 +132,67 @@ void RenderingSystem::initializeText() {
 	glBindVertexArray(0);
 }
 
-void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
-	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+/* keep for reference for now
+void RenderingSystem::renderUI(GameState& game) {
+	uiShader->use();
+	// recalc based on screen size (probably not necessary every frame, only on screen resize)
+	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
+	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	RectUI r1 = game.activeUIRect;
+	// rendering only rect rn
+	// r1.pos is center of rectangle
+	glm::vec2 verts[6] = {
+	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
+	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y - r1.height / 2),
+	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
+	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
+	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
+	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y + r1.height / 2),
+	};
+
+	std::vector<float> rectData;
+
+	// 6 vertices
+	for (int i = 0; i < 6; i++) {
+		rectData.push_back(verts[i].x);
+		rectData.push_back(verts[i].y);
+		rectData.push_back(r1.col.x);
+		rectData.push_back(r1.col.y);
+		rectData.push_back(r1.col.z);
+	}
+
+	glBindVertexArray(uiVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+
+	glBufferData(GL_ARRAY_BUFFER, rectData.size() * sizeof(float), rectData.data(), GL_DYNAMIC_DRAW);
+
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+}
+*/
+
+void RenderingSystem::renderUI(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
+	// render text
+	textProg->use();
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
+		1.0f, glm::vec3(1.0f), textFont);
+
+	// pretend this is the ui shader we're using
+	//textProg->use();
+	RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
+
+	
+}
+
+// TODO: split the rendering passes
+void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
 	// Render pass 1: depth to texture
 	float near_plane = -70.f, far_plane = 25.0f;
 	glm::mat4 lightProj = glm::ortho(bounds.first.x - 50.f, bounds.second.x + 50.f, bounds.first.z - 50.f, bounds.second.z + 50.f, near_plane, far_plane);
-	
 	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
-	
+
 	shadowShader->use();
 	unsigned int lightSpaceLoc = glGetUniformLocation(shadowShader->id, "lightSpaceMat");
 	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
@@ -129,6 +203,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	renderScene(game, shadowShader->id);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
 	// Render pass 2: render scene as normal
 
@@ -155,14 +230,32 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 
 	renderScene(game, basicShader->id);
 
-	// render text
-	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
-			   1.0f, glm::vec3(1.0f), textFont);
-
 	if (dbugPanel::tuning::physicsShapes) {
 		drawPhysxDebug(game, view, proj);
 	}
+
+}
+
+void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
+	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	
+	// render shadows + scene
+	//renderShadows(game, fps ,camSystem);
+	
+
+	for (auto renderPass : renderPasses) {
+		(this->*renderPass)(game, fps, camSystem);
+	}
+
+	
+
+	// render ui
+	renderUI(game, fps, camSystem);
+
+	
 
 	glfwPollEvents();
 	dbugPanel::render();

@@ -61,17 +61,23 @@ class TestInput1 : public CallbackInterface {
 		}
 
 		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
-			actions->shimmyRight = true;
+			actions->kshimmyRight = true;
 		}
 		else{
-			actions->shimmyRight = false;
+			actions->kshimmyRight = false;
 		}
 
 		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
-			actions->shimmyLeft = true;
+			actions->kshimmyLeft = true;
 		}
 		else{
-			actions->shimmyLeft = false;
+			actions->kshimmyLeft = false;
+		}
+		if (key == GLFW_KEY_K && action == GLFW_PRESS) {
+			actions->khandBrake = true;
+		}
+		else{
+			actions->khandBrake = false;
 		}
 
 		if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
@@ -80,6 +86,31 @@ class TestInput1 : public CallbackInterface {
 		else {
 			actions->kRespawn = false;
 		}
+
+		if (actions->intializeGame) {
+			actions->intializeGame = false;
+		}
+
+		if (key == GLFW_KEY_ENTER && (action == GLFW_PRESS) && (action != GLFW_REPEAT)) {
+			// 2 paused, 1 normal gameplay, 0 is initialization, -1 title screen
+			if (actions->menuControl == 2) {
+				actions->menuControl = 1;
+				std::cout << "resume the game" << std::endl;
+			}
+			else if (actions->menuControl == 1) {
+				actions->menuControl = 2;
+				std::cout << "paused now" << std::endl;
+			}
+			else if (actions->menuControl == 0) {
+				actions->menuControl = 2;
+				std::cout << "first pause" << std::endl;
+			}
+			else if (actions->menuControl == -1) {
+				actions->menuControl = 0; 
+				actions->intializeGame = true;
+			}
+		}
+
 	}
 
 	void mouseButtonCallback(int button, int action, int mods) {
@@ -241,9 +272,13 @@ void InputSystem::updateGamepad() {
 		actions.controllerYRot = 0.0;
 
 
-	if (button_B || actions.kboost)
+	if (button_B || actions.kboost){
+		actions.boostJustPressed = 0;
+		if(!actions.boost)
+			actions.boostJustPressed = 1;
+
 		actions.boost = 1;
-	else
+	}else
 		actions.boost = 0;
 
 	if (button_Y || actions.kRespawn)
@@ -251,17 +286,17 @@ void InputSystem::updateGamepad() {
 	else
 		actions.respawn = false;
 
-	if (button_A)
+	if (button_A || actions.khandBrake)
 		actions.handBrake = true;
 	else
 		actions.handBrake = false;
 
-	if (button_RB && !button_LB)
+	if (button_RB ||actions.kshimmyRight)
 		actions.shimmyRight = true;
 	else
 		actions.shimmyRight = false;
 
-	if (button_LB && !button_RB)
+	if (button_LB || actions.kshimmyLeft)
 		actions.shimmyLeft = true;
 	else
 		actions.shimmyLeft = false;

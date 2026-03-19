@@ -10,6 +10,14 @@
 #include "ecs/System.h"
 #include "graphics/CameraSystem.h"
 
+// first setup everything (initilaize shaders and test and shadow map)
+// each frame, rendering system knows which "rendering passes" it needs to do
+// will just be a vector of function pointers, and it will call each one sequentially
+// gamestate will ultimately modify which things to render (i.e update the vector of function ptrs accordingly)
+
+// rendering system will always be active while the game is running, so theoretically there shouldn't be
+// any memory issues
+
 class RenderingSystem:public System {
 
 public:
@@ -19,9 +27,27 @@ public:
 	void initShadowMap();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
+	void renderShadows(GameState& gamestate, std::string& fps, std::shared_ptr<CameraSystem> camSystem); // Render pass 1 
+	// ui functions
+	void renderUI(GameState& gamestate, std::string& fps, std::shared_ptr<CameraSystem> camSystem); // render ui, takes the current Ui objects, converts to screen space, and renders
+	// not sure how to actually do multiple UI elements, or just load images and do it that way
+	// gameState contains which UI elements to display
+	// acc we could create multiple Basic UI components and just have their own create vert function instead of manually doing it here
+	
+	// TODO: split rendershadows into two render passes
+	// currently it contains both cause of variables and stuff
+	//void renderTheScene();  // Render pass 2
+
+	// all functions that are stored in the renderpasses vector must have the same args
+
+
+
 	void drawPhysxDebug(GameState &game, glm::mat4& view, glm::mat4& proj);
 	void renderScene(GameState& game, GLuint& shaderID);
 	void setTrackBounds(std::pair<glm::vec3, glm::vec3> trackBounds);
+
+	
+
 
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
@@ -31,9 +57,12 @@ public:
 	unsigned int textVAO;
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
+	unsigned int uiVAO, uiVBO;
 
 	std::map<char, Character> textFont;
 	glm::mat4 textMat;
+
+	glm::mat4 uiMat;
 
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
@@ -42,6 +71,32 @@ public:
 
 	std::unique_ptr<ShaderProgram> shadowShader;
 
+	std::unique_ptr<ShaderProgram> uiShader;
+
+	// ah yes my favourite type in c++
+	// let's break this down
+	// x y z 
+	// x = void (the return type)
+	// y = (RenderingSystem::*) this is a pointer to a member function
+		// think of normal types like int x;
+		// then we have int* x;  (pointer to an integer)
+		// instead we have RenderingSystem::* x;  
+		// RenderingSystem::*  is a type, which again is just a pointer to a member function   
+	// z = (GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) this is just the arguments of the function
+	// z solidifies which member function signature we can throw in the vector 
+	// i.e we can't put RenderingSystem::initializeShaders in this vector
+
+	// in essence
+	// return type (function) (args)
+	std::vector<void (RenderingSystem::*) (GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem)> renderPasses;
+
+	// now how do we use it?
+	// simple
+	// int* x, you store it with &y  (& address of)
+	// so we just do
+	// renderPasses.push_back(RenderingSystem::&renderShadows)
+	// to access in RenderingSystem (this->*renderPasses[i])(game, fps, camSystem)
+	// LMAO what is C++
 
 private:
 	std::pair<glm::vec3, glm::vec3> bounds;

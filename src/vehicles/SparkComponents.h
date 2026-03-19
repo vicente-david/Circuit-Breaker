@@ -2,7 +2,6 @@
 #include "../snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
-#include <memory>
 #include "physics/CollisionData.h"
 
 using namespace snippetvehicle;
@@ -25,6 +24,7 @@ struct SparkControls {
 
 	bool handbrake;
 	bool boost;
+	bool boostWithHealth;
 	bool shimmyL;
 	bool shimmyR;
 
@@ -35,16 +35,16 @@ struct SparkControls {
 // this is basically the current state of the spark. things can sometimes break
 // if you forget to use refences to this stuff because physx makes no sense
 struct SparkData {
-	float maxHealth = 100.f;
+	float maxHealth = 100.0f;
 	float health = maxHealth;
 
 	float boostUseRate = 0.5f;
-	float boostStrength = 10.f;
-	float boostRegenRate = 50.0f;
-	float maxBoost = 100.f;
+	float boostStrength = 10.0f;
+	float boostRegenRate = 10.0f;
+	float maxBoost = 100.0f;
 	float boost = maxBoost;
 	
-	float shimmyForce = 15.f;
+	float shimmyForce = 15.0f;
 	double ShimmyCooldown = 2;
 	double shimmyTimer = 0;
 
@@ -52,6 +52,7 @@ struct SparkData {
 	
 	bool inReverse = false;
 	bool inDrift = false;
+	bool isBoosting = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
@@ -80,4 +81,6 @@ struct SparkData {
 
 		mVehicle->destroy();
 	}
+
+	bool isHuman = false;
 };

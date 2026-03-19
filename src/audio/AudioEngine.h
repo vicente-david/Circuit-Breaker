@@ -20,7 +20,9 @@ class AudioEngine {
 
 	void updateListenerFrame(glm::mat4 viewMatrix);
 	void updateListenerVel(float x, float y, float z);
+	void updateSoundLoc(Sound sound);
 	void updateSoundLoc(Sound sound, float x, float y, float z);
+	void updateSoundVel(Sound sound);
 	void updateSoundVel(Sound sound, float x, float y, float z);
 
 	static bool checkALErrors(std::string location);

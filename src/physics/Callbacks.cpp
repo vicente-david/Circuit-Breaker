@@ -1,51 +1,142 @@
 #include "physics/Callbacks.h"
 #include "PxActor.h"
+#include "PxFiltering.h"
+#include "PxRigidBody.h"
+#include "PxSimulationEventCallback.h"
+#include "debugUtils/Logger.h"
+#include "ecs/EntityManager.h"
+#include "foundation/PxConstructor.h"
+#include "foundation/PxSimpleTypes.h"
+#include "foundation/PxVec3.h"
 #include "physics/CollisionData.h"
+#include <cstdio>
+#include <set>
 
 void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 								const PxContactPair *pairs, PxU32 nbPairs) {
 
+	dbug::log("PHYS", -1,
+			  "Physics objects touched! If this crashes, a physics object "
+			  "is likely missing its CollisionData");
 	// get collision data from each colliding actor
 	CollisionData *d1 = (CollisionData *)pairHeader.actors[0]->userData;
 	CollisionData *d2 = (CollisionData *)pairHeader.actors[1]->userData;
 
-	dbug::log("PHYS", -1,
-			  "Physics objects touched! If this crashes, a physics object "
-			  "is likely missing its CollisionData");
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
 
-	// do things
-	// theres probably a more straight forward way of doing this than like 10
-	// layers of indirection but idk what it is
+	// spark/wall collisions
 	if (d1->type == SPARK && d2->type == GROUND) {
-		sparkWallCol.push_back(d1->entity);
+		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
+		auto imp = getCollStrength(pairs, nbPairs, vel);
+		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
+
 	} else if (d1->type == GROUND && d2->type == SPARK) {
-		sparkWallCol.push_back(d2->entity);
+		auto vel = ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
+		auto imp = getCollStrength(pairs, nbPairs, vel);
+		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
+
 	} else if (d1->type == SPARK && d2->type == SPARK) {
-		sparkSparkCol.push_back({d1->entity, d2->entity});
+		// get collision velocity
+		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity() -
+				   ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
+		// get strength related to the angle of collision
+		auto imp = getCollStrength(pairs, nbPairs, vel);
+		// send data to spark system
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
 	}
 }
 
+void updateEntityCollider(std::set<Entity> &set, PxPairFlag::Enum status,
+						  Entity e) {
+	if (status == physx::PxPairFlag::eNOTIFY_TOUCH_FOUND) {
+		set.insert(e);
+	} else if (status == physx::PxPairFlag::eNOTIFY_TOUCH_LOST) {
+		set.erase(e);
+	}
+}
 void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 							   physx::PxU32 count) {
-	CollisionData *d1 = (CollisionData *)pairs[0].triggerActor->userData;
-	CollisionData *d2 = (CollisionData *)pairs[0].otherActor->userData;
+
 	dbug::log("PHYS", -1,
 			  "Trigger touched! If this crashes, a physics object is "
 			  "likely missing it's CollisionData");
+	for (int pIdx = 0; pIdx < count; pIdx++) {
+		CollisionData *trigData =
+			(CollisionData *)pairs[pIdx].triggerActor->userData;
+		CollisionData *otherData =
+			(CollisionData *)pairs[pIdx].otherActor->userData;
+		auto status = pairs[pIdx].status;
+		dbug::log("PHYS", 0,
+				  "tIdx %d: status: %d [t] typ:%d id:%d [o] typ:%d id:%d ",
+				  pIdx, pairs[pIdx].status, trigData->type, trigData->entity,
+				  otherData->type, otherData->entity);
 
-	dbug::log("PHYS", 0, "trigger: [1] typ:%d id:%d [2] typ:%d id:%d ",
-			  d1->type, d1->entity, d2->type, d2->entity);
-
-	if (d1->type == SPARK && d2->type == FINISH_LINE) {
-		dbug::log("GAME", 0, "finish!");
-		sparkFinishCol.push_back(d1->entity);
-	} else if (d1->type == FINISH_LINE && d2->type == SPARK) {
-		dbug::log("GAME", 0, "finish!");
-		sparkFinishCol.push_back(d2->entity);
+		// ground trigger box for the spark
+		if (trigData->type == SPARK) {
+			if (otherData->type == GROUND) {
+				updateEntityCollider(groundedSparks, status, trigData->entity);
+			}
+			if (otherData->type == HEAL) {
+				updateEntityCollider(groundedSparks, status, trigData->entity);
+				updateEntityCollider(healingSparks, status, trigData->entity);
+			}
+		}
 	}
 }
+// PxVec3 PhysXCallbacks::getCollStrength(const PxContactPair *pairs,
+// 									   PxU32 nbPairs) {
+// 	// get collision data for every shape that intersects
+// 	// impuse doesnt want to work :(
+// 	float total;
+// 	printf("pairs:%d\n", nbPairs);
+// 	for (int pairIdx = 0; pairIdx < nbPairs; pairIdx++) {
+// 		auto &cp = pairs[pairIdx];
+// 		PxContactPairPoint contacts[16];
+// 		int contCount = cp.extractContacts(contacts, cp.contactCount);
+//
+// 		printf("points:%d or %d\n", cp.contactCount, contCount);
+//
+// 		for (int pointIdx = 0; pointIdx < contCount; pointIdx++) {
+// 			auto imp = contacts[pointIdx].normal;
+// 			total += contacts->impulse[pointIdx];
+//
+// 			dbug::log("PHYS", 0, "pair:%d point:%d impulse:%f", pairIdx,
+// 					  pointIdx, contacts->impulse[pointIdx]);
+// 		}
+// 	}
+// 	return PxVec3(total, 0, 0);
+// 	// return total;
+// }
+
+// TODO: use the impulse here instead of just linear velocity.
+// stuff above should work, but the numbers don't seem right to me so idk
+float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
+									  PxVec3 velocity) {
+	// get collision data for every shape that intersects
+	// impuse doesnt want to work :(
+	float minDot = velocity.magnitude();
+	// printf("strength:\nvel:%f pairs:%d\n", minDot, nbPairs);
+	for (int pairIdx = 0; pairIdx < nbPairs; pairIdx++) {
+		auto &cp = pairs[pairIdx];
+		PxContactPairPoint contacts[16];
+		int contCount = cp.extractContacts(contacts, cp.contactCount);
+		// printf("points:%d or %d\n", cp.contactCount, contCount);
+		for (int pointIdx = 0; pointIdx < contCount; pointIdx++) {
+			auto norm = contacts[pointIdx].normal;
+			float dot = velocity.dot(norm);
+			if (dot < minDot) {
+				minDot = dot;
+			}
+			dbug::log("PHYS", -1, "pair:%d point:%d dot:%f", pairIdx, pointIdx,
+					  dot);
+		}
+	}
+	dbug::log("PHYS", 0, "colStrength:%f (r:%f)", velocity.magnitude() - minDot,
+			  minDot / velocity.magnitude());
+	return velocity.magnitude() - minDot;
+}
+
 void PhysXCallbacks::resetLists() {
 	sparkFinishCol.clear();
 	sparkWallCol.clear();

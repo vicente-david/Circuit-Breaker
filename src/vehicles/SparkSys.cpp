@@ -8,6 +8,46 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	sparkCollision(game);
 	wallCollision(game);
 
+	// TODO: Put in helper (heal regen zone)
+	for (auto const &colData : game.physics->callbacks->healingSparks) {
+		auto &sData = game.coordinator->getComponent<SparkData>(colData);
+		sData.health += 10 * dt; // regen rate
+		if (sData.health > 100) { // use max health
+			sData.health = 100;
+		}
+	}
+	
+	// TODO: Put in helper (spark collisions)
+	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
+		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
+
+		// don't do damage from hitting each other if sliding or boosting
+		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting) {
+			sData1.health -= colData.magnitude;
+		} else {
+			dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
+		}
+
+		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting) {
+			sData2.health -= colData.magnitude;
+		} else {
+			dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
+		}
+		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id,
+				  colData.spark2Id);
+	}
+
+	// TODO: Compare with helper (wall collisions)
+	for (auto const &colData : game.physics->callbacks->sparkWallCol) {
+		auto &sData =
+			game.coordinator->getComponent<SparkData>(colData.sparkId);
+		// auto &rBody = game.coordinator->getComponent<PxRigidBody
+		// *>(entity.sparkId);
+		sData.health -= colData.magnitude * 0.75;
+		dbug::log("GAME", 0, "Hit a wall!");
+	}
+
 	bool reload = false;
 	bool isP1 = true;
 	for (const Entity &entity : entities) {
@@ -32,10 +72,78 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		if (sControls.reset)
 			respawnSpark(sData.rBody, getRespawnPose(entity, game));
 
+		// TODO: Put in helper (boosting with health)
+		// boosting
+		sData.isBoosting = false;
+		if (controls.boost) {
+			// try to boost
+			boost(rBody, sData, controls.boostWithHealth, dt);
+		}
+
+		// TODO: Put in helper (boost regen based off drift angle)
+		// in degrees
+		float driftAngle =
+			PxAcos(linVel.getNormalized().dot(forwardDir.getNormalized())) *
+			(180 / PxPi);
+		driftAngle = std::abs(driftAngle);
+
+		// regen boost if you're drifting
+		float maxBoost = 100 - sData.health;
+		if (entity == 2)
+			dbug::log("GAME", -1, "player drift angle:%.2f, vel:%.2f",
+					  driftAngle, linVel.magnitude());
+
+		if (driftAngle > 20 && linVel.magnitude() > 10) {
+			// how 'hard' of a drift (90 degrees gives full regen, 0 degrees
+			// gives none)
+			// cap at 90 degrees
+			if (driftAngle > 90) {
+				driftAngle = 90;
+			}
+			float multi = driftAngle / 90.f;
+			if (entity == 2)
+				dbug::log("GAME", -1, "drifin' (mulit:%.2f)", multi);
+
+			sData.currBoost += sData.boostRegenSpeed * dt * multi;
+			if (sData.currBoost > maxBoost) {
+				sData.currBoost = maxBoost;
+			}
+		}
+
+		// TODO: Compare with helper (shimmy)
+		// shimmying
+		if (sData.shimmyTimer <= 0) {
+			if (controls.shimmyL) {
+				dbug::log("GAME", 0, "slide to the left");
+				shimmy(rBody, sData, false);
+			}
+
+			if (controls.shimmyR) {
+				dbug::log("GAME", 0, "slide to the right");
+				shimmy(rBody, sData, true);
+			}
+		} else if (sData.shimmyTimer > 0) {
+			sData.shimmyTimer -= dt;
+		}
+		if (controls.reset || sData.health <= 0) {
+			sData.health = 100;
+			sData.currBoost = 0;
+			respawn(rBody);
+		}
+
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
+
+		// TODO: Put in helper (audio stuff)
+		// update sound
+		auto &sound = game.coordinator->getComponent<Sound>(entity);
+		auto pos = rBody->getGlobalPose().p;
+		rBody->getLinearVelocity();
+		sound.position = glm::vec3(pos.x, pos.y, pos.z);
+		auto vel = rBody->getGlobalPose().p;
+		sound.position = glm::vec3(vel.x, vel.y, vel.z);
 
 		reload = sControls.reload;
 
@@ -112,11 +220,24 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
 		PxRigidBodyExt::updateMassAndInertia(*sData.rBody, newMass);
 	}
+	// collision box to detect heal zones/if youre grounded
+	{
+		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.3f));
+		PxShape *groundBox = game.physics->gPhysics->createShape(groundBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.1f), PxQuat(PxIdentity));
+
+		groundBox->setLocalPose(groundBoxLocalPose);
+		sData.rBody->attachShape(*groundBox);
+		groundBox->release();
+	}
 
 	// Create vehicle filter
 	PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS,
 							   COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
-	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, COLLISION_FLAG_GROUND, 0, 0);
+	// wheels have no collision
+	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, 0, 0, 0);
+	PxFilterData groundFilter(COLLISION_FLAG_SPARK_GROUND,
+							  COLLISION_FLAG_SPARK_GROUND_AGAINST, 0, 0);
 	// PxFilterData tireFilter(0, 0, 0, 0);
 	// Set flags
 	PxU32 shapes = sData.rBody->getNbShapes();
@@ -131,10 +252,20 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 			shape->setSimulationFilterData(tireFilter);
 		}
 
-		shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
-		shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-		shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		// special ground trigger
+		if (i == 7) {
+			shape->setSimulationFilterData(groundFilter);
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		} else {
+
+			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
+			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+		}
 	}
 
 	// Set the vehicle in 1st gear.
@@ -182,6 +313,12 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
+	// add engine sound
+	Sound sound = game.audio->createSound("engine");
+	sound.position = glm::vec3(startP.x, startP.y, startP.z);
+	sound.start();
+	game.coordinator->addComponent(sparkEntity, sound);
+
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
 	return sparkEntity;
@@ -201,7 +338,7 @@ void SparkSys::reloadSparkParams(GameState &game) {
 
 		dbug::log("GAME", 0, "setting entity %d", entity);
 		auto &sData = game.coordinator->getComponent<SparkData>(entity);
-		 
+
 		// load params for vehicle base
 		const char *baseFileName = dbugPanel::tuning::basePath.c_str();
 		readBaseParamsFromJsonFile(
@@ -230,7 +367,9 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	Signature sig;
 	sig.set(coord->getComponentType<SparkControls>());
 	sig.set(coord->getComponentType<SparkData>());
-	// sig.set(coord->getComponentType<physx::PxRigidDynamic *>());
+	sig.set(coord->getComponentType<physx::PxRigidBody *>());
+	sig.set(coord->getComponentType<Sound>());
+	sig.set(coord->getComponentType<LapCounter>());
 	coord->setSystemSignature<SparkSys>(sig);
 
 	return system;
