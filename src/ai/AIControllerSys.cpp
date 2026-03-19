@@ -23,6 +23,7 @@ void AIControllerSys::update(GameState& game) {
 		auto &controls = game.coordinator->getComponent<SparkControls>(entity);
 		auto &transform = game.coordinator->getComponent<Transform>(entity);
 		auto& spark = game.coordinator->getComponent<SparkData>(entity);
+		auto& body = game.coordinator->getComponent<physx::PxRigidBody*>(entity);
 		
 		// update current position index
 		int i = ai.currentPosIdx;
@@ -45,15 +46,15 @@ void AIControllerSys::update(GameState& game) {
 			ai.lookAheadSteps = 12;
 		else if (spark.speed >= 48.f)
 			ai.lookAheadSteps = 20;
-
+		
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
 		}
 		else if (spark.health < 30.f) {
 			DefenseState::run(ai, controls, transform, spark);
 		}
-		else if (spark.health < 80.f) { // replace this condition with 'if not in first'
-			OvertakeState::run(ai, controls, transform, spark);
+		else if (spark.health <= 100.f) { // replace this condition with 'if not in first'
+			OvertakeState::run(ai, controls, transform, spark, body);
 		}
 		else { // if in first
 			MaintainState::run(ai, controls, transform, spark);

@@ -22,12 +22,14 @@ void DefenseState::run(AIController& ai, SparkControls& controls, Transform& tra
 /*
 * Drive offensively to overtake other players: prioritize speed and attacking others
 */
-void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
+void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
 
 	// TODO: set appropriate path to follow
 
 
-	//dbug::log("AI", 0, "!!!!! in overtake state");
+	dbug::log("AI", 0, "!!!!! in overtake state");
+	OvertakeState::detect(ai, controls, transform, spark, body);
+
 	if (ai.state == DRIVING)
 		AI_DRIVING(ai, controls, transform, spark);
 	else if (ai.state == BRAKING)
@@ -58,7 +60,27 @@ void MaintainState::run(AIController& ai, SparkControls& controls, Transform& tr
 		AI_ATTACKING(ai, controls, transform);
 }
 
+// Detect if there is another player spark in line of sight
+void OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+	PxScene* scene = body->getScene();
+	
+	PxSweepBuffer hitInfo;
+	PxVec3 forwardDir(transform.forwardD.x, transform.forwardD.y, transform.forwardD.z); // sweep in front facing direction
+	PxBoxGeometry sweepBox(1.f, 0.5f, 0.5f); // geometry to sweep
+	PxTransform initPose = body->getGlobalPose();
+	initPose.p += forwardDir.getNormalized() * 2.f; // set initial pose to be a bit in front of the spark
 
+	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
+	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC); // NOTE: detects any dynamic actor. Could not get it to work otherwise.
+	//filter.flags |= PxQueryFlag::eANY_HIT;
+	//filter.data.word0 = COLLISION_FLAG_CHASSIS;
+	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 75.f, hitInfo, outFlags, filter);
+	
+	// Check if hit returned true and if the hit was not itself
+	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
+		std::cout << "hit?" << std::endl;
+	}
+}
 
 // DRIVING STATES ==============================================================================================================
 
@@ -220,6 +242,9 @@ void AIState::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& 
 
 void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform) {
 	// TODO: add logic for attacking other players
+
+
+
 	return;
 }
 

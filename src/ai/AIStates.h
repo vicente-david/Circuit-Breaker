@@ -38,7 +38,8 @@ public:
 class OvertakeState : public AIState {
 
 public:
-	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
+	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+	static void detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
 };
 
 class MaintainState : public AIState {
