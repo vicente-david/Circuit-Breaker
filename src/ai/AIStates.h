@@ -21,7 +21,6 @@ public:
 	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxSweepBuffer& hitInfo);
 
 private:
-	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
 
 };

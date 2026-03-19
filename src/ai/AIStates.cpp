@@ -89,11 +89,8 @@ PxSweepBuffer OvertakeState::detect(AIController& ai, SparkControls& controls, T
 // DRIVING STATES ==============================================================================================================
 
 void AIState::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
-	// Get target position and calculate steering
-	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
-	glm::vec3 vectorToTarget = targetPos - transform.pos;
-	float distance = glm::length(vectorToTarget);
-	calcSteering(ai, controls, transform, spark);
+	
+	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
 
 
 	if (abs(controls.steering) > 1.0f) {
@@ -146,7 +143,7 @@ void AIState::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& t
 
 void AIState::AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
 
-	calcSteering(ai, controls, transform, spark);
+	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
 
 	// Brake based on difference in current speed and target speed
 	float curvature = ai.angles.at(ai.targetIdx);
@@ -194,7 +191,7 @@ void AIState::AI_BRAKING(AIController& ai, SparkControls& controls, Transform& t
 }
 
 void AIState::AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
-	calcSteering(ai, controls, transform, spark);
+	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
 
 	float curvature = ai.angles.at(ai.targetIdx);
 	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
@@ -223,7 +220,7 @@ void AIState::AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& 
 }
 
 void AIState::AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
-	calcSteering(ai, controls, transform, spark);
+	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
 
 	controls.throttle = 1.0f;
 	controls.brake = 0.0f;
@@ -270,36 +267,7 @@ void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform&
 }
 
 
-// TODO: fix this terribleness
 // Steering calculations used in many of the above
-void AIState::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
-	glm::vec3 targetPos = ai.route.at(ai.targetIdx);
-	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
-	vectorToTarget.y = 0.0f;
-	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
-
-
-	// ---- STEERING ----
-	// compute the signed angle between car forward and direction to target, both projected onto XZ plane
-	// Z = forward, X = lateral, Y = vertical 
-	glm::vec3 unitVectorToTarget = glm::normalize(vectorToTarget);
-	glm::vec3 sparkForward = glm::normalize(transform.forwardD);
-
-	// 2D cross product gives sin of the angle (sign gives turn direction, + = right, - = left)
-	// 2D dot product gives cos of the angle
-	float cross = sparkForward.x * unitVectorToTarget.z - sparkForward.z * unitVectorToTarget.x;
-	float dot = sparkForward.x * unitVectorToTarget.x + sparkForward.z * unitVectorToTarget.z;
-	float angle = glm::atan(cross, dot);
-	dbug::log("AI", 0, "ANGLE: %.3f", angle);
-
-	// map the angle to [-1, 1] steering
-	// lock before sharpness multiplier
-	float steerRaw = -(angle / (glm::pi<float>() / 2)) * ai.steeringSharpness;
-	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
-
-	return;
-}
-
 void AIState::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos) {
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f;
