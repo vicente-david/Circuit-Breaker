@@ -28,6 +28,7 @@ class SparkSys : public System {
 	// Collision
 	void sparkCollision(GameState& game);
 	void wallCollision(GameState& game);
+	void healZoneCheck(GameState& game, double dt);
 
 	// Commands
 	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);

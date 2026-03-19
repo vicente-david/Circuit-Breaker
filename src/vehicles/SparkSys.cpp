@@ -7,47 +7,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	
 	sparkCollision(game);
 	wallCollision(game);
-
-	// TODO: Put in helper (heal regen zone)
-	for (auto const &colData : game.physics->callbacks->healingSparks) {
-		auto &sData = game.coordinator->getComponent<SparkData>(colData);
-		sData.health += 10 * dt; // regen rate
-		if (sData.health > 100) { // use max health
-			sData.health = 100;
-		}
-	}
+	healZoneCheck(game, dt);
 	
-	// TODO: Put in helper (spark collisions)
-	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
-		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
-		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
-
-		// don't do damage from hitting each other if sliding or boosting
-		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting) {
-			sData1.health -= colData.magnitude;
-		} else {
-			dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
-		}
-
-		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting) {
-			sData2.health -= colData.magnitude;
-		} else {
-			dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
-		}
-		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id,
-				  colData.spark2Id);
-	}
-
-	// TODO: Compare with helper (wall collisions)
-	for (auto const &colData : game.physics->callbacks->sparkWallCol) {
-		auto &sData =
-			game.coordinator->getComponent<SparkData>(colData.sparkId);
-		// auto &rBody = game.coordinator->getComponent<PxRigidBody
-		// *>(entity.sparkId);
-		sData.health -= colData.magnitude * 0.75;
-		dbug::log("GAME", 0, "Hit a wall!");
-	}
-
 	bool reload = false;
 	bool isP1 = true;
 	for (const Entity &entity : entities) {
@@ -65,7 +26,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		if (isP1) {
 			dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
 				sControls.throttle, sControls.brake, sControls.steering);
-			dbug::log("ROLL", 0, "%f\tSTEER: %f", rBody->getAngularVelocity().x, sControls.steering);
+			dbug::log("ROLL", 0, "%f\tSTEER: %f", sData.rBody->getAngularVelocity().x, sControls.steering);
 			isP1 = false;
 		}
 		// Respawn
@@ -125,6 +86,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		} else if (sData.shimmyTimer > 0) {
 			sData.shimmyTimer -= dt;
 		}
+
+		// TODO: modify reset
 		if (controls.reset || sData.health <= 0) {
 			sData.health = 100;
 			sData.currBoost = 0;
@@ -375,32 +338,48 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	return system;
 }
 
-// COLLISION DETECTION
+// FLAG CHECKS
 void SparkSys::sparkCollision(GameState& game) {
-	for (auto const& pair : game.physics->callbacks->sparkSparkCol) {
-		auto& sData1 = game.coordinator->getComponent<SparkData>(pair.first);
-		auto& rBody1 = game.coordinator->getComponent<PxRigidBody*>(pair.first);
-		auto& sData2 = game.coordinator->getComponent<SparkData>(pair.second);
-		auto& rBody2 = game.coordinator->getComponent<PxRigidBody*>(pair.second);
+		for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
+		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
 
-		auto velDiff = rBody1->getLinearVelocity() - rBody2->getLinearVelocity();
+		// don't do damage from hitting each other if sliding or boosting
+		// Spark 1 logic
+		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting)
+			sData1.health -= colData.magnitude;
+		//else
+		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
 
-		sData2.health -= velDiff.magnitude();
-		sData1.health -= velDiff.magnitude();
+		// Spark 2 logic
+		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting)
+			sData2.health -= colData.magnitude;
+		//else
+		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
 
-		dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", pair.first, pair.second);
-
+		//dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id, colData.spark2Id);
 	}
 }
 
 void SparkSys::wallCollision(GameState &game) {
-	for (auto const& entity : game.physics->callbacks->sparkWallCol) {
-		auto& sData = game.coordinator->getComponent<SparkData>(entity);
-		auto& rBody = game.coordinator->getComponent<PxRigidBody*>(entity);
-		sData.health -= rBody->getLinearVelocity().magnitude();
-		dbug::log("GAME", 0, "Hit a wall!");
-		printf("!\n");
+	for (auto const& colData : game.physics->callbacks->sparkWallCol) {
+		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
 
+		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
+		dbug::log("GAME", 0, "Hit a wall!");
+	}
+}
+
+void SparkSys::healZoneCheck(GameState& game, double dt) {
+	for (auto const& colData : game.physics->callbacks->healingSparks) {
+		auto& sData = game.coordinator->getComponent<SparkData>(colData);
+		
+		if (sData.health < sData.maxHealth) {
+			sData.health += 10 * dt; // TODO: add regen rate to spark data
+		
+			if (sData.health > sData.maxHealth)
+				sData.health = sData.maxHealth;
+		}
 	}
 }
 
