@@ -17,7 +17,7 @@ class AudioEngine {
 	void close();
 	void update(double dt);
 
-	std::shared_ptr<Sound> createSound(std::string name);
+	std::shared_ptr<Sound> createSound(std::string name, bool do3d = true);
 
 	void updateListenerFrame(glm::mat4 viewMatrix);
 	void updateListenerVel(float x, float y, float z);

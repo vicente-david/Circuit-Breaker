@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PxRigidBody.h"
 #include <AL/al.h>
 #include <glm/fwd.hpp>
 #include <glm/glm.hpp>
@@ -16,6 +17,7 @@ class Sound {
 	ALuint source;
 	bool freed = false;
 	bool playing = false;
+	bool do3D = true;
 
 	glm::vec3 position = glm::vec3(0, 0, 0);
 	glm::vec3 velocity = glm::vec3(0, 0, 0);
@@ -24,6 +26,7 @@ class Sound {
 	void pause();
 	void start();
 	void setLooping(bool looping);
+	void updateFromRbody(physx::PxRigidBody* rbody);
 	// void updatePosition(float x, float y, float z);
 	// void updateVelocity(float x, float y, float z);
 };

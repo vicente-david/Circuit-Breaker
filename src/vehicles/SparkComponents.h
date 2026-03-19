@@ -69,13 +69,11 @@ struct SparkData {
 };
 struct SparkSounds {
 	std::shared_ptr<Sound> engine;
-	std::shared_ptr<Sound> lowHealth;
 	std::shared_ptr<Sound> boost;
 
 	SparkSounds() {};
 	SparkSounds(std::shared_ptr<AudioEngine> audio) {
 		engine = audio->createSound("engine");
-		lowHealth = audio->createSound("lowHealth");
 		boost = audio->createSound("boost");
 	};
 

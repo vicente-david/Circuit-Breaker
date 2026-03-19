@@ -139,10 +139,10 @@ void Game::initializeTrack() {
 
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -6.0f));
-	// initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, 0.0f));
-	// initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, 2.0f, 0.0f));
-	// initializeAISpark2(trackPaths, pathStartPt + glm::vec3(4.0f, 2.0f, -3.0f));
-	// initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, 2.0f, -3.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, 0.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, 2.0f, 0.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(4.0f, 2.0f, -3.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, 2.0f, -3.0f));
 
 
 	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
@@ -230,8 +230,8 @@ void Game::initializeFinishLine() {
 
 void Game::initializeAudio() {
 	// place holder test sounds
-	testSound = gameState.audio->createSound("muteCity");
-	// alSourcef(testSound.source, AL_GAIN, 0.6f);
+	testSound = gameState.audio->createSound("muteCity",false);
+	alSourcef(testSound->source, AL_GAIN, 0.8f);
 	testSound->setLooping(true);
 	testSound->start();
 	//float soundX = 0;

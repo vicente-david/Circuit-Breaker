@@ -61,8 +61,8 @@ void AudioEngine::loadSounds() {
 void AudioEngine::update(double dt) {
 
 	// clean up channels/sources that have finished
-	auto remIdx =
-		std::remove_if(channels.begin(), channels.end(), [](std::shared_ptr<Sound> sound) {
+	auto remIdx = std::remove_if(
+		channels.begin(), channels.end(), [](std::shared_ptr<Sound> sound) {
 			ALint state;
 			alGetSourcei(sound->source, AL_SOURCE_STATE, &state);
 			if (state == AL_STOPPED) {
@@ -78,8 +78,11 @@ void AudioEngine::update(double dt) {
 	std::string str = "Sounds:[";
 	// update position/velocity of all sounds
 	for (auto s : channels) {
-		updateSoundLoc(*s);
-		updateSoundVel(*s);
+		if (s->do3D) {
+			updateSoundLoc(*s);
+			updateSoundVel(*s);
+		}
+
 		str += s->soundName + " ";
 	}
 	dbug::log("AUDIO", -1, "%s]", str.c_str());
@@ -144,12 +147,14 @@ void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 
 // create a sounds channel to play a sound. you need to call play before it will
 // play
-std::shared_ptr<Sound> AudioEngine::createSound(std::string name) {
-	if(sounds.find(name)==sounds.end()){
+std::shared_ptr<Sound> AudioEngine::createSound(std::string name, bool do3d) {
+	if (sounds.find(name) == sounds.end()) {
 		dbug::log("AUDIO", 2, "audio with name '%s' not found", name.c_str());
 	}
 	ALuint channel = sounds[name].createSource();
 	std::shared_ptr<Sound> s = std::make_shared<Sound>(channel, name);
+	s->do3D = do3d;
+
 	channels.push_back(s);
 	return s;
 }

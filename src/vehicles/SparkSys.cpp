@@ -133,11 +133,18 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// shimmying
 		if (sData.shimmyTimer <= 0) {
 			if (controls.shimmyL) {
+				auto sound = game.audio->createSound("clank");
+				sound->updateFromRbody(rBody);
+				sound->start();
 				dbug::log("GAME", 0, "slide to the left");
 				shimmy(rBody, sData, false);
 			}
 
 			if (controls.shimmyR) {
+				auto sound = game.audio->createSound("clank");
+				sound->updateFromRbody(rBody);
+				sound->start();
+
 				dbug::log("GAME", 0, "slide to the right");
 				shimmy(rBody, sData, true);
 			}

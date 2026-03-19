@@ -40,6 +40,14 @@ void Sound::stop() {
 	AudioEngine::checkALErrors("stopping " + soundName);
 }
 
+void Sound::updateFromRbody(physx::PxRigidBody *rBody) {
+	auto pos = rBody->getGlobalPose().p;
+	position = glm::vec3(pos.x, pos.y, pos.z);
+
+	auto vel = rBody->getLinearVelocity();
+	velocity = glm::vec3(vel.x, vel.y, vel.z);
+}
+
 void Sound::setLooping(bool loop) {
 	if (freed) {
 		return;
