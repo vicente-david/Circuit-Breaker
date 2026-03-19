@@ -24,22 +24,30 @@ class SparkSys : public System {
 	void reloadSparkParams( GameState& gameState);
 
   private:
-	// Helpers
+	// === Helpers ===
+	// Collision
 	void sparkCollision(GameState& game);
 	void wallCollision(GameState& game);
 
+	// Commands
 	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);
 	void reverse(SparkData& sData, SparkControls& sControls);
 
-	// helper functions for doing the movements
-	void applyShimmy(SparkData &sData, bool dir);
-	void shimmy(SparkData& sData, SparkControls& sControls, double dt);
-
+	// Features
 	void updateMaxBoost(SparkData &sData);
 	void applyBoost(SparkData &sData);
 	void boost(SparkData &sData, SparkControls &sControls, double dt);
 	
-	// couldn't figure out a way to use the logic from RespawnSystem, so I just copied it here
+	void applyShimmy(SparkData& sData, bool dir);
+	void shimmy(SparkData& sData, SparkControls& sControls, double dt);
+
+	// Stabilizers
+	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
+	void driftStabilizer(SparkData& sData, SparkControls& sControls);
+	void yawStabilizer(SparkData& sData);
+	void stabilizeSpark(SparkData& sData, SparkControls& sControls);
+
+	// Respawn
 	void respawnSpark(PxRigidBody *rBody, PxTransform respawnPose);
 	PxTransform getRespawnPose(Entity entity, GameState &game); 
 };

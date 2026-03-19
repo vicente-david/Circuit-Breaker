@@ -11,12 +11,11 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	bool reload = false;
 	bool isP1 = true;
 	for (const Entity &entity : entities) {
-		PxRigidBody *rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
 		SparkControls &sControls = game.coordinator->getComponent<SparkControls>(entity);
 
-		const PxVec3 linVel = rBody->getLinearVelocity();
-		const PxVec3 forwardDir = rBody->getGlobalPose().q.getBasisVector2();
+		const PxVec3 linVel = sData.rBody->getLinearVelocity();
+		const PxVec3 forwardDir = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 		sData.speed = linVel.magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
@@ -31,7 +30,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		}
 		// Respawn
 		if (sControls.reset)
-			respawnSpark(rBody, getRespawnPose(entity, game));
+			respawnSpark(sData.rBody, getRespawnPose(entity, game));
 
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
@@ -90,7 +89,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	PxTransform startPose(startP, PxQuat(PxIdentity));
 	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName);
 
-	auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
+	sData.rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 
 	// Adds to the shape of the chassis
 	{
@@ -103,15 +102,15 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.0f, 0.1f), PxQuat(PxIdentity));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
-		rBody->attachShape(*rearBox);
+		sData.rBody->attachShape(*rearBox);
 		rearBox->release();
 
 		midBox->setLocalPose(midBoxLocalPose);
-		rBody->attachShape(*midBox);
+		sData.rBody->attachShape(*midBox);
 		midBox->release();
 
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
-		PxRigidBodyExt::updateMassAndInertia(*rBody, newMass);
+		PxRigidBodyExt::updateMassAndInertia(*sData.rBody, newMass);
 	}
 
 	// Create vehicle filter
@@ -120,10 +119,10 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	PxFilterData tireFilter(COLLISION_FLAG_WHEEL, COLLISION_FLAG_GROUND, 0, 0);
 	// PxFilterData tireFilter(0, 0, 0, 0);
 	// Set flags
-	PxU32 shapes = rBody->getNbShapes();
+	PxU32 shapes = sData.rBody->getNbShapes();
 	for (PxU32 i = 0; i < shapes; i++) {
 		PxShape *shape = NULL;
-		rBody->getShapes(&shape, 1, i);
+		sData.rBody->getShapes(&shape, 1, i);
 
 		// add filter to tires/chasis depending on type
 		if (shape->getGeometry().getType() == physx::PxGeometryType::eBOX) {
@@ -159,7 +158,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	sData.mVehicleSimContext.frame.vrtAxis = PxVehicleAxes::ePosY;
 	sData.mVehicleSimContext.scale.scale = 1.0f;
 	sData.physData.entity = sparkEntity;
-	rBody->userData = &sData.physData;
+	sData.rBody->userData = &sData.physData;
 
 	sData.mVehicleSimContext.gravity = game.physics->gGravity;
 	sData.mVehicleSimContext.physxScene = game.physics->gScene;
@@ -176,7 +175,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, SparkControls());
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
-	game.coordinator->addComponent(sparkEntity, rBody);
+	game.coordinator->addComponent(sparkEntity, sData.rBody);
 	if (sparkEntity == 3) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	}
@@ -237,6 +236,7 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	return system;
 }
 
+// COLLISION DETECTION
 void SparkSys::sparkCollision(GameState& game) {
 	for (auto const& pair : game.physics->callbacks->sparkSparkCol) {
 		auto& sData1 = game.coordinator->getComponent<SparkData>(pair.first);
@@ -265,6 +265,7 @@ void SparkSys::wallCollision(GameState &game) {
 	}
 }
 
+// COMMANDS
 void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt) {
 
 	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
@@ -283,68 +284,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	shimmy(sData, sControls, dt);
 
 	// Stabilizers
-	{
-		auto rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
-		
-		const PxVec3 linVel = rBody->getLinearVelocity();
-		const PxVec3 forward = rBody->getGlobalPose().q.getBasisVector2();
-		const PxVec3 lateral = rBody->getGlobalPose().q.getBasisVector0();
-		const PxVec3 lateralDir = lateral.getNormalized();
-
-		const float lateralSpeed = linVel.dot(lateral);
-
-
-		if (sControls.handbrake) {
-			if (!sData.inDrift) {
-				for (int i = 0; i < 4; i++) {
-					sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 2.4;
-					sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 105600;
-				}
-				sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = 0.523599029f;
-			}
-			sData.inDrift = true;
-			const int ccw = PxSign(rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
-			const int steerCcw = PxSign(sControls.steering); // steering ccw = 1 and cw = -1
-
-			
-			const float driftCurve =  2.1f * sControls.steering;
-			const float angleCurve =  1.4f * sControls.steering;
-			const float yawVel = rBody->getAngularVelocity().y;
-
-			// Opposite forces automatically apply due to opposite sign when counter-steering
-			PxVec3 driftDir = (forward + lateral * driftCurve);
-			const float forceStrength = ccw == steerCcw ? 600.f : 1400.f;
-			rBody->addForce(driftDir * forceStrength);
-
-			const float torqueStrength = ccw == steerCcw ? 200.f : 600.f;
-			rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
-
-			const float gripStrength = 240.f;
-			rBody->addForce(-lateralDir * lateralSpeed * gripStrength * yawVel);
-
-			const float rollDamping = sData.speed * 0.4f;
-			rBody->addTorque(PxVec3(0.f, 0.f, 1.f) * -rBody->getAngularVelocity().x * rollDamping);
-		}
-		else {
-			// Reset friction params to original values from JSON
-			if (sData.inDrift) {
-				for (int i = 0; i < 4; i++) {
-					sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = 3.8;
-					sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = 145600;
-				}
-				sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = 0.785398163f;
-			}
-			sData.inDrift = false;
-			
-			//sData.forwardDir = forwardDir;
-
-			// Helps prevent spin-outs
-			const float yawVel = rBody->getAngularVelocity().y;
-			float yawDamping = sData.speed * 0.15f;
-			PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
-			rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
-		}
-	}
+	stabilizeSpark(sData, sControls);
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
@@ -365,17 +305,17 @@ void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 	}
 }
 
+// FEATURES
 void SparkSys::updateMaxBoost(SparkData& sData) {
 	sData.maxBoost = sData.maxHealth - sData.health;
 }
 
 void SparkSys::applyBoost(SparkData& sData) {
-	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
-	const PxVec3 forwardVector = rBody->getGlobalPose().q.getBasisVector2();
+	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 	
 	sData.boost -= sData.boostUseRate;
 
-	rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
+	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 }
 
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
@@ -396,12 +336,11 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 }
 
 void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
-	PxRigidBody* rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
-	const PxVec3 lateralVector = rBody->getGlobalPose().q.getBasisVector0();
+	const PxVec3 lateralVector = sData.rBody->getGlobalPose().q.getBasisVector0();
 	
 	int flip = moveRight ? -1 : 1;
 	
-	rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
+	sData.rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
 
 	sData.shimmyTimer = sData.ShimmyCooldown;
 }
@@ -424,14 +363,84 @@ void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
 
 }
 
+// STABILIZERS
+void SparkSys::changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle) {
+	for (int i = 0; i < 4; i++) {
+		sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = friction;
+		sData.mVehicle->mBaseParams.tireForceParams[i].latStiffY = latFriction;
+	}
+	sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = maxSteerAngle;
+}
+
+void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
+
+	const PxVec3 linVel = sData.rBody->getLinearVelocity();
+	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2();
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0();
+	const PxVec3 lateralDir = lateral.getNormalized();
+
+	const float lateralSpeed = linVel.dot(lateral);
+
+	int ccw = PxSign(sData.rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
+	int steerCcw = PxSign(sControls.steering); // steering ccw = 1 and cw = -1
+
+	float driftCurve = 2.1f * sControls.steering;
+	float angleCurve = 1.4f * sControls.steering;
+	float yawVel = sData.rBody->getAngularVelocity().y;
+
+	// Opposite forces automatically apply due to opposite sign when counter-steering
+	PxVec3 driftDir = (forward + lateral * driftCurve);
+	driftDir.y = 0.f;
+	driftDir.normalize();
+	float forceStrength = ccw == steerCcw ? 600.f : 1400.f;
+	sData.rBody->addForce(driftDir * forceStrength);
+
+	float torqueStrength = ccw == steerCcw ? 200.f : 800.f;
+	sData.rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
+
+	float gripStrength = 240.f;
+	sData.rBody->addForce(-lateralDir * lateralSpeed * gripStrength * yawVel);
+
+	float rollDamping = sData.speed * 0.4f;
+	sData.rBody->addTorque(PxVec3(1.f, 0.f, 0.f) * -sData.rBody->getAngularVelocity().x * rollDamping, PxForceMode::eACCELERATION);
+}
+
+void SparkSys::yawStabilizer(SparkData& sData) {
+	const float yawVel = sData.rBody->getAngularVelocity().y;
+	const float yawDamping = sData.speed * 0.15f;
+	PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
+
+	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
+}
+
+void SparkSys::stabilizeSpark(SparkData& sData, SparkControls& sControls) {
+	// TODO: drift state only when moving fast enough
+	if (sControls.handbrake && sData.speed >= 15) {
+		if (!sData.inDrift)
+			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));
+
+		sData.inDrift = true;
+		driftStabilizer(sData, sControls); // Helps control oversteer
+	}
+	else {
+		// Reset friction params to original values from JSON
+		if (sData.inDrift)
+			changeWheelParams(sData, 3.8, 145600, PxDegToRad(45));
+
+		sData.inDrift = false;
+		yawStabilizer(sData); // Helps prevent oversteer
+	}
+}
+
+// RESPAWN
 void SparkSys::respawnSpark(PxRigidBody* rBody, PxTransform respawnPose) {
 	dbug::log("GAME", 0, "resetting");
 
 	rBody->setGlobalPose(respawnPose);
 
-	PxRigidDynamic* dynamicBody = rBody->is<PxRigidDynamic>();
-	dynamicBody->setLinearVelocity(PxVec3(PxIdentity));
-	dynamicBody->setAngularVelocity(PxVec3(PxIdentity));
+	PxRigidDynamic* dBody = rBody->is<PxRigidDynamic>();
+	dBody->setLinearVelocity(PxVec3(PxIdentity));
+	dBody->setAngularVelocity(PxVec3(PxIdentity));
 }
 
 PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {

@@ -60,6 +60,9 @@ struct SparkData {
 	// Easy access to vehicle's neutral gear
 	PxU32 neutralGear = 0;
 
+	// Easy access to vehicle's rigid body
+	PxRigidBody* rBody = NULL;
+
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];
 	PxU32 mNbMaterialFrictions = 0;
 	PxReal mDefaultMaterialFriction = 1.0f;
