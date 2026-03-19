@@ -35,20 +35,19 @@ void AIControllerSys::update(GameState& game) {
 		
 		
 		// Adjust lookahead target based on speed
-		
-		if (spark.speed < 8.0f)
+		if (spark.speed < 10.0f)
 			ai.lookAheadSteps = 4;
-		else if (spark.speed < 14.0f)
+		else if (spark.speed < 16.0f)
 			ai.lookAheadSteps = 6;
-		else if (spark.speed < 26.f)
-			ai.lookAheadSteps = 8;
 		else if (spark.speed < 32.f)
+			ai.lookAheadSteps = 8;
+		else if (spark.speed < 40.f)
 			ai.lookAheadSteps = 12;
-		else if (spark.speed >= 32.f)
+		else if (spark.speed >= 48.f)
 			ai.lookAheadSteps = 20;
 
 		if (ai.state == IDLE) {
-			AI_IDLE(ai, controls, game); // TODO: move this
+			AI_IDLE(ai, controls, game);
 		}
 		else if (spark.health < 30.f) {
 			DefenseState::run(ai, controls, transform, spark);
@@ -63,7 +62,7 @@ void AIControllerSys::update(GameState& game) {
 	}
 }
 
-
+// TODO: move this with the rest of the states (?)
 void AIControllerSys::AI_IDLE(AIController& ai, SparkControls& controls, GameState& game) {
 	// zero out all controls, car will stay idle
 	controls.throttle = 0.0f;

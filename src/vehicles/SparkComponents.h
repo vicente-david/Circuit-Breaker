@@ -38,13 +38,14 @@ struct SparkControls {
 struct SparkData {
 	float health = 100;
 	float currBoost = 0;
-	float boostRegenSpeed = 10.0f;
+	float boostRegenSpeed = 20.0f;
 
 	double ShimmyCooldown = 1;
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
 	bool isBoosting = false;
+	bool inDrift = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;

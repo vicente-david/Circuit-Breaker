@@ -63,7 +63,7 @@ void PhysicsManager::initPhysX() {
 		pvdClient->setScenePvdFlag(PxPvdSceneFlag::eTRANSMIT_SCENEQUERIES,
 								   true);
 	}
-	gMaterial = gPhysics->createMaterial(0.5f, 0.5f, 0.6f);
+	gMaterial = gPhysics->createMaterial(1.5f, 0.5f, 0.6f);
 
 	PxInitVehicleExtension(*gFoundation); // Initialize vehicle extension
 
@@ -113,7 +113,6 @@ PxTriangleMesh *PhysicsManager::cookTriangleMesh(Mesh mesh) {
 
 PxRigidStatic *PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
 	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
-		auto material = gPhysics->createMaterial(0, 0, 0);
 	PxTriangleMesh *triangleMesh = cookTriangleMesh(mesh);
 
 	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
