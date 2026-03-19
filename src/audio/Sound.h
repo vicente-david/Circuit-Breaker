@@ -15,6 +15,7 @@ class Sound {
 	std::string soundName;
 	ALuint source;
 	bool freed = false;
+	bool playing = false;
 
 	glm::vec3 position = glm::vec3(0, 0, 0);
 	glm::vec3 velocity = glm::vec3(0, 0, 0);

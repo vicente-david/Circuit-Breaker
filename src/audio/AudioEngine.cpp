@@ -43,12 +43,12 @@ AudioEngine::AudioEngine() {
 }
 
 void AudioEngine::loadSounds() {
-	sounds.emplace("hiya", WavData("assets/sounds/hiyaMono.wav"));
-	// sounds["hiya"].loop = true;
-	sounds.emplace("full", WavData("assets/sounds/aaa.wav"));
 	sounds.emplace("muteCity", WavData("assets/sounds/muteCityMono.wav"));
 	sounds.emplace("engine", WavData("assets/sounds/engine.wav"));
 	sounds["engine"].loop = true;
+	sounds.emplace("lowHealth", WavData("assets/sounds/lowHealth.wav"));
+	sounds["lowHealth"].loop = true;
+	sounds.emplace("clank", WavData("assets/sounds/clank.wav"));
 }
 
 void AudioEngine::update(double dt) {

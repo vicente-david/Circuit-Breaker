@@ -1,7 +1,9 @@
 
 // helper to register the system
 #include "GameState.h"
+#include "ecs/Component.h"
 #include "ecs/Coordinator.h"
+#include "vehicles/ControllerSys.h"
 #include "vehicles/SparkComponents.h"
 #include <cstdio>
 #include <memory>
@@ -10,6 +12,10 @@
 
 void SparkSoundSys::updateSounds(double dt, GameState& game){
 	for (auto const &entity : entities) {
+		auto &controls = game.coordinator->getComponent<SparkControls>(entity);
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
+		auto &sounds = game.coordinator->getComponent<SparkSounds>(entity);
+
 		// // update sound
 		// auto &sound = game.coordinator->getComponent<Sound>(entity);
 		// auto pos = rBody->getGlobalPose().p;
@@ -31,6 +37,7 @@ SparkSoundSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	sig.set(coord->getComponentType<SparkData>());
 	sig.set(coord->getComponentType<SparkSounds>());
 	sig.set(coord->getComponentType<SparkControls>());
+	sig.set(coord->getComponentType<Transform>());
 	coord->setSystemSignature<SparkSoundSys>(sig);
 
 	return system;

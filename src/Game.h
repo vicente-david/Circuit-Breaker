@@ -54,7 +54,6 @@ public:
 	void updatePhysics();
 	void updateFPS();
 	void updateRendering();
-	void updateAudio();
 
 	// update not every frame (used for things that don't need to be updated every frame)
 

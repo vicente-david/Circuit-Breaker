@@ -17,6 +17,7 @@ void Sound::start() {
 	if (freed) {
 		return;
 	}
+	playing = true;
 	alSourcePlay(source);
 	AudioEngine::checkALErrors("playing " + soundName);
 }
@@ -25,6 +26,7 @@ void Sound::stop() {
 	if (freed) {
 		return;
 	}
+	playing = false;
 	alSourceStop(source);
 	AudioEngine::checkALErrors("stopping " + soundName);
 }
