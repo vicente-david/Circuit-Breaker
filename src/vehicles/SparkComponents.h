@@ -49,6 +49,7 @@ struct SparkData {
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
+	float minDriftSpeed = 15.f;
 	
 	bool inReverse = false;
 	bool inDrift = false;

@@ -36,45 +36,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			respawnSpark(sData.rBody, getRespawnPose(entity, game));
 		}
 
-		// TODO: Put in helper (boost regen based off drift angle)
-		// in degrees
-		float driftAngle =
-			PxAcos(linVel.getNormalized().dot(forwardDir.getNormalized())) *
-			(180 / PxPi);
-		driftAngle = std::abs(driftAngle);
-
-		// regen boost if you're drifting
-		float maxBoost = 100 - sData.health;
-		if (entity == 2)
-			dbug::log("GAME", -1, "player drift angle:%.2f, vel:%.2f",
-					  driftAngle, linVel.magnitude());
-
-		if (driftAngle > 20 && linVel.magnitude() > 10) {
-			// how 'hard' of a drift (90 degrees gives full regen, 0 degrees
-			// gives none)
-			// cap at 90 degrees
-			if (driftAngle > 90) {
-				driftAngle = 90;
-			}
-			float multi = driftAngle / 90.f;
-			if (entity == 2)
-				dbug::log("GAME", -1, "drifin' (mulit:%.2f)", multi);
-
-			sData.currBoost += sData.boostRegenSpeed * dt * multi;
-			if (sData.currBoost > maxBoost) {
-				sData.currBoost = maxBoost;
-			}
-		}
-
-		// TODO: Compare with helper (shimmy)
-		// shimmying
-		if (sData.shimmyTimer <= 0) {
-			if (controls.shimmyL) {
-				dbug::log("GAME", 0, "slide to the left");
-				shimmy(rBody, sData, false);
-			}
-		}
-
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
@@ -382,8 +343,9 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	// shimmying
 	shimmy(sData, sControls, dt);
 
-	// Stabilizers
-	stabilizeSpark(sData, sControls);
+	// handling
+	// TODO: if (!sData.inAir)
+	sparkHandling(sData, sControls, dt);
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
@@ -445,11 +407,22 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 		applyBoost(sData, sControls.boostWithHealth, dt);
 		sData.isBoosting = true;
 	}
-	else if (sData.boost < sData.maxBoost) {
-		// Case where boost > maxBoost is in updateMaxBoost since it always gets called before applying any boost
-		sData.boost += sData.boostRegenRate * dt;
-		sData.isBoosting = false;
-	}
+}
+
+void SparkSys::regenBoost(SparkData& sData, double dt) {
+	// Regenerate boost based on how 'hard' the drift is.
+	// Traveling parallel to your lateral direction (90 deg from the direction you're 
+	// facing) gives full regen rate.
+	const PxVec3 linVel = sData.rBody->getLinearVelocity();
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
+	const float lateralSpeed = linVel.dot(lateral);
+
+	// calculating the factor like this is much better for performance and gives similar results
+	// recall A.dot(B) = ||A|| ||B|| cosTheta   -->   cosTheta = A.dot(B) / (||A|| ||B||)
+	// cosTheta = 1 if lateralSpeed is perfectly aligned with travel speed
+	// ensure you're traveling fast enough so to not divide by zero
+	float cosTheta = lateralSpeed / sData.speed; 
+	sData.boost += sData.boostRegenRate * dt * cosTheta * cosTheta;
 }
 
 void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
@@ -480,7 +453,7 @@ void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
 
 }
 
-// STABILIZERS
+// HANDLING
 void SparkSys::changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle) {
 	for (int i = 0; i < 4; i++) {
 		sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] = friction;
@@ -492,9 +465,8 @@ void SparkSys::changeWheelParams(SparkData& sData, PxReal friction, PxReal latFr
 void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2();
-	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0();
-	const PxVec3 lateralDir = lateral.getNormalized();
+	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
 
 	const float lateralSpeed = linVel.dot(lateral);
 
@@ -516,10 +488,11 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	sData.rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
 
 	float gripStrength = 240.f;
-	sData.rBody->addForce(-lateralDir * lateralSpeed * gripStrength * yawVel);
+	sData.rBody->addForce(-lateral * lateralSpeed * gripStrength * yawVel);
 
 	float rollDamping = sData.speed * 0.4f;
-	sData.rBody->addTorque(PxVec3(1.f, 0.f, 0.f) * -sData.rBody->getAngularVelocity().x * rollDamping, PxForceMode::eACCELERATION);
+	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
+		PxForceMode::eACCELERATION);
 }
 
 void SparkSys::yawStabilizer(SparkData& sData) {
@@ -530,14 +503,14 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 }
 
-void SparkSys::stabilizeSpark(SparkData& sData, SparkControls& sControls) {
-	// TODO: drift state only when moving fast enough
-	if (sControls.handbrake && sData.speed >= 15) {
+void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls, double dt) {
+	if (sControls.handbrake && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
 			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
+		regenBoost(sData, dt); // Regen only when drifting
 	}
 	else {
 		// Reset friction params to original values from JSON

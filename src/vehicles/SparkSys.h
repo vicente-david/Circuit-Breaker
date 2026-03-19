@@ -38,15 +38,16 @@ class SparkSys : public System {
 	void updateMaxBoost(SparkData &sData);
 	void applyBoost(SparkData &sData, bool useHealth, double dt);
 	void boost(SparkData &sData, SparkControls &sControls, double dt);
+	void regenBoost(SparkData& sData, double dt);
 	
 	void applyShimmy(SparkData& sData, bool dir);
 	void shimmy(SparkData& sData, SparkControls& sControls, double dt);
 
-	// Stabilizers
+	// Handling
 	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
 	void driftStabilizer(SparkData& sData, SparkControls& sControls);
 	void yawStabilizer(SparkData& sData);
-	void stabilizeSpark(SparkData& sData, SparkControls& sControls);
+	void sparkHandling(SparkData& sData, SparkControls& sControls, double dt);
 
 	// Respawn
 	void respawnSpark(PxRigidBody *rBody, PxTransform respawnPose);
