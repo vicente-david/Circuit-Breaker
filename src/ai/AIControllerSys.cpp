@@ -203,7 +203,7 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 	if (targetSpeed <= 0.0f) {
 		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
 		controls.throttle = 1.0f;
-		controls.handbrake = false;
+		controls.driftMode = false;
 		ai.state = DRIVING;
 		return;
 	}
@@ -214,16 +214,16 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 
 	float speedDiff = targetSpeed - spark.speed;
 
-	controls.handbrake = true;
+	controls.driftMode = true;
 
-	if (controls.handbrake)
+	if (controls.driftMode)
 		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
 	else controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
 
-	dbug::log("AI", 0, "-----> DRIFT ----> HAND BRAKE: %d", controls.handbrake);
+	dbug::log("AI", 0, "-----> DRIFT ----> HAND BRAKE: %d", controls.driftMode);
 
 	if (spark.speed <= targetSpeed) {
-		controls.handbrake = false;
+		controls.driftMode = false;
 		ai.state = DRIVING;
 	}
 

@@ -329,7 +329,6 @@ void SparkSys::healZoneCheck(GameState& game, double dt) {
 void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt) {
 
 	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
-	sData.mVehicle->mCommandState.brakes[1] = sControls.handbrake;
 	sData.mVehicle->mCommandState.nbBrakes = 1;
 	sData.mVehicle->mCommandState.throttle = sControls.throttle;
 	sData.mVehicle->mCommandState.steer = sControls.steering;
@@ -504,7 +503,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 }
 
 void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls, double dt) {
-	if (sControls.handbrake && sData.speed >= sData.minDriftSpeed) {
+	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
 			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));
 

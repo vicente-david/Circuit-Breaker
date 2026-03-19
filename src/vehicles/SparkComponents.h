@@ -22,7 +22,7 @@ struct SparkControls {
 	float brake;
 	float reverse; // [0-1] for going backwards
 
-	bool handbrake;
+	bool driftMode;
 	bool boost;
 	bool boostWithHealth;
 	bool shimmyL;
