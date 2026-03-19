@@ -36,7 +36,7 @@ class SparkSys : public System {
 
 	// Features
 	void updateMaxBoost(SparkData &sData);
-	void applyBoost(SparkData &sData);
+	void applyBoost(SparkData &sData, bool useHealth, double dt);
 	void boost(SparkData &sData, SparkControls &sControls, double dt);
 	
 	void applyShimmy(SparkData& sData, bool dir);

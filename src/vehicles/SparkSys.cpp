@@ -21,7 +21,8 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.speed = linVel.magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
-		sparkInputs(sData, sControls, dt);
+		if (sData.health > 0) // cant do anything if your dead lol
+			sparkInputs(sData, sControls, dt);
 
 		if (isP1) {
 			dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
@@ -30,7 +31,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			isP1 = false;
 		}
 		// Respawn
-		if (sControls.reset)
+		if (sControls.reset || sData.health <= 0)
 			respawnSpark(sData.rBody, getRespawnPose(entity, game));
 
 		// TODO: Put in helper (boosting with health)
@@ -426,30 +427,48 @@ void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 // FEATURES
 void SparkSys::updateMaxBoost(SparkData& sData) {
 	sData.maxBoost = sData.maxHealth - sData.health;
+	if (sData.boost > sData.maxBoost)
+		sData.boost = sData.maxBoost;
 }
 
-void SparkSys::applyBoost(SparkData& sData) {
+void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 	
-	sData.boost -= sData.boostUseRate;
+	if (sData.health <= 1)
+		return;
 
+	if (useHealth)
+		sData.health -= sData.boostUseRate * dt * 0.5f; // use half the boost usage rate
+	else
+		sData.boost -= sData.boostUseRate * dt;
+
+	// don't kill yourself from boosting
+	if (sData.health <= 1)
+		sData.health = 1;
+	
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 }
 
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
-	//updateMaxBoost(sData);
+	updateMaxBoost(sData);
 
-	if (sControls.boost && sData.boost > 0) {
-		dbug::log("GAME", -1, "boosting!");
-		applyBoost(sData);
+	// MAYBE TODO: change to a small delay before applying bigger boost (leave alone for now)
+	// stop boosting if we've run out of normal boost
+	if (sData.boost <= 0 && !sControls.boostWithHealth) {
+		sData.isBoosting = false;
+		//dbug::log("GAME", -1, "No boost!");
+		return;
+	}
+
+	if (sControls.boost) {
+		//dbug::log("GAME", -1, "boosting!");
+		applyBoost(sData, sControls.boostWithHealth, dt);
+		sData.isBoosting = true;
 	}
 	else if (sData.boost < sData.maxBoost) {
+		// Case where boost > maxBoost is in updateMaxBoost since it always gets called before applying any boost
 		sData.boost += sData.boostRegenRate * dt;
-
-		if (sData.boost > sData.maxBoost) {
-			sData.boost = sData.maxBoost;
-			dbug::log("GAME", 0, "boost full");
-		}
+		sData.isBoosting = false;
 	}
 }
 
