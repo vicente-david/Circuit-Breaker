@@ -5,7 +5,6 @@
 #include "graphics/RenderingSystem.h"
 #include "vehicles/SparkSys.h"
 #include "vehicles/ControllerSys.h"
-#include "audio/AudioSystem.h"
 #include "ai/AIControllerSys.h"
 #include "world/LapSystem.h"
 #include "ui/UISystem.h"

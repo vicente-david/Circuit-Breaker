@@ -53,7 +53,6 @@ void Game::initializeECS() {
 	coordinator->registerComponent<LapCounter>();
 	coordinator->registerComponent<AIController>();
 	coordinator->registerComponent<CollisionData>();
-	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIComponent>();
 	coordinator->registerComponent<RectUI>();
@@ -65,7 +64,6 @@ void Game::initializeECS() {
 	sparkSoundSys = SparkSoundSys::registerSystem(coordinator);
 	controllerSys = ControllerSys::registerSystem(coordinator);
 	cameraSys = CameraSystem::registerSystem(coordinator);
-	audioSys = AudioSystem::registerSystem(coordinator);
 	aiControllerSys = AIControllerSys::registerSystem(coordinator);
 	respawnSys = RespawnSystem::registerSystem(coordinator);
 	lapSys = LapSystem::registerSystem(coordinator);
@@ -234,8 +232,8 @@ void Game::initializeAudio() {
 	// place holder test sounds
 	testSound = gameState.audio->createSound("muteCity");
 	// alSourcef(testSound.source, AL_GAIN, 0.6f);
-	testSound.setLooping(true);
-	testSound.start();
+	testSound->setLooping(true);
+	testSound->start();
 	//float soundX = 0;
 }
 
@@ -287,7 +285,7 @@ void Game::updatePhysics() {
 		physicsSys->updatePhysics(dt, gameState);
 		cameraSys->update(gameState, dt);
 		sparkSoundSys->updateSounds(dt, gameState);
-		audioSys->updateSounds(gameState);
+		audio->update(dt);
 		accumulator -= dt;
 		t += dt;
 
@@ -308,8 +306,8 @@ void Game::updatePhysics() {
 		// 	gameActions.shimmyRight = false;
 		// }
 		// position at 0,0,0 for testing
-		gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
-		gameState.audio->updateSoundVel(testSound, 0, 0, 0);
+		// gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
+		// gameState.audio->updateSoundVel(testSound, 0, 0, 0);
 	}
 
 }

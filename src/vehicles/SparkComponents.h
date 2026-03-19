@@ -5,6 +5,7 @@
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "physics/CollisionData.h"
+#include <cstdio>
 #include <memory>
 
 using namespace snippetvehicle;
@@ -67,14 +68,15 @@ struct SparkData {
 	bool isHuman = false;
 };
 struct SparkSounds {
-	Sound engine;
-	Sound lowHealth;
-	Sound boost;
+	std::shared_ptr<Sound> engine;
+	std::shared_ptr<Sound> lowHealth;
+	std::shared_ptr<Sound> boost;
 
 	SparkSounds() {};
-	SparkSounds(AudioEngine audio) {
-		engine = audio.createSound("engine");
-		lowHealth = audio.createSound("lowHealth");
-		boost = audio.createSound("muteCity");
+	SparkSounds(std::shared_ptr<AudioEngine> audio) {
+		engine = audio->createSound("engine");
+		lowHealth = audio->createSound("lowHealth");
+		boost = audio->createSound("boost");
 	};
+
 };

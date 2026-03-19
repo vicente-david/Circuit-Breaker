@@ -14,11 +14,11 @@ int main() {
 
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
-	dbug::minLogSeverity = 0;
-	// dbug::logIgnore("AUDIO");
+	dbug::minLogSeverity = -1;
+	dbug::logIgnore("AUDIO");
 	dbug::logIgnore("GEN");
-	dbug::logIgnore("AI");
-	// dbug::logListType = dbug::WHITE_LIST;
+	// dbug::logIgnore("AI");
+	dbug::logListType = dbug::WHITE_LIST;
 	//  dbug::logIgnore("ECS");
 	// dbug::logIgnoreType = dbug::WHITE_LIST;
 

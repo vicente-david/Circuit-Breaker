@@ -6,9 +6,11 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <cstdio>
 #include <glm/fwd.hpp>
+#include <memory>
 #include <stdbool.h>
 #include <string>
 #include <vector>
@@ -46,8 +48,13 @@ void AudioEngine::loadSounds() {
 	sounds.emplace("muteCity", WavData("assets/sounds/muteCityMono.wav"));
 	sounds.emplace("engine", WavData("assets/sounds/engine.wav"));
 	sounds["engine"].loop = true;
+
+	sounds.emplace("boost", WavData("assets/sounds/boost.wav"));
+	sounds["boost"].loop = true;
+
 	sounds.emplace("lowHealth", WavData("assets/sounds/lowHealth.wav"));
 	sounds["lowHealth"].loop = true;
+
 	sounds.emplace("clank", WavData("assets/sounds/clank.wav"));
 }
 
@@ -55,12 +62,12 @@ void AudioEngine::update(double dt) {
 
 	// clean up channels/sources that have finished
 	auto remIdx =
-		std::remove_if(channels.begin(), channels.end(), [](Sound sound) {
+		std::remove_if(channels.begin(), channels.end(), [](std::shared_ptr<Sound> sound) {
 			ALint state;
-			alGetSourcei(sound.source, AL_SOURCE_STATE, &state);
+			alGetSourcei(sound->source, AL_SOURCE_STATE, &state);
 			if (state == AL_STOPPED) {
-				alDeleteSources(1, &sound.source);
-				sound.freed = false;
+				alDeleteSources(1, &sound->source);
+				sound->freed = true;
 				return true;
 			}
 
@@ -68,6 +75,16 @@ void AudioEngine::update(double dt) {
 		});
 	channels.erase(remIdx, channels.end());
 
+	std::string str = "Sounds:[";
+	// update position/velocity of all sounds
+	for (auto s : channels) {
+		updateSoundLoc(*s);
+		updateSoundVel(*s);
+		str += s->soundName + " ";
+	}
+	dbug::log("AUDIO", -1, "%s]", str.c_str());
+
+	// volume control
 	if (dbugPanel::debug::updateVol) {
 		alListenerf(AL_GAIN, dbugPanel::debug::volume);
 	}
@@ -127,17 +144,20 @@ void AudioEngine::updateSoundVel(Sound s, float x, float y, float z) {
 
 // create a sounds channel to play a sound. you need to call play before it will
 // play
-Sound AudioEngine::createSound(std::string name) {
+std::shared_ptr<Sound> AudioEngine::createSound(std::string name) {
+	if(sounds.find(name)==sounds.end()){
+		dbug::log("AUDIO", 2, "audio with name '%s' not found", name.c_str());
+	}
 	ALuint channel = sounds[name].createSource();
-	Sound s(channel, name);
-
+	std::shared_ptr<Sound> s = std::make_shared<Sound>(channel, name);
+	channels.push_back(s);
 	return s;
 }
 
 void AudioEngine::close() {
 	for (auto ch : channels) {
-		ch.freed = true;
-		alDeleteSources(1, &ch.source);
+		ch->freed = true;
+		alDeleteSources(1, &ch->source);
 	}
 	alcDestroyContext(context);
 	alcCloseDevice(device);
@@ -153,32 +173,31 @@ bool AudioEngine::checkALErrors(std::string location) {
 		return true;
 	}
 
-	dbug::log("AUDIO", 2, "Open Al Error at location %s\n", location.c_str());
+	dbug::log("AUDIO", 2, "Open Al Error at location %s", location.c_str());
 	switch (err) {
 	case AL_INVALID_NAME:
 
 		dbug::log("AUDIO", 2,
-				  "AL_INVALID_NAME: invalid ID was passed to AL function.\n");
+				  "AL_INVALID_NAME: invalid ID was passed to AL function.");
 		break;
 
 	case AL_INVALID_ENUM:
 		dbug::log("AUDIO", 2,
-				  "AL_INVALID_ENUM: invalid enum was passed to AL function.\n");
+				  "AL_INVALID_ENUM: invalid enum was passed to AL function.");
 		break;
 	case AL_INVALID_VALUE:
-		dbug::log(
-			"AUDIO", 2,
-			"AL_INVALID_VALUE: invalid value was passed to AL function.\n");
+		dbug::log("AUDIO", 2,
+				  "AL_INVALID_VALUE: invalid value was passed to AL function.");
 		break;
 	case AL_INVALID_OPERATION:
 		dbug::log("AUDIO", 2,
-				  "AL_INVALID_OPERATION: requested operation is invalid.\n");
+				  "AL_INVALID_OPERATION: requested operation is invalid.");
 		break;
 	case AL_OUT_OF_MEMORY:
-		dbug::log("AUDIO", 2, "AL_OUT_OF_MEMORY: openAL ran out of memory!.\n");
+		dbug::log("AUDIO", 2, "AL_OUT_OF_MEMORY: openAL ran out of memory!.");
 		break;
 	default:
-		dbug::log("AUDIO", 2, "UNKNOWN AL ERROR: good luck :(\n");
+		dbug::log("AUDIO", 2, "UNKNOWN AL ERROR: good luck :(");
 		break;
 	}
 	return false;

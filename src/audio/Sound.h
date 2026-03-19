@@ -21,6 +21,7 @@ class Sound {
 	glm::vec3 velocity = glm::vec3(0, 0, 0);
 
 	void stop();
+	void pause();
 	void start();
 	void setLooping(bool looping);
 	// void updatePosition(float x, float y, float z);

@@ -385,7 +385,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, rBody);
-	game.coordinator->addComponent(sparkEntity, SparkSounds());
+	game.coordinator->addComponent(sparkEntity, SparkSounds(game.audio));
 	// different model for p3
 	if (sparkEntity == 3) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));

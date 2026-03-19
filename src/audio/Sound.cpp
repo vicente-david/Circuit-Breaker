@@ -14,12 +14,21 @@ Sound::Sound(ALuint source, std::string name) {
 
 // starts the sound so it will start playing
 void Sound::start() {
-	if (freed) {
+	if (freed || playing) {
 		return;
 	}
 	playing = true;
 	alSourcePlay(source);
 	AudioEngine::checkALErrors("playing " + soundName);
+}
+
+void Sound::pause() {
+	if (freed || !playing) {
+		return;
+	}
+	playing = false;
+	alSourcePause(source);
+	AudioEngine::checkALErrors("pausing " + soundName);
 }
 
 void Sound::stop() {
