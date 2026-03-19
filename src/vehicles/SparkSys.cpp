@@ -23,12 +23,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, dt);
 
-		if (isP1) {
-			dbug::log("INPUT", -1, "Spark commands: th: %f, brk: %f, trn: %f",
-				sControls.throttle, sControls.brake, sControls.steering);
-			dbug::log("ROLL", 0, "%f\tSTEER: %f", sData.rBody->getAngularVelocity().x, sControls.steering);
-			isP1 = false;
-		}
 		// Respawn
 		respawn(entity, game, dt);
 
@@ -322,8 +316,8 @@ void SparkSys::healZoneCheck(GameState& game, double dt) {
 	for (auto const& colData : game.physics->callbacks->healingSparks) {
 		auto& sData = game.coordinator->getComponent<SparkData>(colData);
 		
-		if (sData.health < sData.maxHealth) {
-			sData.health += 10 * dt; // TODO: add regen rate to spark data
+		// Make sure spark is not healing while dead
+		if (sData.health < sData.maxHealth && !sData.isDead) {
 			sData.health += sData.healthRegenRate * dt;
 		
 			if (sData.health > sData.maxHealth)
@@ -352,6 +346,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	// handling
 	// TODO: if (!sData.inAir)
 	sparkHandling(sData, sControls, dt);
+	regenBoost(sData, dt); 
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
@@ -419,6 +414,9 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 	// Regenerate boost based on how 'hard' the drift is.
 	// Traveling parallel to your lateral direction (90 deg from the direction you're 
 	// facing) gives full regen rate.
+	if (sData.speed < sData.minDriftSpeed)
+		return;
+
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
 	const float lateralSpeed = linVel.dot(lateral);
@@ -516,7 +514,6 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls, double 
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
-		regenBoost(sData, dt); // Regen only when drifting
 	}
 	else {
 		// Reset friction params to original values from JSON
