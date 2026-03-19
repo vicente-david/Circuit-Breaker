@@ -42,13 +42,16 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 
 		// TODO: Put in helper (audio stuff)
-		// update sound
-		auto &sound = game.coordinator->getComponent<Sound>(entity);
-		auto pos = rBody->getGlobalPose().p;
-		rBody->getLinearVelocity();
-		sound.position = glm::vec3(pos.x, pos.y, pos.z);
-		auto vel = rBody->getGlobalPose().p;
-		sound.position = glm::vec3(vel.x, vel.y, vel.z);
+		// CANCEL TODO: hold off for now, there might be a different system for this later on
+		{
+			// update sound
+			auto& sound = game.coordinator->getComponent<Sound>(entity);
+			auto pos = sData.rBody->getGlobalPose().p;
+			sData.rBody->getLinearVelocity();
+			sound.position = glm::vec3(pos.x, pos.y, pos.z);
+			auto vel = sData.rBody->getGlobalPose().p;
+			sound.position = glm::vec3(vel.x, vel.y, vel.z);
+		}
 
 		reload = sControls.reload;
 
