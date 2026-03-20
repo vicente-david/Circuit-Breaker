@@ -255,7 +255,7 @@ void Game::update() {
 	aiControllerSys->update(gameState);
 	// after physics update
 	lapSys->update(gameState);
-	respawnSys->update(gameState);
+	//respawnSys->update(gameState);
 
 	updateFPS();
 

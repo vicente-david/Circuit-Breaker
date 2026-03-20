@@ -277,9 +277,21 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 }
 
 void SparkSys::checkDeath(SparkData& sData, double dt) {
-	if (sData.health <= 0 && !sData.isDead) {
-		sData.isDead = true;
-		sData.respawnTimer = sData.respawnCooldown;
+	if (sData.health > 0)
+		return;
+	
+	if (sData.isDead && sData.deathTimer > 0) {
+		sData.deathTimer -= dt;
+		return;
+	}
+
+	// don't want negative health for UI purposes
+	if (sData.health < 0) 
+		sData.health = 0; 
+	
+	sData.isDead = true;
+}
+
 void SparkSys::checkAirborne(SparkData& sData, double dt) {
 	bool grounded = false; // assume you're airborne
 	for (int i = 0; i < 4; i++) {
@@ -573,32 +585,37 @@ PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
 
 void SparkSys::sparkValuesReset(SparkData& sData) {
 	sData.health = sData.maxHealth;
-	sData.maxBoost = 0.0f;
 	sData.boost = sData.maxBoost;
 	sData.shimmyTimer = 0;
-	sData.speed = 0.0f;
+	sData.deathTimer = sData.deathCooldown;
+	sData.offGroundTimer = sData.offGroundLimit;
+	
 	sData.inReverse = false;
-	sData.inDrift = false;
 	sData.isBoosting = false;
 	sData.isDead = false;
+
+	dbug::log("GAME", 0, "reset spark");
 }
 
 void SparkSys::respawn(Entity entity, GameState& game, double dt) {
 	SparkData& sData = game.coordinator->getComponent<SparkData>(entity);
 	SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
 
-	if (sData.respawnTimer <= 0) {
-		if (sData.isDead) {
-			sparkValuesReset(sData);
-			sControls.reset = true;
-		}
-
-		if (sControls.reset) {
-			respawnSpark(sData, getRespawnPose(entity, game));
-			sControls.reset = false; // so AI doesn't get stuck in a loop
-		}
-	}
-	else {
+	if (sData.respawnTimer > 0) {
 		sData.respawnTimer -= dt;
+		return;
+	}
+	
+	if (sData.deathTimer <= 0) {
+		sparkValuesReset(sData);
+		sControls.reset = true;
+	}
+
+	if (sData.offGroundTimer <= 0 && !sData.isDead)
+		sControls.reset = true;
+
+	if (sControls.reset) {
+		respawnSpark(sData, getRespawnPose(entity, game));
+		sControls.reset = false; // so AI doesn't get stuck in a loop
 	}
 }

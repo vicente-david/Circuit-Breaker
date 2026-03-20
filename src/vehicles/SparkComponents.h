@@ -51,6 +51,11 @@ struct SparkData {
 
 	float speed = 0.0f;
 	float minDriftSpeed = 15.f;
+
+	double respawnCooldown = 3;
+	double respawnTimer = 0;
+	double deathCooldown = 2;
+	double deathTimer = deathCooldown;
 	double offGroundLimit = 2;
 	double offGroundTimer = offGroundLimit;
 	
