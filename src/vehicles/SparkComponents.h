@@ -46,7 +46,8 @@ struct SparkData {
 	float boost = maxBoost;
 	
 	float shimmyForce = 15.0f;
-	double ShimmyCooldown = 2;
+	double shimmyCooldown = 2;
+	double shimmyInvincible = shimmyCooldown - 0.5;
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
