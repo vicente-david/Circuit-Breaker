@@ -17,7 +17,7 @@ enum Direction {
 /*
 * Base AI state class
 * Not used directly by the AIControllerSys.
-* Contains all the 'low-level' driving states that each high-level state can use (with the option of overriding behaviour).
+* Contains all the 'low-level' driving states that each high-level state can use (with the option of "overriding" (not really because they're all static) behaviour).
 */
 class AIState {
 
@@ -27,6 +27,7 @@ public:
 	static void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, std::pair<Direction, glm::vec3>& sweepResult);
+	static void AI_DODGING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, std::pair<Direction, glm::vec3>& sweepResult);
 
 	static std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
 	static std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
@@ -43,7 +44,9 @@ private:
 class DefenseState : public AIState {
 
 public:
-	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
+	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+	static std::pair<Direction, glm::vec3> detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+
 };
 
 class OvertakeState : public AIState {

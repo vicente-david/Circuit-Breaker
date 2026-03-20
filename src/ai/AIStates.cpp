@@ -1,11 +1,14 @@
 #include "AIStates.h"
 
-// Note: these all do the same thing right now.
+
 /*
-* Drive defensively: prioritize dodging and recovering HP
+* ===== DEFENSE STATE =============================================================================================================================================
+* prioritize dodging and recovering HP
 */
-void DefenseState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
+void DefenseState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
 	//dbug::log("AI", 0, " !!!!! in defense state");
+
+	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ai, controls, transform, spark, body); // Line of sight sweep
 
 	if (ai.state == DRIVING)
 		AI_DRIVING(ai, controls, transform, spark);
@@ -15,11 +18,45 @@ void DefenseState::run(AIController& ai, SparkControls& controls, Transform& tra
 		AI_DRIFTING(ai, controls, transform, spark);
 	else if (ai.state == BOOSTING)
 		AI_BOOSTING(ai, controls, transform, spark);
+	else if (ai.state == DODGING)
+		AI_DODGING(ai, controls, transform, spark, sweepResult);
 	
 }
 
+// Detect if there is another player spark in line of sight
+std::pair<Direction, glm::vec3> DefenseState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
+
+	Direction dir = LEFT;
+	std::pair<bool, glm::vec3> resultSide = AIState::lookSide(transform, body, dir);
+	if (resultSide.first) {
+		ai.state = DODGING;
+		result = { LEFT, resultSide.second };
+		std::cout << "hit left" << std::endl;
+		return result;
+	}
+
+	dir = RIGHT;
+	resultSide = AIState::lookSide(transform, body, dir);
+	if (resultSide.first) {
+		ai.state = DODGING;
+		result = { RIGHT, resultSide.second };
+		std::cout << "hit right" << std::endl;
+		return result;
+	}
+
+	// No sweep returned with a hit
+	if (ai.state == DODGING) {
+		ai.state = DRIVING; // if ai in dodging state but can no longer see an enemy, switch to driving state
+	}
+
+	return result; // return direction and position of hit point.
+}
+
+
 /*
-* Drive offensively to overtake other players: prioritize speed and attacking others
+* ===== OVERTAKE STATE =============================================================================================================================================
+* overtake other players: prioritize speed and attacking others
 */
 void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
 
@@ -40,94 +77,9 @@ void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& tr
 		AI_ATTACKING(ai, controls, transform, spark, sweepResult);
 }
 
-/*
-* Drive to maintain a lead: take less risks to maintain in the lead
-*/
-void MaintainState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
-
-	//dbug::log("AI", 0, "!!!!! in maintain state");
-	if (ai.state == DRIVING)
-		AI_DRIVING(ai, controls, transform, spark);
-	else if (ai.state == BRAKING)
-		AI_BRAKING(ai, controls, transform, spark);
-	else if (ai.state == DRIFTING)
-		AI_DRIFTING(ai, controls, transform, spark);
-	else if (ai.state == BOOSTING)
-		AI_BOOSTING(ai, controls, transform, spark);
-	
-}
-
-std::pair<bool, glm::vec3> AIState::lookFwd(Transform& transform, PxRigidBody* body) {
-	PxScene* scene = body->getScene();
-
-	PxSweepBuffer hitInfo;
-	PxVec3 forwardDir(transform.forwardD.x, transform.forwardD.y, transform.forwardD.z); // sweep in front facing direction
-	PxBoxGeometry sweepBox(1.f, 0.5f, 0.5f); // geometry to sweep
-	PxTransform initPose = body->getGlobalPose();
-	initPose.p += forwardDir.getNormalized() * 2.f; // set initial pose to be a bit in front of the spark
-
-	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
-	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC); // NOTE: detects any dynamic actor. Could not get it to work otherwise.
-	//filter.flags |= PxQueryFlag::eANY_HIT;
-	//filter.data.word0 = COLLISION_FLAG_CHASSIS;
-	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 100.f, hitInfo, outFlags, filter);
-
-	// Check if hit returned true and if the hit was not itself
-	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
-		std::cout << "hit fwd" << std::endl;
-
-		PxVec3 t = hitInfo.block.position;
-		glm::vec3 target(t.x, t.y, t.z);
-
-		return { true, target };
-	}
-	else
-		return { false, glm::vec3(0.f) };
-
-}
-
-std::pair<bool, glm::vec3> AIState::lookSide(Transform& transform, PxRigidBody* body, Direction& dir) {
-	PxScene* scene = body->getScene();
-
-	PxSweepBuffer hitInfo;
-	
-	// Locally rotate forward direction by -90(L) or 90(R) degrees
-	glm::quat rotate;
-	if (dir == LEFT) {
-		rotate = glm::angleAxis(glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
-	}
-	else {
-		rotate = glm::angleAxis(glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
-	}
-	glm::vec3 d = rotate * transform.forwardD;
-	PxVec3 direction(d.x, d.y, d.z);
-
-	PxBoxGeometry sweepBox(.2f, 0.25f, 0.5f); // geometry to sweep
-	PxTransform initPose = body->getGlobalPose();
-	initPose.p += direction.getNormalized() * 2.f; // set initial pose to be a bit away from spark
-
-	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
-	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC);
-
-	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 50.f, hitInfo, outFlags, filter);
-
-	// Check if hit returned true and if the hit was not itself
-	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
-		std::cout << "hit side" << std::endl;
-
-		PxVec3 t = hitInfo.block.position;
-		glm::vec3 target(t.x, t.y, t.z);
-
-		return { true, target };
-	}
-	else
-		return { false, glm::vec3(0.f) };
-}
-
-
 // Detect if there is another player spark in line of sight
 std::pair<Direction, glm::vec3> OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
-	std::pair<Direction, glm::vec3> result{NONE, glm::vec3(0.f)};
+	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
 
 	// Only check forward direction if spark has boost
 	if (spark.currBoost > 0.0f) {
@@ -151,7 +103,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIController& ai, SparkCon
 			std::cout << "hit left" << std::endl;
 			return result;
 		}
-		
+
 		dir = RIGHT;
 		resultSide = AIState::lookSide(transform, body, dir);
 		if (resultSide.first) {
@@ -168,11 +120,35 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIController& ai, SparkCon
 		ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
 		controls.boost = false; // ensure false
 	}
-	
+
 	return result; // return direction and position of hit point.
 }
 
-// DRIVING STATES ==============================================================================================================
+/*
+* ===== MAINTAIN STATE =============================================================================================================================================
+* Drive to maintain a lead: take less risks to maintain in the lead
+*/
+void MaintainState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
+
+	//dbug::log("AI", 0, "!!!!! in maintain state");
+	if (ai.state == DRIVING)
+		AI_DRIVING(ai, controls, transform, spark);
+	else if (ai.state == BRAKING)
+		AI_BRAKING(ai, controls, transform, spark);
+	else if (ai.state == DRIFTING)
+		AI_DRIFTING(ai, controls, transform, spark);
+	else if (ai.state == BOOSTING)
+		AI_BOOSTING(ai, controls, transform, spark);
+	
+}
+
+
+
+
+
+
+
+// =========== DRIVING STATES =============================================================================================================================================================
 
 void AIState::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
 	
@@ -375,6 +351,120 @@ void AIState::AI_ATTACKING(AIController& ai, SparkControls& controls, Transform&
 	return;
 }
 
+void AIState::AI_DODGING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, std::pair<Direction, glm::vec3>& sweepResult) {
+
+	// Sanity check that a hit was actually detected
+	if (sweepResult.first == NONE) {
+		controls.boost = false;
+		controls.shimmyL = false;
+		controls.shimmyR = false;
+		return;
+	}
+	
+	glm::vec3 vecToOpponent = transform.pos - sweepResult.second;
+	float angleBetween = glm::acos(glm::dot(glm::normalize(transform.forwardD), glm::normalize(vecToOpponent))); // angle between the forward direction and direction to the detected opponent
+	
+	std::cout << "angle btwn: " << angleBetween << std::endl;
+	if (angleBetween > glm::radians(90.f) && spark.currBoost > 0.0f) {
+		// opponent is slightly behind: try to boost away
+		glm::quat rotateAway;
+		if (sweepResult.first == LEFT) {
+			rotateAway = glm::angleAxis(glm::radians(10.f), glm::vec3(0.f, 1.f, 0.f));
+		}
+		else
+			rotateAway = glm::angleAxis(glm::radians(-10.f), glm::vec3(0.f, 1.f, 0.f));
+
+		glm::vec3 escapeDir = ai.route.at(ai.targetIdx) - transform.pos; // vector between spark and target index
+		escapeDir = rotateAway * escapeDir;
+		glm::vec3 target = transform.pos + escapeDir; // Get lookahead position rotated away from detected opponent
+		
+		
+		calcSteering(ai, controls, transform, spark, target); // Calculate steering towards escape direction
+		controls.boost = true;
+		dbug::log("AI", 0, "[DODGING] -> BOOST AWAY");
+	}
+	else if (spark.currBoost <= 0.0f) {
+		ai.state = DRIVING;
+		controls.boost = false;
+	}
+	
+
+	return;
+
+}
+
+
+// ====== HELPER FUNCTIONS ===========================================================================================================================================================
+
+// Perform forward sweep to detect opponents
+std::pair<bool, glm::vec3> AIState::lookFwd(Transform& transform, PxRigidBody* body) {
+	PxScene* scene = body->getScene();
+
+	PxSweepBuffer hitInfo;
+	PxVec3 forwardDir(transform.forwardD.x, transform.forwardD.y, transform.forwardD.z); // sweep in front facing direction
+	PxBoxGeometry sweepBox(1.f, 0.5f, 0.5f); // geometry to sweep
+	PxTransform initPose = body->getGlobalPose();
+	initPose.p += forwardDir.getNormalized() * 2.f; // set initial pose to be a bit in front of the spark
+
+	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
+	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC); // NOTE: detects any dynamic actor. Could not get it to work otherwise.
+	//filter.flags |= PxQueryFlag::eANY_HIT;
+	//filter.data.word0 = COLLISION_FLAG_CHASSIS;
+	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 100.f, hitInfo, outFlags, filter);
+
+	// Check if hit returned true and if the hit was not itself
+	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
+		std::cout << "hit fwd" << std::endl;
+
+		PxVec3 t = hitInfo.block.position;
+		glm::vec3 target(t.x, t.y, t.z);
+
+		return { true, target };
+	}
+	else
+		return { false, glm::vec3(0.f) };
+
+}
+
+// Perform sideways sweep to detect opponents
+std::pair<bool, glm::vec3> AIState::lookSide(Transform& transform, PxRigidBody* body, Direction& dir) {
+	PxScene* scene = body->getScene();
+
+	PxSweepBuffer hitInfo;
+
+	// Locally rotate forward direction by -90(L) or 90(R) degrees
+	glm::quat rotate;
+	if (dir == LEFT) {
+		rotate = glm::angleAxis(glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
+	}
+	else {
+		rotate = glm::angleAxis(glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
+	}
+	glm::vec3 d = rotate * transform.forwardD;
+	PxVec3 direction(d.x, d.y, d.z);
+
+	PxBoxGeometry sweepBox(.2f, 0.25f, 0.5f); // geometry to sweep
+	PxTransform initPose = body->getGlobalPose();
+	initPose.p += direction.getNormalized() * 2.f; // set initial pose to be a bit away from spark
+
+	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
+	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC);
+
+	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 50.f, hitInfo, outFlags, filter);
+
+	// Check if hit returned true and if the hit was not itself
+	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
+		std::cout << "hit side" << std::endl;
+
+		PxVec3 t = hitInfo.block.position;
+		glm::vec3 target(t.x, t.y, t.z);
+
+		return { true, target };
+	}
+	else
+		return { false, glm::vec3(0.f) };
+}
+
 
 // Steering calculations used in many of the above
 void AIState::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos) {
@@ -383,7 +473,6 @@ void AIState::calcSteering(AIController& ai, SparkControls& controls, Transform&
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
 
 
-	// ---- STEERING ----
 	// compute the signed angle between car forward and direction to target, both projected onto XZ plane
 	// Z = forward, X = lateral, Y = vertical 
 	glm::vec3 unitVectorToTarget = glm::normalize(vectorToTarget);

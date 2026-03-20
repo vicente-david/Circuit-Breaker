@@ -8,7 +8,8 @@ enum AIDriveState {
 	BRAKING = 2,
 	DRIFTING = 3,
 	BOOSTING = 4,
-	ATTACKING = 5
+	ATTACKING = 5,
+	DODGING = 6
 };
 
 // this component tells the controller system that its AI controlled.
