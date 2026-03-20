@@ -7,12 +7,27 @@
 // we can just pass in the current game state
 // for nested ui's for example pause menu + settings we can store via a stack
 
+// ok so how this is going to be structures as of right now:
+
+// gamestate will push and pop screens, these screens will be defined and created here in the UISystem
+// see the screens section below in the UiSystem class
+
+// each UIScreen will contain a vector of UIElements
+// ui elements will be considered as entities in our ECS system
+// that contain the component UIElement
+
+// to toggle visibility, we will use the screenStack vector (stack)
+// this will display all currently active uiscreens
+// we'll let UIsystem do it's own rendering
+// but rendering system will have to pass some information 
+
 #pragma once
 #include <string>
 #include "UISystemComponents.h"
 #include "../ecs/System.h"
 #include "../ecs/Coordinator.h"
 #include "../ecs/Component.h"
+#include "../graphics/Text.h"
 #include <glm/gtx/projection.hpp>
 
 
@@ -24,6 +39,13 @@ struct UIPositions {
 	glm::vec3 p4;
 	glm::vec3 p5;
 	glm::vec3 p6;
+};
+
+// a UIscreen consists of a bunch of UIElements 
+// we'll push screens into the UIstack
+struct UIScreen {
+	std::string name; // name of the ui screen
+	std::vector<Entity> UIElements; // what elements make it up
 };
 
 
@@ -40,7 +62,31 @@ public:
 	TextUI changeToWinScreen(); // change to win screen when that event triggers
 	TextUI changeToLoseScreen(); // change to win screen when that event triggers
 
+	void setRenderingParams(); // sets all necessary rendering params
+
+	// 
+	void addScreen(); // add a ui screen to the stack
+	void popScreen(); // pop a ui screen from the stack 
+	void clearAllScreens(); // clears all screens from the stack
+
+	// initialization
+	void screenInitialization(); // creates and stores all different ui screens
+
+	// Screens (just means ui screens in general, not speficially limited to only pausemenu and mainmenu)
+	// it could include things like a heads up display
+	// fps counter
+	// etc
+	void createMainMenu(); // create the pause menu and push it to the hash map
+	void createFPSCounter(); // create an fps counter
+	//void createLapCounter();
+	//void updateLapCounter(int lapcount);
+
+
 private:
 
+	std::vector<UIScreen> screenStack; // pretend this is a stack
+	// we iterate backwards
+
+	std::unordered_map<std::string, UIScreen> nameToScreen; // maps screen names to UIScreens
 
 };

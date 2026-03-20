@@ -23,6 +23,8 @@ void Game::initializeGame() {
 	gameState.audio = audio;
 	gameState.uiSystem = uiSystem;
 
+	renderer->uiSystem = uiSystem;
+
 	initializeAudio();
 
 	renderer->initializeShaders(); // Create shader programs
@@ -55,6 +57,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIComponent>();
 	coordinator->registerComponent<RectUI>();
+	coordinator->registerComponent<UIElement>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);

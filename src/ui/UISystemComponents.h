@@ -25,6 +25,14 @@ struct TextUI { // to do add textfont
 	glm::vec3 col;
 };
 
+// align text enums
+// will assume center align by default
+enum textAlign {
+	CENTER,
+	LEFT,
+	RIGHT
+};
+
 // assume it's a quad
 struct UIElement {
 	bool isVisible; // we'll load all of the ui at the start, and just toggle, instead of reconstructing
@@ -33,10 +41,17 @@ struct UIElement {
 	glm::vec4 anchors = glm::vec4(0.0f); //left, top, right, bottom
 	glm::vec4 anchorOffsets = glm::vec4(0.0f); // left, top, right, bottom
 
+	textAlign textAlignment; // anchros define the area of a ui element
+	// text can behave indepdently of the container
+	// we have three alignment types, center, left, and right
+	// center will be assumed to be default
+	// center meaning center relative to the anchors (parent container) 
+
 	// anchors determine relative position
 
 	// combined together with anchor offsets 
 	std::string path; // path to texture
+	glm::vec3 color; // solid fill bg color
 
 	// anchors:
 	// define where the corners go (ranges from 0 to 1))
