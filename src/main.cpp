@@ -28,18 +28,8 @@ int main() {
 
 	game.initializeGame();
 
-	//Entity r1 = gameState.coordinator->createEntity();
-	//gameState.coordinator->addComponent<RectUI>(r1, RectUI());
-	//gameState.coordinator->addComponent<UIComponent>(r1, UIComponent());
-
 	// add debug imgui panel (needs to be after input callbacks are set)
 	dbugPanel::createPanel(game.renderer->window);
-
-	// Create models
-	Model cube("assets/cube.obj");
-	Model spark("assets/spark.obj");
-	//Model planeModel("assets/plane.obj");
-
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

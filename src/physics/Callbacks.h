@@ -3,6 +3,7 @@
 #include "PxSimulationEventCallback.h"
 #include "ecs/EntityManager.h"
 #include "foundation/PxVec3.h"
+#include <set>
 #include <utility>
 #include <vector>
 
@@ -25,6 +26,8 @@ struct SparkSparkColData {
 class PhysXCallbacks : public PxSimulationEventCallback {
 
   public:
+	std::set<Entity> groundedSparks;
+	std::set<Entity> healingSparks;
 	std::vector<Entity> sparkFinishCol;
 	std::vector<SparkWallColData> sparkWallCol;
 	std::vector<SparkSparkColData> sparkSparkCol;

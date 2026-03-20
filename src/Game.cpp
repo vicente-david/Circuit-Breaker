@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "physics/CollisionData.h"
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
@@ -71,49 +72,64 @@ void Game::initializeECS() {
 
 void Game::initializeRace() {
 	initializeTrack();
-	initializeFinishLine();
+	// initializeFinishLine();
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/biggertrack1.obj");
+	lapSys->generateCheckpoints("assets/track1.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/biggertrack1.obj"); // loads model and paths
+	Track Track("assets/track1.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 
-	renderer->setTrackBounds(Track.model.GetMesh()[0].GetBounds());
+	renderer->setTrackBounds(Track.model.GetMesh("Track").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
-		Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
-		Entity track = coordinator->createEntity();
-		CollisionData trackPhys{ GROUND, track };
-		coordinator->addComponent(track, none);
-		coordinator->addComponent(track, Track.model);
-		coordinator->addComponent(track, trackPhys);
-
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = coordinator->createEntity();
-		CollisionData planePhys{ GROUND, walls };
-		coordinator->addComponent(walls, none);
-		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, planePhys);
-
+		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+		Entity track = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(track, none);
+		gameState.coordinator->addComponent(track, Track.model);
+		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
+		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
 		auto trackActor =
-			physics->initStaticMesh(Track.model.GetMesh()[0], none);
+			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
-		for (auto& i : wallsModel.GetMesh()) {
+		// add walls
+		Model wallsModel("assets/walls.obj"); // loads model and paths
+		Entity walls = coordinator->createEntity();
+		coordinator->addComponent(walls, none);
+		coordinator->addComponent(walls, wallsModel);
+		coordinator->addComponent(track, CollisionData{GROUND, walls});
+		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
+
+
+		for (auto& i : wallsModel.GetMeshes()) {
 			auto actor = physics->initStaticMesh(i, none);
 			actor->userData = &planePhys;
 		}
 
 		dbug::log(0, "track entity id:%d", track);
+
+		// add heal zones
+		Model healModel("assets/heals.obj"); // loads model and paths
+		Entity heal = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(heal, none);
+		gameState.coordinator->addComponent(heal, healModel);
+		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
+		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
+		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
+		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
+		for(auto& i : healModel.GetMeshes()){
+			auto actor = physics->initHealZones(i, none);
+			actor->userData = &healPhys;
+		}
 	}
 
 
@@ -121,16 +137,18 @@ void Game::initializeTrack() {
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -6.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, 0.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(4.0f, 2.0f, -3.0f));
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -13.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -1.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -4.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -7.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
 
 
 	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
 
-void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt) {
+void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc);
@@ -143,7 +161,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3&
 	player = sparkEntity;
 }
 
-void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt) {
+void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark2, LapCounter());
@@ -155,7 +173,7 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pat
 		});
 }
 
-void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt) {
+void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark3, LapCounter());
@@ -172,6 +190,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3& pa
 }
 
 void Game::initializeFinishLine() {
+	// return;
 	// create finish line trigger box
 	CollisionData finishCollisionData{ FINISH_LINE, -1 };
 	{

@@ -8,8 +8,19 @@ void Model::Draw(GLuint& shaderID) {
 	}
 }
 
-std::vector<Mesh> Model::GetMesh() {
+std::vector<Mesh> Model::GetMeshes() {
 	return meshes;
+}
+
+Mesh Model::GetMesh(std::string name) {
+	for (auto& mesh : meshes) {
+		if (mesh.name == name) {
+			return mesh;
+		}
+	}
+	std::cout << "ERROR: Model contains no mesh named " << name << std::endl;
+	throw std::runtime_error("Mesh fetch failure");
+
 }
 
 void Model::loadModel(std::string path) {
@@ -46,8 +57,10 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 	std::vector<Vertex> vertices;
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
+	std::string name;
 
 	// Process vertex position and texture data
+	
 	for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
 		Vertex vertex;
 		glm::vec3 posVec = { mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z };
@@ -86,9 +99,16 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
 		std::vector<Texture> diffuseTex = loadMatTextures(material, aiTextureType_DIFFUSE, "diffuse");
 		textures.insert(textures.end(), diffuseTex.begin(), diffuseTex.end());
 	}
+
+	// Get name of mesh
+	aiString meshName = mesh->mName;
+	if (!meshName.Empty()) {
+		name = meshName.C_Str();
+	}
+	else name = "";
 	
 
-	return Mesh(vertices, indices, textures);
+	return Mesh(vertices, indices, textures, name);
 }
 
 std::vector<Texture> Model::loadMatTextures(aiMaterial* mat, aiTextureType type, std::string typeName) {

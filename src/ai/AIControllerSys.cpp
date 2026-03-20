@@ -106,7 +106,7 @@ void AIControllerSys::AI_DRIVING(AIController& ai, SparkControls& controls, Tran
 
 
 	// Boost for speed if along straight path, not running out of boost, not facing downwards and not when steering
-	if (curvature < ai.curveBoostThresh && spark.currBoost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
+	if (curvature < ai.curveBoostThresh && spark.boost >= 15.f && transform.pos.y > -0.05f && abs(controls.steering) < 0.5f ) {
 	
 		ai.state = BOOSTING;
 		return;
@@ -203,7 +203,7 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 	if (targetSpeed <= 0.0f) {
 		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
 		controls.throttle = 1.0f;
-		controls.handbrake = false;
+		controls.driftMode = false;
 		ai.state = DRIVING;
 		return;
 	}
@@ -214,16 +214,16 @@ void AIControllerSys::AI_DRIFTING(AIController& ai, SparkControls& controls, Tra
 
 	float speedDiff = targetSpeed - spark.speed;
 
-	controls.handbrake = true;
+	controls.driftMode = true;
 
-	if (controls.handbrake)
+	if (controls.driftMode)
 		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
 	else controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
 
-	dbug::log("AI", 0, "-----> DRIFT ----> HAND BRAKE: %d", controls.handbrake);
+	dbug::log("AI", 0, "-----> DRIFT ----> HAND BRAKE: %d", controls.driftMode);
 
 	if (spark.speed <= targetSpeed) {
-		controls.handbrake = false;
+		controls.driftMode = false;
 		ai.state = DRIVING;
 	}
 
@@ -245,7 +245,7 @@ void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Tra
 	controls.throttle = 1.0f;
 	controls.brake = 0.0f;
 	controls.boost = true;
-	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.currBoost);
+	dbug::log("AI", 0, "BOOSTING -> BOOST AMT: %.2f", spark.boost);
 
 	float curvature = ai.angles.at(ai.targetIdx);
 	if (curvature > ai.curveBrakeThresh) {
@@ -253,7 +253,7 @@ void AIControllerSys::AI_BOOSTING(AIController& ai, SparkControls& controls, Tra
 		controls.boost = false;
 		return;
 	}
-	else if (curvature >= ai.curveBoostThresh || spark.currBoost < 25.f) {
+	else if (curvature >= ai.curveBoostThresh || spark.boost < 25.f) {
 		ai.state = DRIVING;
 		controls.boost = false;
 	}

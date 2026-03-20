@@ -3,10 +3,11 @@
 #include <iostream>
 
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures) {
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, std::string name) {
 	this->vertices = vertices;
 	this->indices = indices;
 	this->textures = textures;
+	this->name = name;
 	
 	initMesh();
 }

@@ -32,7 +32,7 @@ void RespawnSystem::update(GameState& game) {
 
 		// compute the respawn position: last checkpoint + deltaY above it
 		glm::vec3 respawnPos = lapProg.lastCheckpointPos;
-		respawnPos.y += deltaY;
+		//respawnPos.y += deltaY;
 
 		// compute the respawn rotation so the vehicle faces along the track
 		// the vehicle's forward axis is +Z, so we need the angle from +Z to lastCheckpointDir

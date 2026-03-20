@@ -1,13 +1,16 @@
 #include "physics/Callbacks.h"
 #include "PxActor.h"
+#include "PxFiltering.h"
 #include "PxRigidBody.h"
 #include "PxSimulationEventCallback.h"
 #include "debugUtils/Logger.h"
+#include "ecs/EntityManager.h"
 #include "foundation/PxConstructor.h"
 #include "foundation/PxSimpleTypes.h"
 #include "foundation/PxVec3.h"
 #include "physics/CollisionData.h"
 #include <cstdio>
+#include <set>
 
 void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 								const PxContactPair *pairs, PxU32 nbPairs) {
@@ -21,9 +24,8 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
-	// dbug::log("PHYS", 0, "impulse:", pairHeader.pairs[0].contactImpulses);
 
-	// do things
+	// spark/wall collisions
 	if (d1->type == SPARK && d2->type == GROUND) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
@@ -41,28 +43,45 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 		// get strength related to the angle of collision
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		// send data to spark system
-		sparkSparkCol.push_back(
-			SparkSparkColData{d1->entity, d2->entity, imp});
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
 	}
 }
 
+void updateEntityCollider(std::set<Entity> &set, PxPairFlag::Enum status,
+						  Entity e) {
+	if (status == physx::PxPairFlag::eNOTIFY_TOUCH_FOUND) {
+		set.insert(e);
+	} else if (status == physx::PxPairFlag::eNOTIFY_TOUCH_LOST) {
+		set.erase(e);
+	}
+}
 void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 							   physx::PxU32 count) {
-	CollisionData *d1 = (CollisionData *)pairs[0].triggerActor->userData;
-	CollisionData *d2 = (CollisionData *)pairs[0].otherActor->userData;
+
 	dbug::log("PHYS", -1,
 			  "Trigger touched! If this crashes, a physics object is "
 			  "likely missing it's CollisionData");
+	for (int pIdx = 0; pIdx < count; pIdx++) {
+		CollisionData *trigData =
+			(CollisionData *)pairs[pIdx].triggerActor->userData;
+		CollisionData *otherData =
+			(CollisionData *)pairs[pIdx].otherActor->userData;
+		auto status = pairs[pIdx].status;
+		dbug::log("PHYS", 0,
+				  "tIdx %d: status: %d [t] typ:%d id:%d [o] typ:%d id:%d ",
+				  pIdx, pairs[pIdx].status, trigData->type, trigData->entity,
+				  otherData->type, otherData->entity);
 
-	dbug::log("PHYS", 0, "trigger: [1] typ:%d id:%d [2] typ:%d id:%d ",
-			  d1->type, d1->entity, d2->type, d2->entity);
-
-	if (d1->type == SPARK && d2->type == FINISH_LINE) {
-		dbug::log("GAME", 0, "finish!");
-		sparkFinishCol.push_back(d1->entity);
-	} else if (d1->type == FINISH_LINE && d2->type == SPARK) {
-		dbug::log("GAME", 0, "finish!");
-		sparkFinishCol.push_back(d2->entity);
+		// ground trigger box for the spark
+		if (trigData->type == SPARK) {
+			if (otherData->type == GROUND) {
+				updateEntityCollider(groundedSparks, status, trigData->entity);
+			}
+			if (otherData->type == HEAL) {
+				updateEntityCollider(groundedSparks, status, trigData->entity);
+				updateEntityCollider(healingSparks, status, trigData->entity);
+			}
+		}
 	}
 }
 // PxVec3 PhysXCallbacks::getCollStrength(const PxContactPair *pairs,
@@ -90,9 +109,8 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 // 	// return total;
 // }
 
-
-//TODO: use the impulse here instead of just linear velocity.
-//stuff above should work, but the numbers don't seem right to me so idk
+// TODO: use the impulse here instead of just linear velocity.
+// stuff above should work, but the numbers don't seem right to me so idk
 float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 									  PxVec3 velocity) {
 	// get collision data for every shape that intersects
@@ -118,8 +136,6 @@ float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 			  minDot / velocity.magnitude());
 	return velocity.magnitude() - minDot;
 }
-
-
 
 void PhysXCallbacks::resetLists() {
 	sparkFinishCol.clear();

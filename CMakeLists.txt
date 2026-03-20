@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 project(circuit-breaker)
 
+if(MSVC)
+    add_compile_options(/EHsc)
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 # run this if using debug version
@@ -112,16 +116,6 @@ if (WIN32)
     ${PHYSX_LIB}/libPhysXCommon_static_64.a
     ${PHYSX_LIB}/libPhysXFoundation_static_64.a
     ${LIBRARIES}
-    # target_link_libraries(${PROJECT_NAME} PRIVATE 
-    # # physx
-    # ${PHYSX_LIB}/libPhysXExtensions_static_64.a
-    # ${PHYSX_LIB}/libPhysX_static_64.a
-    # ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
-    # ${PHYSX_LIB}/libPhysXCommon_static_64.a
-    # ${PHYSX_LIB}/libPhysXFoundation_static_64.a
-    # ${PHYSX_LIB}/libPhysXCooking_static_64.a
-    # ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
-    # ${LIBRARIES}
   )
 
 

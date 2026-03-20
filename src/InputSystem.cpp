@@ -74,10 +74,10 @@ class TestInput1 : public CallbackInterface {
 			actions->kshimmyLeft = false;
 		}
 		if (key == GLFW_KEY_K && action == GLFW_PRESS) {
-			actions->khandBrake = true;
+			actions->kdriftMode = true;
 		}
 		else{
-			actions->khandBrake = false;
+			actions->kdriftMode = false;
 		}
 
 		if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
@@ -232,9 +232,9 @@ void InputSystem::updateGamepad() {
 	float righty = controllerState.axes[GLFW_GAMEPAD_AXIS_RIGHT_Y];
 	float leftx = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_X];
 	float lefty = controllerState.axes[GLFW_GAMEPAD_AXIS_LEFT_Y];
+	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
 	bool button_B = controllerState.buttons[GLFW_GAMEPAD_BUTTON_B];
 	bool button_Y = controllerState.buttons[GLFW_GAMEPAD_BUTTON_Y];
-	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
 	bool button_RB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
 	bool button_LB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
 	bool button_BACK = controllerState.buttons[GLFW_GAMEPAD_BUTTON_BACK];
@@ -286,10 +286,10 @@ void InputSystem::updateGamepad() {
 	else
 		actions.respawn = false;
 
-	if (button_A || actions.khandBrake)
-		actions.handBrake = true;
+	if (button_A || actions.kdriftMode)
+		actions.driftMode = true;
 	else
-		actions.handBrake = false;
+		actions.driftMode = false;
 
 	if (button_RB ||actions.kshimmyRight)
 		actions.shimmyRight = true;

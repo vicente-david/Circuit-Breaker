@@ -41,9 +41,9 @@ public:
 	void initializeAudio();
 
 	//void initializePlayers();
-	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt); // initializes player spark
-	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt); // ai spark
-	void initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3& pathStartPt); // to-do join above line together 
+	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
+	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // ai spark
+	void initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // to-do join above line together 
 
 
 	//void resetGame(); // todo: implement
