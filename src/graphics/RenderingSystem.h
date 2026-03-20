@@ -26,18 +26,6 @@ public:
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
 	void renderShadows(GameState& gamestate, std::string& fps, std::shared_ptr<CameraSystem> camSystem); // Render pass 1 
-	// ui functions
-	void renderUI(GameState& gamestate, std::string& fps, std::shared_ptr<CameraSystem> camSystem); // render ui, takes the current Ui objects, converts to screen space, and renders
-	// not sure how to actually do multiple UI elements, or just load images and do it that way
-	// gameState contains which UI elements to display
-	// acc we could create multiple Basic UI components and just have their own create vert function instead of manually doing it here
-	
-	// TODO: split rendershadows into two render passes
-	// currently it contains both cause of variables and stuff
-	//void renderTheScene();  // Render pass 2
-
-	// all functions that are stored in the renderpasses vector must have the same args
-
 
 
 	void drawPhysxDebug(GameState &game, glm::mat4& view, glm::mat4& proj);

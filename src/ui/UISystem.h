@@ -89,8 +89,8 @@ public:
 	// etc
 	void createMainMenu(); // create the pause menu and push it to the hash map
 	void createFPSCounter(); // create an fps counter
-	//void createLapCounter();
-	//void updateLapCounter(int lapcount);
+	void createLapCounter();
+	void updateLapCounter(int lapcount);
 	
 	unsigned int uiVAO, uiVBO, textVBO, textVAO;
 

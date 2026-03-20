@@ -89,50 +89,6 @@ void RenderingSystem::initializeLines() {
 	glBindVertexArray(0);
 }
 
-/* keep for reference for now
-void RenderingSystem::renderUI(GameState& game) {
-	uiShader->use();
-	// recalc based on screen size (probably not necessary every frame, only on screen resize)
-	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
-	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
-
-	RectUI r1 = game.activeUIRect;
-	// rendering only rect rn
-	// r1.pos is center of rectangle
-	glm::vec2 verts[6] = {
-	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
-	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y - r1.height / 2),
-	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
-	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
-	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
-	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y + r1.height / 2),
-	};
-
-	std::vector<float> rectData;
-
-	// 6 vertices
-	for (int i = 0; i < 6; i++) {
-		rectData.push_back(verts[i].x);
-		rectData.push_back(verts[i].y);
-		rectData.push_back(r1.col.x);
-		rectData.push_back(r1.col.y);
-		rectData.push_back(r1.col.z);
-	}
-
-	glBindVertexArray(uiVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-
-	glBufferData(GL_ARRAY_BUFFER, rectData.size() * sizeof(float), rectData.data(), GL_DYNAMIC_DRAW);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-}
-*/
-
-void RenderingSystem::renderUI(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
-	
-}
-
 // TODO: split the rendering passes
 void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
 	// Render pass 1: depth to texture
@@ -199,10 +155,7 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	}
 
 	
-
-	// render ui
-	//renderUI(game, fps, camSystem);
-
+	// ui is rendered next, just in the upper level
 	
 	dbugPanel::render();
 
