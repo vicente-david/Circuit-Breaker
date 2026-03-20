@@ -202,6 +202,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	//Larger lateral damping factor than default to avoid drift when nearly rest
 	sData.mVehicleSimContext.tireStickyParams.stickyParams[PxVehicleTireDirectionModes::eLATERAL].damping = 1.0f;
 
+	sData.rBody->setMaxAngularVelocity(6.f);
 
 	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());
