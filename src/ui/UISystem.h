@@ -38,6 +38,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include "../GameState.h"
 
 
 // positions of the triangle to render the quad
@@ -64,7 +65,7 @@ public:
 
 	void update(std::string& fps);
 
-	UIPositions calculateAnchorPositions(UIElement u1, int width, int height);
+	UIPositions calculateAnchorPositions(UIElement u1);
 
 	void initializeRenderingParams(); // sets all necessary rendering params
 

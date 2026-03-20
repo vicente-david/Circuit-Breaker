@@ -35,7 +35,9 @@ void UISystem::update(std::string& fps) {
 	}
 }
 
-UIPositions UISystem::calculateAnchorPositions(UIElement u1, int width, int height) {
+UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
+	int width = *SCR_WIDTH;
+	int height = *SCR_HEIGHT;
 	UIPositions uF;  // ui triangle positions
 	float left, top, right, bottom, leftO, topO, rightO, bottomO;
 
