@@ -70,6 +70,18 @@ void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
 
+    // calc width and height of string
+    // only necessary for right align and center align
+    std::string::const_iterator c1;
+    float totalWidth = 0.0f;
+    float totalHeight = 0.0f;
+    for (c1 = text.begin(); c1 != text.end(); c1++) {
+        Character ch = Characters[*c1];
+        totalWidth += (ch.Advance >> 6)*scale;
+    }
+    
+    //x = x/2.0 - totalWidth/2.0;
+
     // iterate through all characters
     std::string::const_iterator c;
     for (c = text.begin(); c != text.end(); c++)

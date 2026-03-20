@@ -1,3 +1,4 @@
+#pragma once
 #include "RenderingSystem.h"
 #include "CameraSystem.h"
 #include "GameState.h"
@@ -71,8 +72,8 @@ void RenderingSystem::initializeShaders() {
 
 
 	textFont = initFont("assets/miamanueva.ttf");
-	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f,
-						 static_cast<float>(1440));
+	textMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f,
+						 static_cast<float>(SCR_HEIGHT));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 					   GL_FALSE, glm::value_ptr(textMat));
@@ -173,10 +174,18 @@ void RenderingSystem::renderUI(GameState& game) {
 */
 
 void RenderingSystem::renderUI(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
+	// optimization recalc matrix only on window resize
+	textMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f,
+		static_cast<float>(SCR_HEIGHT));
+
+
 	// render text
 	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
+	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
+		GL_FALSE, glm::value_ptr(textMat));
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.0, SCR_HEIGHT-50,
 		1.0f, glm::vec3(1.0f), textFont);
+
 
 	// pretend this is the ui shader we're using
 	//textProg->use();

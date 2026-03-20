@@ -73,8 +73,6 @@ public:
 
 	std::unique_ptr<ShaderProgram> uiShader;
 
-	std::shared_ptr<UISystem>& uiSystem;
-
 	// ah yes my favourite type in c++
 	// let's break this down
 	// x y z 

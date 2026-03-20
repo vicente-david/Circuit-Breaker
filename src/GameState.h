@@ -9,9 +9,19 @@
 
 #include <memory>
 
+enum GAMESTATE {
+	MAINMENU,
+	GAMEPLAY,
+	PAUSED,
+	END
+};
+
+
 class GameState {
   public:
 	Actions inputActions;
+
+	GAMESTATE currentState = MAINMENU; // stores the current state of the game
 
 	// Public functions
 	GameState();

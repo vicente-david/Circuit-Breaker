@@ -21,13 +21,16 @@
 // we'll let UIsystem do it's own rendering
 // but rendering system will have to pass some information 
 
+
+// TLDR:
+// Gamestate pushes/pops screens by name,  UISystem renders via stack, UIElements store the data
+
 #pragma once
 #include <string>
 #include "UISystemComponents.h"
 #include "../ecs/System.h"
 #include "../ecs/Coordinator.h"
 #include "../ecs/Component.h"
-#include "../graphics/Text.h"
 #include <glm/gtx/projection.hpp>
 
 
@@ -62,7 +65,8 @@ public:
 	TextUI changeToWinScreen(); // change to win screen when that event triggers
 	TextUI changeToLoseScreen(); // change to win screen when that event triggers
 
-	void setRenderingParams(); // sets all necessary rendering params
+	
+	void initializeRenderingParams(); // sets all necessary rendering params
 
 	// 
 	void addScreen(); // add a ui screen to the stack
@@ -80,6 +84,7 @@ public:
 	void createFPSCounter(); // create an fps counter
 	//void createLapCounter();
 	//void updateLapCounter(int lapcount);
+	
 
 
 private:
