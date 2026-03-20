@@ -26,6 +26,7 @@ class SparkSys : public System {
   private:
 	// === Helpers ===
 	void checkDeath(SparkData& sData, double dt);
+	void checkAirborne(SparkData& sData, double dt);
 
 	// Collision
 	void sparkCollision(GameState& game);
@@ -49,7 +50,7 @@ class SparkSys : public System {
 	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
 	void driftStabilizer(SparkData& sData, SparkControls& sControls);
 	void yawStabilizer(SparkData& sData);
-	void sparkHandling(SparkData& sData, SparkControls& sControls, double dt);
+	void sparkHandling(SparkData& sData, SparkControls& sControls);
 
 	// Respawn
 	void respawnSpark(SparkData& sData, PxTransform respawnPose);

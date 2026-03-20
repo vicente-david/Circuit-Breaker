@@ -31,6 +31,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 
+		// Check in air
+		checkAirborne(sData, dt);
+
 		// TODO: Put in helper (audio stuff)
 		// CANCEL TODO: hold off for now, there might be a different system for this later on
 		{
@@ -277,7 +280,20 @@ void SparkSys::checkDeath(SparkData& sData, double dt) {
 	if (sData.health <= 0 && !sData.isDead) {
 		sData.isDead = true;
 		sData.respawnTimer = sData.respawnCooldown;
+void SparkSys::checkAirborne(SparkData& sData, double dt) {
+	bool grounded = false; // assume you're airborne
+	for (int i = 0; i < 4; i++) {
+		// if 1 tire is has contact -> you are grounded
+		grounded |= sData.mVehicle->mBaseState.roadGeomStates[i].hitState;
 	}
+
+	if (grounded) 
+		sData.offGroundTimer = sData.offGroundLimit;
+
+	else if (sData.offGroundTimer > 0)
+			sData.offGroundTimer -= dt;
+
+	sData.isGrounded = grounded;
 }
 
 // FLAG CHECKS
@@ -343,10 +359,13 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	// shimmying
 	shimmy(sData, sControls, dt);
 
+	if (!sData.isGrounded)
+		return;
+
 	// handling
-	// TODO: if (!sData.inAir)
-	sparkHandling(sData, sControls, dt);
-	regenBoost(sData, dt); 
+	sparkHandling(sData, sControls);
+	regenBoost(sData, dt);
+	
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
@@ -508,7 +527,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 }
 
-void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls, double dt) {
+void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
 			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));

@@ -38,8 +38,6 @@ struct SparkData {
 	float maxHealth = 100.0f;
 	float health = maxHealth;
 	float healthRegenRate = 10.f;
-	double respawnCooldown = 3;
-	double respawnTimer = 0;
 
 	float boostUseRate = 15.f;
 	float boostStrength = 10.0f;
@@ -53,11 +51,14 @@ struct SparkData {
 
 	float speed = 0.0f;
 	float minDriftSpeed = 15.f;
+	double offGroundLimit = 2;
+	double offGroundTimer = offGroundLimit;
 	
 	bool inReverse = false;
 	bool inDrift = false;
 	bool isBoosting = false;
 	bool isDead = false;
+	bool isGrounded = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
