@@ -463,30 +463,27 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 
 void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
 	const PxVec3 lateralVector = sData.rBody->getGlobalPose().q.getBasisVector0();
-	
 	int flip = moveRight ? -1 : 1;
 	
 	sData.rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
-
 	sData.shimmyTimer = sData.shimmyCooldown;
 }
 
 void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
-	if (sData.shimmyTimer <= 0) {
-		if (sControls.shimmyL) {
-			//dbug::log("GAME", 0, "slide to the left");
-			applyShimmy(sData, false);
-		}
-
-		if (sControls.shimmyR) {
-			//dbug::log("GAME", 0, "slide to the right");
-			applyShimmy(sData, true);
-		}
-	}
-	else {
+	if (sData.shimmyTimer > 0) {
 		sData.shimmyTimer -= dt;
+		return;
 	}
 
+	if (sControls.shimmyL) {
+		//dbug::log("GAME", 0, "slide to the left");
+		applyShimmy(sData, false);
+	}
+
+	if (sControls.shimmyR) {
+		//dbug::log("GAME", 0, "slide to the right");
+		applyShimmy(sData, true);
+	}
 }
 
 // HANDLING
