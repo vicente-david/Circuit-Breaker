@@ -6,6 +6,14 @@
 #include "ecs/System.h"
 #include "world/CurveLoader.h"
 
+// Direction enum for labelling sweep/hit direction
+enum Direction {
+	FWD,
+	LEFT,
+	RIGHT,
+	NONE // no hit
+};
+
 /*
 * Base AI state class
 * Not used directly by the AIControllerSys.
@@ -18,9 +26,10 @@ public:
 	static void AI_BRAKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void AI_DRIFTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 	static void AI_BOOSTING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
-	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& hitTargetPos);
+	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, std::pair<Direction, glm::vec3>& sweepResult);
 
 	static std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
+	static std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
 
 private:
 	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
@@ -41,7 +50,7 @@ class OvertakeState : public AIState {
 
 public:
 	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
-	static glm::vec3 detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+	static std::pair<Direction, glm::vec3> detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
 };
 
 class MaintainState : public AIState {
