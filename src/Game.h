@@ -48,6 +48,9 @@ public:
 
 	//void resetGame(); // todo: implement
 
+	void stateTransition(); // if gamestate changes update things
+	// mostly a convenience function
+
 	// update every frame 
 	void update(); // calls the various updates, ex first update physics then rendering
 	void updateTime(); 

@@ -240,6 +240,64 @@ void Game::initializeAudio() {
 	//float soundX = 0;
 }
 
+void Game::stateTransition() {
+	// if a transition happened
+	if (!(gameState.currentState == gameState.nextState)) {
+		// we can have a switch case statement here
+		// for every possible state
+
+		// we know this is the "old" state
+		// we can do cleanup here if necessary
+		// outgoing transition
+		// exit
+		switch (gameState.currentState) {
+			
+			// we're likely initializing here, so pop the main menu from UI
+			// initialize everything 
+			case (MAINMENU):
+				initializeRace();
+				break;
+
+			// our likely next state is paused or game ended
+			// we may want to pop heads up display
+			case (GAMEPLAY): 
+				break;
+
+			// we're likely resuming the game, so pop all pause menus
+			case (PAUSED): 
+				break;
+
+			// we're likely restarting the game
+			case (END):
+				break;
+		}
+
+		// this is the new state, do things that you want to update
+		// incoming transition
+		// entry
+		switch (gameState.nextState) {
+			// HOW DID WE GET HERE, this shouldn't run
+			case (MAINMENU):
+				break;
+
+				// we are resuming gameplay
+			case (GAMEPLAY):
+				break;
+
+				// we will be in a pause menu
+			case (PAUSED):
+				break;
+
+				// someone has finished the race
+			case (END):
+				break;
+		}
+
+		gameState.currentState = gameState.nextState;
+	}
+}
+
+
 // update stuff
 void Game::update() {
 	// update inputs
@@ -249,17 +307,25 @@ void Game::update() {
 	controllerSys->update(gameState);
 
 	if (gameActions.intializeGame) {
-		initializeRace();
 		gameActions.intializeGame = false;
+		gameState.nextState = GAMEPLAY;
 	}
 
+	stateTransition(); // handle any state transitions
+
 	updateTime();
-	updatePhysics();
-	// AI
-	aiControllerSys->update(gameState);
-	// after physics update
-	lapSys->update(gameState);
-	respawnSys->update(gameState);
+
+
+	// do our updates only if in game
+	if (gameState.currentState == GAMEPLAY) {
+
+		updatePhysics();
+		// AI
+		aiControllerSys->update(gameState);
+		// after physics update
+		lapSys->update(gameState);
+		respawnSys->update(gameState);
+	}
 
 	updateFPS();
 
@@ -275,6 +341,8 @@ void Game::updateTime() {
 	accumulator += frameTime;
 	accumulator = std::min(accumulator, 1 / minFps);
 	framesPassed++;
+
+	t += frameTime;
 }
 
 void Game::updatePhysics() {
@@ -288,7 +356,7 @@ void Game::updatePhysics() {
 		cameraSys->update(gameState, dt);
 		audioSys->updateSounds(gameState);
 		accumulator -= dt;
-		t += dt;
+		//t += dt;
 
 		// dopler shift test
 		// this stuff would  go in whatever is playing a sound (ex. physics

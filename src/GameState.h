@@ -20,6 +20,7 @@ class GameState {
 	Actions inputActions;
 
 	GAMESTATE currentState = MAINMENU; // stores the current state of the game
+	GAMESTATE nextState = MAINMENU; // used for handling state transitions
 
 	// Public functions
 	GameState();
