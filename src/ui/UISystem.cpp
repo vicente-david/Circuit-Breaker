@@ -6,10 +6,8 @@ std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>&
 	auto system = coord->registerSystem<UISystem>();
 	// create system signture (what components this system needs)
 	Signature sig;
-	sig.set(coord->getComponentType<UIComponent>());
-	sig.set(coord->getComponentType<RectUI>());
 
-	//sig.set(coord->getComponentType<UIElement>());
+	sig.set(coord->getComponentType<UIElement>());
 
 	coord->setSystemSignature<UISystem>(sig);
 
@@ -71,49 +69,6 @@ UIPositions UISystem::calculateAnchorPositions(UIElement u1, int width, int heig
 	uF.p6 = glm::vec3(left*width + leftO, top*height + topO, 0.0f); // (left, top, 0.0)
 	
 	return uF;
-}
-
-
-// raceUI should just be lap counter
-// keep it simple for now
-TextUI UISystem::raceUI(int lapcount) {
-	// render text
-	// render no rect
-	TextUI text1;
-	text1.textContent = "Current Lap: "+std::to_string(lapcount);
-	text1.col = glm::vec3(1.0f);
-	text1.scale = 1.0f;
-	text1.xPos = 400.0f;
-	text1.yPos = 1380.0f;
-
-	return text1;
-}
-
-TextUI UISystem::changeToWinScreen() {
-	// render text 
-	// render a rect
-	TextUI text1;
-	text1.textContent = "You Win!";
-	text1.col = glm::vec3(1.0f);
-	text1.scale = 5.0f;
-	text1.xPos = 300.0f;
-	text1.yPos = 450.0f;
-	
-	return text1;
-}
-
-TextUI UISystem::changeToLoseScreen() {
-	// render text
-	// render no rect
-	TextUI text1;
-	text1.textContent = "You Lose!";
-	text1.col = glm::vec3(1.0f);
-	text1.scale = 5.0f;
-	text1.xPos = 200.0f;
-	text1.yPos = 1380.0f / 2;
-
-
-	return text1;
 }
 
 void UISystem::initializeRenderingParams(){

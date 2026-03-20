@@ -61,16 +61,11 @@ struct UIScreen {
 class UISystem : public System{
 public:
 	static std::shared_ptr<UISystem> registerSystem(std::shared_ptr<Coordinator>& coord); // ecs shenanigans
-	
-	TextUI raceUI(int lapcount);
 
 	void update(std::string& fps);
 
 	UIPositions calculateAnchorPositions(UIElement u1, int width, int height);
 
-	TextUI changeToWinScreen(); // change to win screen when that event triggers
-	TextUI changeToLoseScreen(); // change to win screen when that event triggers
-	
 	void initializeRenderingParams(); // sets all necessary rendering params
 
 	void renderUI();
