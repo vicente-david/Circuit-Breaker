@@ -64,7 +64,7 @@ public:
 	
 	TextUI raceUI(int lapcount);
 
-	void update();
+	void update(std::string& fps);
 
 	UIPositions calculateAnchorPositions(UIElement u1, int width, int height);
 
@@ -104,7 +104,8 @@ public:
 	std::unique_ptr<ShaderProgram> uiShader;
 	std::unique_ptr<ShaderProgram> textProg;
 
-	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
+	int* SCR_WIDTH; 
+	int* SCR_HEIGHT;
 
 private:
 

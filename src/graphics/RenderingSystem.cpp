@@ -74,7 +74,7 @@ void RenderingSystem::initShadowMap() {
 
 }
 
-void RenderingSystem::initializeText() {
+void RenderingSystem::initializeLines() {
 
 	// lines debug VAO/VBO setup
 	glGenVertexArrays(1, &linesVAO);
@@ -201,13 +201,11 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	
 
 	// render ui
-	renderUI(game, fps, camSystem);
+	//renderUI(game, fps, camSystem);
 
 	
-
-	glfwPollEvents();
 	dbugPanel::render();
-	glfwSwapBuffers(window);
+
 }
 
 void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {

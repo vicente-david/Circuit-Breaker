@@ -21,7 +21,7 @@ class RenderingSystem:public System {
 public:
 	RenderingSystem();
 	void initializeShaders();
-	void initializeText();
+	void initializeLines();
 	void initShadowMap();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);

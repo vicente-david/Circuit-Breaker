@@ -21,16 +21,20 @@ void Game::initializeGame() {
 	gameState.physics = physics;
 	gameState.coordinator = coordinator;
 	gameState.audio = audio;
-	//gameState.uiSystem = uiSystem;
 
 
 	initializeAudio();
 
 	renderer->initializeShaders(); // Create shader programs
-	renderer->initializeText();
+	renderer->initializeLines();
 	
 
 	inputSystem.attachWindow(renderer->window);
+
+	uiSys->window = renderer->window;
+	uiSys->SCR_WIDTH = &renderer->SCR_WIDTH;
+	uiSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
+	uiSys->initializeRenderingParams();
 
 	gameActions = inputSystem.getActions();
 
@@ -54,9 +58,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<CollisionData>();
 	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
-	coordinator->registerComponent<UIComponent>();
-	coordinator->registerComponent<RectUI>();
-	//coordinator->registerComponent<UIElement>();
+	coordinator->registerComponent<UIElement>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -324,6 +326,12 @@ void Game::updateFPS() {
 void Game::updateRendering() {
 	// rendering
 	renderer->update(gameState, fps, cameraSys);
+
+	// update UI
+	uiSys->update(fps);
+
+	glfwPollEvents();
+	glfwSwapBuffers(renderer->window);
 }
 
 void Game::updateAudio() {

@@ -17,9 +17,21 @@ std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>&
 }
 
 // called by rendering likely
-void UISystem::update() {
+void UISystem::update(std::string& fps) {
 	// we will assume game automatically updates which UI elements to show
 	// so loop through active UI elements
+	
+	// optimization recalc matrix only on window resize
+	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
+		static_cast<float>(*SCR_HEIGHT));
+
+
+	// render text
+	textProg->use();
+	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
+		GL_FALSE, glm::value_ptr(textMat));
+
+	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10, *SCR_HEIGHT / 2, 1.0f, glm::vec3(1.0f), textFont);
 	for (auto& entity : entities) {
 		
 	}
@@ -110,7 +122,7 @@ void UISystem::initializeRenderingParams(){
 	// ui initialization
 	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
 
-	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
+	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f, static_cast<float>(*SCR_HEIGHT)); // create iniital ortho projection
 	uiShader->use(); // use it first
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
@@ -144,8 +156,8 @@ void UISystem::initializeRenderingParams(){
 	glBindVertexArray(0);
 
 	textFont = initFont("assets/miamanueva.ttf");
-	textMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f,
-		static_cast<float>(SCR_HEIGHT));
+	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
+		static_cast<float>(*SCR_HEIGHT));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 		GL_FALSE, glm::value_ptr(textMat));
@@ -155,8 +167,8 @@ void UISystem::initializeRenderingParams(){
 void UISystem::renderUI(){
 
 	// optimization recalc matrix only on window resize
-	textMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f,
-		static_cast<float>(SCR_HEIGHT));
+	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
+		static_cast<float>(*SCR_HEIGHT));
 
 
 	// render text
