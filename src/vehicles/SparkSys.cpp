@@ -316,13 +316,13 @@ void SparkSys::sparkCollision(GameState& game) {
 
 		// don't do damage from hitting each other if sliding or boosting
 		// Spark 1 logic
-		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting)
+		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting)
 			sData1.health -= colData.magnitude;
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
 
 		// Spark 2 logic
-		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting)
+		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting)
 			sData2.health -= colData.magnitude;
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
@@ -468,7 +468,7 @@ void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
 	
 	sData.rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
 
-	sData.shimmyTimer = sData.ShimmyCooldown;
+	sData.shimmyTimer = sData.shimmyCooldown;
 }
 
 void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
