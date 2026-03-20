@@ -293,6 +293,7 @@ void SparkSys::checkDeath(SparkData& sData, double dt) {
 }
 
 void SparkSys::checkAirborne(SparkData& sData, double dt) {
+	// do check after simulation step
 	bool grounded = false; // assume you're airborne
 	for (int i = 0; i < 4; i++) {
 		// if 1 tire is has contact -> you are grounded
@@ -305,7 +306,28 @@ void SparkSys::checkAirborne(SparkData& sData, double dt) {
 	else if (sData.offGroundTimer > 0)
 			sData.offGroundTimer -= dt;
 
+	if (sData.isGrounded && !grounded) // just became airborne
+		angularResistance(sData, PX_MAX_REAL, sData.offGroundLimit);
+	else if (!sData.isGrounded && grounded) // just touched ground
+		angularResistance(sData); // pre-maturely kill angResTimer
+
 	sData.isGrounded = grounded;
+}
+
+void SparkSys::angularResistance(SparkData& sData, PxReal val, double duration) {
+	sData.rBody->setAngularDamping(val);
+	sData.angResTimer = duration; // duration of zero means indefinitely
+}
+
+void SparkSys::checkAngResistace(SparkData& sData, double dt) {
+	if (sData.angResTimer <= 0)
+		return;
+	
+	sData.angResTimer -= dt;
+	
+	// restore to default resistance
+	if (sData.angResTimer <= 0) 
+		angularResistance(sData);
 }
 
 // FLAG CHECKS
@@ -375,6 +397,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 		return;
 
 	// handling
+	checkAngResistace(sData, dt);
 	sparkHandling(sData, sControls);
 	regenBoost(sData, dt);
 	
@@ -467,6 +490,10 @@ void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
 	
 	sData.rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
 	sData.shimmyTimer = sData.shimmyCooldown;
+
+	float iFramesInSecs = sData.shimmyCooldown - sData.shimmyInvincible;
+	angularResistance(sData, PX_MAX_REAL, iFramesInSecs);
+
 }
 
 void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {

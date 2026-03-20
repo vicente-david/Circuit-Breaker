@@ -59,6 +59,7 @@ struct SparkData {
 	double deathTimer = deathCooldown;
 	double offGroundLimit = 2;
 	double offGroundTimer = offGroundLimit;
+	double angResTimer = 0;
 	
 	bool inReverse = false;
 	bool inDrift = false;
