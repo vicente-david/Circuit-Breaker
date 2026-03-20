@@ -53,6 +53,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<CollisionData>();
 	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
+	coordinator->registerComponent<Leaderboard>();
 	coordinator->registerComponent<UIComponent>();
 	coordinator->registerComponent<RectUI>();
 
@@ -65,6 +66,7 @@ void Game::initializeECS() {
 	audioSys = AudioSystem::registerSystem(coordinator);
 	aiControllerSys = AIControllerSys::registerSystem(coordinator);
 	respawnSys = RespawnSystem::registerSystem(coordinator);
+	leaderboardSys = LeaderboardSystem::registerSystem(coordinator);
 	lapSys = LapSystem::registerSystem(coordinator);
 	uiSys = UISystem::registerSystem(coordinator);
 
@@ -156,6 +158,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());
 	coordinator->addComponent(sparkEntity, Respawnable());
+	coordinator->addComponent(sparkEntity, Leaderboard());
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
@@ -166,6 +169,7 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
+	coordinator->addComponent(testSpark2, Leaderboard());
 	coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
@@ -178,6 +182,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pat
 	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
+	coordinator->addComponent(testSpark3, Leaderboard());
 	coordinator->addComponent(testSpark3, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
@@ -256,7 +261,7 @@ void Game::update() {
 	// after physics update
 	lapSys->update(gameState);
 	//respawnSys->update(gameState);
-
+	leaderboardSys->update(gameState);
 	updateFPS();
 
 	updateRendering();

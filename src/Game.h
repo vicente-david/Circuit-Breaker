@@ -67,6 +67,7 @@ public:
 	std::shared_ptr<AudioSystem> audioSys;
 	std::shared_ptr<AIControllerSys> aiControllerSys;
 	std::shared_ptr<RespawnSystem> respawnSys;
+	std::shared_ptr<LeaderboardSystem> leaderboardSys;
 	std::shared_ptr<LapSystem> lapSys;
 	std::shared_ptr<UISystem> uiSys;
 

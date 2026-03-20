@@ -8,4 +8,5 @@
 #include "audio/AudioSystem.h"
 #include "ai/AIControllerSys.h"
 #include "world/LapSystem.h"
+#include "world/LeaderboardSystem.h"
 #include "ui/UISystem.h"
