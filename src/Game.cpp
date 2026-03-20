@@ -21,7 +21,7 @@ void Game::initializeGame() {
 	gameState.physics = physics;
 	gameState.coordinator = coordinator;
 	gameState.audio = audio;
-	gameState.uiSystem = uiSystem;
+	//gameState.uiSystem = uiSystem;
 
 
 	initializeAudio();
@@ -146,7 +146,7 @@ void Game::initializeTrack() {
 	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
 
 
-	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
+	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
 

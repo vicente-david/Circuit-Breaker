@@ -1,11 +1,9 @@
 #pragma once 
-
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-
+#include "ShaderProgram.h"
 #include "GameState.h"
-#include "Text.h"
 #include "Camera.h"
 #include "ecs/System.h"
 #include "graphics/CameraSystem.h"
@@ -53,25 +51,18 @@ public:
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
 	unsigned int SHADOW_WIDTH = SCR_WIDTH * 10, SHADOW_HEIGHT = SCR_HEIGHT * 10;
-	unsigned int textVBO;
-	unsigned int textVAO;
+
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
-	unsigned int uiVAO, uiVBO;
 
-	std::map<char, Character> textFont;
-	glm::mat4 textMat;
-
-	glm::mat4 uiMat;
+	
 
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
-	std::unique_ptr<ShaderProgram> textProg;
+	
 	std::unique_ptr<ShaderProgram> solidColour;
 
 	std::unique_ptr<ShaderProgram> shadowShader;
-
-	std::unique_ptr<ShaderProgram> uiShader;
 
 	// ah yes my favourite type in c++
 	// let's break this down

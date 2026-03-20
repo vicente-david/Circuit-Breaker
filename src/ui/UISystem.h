@@ -26,12 +26,18 @@
 // Gamestate pushes/pops screens by name,  UISystem renders via stack, UIElements store the data
 
 #pragma once
+#include <glad/gl.h>
+#include <GLFW/glfw3.h>
+#include "../graphics/Text.h"
 #include <string>
 #include "UISystemComponents.h"
 #include "../ecs/System.h"
 #include "../ecs/Coordinator.h"
 #include "../ecs/Component.h"
 #include <glm/gtx/projection.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 
 // positions of the triangle to render the quad
@@ -64,9 +70,10 @@ public:
 
 	TextUI changeToWinScreen(); // change to win screen when that event triggers
 	TextUI changeToLoseScreen(); // change to win screen when that event triggers
-
 	
 	void initializeRenderingParams(); // sets all necessary rendering params
+
+	void renderUI();
 
 	// 
 	void addScreen(); // add a ui screen to the stack
@@ -85,7 +92,19 @@ public:
 	//void createLapCounter();
 	//void updateLapCounter(int lapcount);
 	
+	unsigned int uiVAO, uiVBO, textVBO, textVAO;
 
+	std::map<char, Character> textFont;
+	glm::mat4 textMat;
+
+	glm::mat4 uiMat;
+
+	GLFWwindow* window;
+
+	std::unique_ptr<ShaderProgram> uiShader;
+	std::unique_ptr<ShaderProgram> textProg;
+
+	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
 
 private:
 

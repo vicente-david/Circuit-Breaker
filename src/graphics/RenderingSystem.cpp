@@ -12,7 +12,7 @@
 #include <iostream>
 #include <memory>
 
-RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
+RenderingSystem::RenderingSystem(){
 	// Instantiate GLFW window
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -45,38 +45,8 @@ void RenderingSystem::initializeShaders() {
 												  "shaders/basic.frag");
 	shadowShader = std::make_unique<ShaderProgram>("shaders/shadow.vert",
 												"shaders/shadow.frag");
-	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert",
-											   "shaders/testText.frag");
 	solidColour = std::make_unique<ShaderProgram>("shaders/lines.vert",
 												  "shaders/lines.frag");
-	
-	// ui initialization
-	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
-	
-	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
-	uiShader->use(); // use it first
-	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
-
-	glGenVertexArrays(1, &uiVAO);
-	glBindVertexArray(uiVAO);
-
-	glGenBuffers(1, &uiVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, NULL, GL_DYNAMIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
-	
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
-
-	textFont = initFont("assets/miamanueva.ttf");
-	textMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f,
-						 static_cast<float>(SCR_HEIGHT));
-	textProg->use();
-	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-					   GL_FALSE, glm::value_ptr(textMat));
 
 	initShadowMap();
 }
@@ -105,20 +75,6 @@ void RenderingSystem::initShadowMap() {
 }
 
 void RenderingSystem::initializeText() {
-	// Initialize and bind VAO
-	glGenVertexArrays(1, &textVAO);
-	glBindVertexArray(textVAO);
-	// Generate VBO
-	glGenBuffers(1, &textVBO);
-	// bind VBO
-	glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 
 	// lines debug VAO/VBO setup
 	glGenVertexArrays(1, &linesVAO);
@@ -174,23 +130,6 @@ void RenderingSystem::renderUI(GameState& game) {
 */
 
 void RenderingSystem::renderUI(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
-	// optimization recalc matrix only on window resize
-	textMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f,
-		static_cast<float>(SCR_HEIGHT));
-
-
-	// render text
-	textProg->use();
-	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-		GL_FALSE, glm::value_ptr(textMat));
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.0, SCR_HEIGHT-50,
-		1.0f, glm::vec3(1.0f), textFont);
-
-
-	// pretend this is the ui shader we're using
-	//textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
-
 	
 }
 
