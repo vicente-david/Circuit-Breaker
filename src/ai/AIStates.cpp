@@ -5,13 +5,19 @@
 * ===== DEFENSE STATE =============================================================================================================================================
 * prioritize dodging and recovering HP
 */
-void DefenseState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+void DefenseState::run(AIDriveContext& ctx, PxRigidBody* body) {
 	//dbug::log("AI", 0, " !!!!! in defense state");
-
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
 	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ai, controls, transform, spark, body); // Line of sight sweep
-
-	if (ai.state == DRIVING)
-		AI_DRIVING(ai, controls, transform, spark);
+	if (ai.state == DRIVING) {
+		//AI_DRIVING(ai, controls, transform, spark);
+		currentState = std::make_unique<S_Driving>();
+		currentState->enter(ctx);
+		auto next = currentState->update(ctx);
+	}
 	else if (ai.state == BRAKING)
 		AI_BRAKING(ai, controls, transform, spark);
 	else if (ai.state == DRIFTING)
@@ -149,6 +155,56 @@ void MaintainState::run(AIController& ai, SparkControls& controls, Transform& tr
 
 
 // =========== DRIVING STATES =============================================================================================================================================================
+
+std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+	AIState::calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
+
+	if (abs(controls.steering) > 1.0f) {
+		// spark most likely has lost steering control
+		ai.state = BRAKING;
+		return nullptr;
+	}
+
+	// Speed and curve of target and current positions.
+	// target speed is calculated based on how much curve is ahead (sharper curve = slower speed)
+	float curvature = ai.angles.at(ai.targetIdx); // curvature 0 = straight, 1 = curve
+	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
+	float curveIn = ai.angles.at(ai.currentPosIdx);
+	dbug::log("AI", 0, "[DRIVING] CURVE: %.2f, CURRENT SPEED: %.2f, TARGET SPEED: %.2f, LOOK: %d, BOOST: %.2f, HP: %.2f", curvature, spark.speed, targetSpeed, ai.lookAheadSteps, spark.currBoost, spark.health);
+
+
+	// Boost for speed if along straight path, not running out of boost, not facing downwards and not when steering sharply
+	if (curvature < ai.curveBoostThresh && spark.currBoost >= 0.f && transform.pos.y > -0.08f && abs(controls.steering) < 0.8f) {
+		ai.state = BOOSTING;
+		return nullptr;
+	}
+	// Brake if there is a sharp turn ahead and the spark is travelling faster than its target speed
+	else if (curvature >= ai.curveBrakeThresh && (spark.speed - targetSpeed) > 15.f && curveIn < curvature) {
+		ai.state = BRAKING;
+		return nullptr;
+	}
+	// If the curve ahead is large enough, attempt drifting
+	else if (curvature >= ai.curveDriftThresh) {
+		ai.state = DRIFTING;
+		return nullptr;
+
+	}
+	// Otherwise, continue in driving state
+	else {
+		if (spark.speed <= targetSpeed)
+			controls.throttle = 1.0f;
+		else
+			controls.throttle = 0.0f;
+		controls.brake = 0.0f;
+	}
+	return nullptr;
+}
+
+
 
 void AIState::AI_DRIVING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
 	

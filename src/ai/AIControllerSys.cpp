@@ -48,11 +48,16 @@ void AIControllerSys::update(GameState& game) {
 			ai.lookAheadSteps = 20;
 		
 		bool test = true;
+		
+		std::unique_ptr<AIState> defenseState;
+		defenseState = std::make_unique<DefenseState>();
+		AIDriveContext ctx{ ai, controls, transform, spark };
+
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
 		}
 		else if (test) {
-			DefenseState::run(ai, controls, transform, spark, body);
+			defenseState->run(ctx, body);
 		}
 		else if (spark.health <= 100.f) { // replace this condition with 'if not in first'
 			OvertakeState::run(ai, controls, transform, spark, body);

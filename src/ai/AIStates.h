@@ -5,6 +5,7 @@
 #include "vehicles/SparkComponents.h"
 #include "ecs/System.h"
 #include "world/CurveLoader.h"
+#include "IDriveState.h"
 
 // Direction enum for labelling sweep/hit direction
 enum Direction {
@@ -31,9 +32,9 @@ public:
 
 	static std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
 	static std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
-
-private:
 	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
+	virtual void run(AIDriveContext& ctx, PxRigidBody* body) {};
+private:
 
 };
 
@@ -44,9 +45,9 @@ private:
 class DefenseState : public AIState {
 
 public:
-	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+	void run(AIDriveContext& ctx, PxRigidBody* body) override;
 	static std::pair<Direction, glm::vec3> detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
-
+	std::unique_ptr<IDriveState> currentState;
 };
 
 class OvertakeState : public AIState {
@@ -60,4 +61,16 @@ class MaintainState : public AIState {
 
 public:
 	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
+};
+
+class S_Driving : public IDriveState {
+public:
+	void enter(AIDriveContext& ctx) override {
+		// Zero out controls unused in this state
+		ctx.controls.reverse = 0.0f;
+		ctx.controls.boost = false;
+		ctx.controls.shimmyL = false;
+		ctx.controls.shimmyR = false;
+	}
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 };
