@@ -24,7 +24,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			sparkInputs(sData, sControls, dt);
 
 		// Respawn
-		respawn(entity, game, dt);
+		respawn(sData, sControls, dt);
 
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
@@ -295,6 +295,7 @@ void SparkSys::checkAirborne(SparkData& sData, double dt) {
 		grounded |= sData.mVehicle->mBaseState.roadGeomStates[i].hitState;
 	}
 
+	// TODO: find a way to detect if you're grounded but just flipped over 
 	if (grounded) 
 		sData.offGroundTimer = sData.offGroundLimit;
 
@@ -581,31 +582,6 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 }
 
 // RESPAWN
-void SparkSys::respawnSpark(SparkData& sData, PxTransform respawnPose) {
-	dbug::log("GAME", 0, "resetting");
-
-	sData.rBody->setGlobalPose(respawnPose);
-
-	PxRigidDynamic* dBody = sData.rBody->is<PxRigidDynamic>();
-	dBody->setLinearVelocity(PxVec3(PxIdentity));
-	dBody->setAngularVelocity(PxVec3(PxIdentity));
-
-	sData.respawnTimer = sData.respawnCooldown;
-}
-
-PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
-	// copied logic from RespawnSystem::update
-	LapCounter& prog = game.coordinator->getComponent<LapCounter>(entity);
-
-	glm::vec3 p = prog.lastCheckpointPos;
-	PxVec3 pos(p.x, p.y, p.z);
-
-	glm::vec3 q = prog.lastCheckpointDir;
-	PxQuat quat(PxAtan2(q.x, q.z), PxVec3(0.f, 1.f, 0.f));
-
-	return PxTransform(pos, quat);
-}
-
 void SparkSys::sparkValuesReset(SparkData& sData) {
 	sData.health = sData.maxHealth;
 	sData.boost = sData.maxBoost;
@@ -620,10 +596,7 @@ void SparkSys::sparkValuesReset(SparkData& sData) {
 	dbug::log("GAME", 0, "reset spark");
 }
 
-void SparkSys::respawn(Entity entity, GameState& game, double dt) {
-	SparkData& sData = game.coordinator->getComponent<SparkData>(entity);
-	SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
-
+void SparkSys::respawn(SparkData& sData, SparkControls& sControls, double dt) {
 	if (sData.respawnTimer > 0) {
 		sData.respawnTimer -= dt;
 		return;
@@ -634,11 +607,12 @@ void SparkSys::respawn(Entity entity, GameState& game, double dt) {
 		sControls.reset = true;
 	}
 
+	// TODO: make it so that after offGroundTimer is up, display a message indicating
+	// you can use Y button (Xbox) to reset.
 	if (sData.offGroundTimer <= 0 && !sData.isDead)
 		sControls.reset = true;
 
-	if (sControls.reset) {
-		respawnSpark(sData, getRespawnPose(entity, game));
-		sControls.reset = false; // so AI doesn't get stuck in a loop
-	}
+	// Respawn logic in RespawnSystem::update
+	if (sControls.reset)
+		sData.respawnTimer = sData.respawnCooldown;
 }
