@@ -30,10 +30,13 @@ public:
 	static void AI_ATTACKING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, std::pair<Direction, glm::vec3>& sweepResult);
 	static void AI_DODGING(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, std::pair<Direction, glm::vec3>& sweepResult);
 
+	virtual void run(AIDriveContext& ctx) {};
+	virtual std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) { return { NONE, glm::vec3(0.f) }; };
+
 	static std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
 	static std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
 	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
-	virtual void run(AIDriveContext& ctx) {};
+	
 private:
 
 };
@@ -112,7 +115,7 @@ class DefenseState : public AIState {
 
 public:
 	void run(AIDriveContext& ctx) override;
-	static std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx);
+	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
 	
 	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
 };
@@ -120,13 +123,13 @@ public:
 class OvertakeState : public AIState {
 
 public:
-	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
-	static std::pair<Direction, glm::vec3> detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
+	void run(AIDriveContext& ctx) override ;
+	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
 };
 
 class MaintainState : public AIState {
 
 public:
-	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
+	void run(AIDriveContext& ctx) override;
 };
 

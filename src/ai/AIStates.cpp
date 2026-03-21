@@ -6,12 +6,6 @@
 * prioritize dodging and recovering HP
 */
 void DefenseState::run(AIDriveContext& ctx) {
-	//dbug::log("AI", 0, " !!!!! in defense state");
-	auto& ai = ctx.ai;
-	auto& controls = ctx.controls;
-	auto& transform = ctx.transform;
-	auto& spark = ctx.spark;
-	auto& body = ctx.body;
 	
 	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx); // Line of sight sweep
 	if (sweepResult.first != NONE) {
@@ -22,24 +16,10 @@ void DefenseState::run(AIDriveContext& ctx) {
 
 	auto next = currentState->update(ctx);
 	if (next) {
-		// if the returned pointer was nullptr (does not point to a new state), remain in this state
+		// if the returned pointer was not nullptr (points to a new state), change states
 		currentState = std::move(next);
+		currentState->enter(ctx);
 	}
-
-	//if (ai.state == DRIVING) {
-	//	//AI_DRIVING(ai, controls, transform, spark);
-	//	currentState = std::make_unique<S_Driving>();
-	//	currentState->enter(ctx);
-	//	auto next = currentState->update(ctx);
-	//}
-	//else if (ai.state == BRAKING)
-	//	AI_BRAKING(ai, controls, transform, spark);
-	//else if (ai.state == DRIFTING)
-	//	AI_DRIFTING(ai, controls, transform, spark);
-	//else if (ai.state == BOOSTING)
-	//	AI_BOOSTING(ai, controls, transform, spark);
-	//else if (ai.state == DODGING)
-	//	AI_DODGING(ai, controls, transform, spark, sweepResult);
 	
 }
 
@@ -81,14 +61,14 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 * ===== OVERTAKE STATE =============================================================================================================================================
 * overtake other players: prioritize speed and attacking others
 */
-void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+void OvertakeState::run(AIDriveContext& ctx) {
 
 	// TODO: set appropriate path to follow
 
 
-	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ai, controls, transform, spark, body); // Line of sight sweep
+	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
 
-	if (ai.state == DRIVING)
+	/*if (ai.state == DRIVING)
 		AI_DRIVING(ai, controls, transform, spark);
 	else if (ai.state == BRAKING)
 		AI_BRAKING(ai, controls, transform, spark);
@@ -97,11 +77,15 @@ void OvertakeState::run(AIController& ai, SparkControls& controls, Transform& tr
 	else if (ai.state == BOOSTING)
 		AI_BOOSTING(ai, controls, transform, spark);
 	else if (ai.state == ATTACKING)
-		AI_ATTACKING(ai, controls, transform, spark, sweepResult);
+		AI_ATTACKING(ai, controls, transform, spark, sweepResult);*/
 }
 
 // Detect if there is another player spark in line of sight
-std::pair<Direction, glm::vec3> OvertakeState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+	auto& body = ctx.body;
 	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
 
 	// Only check forward direction if spark has boost
@@ -141,7 +125,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIController& ai, SparkCon
 	// No sweep returned with a hit
 	if (ai.state == ATTACKING) {
 		ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
-		controls.boost = false; // ensure false
+		//controls.boost = false; // ensure false
 	}
 
 	return result; // return direction and position of hit point.
@@ -151,17 +135,17 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIController& ai, SparkCon
 * ===== MAINTAIN STATE =============================================================================================================================================
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
-void MaintainState::run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark) {
+void MaintainState::run(AIDriveContext& ctx) {
 
 	//dbug::log("AI", 0, "!!!!! in maintain state");
-	if (ai.state == DRIVING)
+	/*if (ai.state == DRIVING)
 		AI_DRIVING(ai, controls, transform, spark);
 	else if (ai.state == BRAKING)
 		AI_BRAKING(ai, controls, transform, spark);
 	else if (ai.state == DRIFTING)
 		AI_DRIFTING(ai, controls, transform, spark);
 	else if (ai.state == BOOSTING)
-		AI_BOOSTING(ai, controls, transform, spark);
+		AI_BOOSTING(ai, controls, transform, spark);*/
 	
 }
 
@@ -278,11 +262,8 @@ std::unique_ptr<IDriveState> S_Drifting::update(AIDriveContext& ctx) {
 	float curvature = ai.angles.at(ai.targetIdx);
 	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
 
-	// amount of throttle to add per unit difference in speed
-	float throttleGain = 0.5f;
-	float speedDiff = targetSpeed - spark.speed;
 	controls.handbrake = true; // note: handbrake isn't actually a brake, should be held down to drift.
-	controls.throttle = 1.0f; //glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
+	controls.throttle = 1.0f; 
 
 	dbug::log("AI", 0, "[DRIFTING] THROTTLE: %.2f, CURVE: %.2f, \n\tBOOST: %.2f, HP: %.2f", controls.throttle, curvature, spark.currBoost, spark.health);
 
@@ -378,7 +359,7 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 	auto& transform = ctx.transform;
 	auto& spark = ctx.spark;
 
-	// Sanity check that a hit was actually detected
+	// Check that a hit is still detected
 	if (sweepResult.first == NONE) {
 		controls.boost = false;
 		controls.shimmyL = false;

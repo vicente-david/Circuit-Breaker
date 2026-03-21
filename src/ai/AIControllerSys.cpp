@@ -47,22 +47,20 @@ void AIControllerSys::update(GameState& game) {
 		else if (spark.speed >= 48.f)
 			ai.lookAheadSteps = 20;
 		
-		bool test = true;
-		
 		
 		AIDriveContext ctx{ ai, controls, transform, spark, body };
 
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
 		}
-		else if (test) {
+		else if (spark.health < 800.0f) {
 			defenseState->run(ctx);
 		}
 		else if (spark.health <= 100.f) { // replace this condition with 'if not in first'
-			OvertakeState::run(ai, controls, transform, spark, body);
+			//overtakeState->run(ctx);
 		}
 		else { // if in first
-			MaintainState::run(ai, controls, transform, spark);
+			//maintainState->run(ctx);
 		}
 
 	}
