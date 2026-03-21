@@ -399,6 +399,8 @@ void Game::updateFPS() {
 		t -= 1.0;
 		framesPassed = 0;
 	}
+
+	uiSys->updateFPSCounter();
 }
 
 void Game::updateRendering() {

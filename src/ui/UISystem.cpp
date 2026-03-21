@@ -147,7 +147,7 @@ void UISystem::initializeRenderingParams(){
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	textFont = initFont("assets/miamanueva.ttf");
+	textFont = initFont("assets/SquareAntiqua-Book.ttf");
 	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
 		static_cast<float>(*SCR_HEIGHT));
 	textProg->use();
@@ -217,4 +217,11 @@ void UISystem::createFPSCounter(){
 	fpsCounter.UIElements.push_back(e1);
 
 	nameToScreen["fpsCounter"] = fpsCounter;
+}
+
+void UISystem::updateFPSCounter() {
+	// can assume it's only the first thing (we hard coded it above)
+	Entity e1 = nameToScreen["fpsCounter"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+	u1.text = "FPS: " + *fps;
 }

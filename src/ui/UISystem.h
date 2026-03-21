@@ -90,6 +90,7 @@ public:
 	// the return value will be the name of the string it maps the screen to
 	void createMainMenu(); // create the pause menu and push it to the hash map
 	void createFPSCounter(); // create an fps counter
+	void updateFPSCounter();
 	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
 	
