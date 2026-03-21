@@ -33,9 +33,75 @@ public:
 	static std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
 	static std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
 	static void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
-	virtual void run(AIDriveContext& ctx, PxRigidBody* body) {};
+	virtual void run(AIDriveContext& ctx) {};
 private:
 
+};
+
+
+class S_Driving : public IDriveState {
+public:
+	void enter(AIDriveContext& ctx) override {
+		// Zero out controls unused in this state
+		ctx.controls.reverse = 0.0f;
+		ctx.controls.brake = 0.0f;
+		ctx.controls.boost = false;
+		ctx.controls.shimmyL = false;
+		ctx.controls.shimmyR = false;
+	}
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+};
+
+class S_Braking : public IDriveState {
+public:
+	void enter(AIDriveContext& ctx) override {
+		ctx.controls.reverse = 0.0f;
+		ctx.controls.boost = false;
+		ctx.controls.shimmyL = false;
+		ctx.controls.shimmyR = false;
+	}
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+};
+
+class S_Drifting : public IDriveState {
+public:
+	void enter(AIDriveContext& ctx) override {
+		ctx.controls.reverse = 0.0f;
+		ctx.controls.brake = 0.0f;
+		ctx.controls.boost = false;
+		ctx.controls.shimmyL = false;
+		ctx.controls.shimmyR = false;
+	}
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+};
+
+class S_Boosting : public IDriveState {
+public:
+	void enter(AIDriveContext& ctx) override {
+		ctx.controls.reverse = 0.0f;
+		ctx.controls.brake = 0.0f;
+		ctx.controls.boost = false;
+		ctx.controls.shimmyL = false;
+		ctx.controls.shimmyR = false;
+
+		ctx.controls.throttle = 1.0f;
+		ctx.controls.boost = true;
+	}
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+};
+
+class S_Attacking : public IDriveState {
+public:
+
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
+};
+
+class S_Dodging : public IDriveState {
+public:
+
+	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
 };
 
 /*
@@ -45,9 +111,10 @@ private:
 class DefenseState : public AIState {
 
 public:
-	void run(AIDriveContext& ctx, PxRigidBody* body) override;
-	static std::pair<Direction, glm::vec3> detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body);
-	std::unique_ptr<IDriveState> currentState;
+	void run(AIDriveContext& ctx) override;
+	static std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx);
+	
+	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
 };
 
 class OvertakeState : public AIState {
@@ -63,14 +130,3 @@ public:
 	static void run(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark);
 };
 
-class S_Driving : public IDriveState {
-public:
-	void enter(AIDriveContext& ctx) override {
-		// Zero out controls unused in this state
-		ctx.controls.reverse = 0.0f;
-		ctx.controls.boost = false;
-		ctx.controls.shimmyL = false;
-		ctx.controls.shimmyR = false;
-	}
-	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
-};

@@ -8,8 +8,10 @@ struct AIDriveContext {
 	SparkControls& controls;
 	Transform& transform;
 	SparkData& spark;
+	PxRigidBody* body;
 };
 
+// Driving state interface
 class IDriveState {
 public:
 	virtual void enter(AIDriveContext& ctx) {}

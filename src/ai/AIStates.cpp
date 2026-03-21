@@ -5,32 +5,49 @@
 * ===== DEFENSE STATE =============================================================================================================================================
 * prioritize dodging and recovering HP
 */
-void DefenseState::run(AIDriveContext& ctx, PxRigidBody* body) {
+void DefenseState::run(AIDriveContext& ctx) {
 	//dbug::log("AI", 0, " !!!!! in defense state");
 	auto& ai = ctx.ai;
 	auto& controls = ctx.controls;
 	auto& transform = ctx.transform;
 	auto& spark = ctx.spark;
-	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ai, controls, transform, spark, body); // Line of sight sweep
-	if (ai.state == DRIVING) {
-		//AI_DRIVING(ai, controls, transform, spark);
-		currentState = std::make_unique<S_Driving>();
-		currentState->enter(ctx);
-		auto next = currentState->update(ctx);
+	auto& body = ctx.body;
+	
+	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx); // Line of sight sweep
+	if (sweepResult.first != NONE) {
+		auto next = std::make_unique<S_Dodging>();
+		next->sweepResult = sweepResult;
+		currentState = std::move(next);
 	}
-	else if (ai.state == BRAKING)
-		AI_BRAKING(ai, controls, transform, spark);
-	else if (ai.state == DRIFTING)
-		AI_DRIFTING(ai, controls, transform, spark);
-	else if (ai.state == BOOSTING)
-		AI_BOOSTING(ai, controls, transform, spark);
-	else if (ai.state == DODGING)
-		AI_DODGING(ai, controls, transform, spark, sweepResult);
+
+	auto next = currentState->update(ctx);
+	if (next) {
+		// if the returned pointer was nullptr (does not point to a new state), remain in this state
+		currentState = std::move(next);
+	}
+
+	//if (ai.state == DRIVING) {
+	//	//AI_DRIVING(ai, controls, transform, spark);
+	//	currentState = std::make_unique<S_Driving>();
+	//	currentState->enter(ctx);
+	//	auto next = currentState->update(ctx);
+	//}
+	//else if (ai.state == BRAKING)
+	//	AI_BRAKING(ai, controls, transform, spark);
+	//else if (ai.state == DRIFTING)
+	//	AI_DRIFTING(ai, controls, transform, spark);
+	//else if (ai.state == BOOSTING)
+	//	AI_BOOSTING(ai, controls, transform, spark);
+	//else if (ai.state == DODGING)
+	//	AI_DODGING(ai, controls, transform, spark, sweepResult);
 	
 }
 
 // Detect if there is another player spark in line of sight
-std::pair<Direction, glm::vec3> DefenseState::detect(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, PxRigidBody* body) {
+std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& transform = ctx.transform;
+	auto& body = ctx.body;
 	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
 
 	Direction dir = LEFT;
@@ -166,7 +183,7 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	if (abs(controls.steering) > 1.0f) {
 		// spark most likely has lost steering control
 		ai.state = BRAKING;
-		return nullptr;
+		return std::make_unique<S_Braking>();
 	}
 
 	// Speed and curve of target and current positions.
@@ -180,17 +197,17 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	// Boost for speed if along straight path, not running out of boost, not facing downwards and not when steering sharply
 	if (curvature < ai.curveBoostThresh && spark.currBoost >= 0.f && transform.pos.y > -0.08f && abs(controls.steering) < 0.8f) {
 		ai.state = BOOSTING;
-		return nullptr;
+		return std::make_unique<S_Boosting>();
 	}
 	// Brake if there is a sharp turn ahead and the spark is travelling faster than its target speed
 	else if (curvature >= ai.curveBrakeThresh && (spark.speed - targetSpeed) > 15.f && curveIn < curvature) {
 		ai.state = BRAKING;
-		return nullptr;
+		return std::make_unique<S_Braking>();
 	}
 	// If the curve ahead is large enough, attempt drifting
 	else if (curvature >= ai.curveDriftThresh) {
 		ai.state = DRIFTING;
-		return nullptr;
+		return std::make_unique<S_Drifting>();
 
 	}
 	// Otherwise, continue in driving state
@@ -201,8 +218,218 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 			controls.throttle = 0.0f;
 		controls.brake = 0.0f;
 	}
+
 	return nullptr;
 }
+
+std::unique_ptr<IDriveState> S_Braking::update(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+	AIState::calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
+
+	// Brake based on difference in current speed and target speed
+	float curvature = ai.angles.at(ai.targetIdx);
+	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
+
+	if (targetSpeed <= 0.0f) {
+		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
+		controls.throttle = 1.0f;
+		controls.brake = 0.0f;
+		ai.state = DRIVING;
+		return std::make_unique<S_Driving>();
+	}
+
+	// amount of throttle/brake to add per unit difference in speed
+	float throttleGain = 0.3f;
+	float brakeGain = 0.2f;
+
+	float speedDiff = targetSpeed - spark.speed;
+
+	if (speedDiff > 20.f) { // if speed differenece is very high, do not slam on brakes
+		controls.brake = 0.f;
+		controls.throttle = 0.f;
+	}
+	else
+		controls.brake = glm::clamp(-speedDiff * brakeGain, 0.0f, 1.0f);
+
+	if (controls.brake > 0.05)
+		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
+	else controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
+
+	dbug::log("AI", 0, "[BRAKING] Brake: %0.2f", controls.brake);
+
+	if (spark.speed <= targetSpeed) {
+		ai.state = DRIVING;
+		return std::make_unique<S_Driving>();
+	}
+
+	return nullptr;
+}
+
+std::unique_ptr<IDriveState> S_Drifting::update(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+	AIState::calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
+
+	float curvature = ai.angles.at(ai.targetIdx);
+	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
+
+	// amount of throttle to add per unit difference in speed
+	float throttleGain = 0.5f;
+	float speedDiff = targetSpeed - spark.speed;
+	controls.handbrake = true; // note: handbrake isn't actually a brake, should be held down to drift.
+	controls.throttle = 1.0f; //glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
+
+	dbug::log("AI", 0, "[DRIFTING] THROTTLE: %.2f, CURVE: %.2f, \n\tBOOST: %.2f, HP: %.2f", controls.throttle, curvature, spark.currBoost, spark.health);
+
+	// Let go of drift when the curve flattens out
+	if (curvature < ai.curveDriftThresh) {
+		controls.handbrake = false;
+		ai.state = DRIVING;
+		return std::make_unique<S_Driving>();
+	}
+
+	return nullptr;
+}
+
+std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+	AIState::calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
+
+	dbug::log("AI", 0, "BOOSTING -> BOOST: %.2f, HEALTH: %.2f", spark.currBoost, spark.health);
+
+	float curvature = ai.angles.at(ai.targetIdx);
+	if (curvature > ai.curveBrakeThresh) {
+		ai.state = BRAKING; // If curvature of lookahead is passed threshold, go straight to braking
+		controls.boost = false;
+		return std::make_unique<S_Braking>();
+	}
+	else if (curvature >= ai.curveBoostThresh || spark.currBoost <= 0.0f) {
+		ai.state = DRIVING;
+		controls.boost = false;
+		return std::make_unique<S_Driving>();
+	}
+
+	return nullptr;
+}
+
+std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+
+	// Sanity check that a hit was actually detected
+	if (sweepResult.first == NONE) {
+		controls.boost = false;
+		controls.shimmyL = false;
+		controls.shimmyR = false;
+		return std::make_unique<S_Driving>();;
+	}
+
+	if (sweepResult.first == FWD) {
+		// Boost attack
+		if (spark.currBoost > 0.0f) {
+			AIState::calcSteering(ai, controls, transform, spark, sweepResult.second); // steer to position of collision point
+
+			float distTo = glm::length(sweepResult.second - transform.pos);
+
+			// Boost towards target
+			controls.throttle = 1.0f;
+			controls.brake = 0.0f;
+			controls.boost = true;
+			dbug::log("AI", 0, "[ATTACKING] -> DIST TO TARGET: %.2f, BOOST: %.2f, HEALTH: %.2f", distTo, spark.currBoost, spark.health);
+
+		}
+
+		if (spark.currBoost <= 0.0f) {
+			controls.boost = false;
+			ai.state = DRIVING; // out of boost: exit attack
+			return std::make_unique<S_Driving>();
+		}
+	}
+
+	else {
+		// Shimmy attack
+		if (sweepResult.first == LEFT) {
+			controls.shimmyL = true;
+			dbug::log("AI", 0, "[ATTACKING] -> SHIMMY LEFT");
+		}
+		else if (sweepResult.first == RIGHT) {
+			controls.shimmyR = true;
+			dbug::log("AI", 0, "[ATTACKING] -> SHIMMY RIGHT");
+		}
+	}
+
+
+	return nullptr;
+}
+
+std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
+	auto& ai = ctx.ai;
+	auto& controls = ctx.controls;
+	auto& transform = ctx.transform;
+	auto& spark = ctx.spark;
+
+	// Sanity check that a hit was actually detected
+	if (sweepResult.first == NONE) {
+		controls.boost = false;
+		controls.shimmyL = false;
+		controls.shimmyR = false;
+		return std::make_unique<S_Driving>();
+	}
+
+	glm::vec3 vecToOpponent = transform.pos - sweepResult.second;
+	float angleBetween = glm::acos(glm::dot(glm::normalize(transform.forwardD), glm::normalize(vecToOpponent))); // angle between the forward direction and direction to the detected opponent
+
+	std::cout << "angle btwn: " << angleBetween << std::endl;
+	if (angleBetween > glm::radians(90.f) && spark.currBoost > 0.0f) {
+		// opponent is slightly behind: try to boost away
+		glm::quat rotateAway;
+		if (sweepResult.first == LEFT) {
+			rotateAway = glm::angleAxis(glm::radians(10.f), glm::vec3(0.f, 1.f, 0.f));
+		}
+		else
+			rotateAway = glm::angleAxis(glm::radians(-10.f), glm::vec3(0.f, 1.f, 0.f));
+
+		glm::vec3 escapeDir = ai.route.at(ai.targetIdx) - transform.pos; // vector between spark and target index
+		escapeDir = rotateAway * escapeDir;
+		glm::vec3 target = transform.pos + escapeDir; // Get lookahead position rotated away from detected opponent
+
+
+		AIState::calcSteering(ai, controls, transform, spark, target); // Calculate steering towards escape direction
+		controls.boost = true;
+		dbug::log("AI", 0, "[DODGING] -> BOOST AWAY");
+	}
+	else if (spark.currBoost <= 0.0f) {
+		ai.state = DRIVING;
+		controls.boost = false;
+		return std::make_unique<S_Driving>();
+	}
+
+
+	return nullptr;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
