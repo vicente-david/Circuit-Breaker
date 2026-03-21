@@ -34,18 +34,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// Check in air
 		checkAirborne(sData, dt);
 
-		// TODO: Put in helper (audio stuff)
-		// CANCEL TODO: hold off for now, there might be a different system for this later on
-		{
-			// update sound
-			auto& sound = game.coordinator->getComponent<Sound>(entity);
-			auto pos = sData.rBody->getGlobalPose().p;
-			sData.rBody->getLinearVelocity();
-			sound.position = glm::vec3(pos.x, pos.y, pos.z);
-			auto vel = sData.rBody->getGlobalPose().p;
-			sound.position = glm::vec3(vel.x, vel.y, vel.z);
-		}
-
 		reload = sControls.reload;
 
 		dbugPanel::sparkInfo(entity, sData.health, sData.boost);
@@ -359,7 +347,10 @@ void SparkSys::wallCollision(GameState &game) {
 		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
 
 		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
-		dbug::log("GAME", 0, "Hit a wall!");
+		if (sData.health < 0)
+			sData.health = 0;
+
+		//dbug::log("GAME", 0, "Hit a wall!");
 	}
 }
 
@@ -551,6 +542,7 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	float gripStrength = 240.f;
 	sData.rBody->addForce(-lateral * lateralSpeed * gripStrength * yawVel);
 
+	// TODO: make sure roll damping is working properly
 	float rollDamping = sData.speed * 0.4f;
 	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
 		PxForceMode::eACCELERATION);
