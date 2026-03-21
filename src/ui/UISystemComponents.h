@@ -26,7 +26,7 @@ struct textPositions {
 
 // assume it's a quad
 struct UIElement {
-	bool isVisible; // visibility
+	bool isVisible; // visibility (currently unused)
 	std::string text; //text centered by default
 	float textScale; // scale of the text 
 	glm::vec4 anchors = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); //left, top, right, bottom (default whole screen 0,0,1,1)
@@ -45,6 +45,7 @@ struct UIElement {
 	// combined together with anchor offsets 
 	std::string path; // path to texture
 	glm::vec3 color; // solid fill bg color
+	bool hasBackgroundColor; // toggle bg color on/off
 
 	// anchors:
 	// define where the corners go (ranges from 0 to 1))

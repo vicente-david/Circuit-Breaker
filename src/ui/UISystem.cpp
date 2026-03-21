@@ -19,19 +19,37 @@ void UISystem::update() {
 	// we will assume game automatically updates which UI elements to show
 	// so loop through active UI elements
 
-	// for all screens render the containers
+	// disable depth test, only render in order
+	glDisable(GL_DEPTH_TEST);
 	
-	// optimization recalc matrix only on window resize
-	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT), 0.0f);
+	// for all screens render the containers
+
+	uiShader->use();
+
+	// detect window resize by comparing previous windowSize and now window size
+	if (!(*SCR_WIDTH == prevSCR_WIDTH) || !(*SCR_HEIGHT == prevSCR_HEIGHT)) {
+		// optimization recalc matrix only on window resize
+		uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT), 0.0f);
+		glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+		recalcScreenData();
+		prevSCR_WIDTH = *SCR_WIDTH;
+		prevSCR_HEIGHT = *SCR_HEIGHT;
+	}
+
+	glBindVertexArray(uiVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+
+	// data is populated when screens are added/removed
+	glDrawArrays(GL_TRIANGLES, 0, uiData.size()/2);
 
 
 	// render text
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-		GL_FALSE, glm::value_ptr(textMat));
+		GL_FALSE, glm::value_ptr(uiMat));
 
 	// for all screens render their text
-	for (UIScreen screen : screenStack) {
+	for (UIScreen& screen : screenStack) {
 
 		for (Entity& entity : screen.UIElements) {
 			UIElement& uiElement = coordinator->getComponent<UIElement>(entity);
@@ -45,7 +63,9 @@ void UISystem::update() {
 			// additionally you can test for visiblity, if something else controls it
 		}
 	}
-	
+
+	// re enable depth testing for 3d scenes
+	glEnable(GL_DEPTH_TEST);
 }
 
 UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
@@ -75,13 +95,13 @@ UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
 	// same thing for bottom, (bottom*height) + bottomOffset
 
 	// start at bottom left then follow counter clockwise (bottom up) to build triangles
-	uF.p1 = glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f); // (left, bottom, 0.0)
-	uF.p2 = glm::vec3(right*width + rightO, bottom*height + bottomO, 0.0f); // (right, bottom, 0.0)
-	uF.p3 = glm::vec3(right*width + rightO, top*height + topO, 0.0f); // (right, top, 0.0)
+	uF.points.push_back(glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f)); // (left, bottom, 0.0)
+	uF.points.push_back(glm::vec3(right*width + rightO, bottom*height + bottomO, 0.0f)); // (right, bottom, 0.0)
+	uF.points.push_back(glm::vec3(right*width + rightO, top*height + topO, 0.0f)); // (right, top, 0.0)
 
-	uF.p4 = glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f); // (left, bottom, 0.0)
-	uF.p5 = glm::vec3(right*width + rightO, top*height + topO, 0.0f); // (right, top, 0.0)
-	uF.p6 = glm::vec3(left*width + leftO, top*height + topO, 0.0f); // (left, top, 0.0)
+	uF.points.push_back(glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f)); // (left, bottom, 0.0)
+	uF.points.push_back(glm::vec3(right*width + rightO, top*height + topO, 0.0f)); // (right, top, 0.0)
+	uF.points.push_back(glm::vec3(left*width + leftO, top*height + topO, 0.0f)); // (left, top, 0.0)
 	
 	return uF;
 }
@@ -103,9 +123,15 @@ void UISystem::initializeRenderingParams(){
 	// ui initialization
 	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
 
-	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f, static_cast<float>(*SCR_HEIGHT)); // create iniital ortho projection
+	uiTextureShader = std::make_unique<ShaderProgram>("shaders/uiText.vert", "shaders/uiText.frag"); // ui shader for texture
+
+	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT),0.0f); // create iniital ortho projection
 	uiShader->use(); // use it first
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	uiTextureShader->use(); 
+	glUniformMatrix4fv(glGetUniformLocation(uiTextureShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+
+
 
 	glGenVertexArrays(1, &uiVAO);
 	glBindVertexArray(uiVAO);
@@ -115,17 +141,17 @@ void UISystem::initializeRenderingParams(){
 
 	// modify as needed
 
-	// currently 5 floats (x,y,r,g,b) per point
+	// currently 6 floats (x,y,z,r,g,b) per point
 	// 6 total because that's how many you need for a quad (2 triangles)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 6, NULL, GL_DYNAMIC_DRAW);
 
-	// first position is just (x,y)
-	// position is mapped to layout = 0, size is 2 since (x,y) the stride is 5 because [x,y,r,g,b,x] skip 5 for the next starting point
+	// first position is just (x,y, z) but z=0
+	// position is mapped to layout = 0, size is 3 since (x,y,z) the stride is 6 because [x,y,z,r,g,b,x] skip 6 for the next starting point
 	// and it starts at 0 so (void*)0
-	// color is mapped to layout = 1 size is 3 since (r,g,b) the stride is 5 again [r,g,b,x,y,r] skips 5 to get to the next starting point
-	// and it starts after 2 floats so (void*)(2*sizeof(float)
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
+	// color is mapped to layout = 1 size is 3 since (r,g,b) the stride is 6 again [r,g,b,x,y,z,r] skips 6 to get to the next starting point
+	// and it starts after 3 floats so (void*)(3*sizeof(float)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	// enable both
 	glEnableVertexAttribArray(0);
@@ -156,29 +182,95 @@ void UISystem::initializeRenderingParams(){
 
 }
 
-void UISystem::renderUI(){
+void UISystem::addScreen(std::string screenName) {
+	// retrieve the screen's uielements
+	UIScreen u1 = nameToScreen[screenName];
+	// push it into active screens
+	screenStack.push_back(u1);
 
-	// optimization recalc matrix only on window resize
-	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
-		static_cast<float>(*SCR_HEIGHT));
+	// then push it's data into the data
+	for (Entity& e : u1.UIElements) {
+		UIElement& element = coordinator->getComponent<UIElement>(e);
+		if (element.hasBackgroundColor) {
+			// if it has a bacground color 
+			// then push the position, and the color
+			UIPositions positions = calculateAnchorPositions(element);
+			// 6 points in a triangle based quad
+			for (int i = 0; i < 6; i++) {
+				uiData.push_back(positions.points[i]);
+				uiData.push_back(element.color);
+			}
 
+		}
+		else if (!element.path.empty()) {
+			// otherwise if the texture path exists
+		}
+	}
 
-	// render text
-	textProg->use();
-	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-		GL_FALSE, glm::value_ptr(textMat));
+	// resize the vbo
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+	glBufferData(GL_ARRAY_BUFFER, uiData.size()*3*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+}
+
+void UISystem::popScreen() {
+	UIScreen u1 = screenStack.back();
+	screenStack.pop_back();
 	
-	//RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.0, SCR_HEIGHT - 50, 1.0f, glm::vec3(1.0f), textFont);
+	for (Entity& e : u1.UIElements) {
 
+		UIElement& element = coordinator->getComponent<UIElement>(e);
+		if (element.hasBackgroundColor) {
+			// if it has a bacground color 
+			// then pop the position, and the color
+			// 6 points in a triangle based quad
+			for (int i = 0; i < 6; i++) {
+				uiData.pop_back();
+				uiData.pop_back();
+			}
 
-	// pretend this is the ui shader we're using
-	//textProg->use();
-	//RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
+		}
+		else if (!element.path.empty()) {
+			// otherwise if the texture path exists
+		}
+		
+	}
+
+	// resize the vbo
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+	glBufferData(GL_ARRAY_BUFFER, uiData.size()*3*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 
 }
 
-void UISystem::addScreen(std::string screenName) {
-	screenStack.push_back(nameToScreen[screenName]);
+void UISystem::recalcScreenData() {
+	uiData.clear();
+	for (UIScreen& u1 : screenStack) {
+		// then push it's data into the data
+		for (Entity& e : u1.UIElements) {
+			UIElement& element = coordinator->getComponent<UIElement>(e);
+			if (element.hasBackgroundColor) {
+				// if it has a bacground color 
+				// then push the position, and the color
+				UIPositions positions = calculateAnchorPositions(element);
+				// 6 points in a triangle based quad
+				for (int i = 0; i < 6; i++) {
+					uiData.push_back(positions.points[i]);
+					uiData.push_back(element.color);
+				}
+
+			}
+			else if (!element.path.empty()) {
+				// otherwise if the texture path exists
+			}
+		}
+	}
+	// resize the vbo
+	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+	glBufferData(GL_ARRAY_BUFFER, uiData.size() * 3 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+}
+
+void UISystem::clearAllScreens() {
+	screenStack.clear();
+	uiData.clear();
 }
 
 void UISystem::screenInitialization(){
@@ -208,6 +300,9 @@ void UISystem::createFPSCounter(){
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
 	counter1.textAlignmentY = BOTTOM;
+
+	counter1.hasBackgroundColor = true;
+	counter1.color = glm::vec3(0.5f);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, counter1);

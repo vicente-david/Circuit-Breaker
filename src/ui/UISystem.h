@@ -43,12 +43,7 @@
 
 // positions of the triangle to render the quad
 struct UIPositions {
-	glm::vec3 p1;
-	glm::vec3 p2;
-	glm::vec3 p3;
-	glm::vec3 p4;
-	glm::vec3 p5;
-	glm::vec3 p6;
+	std::vector<glm::vec3> points;
 };
 
 // a UIscreen consists of a bunch of UIElements 
@@ -75,10 +70,12 @@ public:
 
 	void renderUI();
 
-	// 
-	void addScreen(std::string screenName); // add a ui screen to the stack
-	void popScreen(); // pop a ui screen from the stack 
-	void clearAllScreens(); // clears all screens from the stack
+	// add the screen to the screenstack
+	// also update the uiData at the same time
+	void addScreen(std::string screenName);
+	void popScreen(); // pop a ui screen from the stack (and erase it's data from the uiData)
+	void recalcScreenData(); // on window resize, we need to recalc the data
+	void clearAllScreens(); // clears all screens from the stack (and clears the uiData)
 
 	// initialization
 	void screenInitialization(); // creates and stores all different ui screens
@@ -103,8 +100,9 @@ public:
 
 	GLFWwindow* window;
 
-	std::unique_ptr<ShaderProgram> uiShader;
-	std::unique_ptr<ShaderProgram> textProg;
+	std::unique_ptr<ShaderProgram> uiShader; // shader for ui elements that are colored 
+	std::unique_ptr<ShaderProgram> textProg; // shader for text
+	std::unique_ptr<ShaderProgram> uiTextureShader; // shader for ui elements that contains a textur
 
 	// instead of doing some funky passing, just keep a pointer to the correct information
 	// just be cautious of what you're storing though
@@ -120,10 +118,21 @@ public:
 
 private:
 
+	int prevSCR_WIDTH = 0;
+	int prevSCR_HEIGHT = 0;
+
 	std::vector<UIScreen> screenStack; // pretend this is a stack
 	// we iterate forwards since last element gets drawn on top
 
-	// 
+	// contains all the data being passed to the uivbo
+	// contains both positions and colors/texture coords 
+	// if it has a bg color then the layout is (x,y,z,r,g,b) 
+	// if it has a texture then the layout is (x,y,z,u,v, unused) 
+	// because it is UIelements, z = 0
+	// the UIelement itself decides if it uses a bg color or a texture (it cannot do both)
+	std::vector<glm::vec3> uiData;
+	
+	// this could be useful
 	// std::vector<UIElement> alwaysVisible; // a vector of always visible UI elements
 
 	std::unordered_map<std::string, UIScreen> nameToScreen; // maps screen names to UIScreens
