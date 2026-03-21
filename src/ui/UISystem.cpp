@@ -57,7 +57,7 @@ void UISystem::update() {
 			if (!uiElement.text.empty()) {
 				textPositions p1  = calculateTextContainer(uiElement);
 
-				RenderText(textProg->id, textVAO, textVBO, uiElement.text, p1, 1.0f, glm::vec3(1.0f), textFont);
+				RenderText(textProg->id, textVAO, textVBO, uiElement.text, p1, 1.0f, uiElement.textColor, textFont);
 			}
 			
 			// additionally you can test for visiblity, if something else controls it
@@ -306,7 +306,7 @@ void UISystem::createFPSCounter(){
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, counter1);
-
+	
 	UIScreen fpsCounter;
 	fpsCounter.name = "fpsCounter";
 	fpsCounter.UIElements.push_back(e1);
