@@ -1,7 +1,9 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <vector>
 
 // FSM states for AI sparks
+// NOTE: no longer used (left in for debugging)
 enum AIDriveState {
 	IDLE = 0,
 	DRIVING = 1,
