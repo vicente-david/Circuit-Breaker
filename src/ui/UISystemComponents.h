@@ -5,21 +5,36 @@
 #include "../graphics/Texture.h"
 
 // align text enums
-// will assume center align by default
+// will assume bottom left alignment by default
 enum textAlign {
 	CENTER,
 	LEFT,
-	RIGHT
+	RIGHT,
+	TOP,
+	BOTTOM
+};
+
+// where to place the text in pixel space
+struct textPositions {
+	float leftPx; // where is the left part of text container starting (typically ignored if using right align)
+	float topPx; // where is the top part of text (typically ignored if using bottom align)
+	float rightPx; // where is the right part of text (typically ignored if using left align)
+	float bottomPx; // where is the bottom part of text (typically ignored if using top align)
+	textAlign textAlignX = LEFT; // horizontal alignment enum
+	textAlign textAlignY = TOP; // vertical alignment enum
 };
 
 // assume it's a quad
 struct UIElement {
+	bool isVisible; // visibility
 	std::string text; //text centered by default
 	float textScale; // scale of the text 
-	glm::vec4 anchors = glm::vec4(0.0f); //left, top, right, bottom
-	glm::vec4 anchorOffsets = glm::vec4(0.0f); // left, top, right, bottom
+	glm::vec4 anchors = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); //left, top, right, bottom (default whole screen 0,0,1,1)
+	glm::vec4 anchorOffsets = glm::vec4(0.0f); // left, top, right, bottom 
 
-	textAlign textAlignment; // anchros define the area of a ui element
+	glm::vec3 textColor;
+	textAlign textAlignmentY;
+	textAlign textAlignmentX; // anchros define the area of a ui element
 	// text can behave indepdently of the container
 	// we have three alignment types, center, left, and right
 	// center will be assumed to be default

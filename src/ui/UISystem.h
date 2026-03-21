@@ -63,16 +63,20 @@ class UISystem : public System{
 public:
 	static std::shared_ptr<UISystem> registerSystem(std::shared_ptr<Coordinator>& coord); // ecs shenanigans
 
-	void update(std::string& fps);
+	// iterate through active screens
+	// and draw those ui elements
+	void update();
 
-	UIPositions calculateAnchorPositions(UIElement u1);
+	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
+
+	textPositions calculateTextContainer(UIElement u1); // exclusively used for defining a text container anchor
 
 	void initializeRenderingParams(); // sets all necessary rendering params
 
 	void renderUI();
 
 	// 
-	void addScreen(); // add a ui screen to the stack
+	void addScreen(std::string screenName); // add a ui screen to the stack
 	void popScreen(); // pop a ui screen from the stack 
 	void clearAllScreens(); // clears all screens from the stack
 
@@ -83,9 +87,10 @@ public:
 	// it could include things like a heads up display
 	// fps counter
 	// etc
+	// the return value will be the name of the string it maps the screen to
 	void createMainMenu(); // create the pause menu and push it to the hash map
 	void createFPSCounter(); // create an fps counter
-	void createLapCounter();
+	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
 	
 	unsigned int uiVAO, uiVBO, textVBO, textVAO;
@@ -100,13 +105,25 @@ public:
 	std::unique_ptr<ShaderProgram> uiShader;
 	std::unique_ptr<ShaderProgram> textProg;
 
+	// instead of doing some funky passing, just keep a pointer to the correct information
+	// just be cautious of what you're storing though
+	// and ofc lifetimes
+	// currently fps is a field of Game, so it should be ok
+	// scr_width and scr_height are stored in the rendering system, it should be ok
 	int* SCR_WIDTH; 
 	int* SCR_HEIGHT;
+	std::string* fps;
+	// entity based pointers will need a little more managment
+	
+	std::shared_ptr<Coordinator> coordinator;
 
 private:
 
 	std::vector<UIScreen> screenStack; // pretend this is a stack
-	// we iterate backwards
+	// we iterate forwards since last element gets drawn on top
+
+	// 
+	// std::vector<UIElement> alwaysVisible; // a vector of always visible UI elements
 
 	std::unordered_map<std::string, UIScreen> nameToScreen; // maps screen names to UIScreens
 

@@ -39,6 +39,7 @@ public:
 	void initializeTrack();
 	void initializeFinishLine(); // ???
 	void initializeAudio();
+	void initializeUI();
 
 	//void initializePlayers();
 	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark

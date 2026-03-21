@@ -31,10 +31,7 @@ void Game::initializeGame() {
 
 	inputSystem.attachWindow(renderer->window);
 
-	uiSys->window = renderer->window;
-	uiSys->SCR_WIDTH = &renderer->SCR_WIDTH;
-	uiSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
-	uiSys->initializeRenderingParams();
+	initializeUI();
 
 	gameActions = inputSystem.getActions();
 
@@ -240,6 +237,19 @@ void Game::initializeAudio() {
 	//float soundX = 0;
 }
 
+void Game::initializeUI() {
+	uiSys->window = renderer->window;
+	uiSys->SCR_WIDTH = &renderer->SCR_WIDTH;
+	uiSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
+	uiSys->initializeRenderingParams();
+	uiSys->coordinator = coordinator;
+	uiSys->fps = &fps;
+
+	uiSys->screenInitialization();
+
+	uiSys->addScreen("fpsCounter");
+}
+
 void Game::stateTransition() {
 	// if a transition happened
 	if (!(gameState.currentState == gameState.nextState)) {
@@ -396,7 +406,7 @@ void Game::updateRendering() {
 	renderer->update(gameState, fps, cameraSys);
 
 	// update UI
-	uiSys->update(fps);
+	uiSys->update();
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);

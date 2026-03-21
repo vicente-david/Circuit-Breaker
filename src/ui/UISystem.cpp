@@ -15,13 +15,14 @@ std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>&
 }
 
 // called by rendering likely
-void UISystem::update(std::string& fps) {
+void UISystem::update() {
 	// we will assume game automatically updates which UI elements to show
 	// so loop through active UI elements
+
+	// for all screens render the containers
 	
 	// optimization recalc matrix only on window resize
-	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
-		static_cast<float>(*SCR_HEIGHT));
+	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT), 0.0f);
 
 
 	// render text
@@ -29,10 +30,22 @@ void UISystem::update(std::string& fps) {
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 		GL_FALSE, glm::value_ptr(textMat));
 
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10, *SCR_HEIGHT / 2, 1.0f, glm::vec3(1.0f), textFont);
-	for (auto& entity : entities) {
-		
+	// for all screens render their text
+	for (UIScreen screen : screenStack) {
+
+		for (Entity& entity : screen.UIElements) {
+			UIElement& uiElement = coordinator->getComponent<UIElement>(entity);
+
+			if (!uiElement.text.empty()) {
+				textPositions p1  = calculateTextContainer(uiElement);
+
+				RenderText(textProg->id, textVAO, textVBO, uiElement.text, p1, 1.0f, glm::vec3(1.0f), textFont);
+			}
+			
+			// additionally you can test for visiblity, if something else controls it
+		}
 	}
+	
 }
 
 UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
@@ -73,6 +86,17 @@ UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
 	return uF;
 }
 
+textPositions UISystem::calculateTextContainer(UIElement u1) {
+	textPositions tp1;
+	tp1.leftPx = u1.anchors.x*(*SCR_WIDTH) + u1.anchorOffsets.x;
+	tp1.topPx = u1.anchors.y*(*SCR_HEIGHT) + u1.anchorOffsets.y;
+	tp1.rightPx = u1.anchors.z*(*SCR_WIDTH) + u1.anchorOffsets.z;
+	tp1.bottomPx = u1.anchors.w*(*SCR_HEIGHT) + u1.anchorOffsets.w;
+	tp1.textAlignX = u1.textAlignmentX;
+	tp1.textAlignY = u1.textAlignmentY;
+	return tp1;
+}
+
 void UISystem::initializeRenderingParams(){
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert", "shaders/testText.frag");
 
@@ -88,11 +112,22 @@ void UISystem::initializeRenderingParams(){
 
 	glGenBuffers(1, &uiVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
+
+	// modify as needed
+
+	// currently 5 floats (x,y,r,g,b) per point
+	// 6 total because that's how many you need for a quad (2 triangles)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, NULL, GL_DYNAMIC_DRAW);
 
+	// first position is just (x,y)
+	// position is mapped to layout = 0, size is 2 since (x,y) the stride is 5 because [x,y,r,g,b,x] skip 5 for the next starting point
+	// and it starts at 0 so (void*)0
+	// color is mapped to layout = 1 size is 3 since (r,g,b) the stride is 5 again [r,g,b,x,y,r] skips 5 to get to the next starting point
+	// and it starts after 2 floats so (void*)(2*sizeof(float)
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
 
+	// enable both
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 
@@ -140,4 +175,46 @@ void UISystem::renderUI(){
 	//textProg->use();
 	//RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
 
+}
+
+void UISystem::addScreen(std::string screenName) {
+	screenStack.push_back(nameToScreen[screenName]);
+}
+
+void UISystem::screenInitialization(){
+	createFPSCounter();
+}
+
+// Recall UIElement has the following fields
+/*
+std::string text;
+float textScale;
+glm::vec4 anchors = glm::vec4(0.0f);
+glm::vec4 anchorOffsets = glm::vec4(0.0f); 
+glm::vec3 textColor;
+textAlign textAlignmentY;
+textAlign textAlignmentX; 
+std::string path; 
+glm::vec3 color; 
+*/
+
+// return the name of the screenName
+void UISystem::createFPSCounter(){
+	
+	UIElement counter1;
+	counter1.text = "FPS: " + *fps;
+	counter1.textScale = 1.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = RIGHT;
+	counter1.textAlignmentY = BOTTOM;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen fpsCounter;
+	fpsCounter.name = "fpsCounter";
+	fpsCounter.UIElements.push_back(e1);
+
+	nameToScreen["fpsCounter"] = fpsCounter;
 }
