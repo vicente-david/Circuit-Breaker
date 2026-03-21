@@ -198,7 +198,7 @@ void UISystem::addScreen(std::string screenName) {
 			// 6 points in a triangle based quad
 			for (int i = 0; i < 6; i++) {
 				uiData.push_back(positions.points[i]);
-				uiData.push_back(element.color);
+				uiData.push_back(element.colors[i]);
 			}
 
 		}
@@ -254,7 +254,7 @@ void UISystem::recalcScreenData() {
 				// 6 points in a triangle based quad
 				for (int i = 0; i < 6; i++) {
 					uiData.push_back(positions.points[i]);
-					uiData.push_back(element.color);
+					uiData.push_back(element.colors[i]);
 				}
 
 			}
@@ -302,7 +302,12 @@ void UISystem::createFPSCounter(){
 	counter1.textAlignmentY = BOTTOM;
 
 	counter1.hasBackgroundColor = true;
-	counter1.color = glm::vec3(0.5f);
+	counter1.colors[0] = glm::vec3(1.0f, 0.0f, 0.0f); // bottom left
+	counter1.colors[1] = glm::vec3(1.0f, 1.0f, 0.0f); // bottom right
+	counter1.colors[2] = glm::vec3(1.0f, 0.0, 1.0f); // top right
+	counter1.colors[3] = glm::vec3(1.0, 0.0f, 0.0f); // bottom left
+	counter1.colors[4] = glm::vec3(1.0, 0.0f, 1.0f); // top right
+	counter1.colors[5] = glm::vec3(0.0f, 1.0f, 1.0f); // top left
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, counter1);
