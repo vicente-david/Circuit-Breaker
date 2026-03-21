@@ -7,13 +7,7 @@
 #include "world/CurveLoader.h"
 #include "IDriveState.h"
 
-// Direction enum for labelling sweep/hit direction
-enum Direction {
-	FWD,
-	LEFT,
-	RIGHT,
-	NONE // no hit
-};
+
 
 /*
 * Base AI state class
@@ -125,6 +119,8 @@ class OvertakeState : public AIState {
 public:
 	void run(AIDriveContext& ctx) override ;
 	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
+
+	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
 };
 
 class MaintainState : public AIState {

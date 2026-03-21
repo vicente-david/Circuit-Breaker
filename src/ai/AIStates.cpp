@@ -7,14 +7,16 @@
 */
 void DefenseState::run(AIDriveContext& ctx) {
 	
-	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx); // Line of sight sweep
+	// Line of sight sweep: detect other players and change state accordingly
+	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx);
 	if (sweepResult.first != NONE) {
 		auto next = std::make_unique<S_Dodging>();
 		next->sweepResult = sweepResult;
 		currentState = std::move(next);
 	}
-
+	// run state update function
 	auto next = currentState->update(ctx);
+
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
 		currentState = std::move(next);
@@ -35,7 +37,6 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 	if (resultSide.first) {
 		ai.state = DODGING;
 		result = { LEFT, resultSide.second };
-		std::cout << "hit left" << std::endl;
 		return result;
 	}
 
@@ -44,7 +45,6 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 	if (resultSide.first) {
 		ai.state = DODGING;
 		result = { RIGHT, resultSide.second };
-		std::cout << "hit right" << std::endl;
 		return result;
 	}
 
@@ -67,17 +67,21 @@ void OvertakeState::run(AIDriveContext& ctx) {
 
 
 	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
+	if (sweepResult.first != NONE) {
+		auto next = std::make_unique<S_Attacking>();
+		next->sweepResult = sweepResult;
+		currentState = std::move(next);
+	}
 
-	/*if (ai.state == DRIVING)
-		AI_DRIVING(ai, controls, transform, spark);
-	else if (ai.state == BRAKING)
-		AI_BRAKING(ai, controls, transform, spark);
-	else if (ai.state == DRIFTING)
-		AI_DRIFTING(ai, controls, transform, spark);
-	else if (ai.state == BOOSTING)
-		AI_BOOSTING(ai, controls, transform, spark);
-	else if (ai.state == ATTACKING)
-		AI_ATTACKING(ai, controls, transform, spark, sweepResult);*/
+	// run state update function
+	auto next = currentState->update(ctx);
+
+	if (next) {
+		// if the returned pointer was not nullptr (points to a new state), change states
+		currentState = std::move(next);
+		currentState->enter(ctx);
+	}
+
 }
 
 // Detect if there is another player spark in line of sight
@@ -91,9 +95,9 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 	// Only check forward direction if spark has boost
 	if (spark.currBoost > 0.0f) {
 		std::pair<bool, glm::vec3> resultFwd = AIState::lookFwd(transform, body);
-
 		// Check if hit returned true and if the hit was not itself
 		if (resultFwd.first) {
+			std::cout << "hit fwd" << std::endl;
 			ai.state = ATTACKING;
 			result = { FWD, resultFwd.second };
 			return result;
@@ -105,30 +109,30 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 		Direction dir = LEFT;
 		std::pair<bool, glm::vec3> resultSide = AIState::lookSide(transform, body, dir);
 		if (resultSide.first) {
+			std::cout << "hit left" << std::endl;
 			ai.state = ATTACKING;
 			result = { LEFT, resultSide.second };
-			std::cout << "hit left" << std::endl;
 			return result;
 		}
 
 		dir = RIGHT;
 		resultSide = AIState::lookSide(transform, body, dir);
 		if (resultSide.first) {
+			std::cout << "hit right" << std::endl;
 			ai.state = ATTACKING;
 			result = { RIGHT, resultSide.second };
-			std::cout << "hit right" << std::endl;
 			return result;
 		}
 
 	}
 
 	// No sweep returned with a hit
-	if (ai.state == ATTACKING) {
-		ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
-		//controls.boost = false; // ensure false
-	}
+	ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
+	
+	return { NONE, glm::vec3(0.f) };
+	
 
-	return result; // return direction and position of hit point.
+	//return result; // return direction and position of hit point.
 }
 
 /*
@@ -137,15 +141,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 */
 void MaintainState::run(AIDriveContext& ctx) {
 
-	//dbug::log("AI", 0, "!!!!! in maintain state");
-	/*if (ai.state == DRIVING)
-		AI_DRIVING(ai, controls, transform, spark);
-	else if (ai.state == BRAKING)
-		AI_BRAKING(ai, controls, transform, spark);
-	else if (ai.state == DRIFTING)
-		AI_DRIFTING(ai, controls, transform, spark);
-	else if (ai.state == BOOSTING)
-		AI_BOOSTING(ai, controls, transform, spark);*/
+
 	
 }
 
@@ -312,11 +308,11 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 		controls.boost = false;
 		controls.shimmyL = false;
 		controls.shimmyR = false;
-		return std::make_unique<S_Driving>();;
+		return std::make_unique<S_Driving>();
 	}
 
+	// Boost attack
 	if (sweepResult.first == FWD) {
-		// Boost attack
 		if (spark.currBoost > 0.0f) {
 			AIState::calcSteering(ai, controls, transform, spark, sweepResult.second); // steer to position of collision point
 
@@ -327,7 +323,7 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 			controls.brake = 0.0f;
 			controls.boost = true;
 			dbug::log("AI", 0, "[ATTACKING] -> DIST TO TARGET: %.2f, BOOST: %.2f, HEALTH: %.2f", distTo, spark.currBoost, spark.health);
-
+			
 		}
 
 		if (spark.currBoost <= 0.0f) {
@@ -337,18 +333,20 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 		}
 	}
 
-	else {
-		// Shimmy attack
-		if (sweepResult.first == LEFT) {
-			controls.shimmyL = true;
-			dbug::log("AI", 0, "[ATTACKING] -> SHIMMY LEFT");
-		}
-		else if (sweepResult.first == RIGHT) {
-			controls.shimmyR = true;
-			dbug::log("AI", 0, "[ATTACKING] -> SHIMMY RIGHT");
-		}
+	
+	// Shimmy attack
+	else if (sweepResult.first == LEFT) {
+		controls.shimmyL = true;
+		dbug::log("AI", 0, "[ATTACKING] -> SHIMMY LEFT");
+	}
+	else if (sweepResult.first == RIGHT) {
+		controls.shimmyR = true;
+		dbug::log("AI", 0, "[ATTACKING] -> SHIMMY RIGHT");
 	}
 
+	if (spark.shimmyTimer > 0.0f) {
+		return std::make_unique<S_Driving>();
+	}
 
 	return nullptr;
 }
@@ -389,7 +387,7 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 		controls.boost = true;
 		dbug::log("AI", 0, "[DODGING] -> BOOST AWAY");
 	}
-	else if (spark.currBoost <= 0.0f) {
+	else if (spark.currBoost <= 0.0f || sweepResult.first == NONE) {
 		ai.state = DRIVING;
 		controls.boost = false;
 		return std::make_unique<S_Driving>();
