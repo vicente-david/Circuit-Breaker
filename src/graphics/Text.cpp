@@ -103,14 +103,16 @@ void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text
     std::string::const_iterator c1;
     int totalWidth = 0;
     int maxHeight = 0;
+    int maxBearing = 0;
     for (c1 = text.begin(); c1 != text.end(); c1++) {
         Character ch = Characters[*c1];
         totalWidth += (ch.Advance >> 6)*scale;
         maxHeight = glm::max(maxHeight, ch.size.y);
+        maxBearing = glm::max(maxBearing, ch.bearing.y);
     }
     
     calcPositions(positions, x, y, totalWidth, maxHeight);
-
+    
 
     // iterate through all characters
     std::string::const_iterator c;
@@ -119,7 +121,7 @@ void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text
         Character ch = Characters[*c];
 
         float xpos = x + ch.bearing.x * scale;
-        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+        float ypos = y + (maxBearing - ch.bearing.y) * scale;
 
         float w = ch.size.x * scale;
         float h = ch.size.y * scale;
