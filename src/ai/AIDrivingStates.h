@@ -72,7 +72,9 @@ public:
 
 class S_Attacking : public IDriveState {
 public:
-
+	void enter(AIDriveContext& ctx) override {
+		ctx.controls.throttle = 1.0f;
+}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
 
@@ -83,7 +85,9 @@ private:
 
 class S_Dodging : public IDriveState {
 public:
-
+	void enter(AIDriveContext& ctx) override {
+		ctx.controls.throttle = 1.0f;
+	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
 };

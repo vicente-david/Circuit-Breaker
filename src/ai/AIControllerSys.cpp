@@ -53,7 +53,7 @@ void AIControllerSys::update(GameState& game) {
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
 		}
-		else if (spark.health < 101.0f) {
+		else if (spark.health < 50.0f) {
 			defenseState->run(ctx);
 		}
 		else if (spark.health <= 100.f) { // replace this condition with 'if not in first'
@@ -77,8 +77,7 @@ void AIControllerSys::AI_IDLE(AIController& ai, SparkControls& controls, GameSta
 	controls.shimmyL = false;
 	controls.shimmyR = false;
 	controls.reset = false;
-
-	// AI only idle when race hasn't started yet
+	dbug::log("AI", 0, "..... idling ....");	// AI only idle when race hasn't started yet
 	if (game.raceStart == true) {
 		ai.state = DRIVING;
 	}

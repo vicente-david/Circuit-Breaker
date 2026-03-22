@@ -137,11 +137,11 @@ void Game::initializeTrack() {
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -13.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -1.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -4.0f));
-	//initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -7.0f));
-	//initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(10.0f, -1.0f, -16.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, -1.0f, -12.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, -1.0f, -8.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-5.0f, -1.0f, -4.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-10.0f, -1.0f, -0.0f));
 
 
 	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
@@ -182,10 +182,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pat
 		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		0.10f, // curveBrakeThresh
-		22.0f, // maxTargetSpeed
-		0.02f, // curveBoostThresh
-		8, // steeringSharpness
+		
 		});
 }
 

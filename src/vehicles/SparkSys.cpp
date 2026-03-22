@@ -197,13 +197,13 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	sData.mVehicleSimContext.tireStickyParams.stickyParams[PxVehicleTireDirectionModes::eLATERAL].damping = 1.0f;
 
 	sData.rBody->setMaxAngularVelocity(6.f);
-
+	
 	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
-	if (sparkEntity == 3) {
+	if (sparkEntity == 4) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	}
 	else

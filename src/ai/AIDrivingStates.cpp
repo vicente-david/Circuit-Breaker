@@ -226,9 +226,6 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 
 	glm::vec3 vecToOpponent = sweepResult.second - transform.pos;
 	float angleBetween = glm::acos(glm::dot(glm::normalize(transform.forwardD), glm::normalize(vecToOpponent))); // angle between the forward direction and direction to the detected opponent
-	float distFromCurve = glm::length(ai.route.at(ai.currentPosIdx) - transform.pos);
-	std::cout << "dist from curve: " << distFromCurve << std::endl;
-	std::cout << "angle btwn : " << angleBetween << std::endl;
 	// measure the angle between forward direction and opponent
 	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f) {
 		// opponent is slightly behind: try to boost away
@@ -278,7 +275,6 @@ std::pair<bool, glm::vec3> AIHelpers::lookFwd(Transform& transform, PxRigidBody*
 
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
-		std::cout << "hit fwd" << std::endl;
 
 		PxVec3 t = hitInfo.block.position;
 		glm::vec3 target(t.x, t.y, t.z);
@@ -318,7 +314,6 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
-		std::cout << "hit side" << std::endl;
 
 		PxVec3 t = hitInfo.block.position;
 		glm::vec3 target(t.x, t.y, t.z);

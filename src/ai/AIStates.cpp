@@ -99,7 +99,6 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 		std::pair<bool, glm::vec3> resultFwd = lookFwd(transform, body);
 		// Check if hit returned true and if the hit was not itself
 		if (resultFwd.first) {
-			std::cout << "hit fwd" << std::endl;
 			ai.state = ATTACKING;
 			result = { FWD, resultFwd.second };
 			return result;
@@ -111,7 +110,6 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 		Direction dir = LEFT;
 		std::pair<bool, glm::vec3> resultSide = lookSide(transform, body, dir);
 		if (resultSide.first) {
-			std::cout << "hit left" << std::endl;
 			ai.state = ATTACKING;
 			result = { LEFT, resultSide.second };
 			return result;
@@ -120,7 +118,6 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 		dir = RIGHT;
 		resultSide = lookSide(transform, body, dir);
 		if (resultSide.first) {
-			std::cout << "hit right" << std::endl;
 			ai.state = ATTACKING;
 			result = { RIGHT, resultSide.second };
 			return result;
