@@ -115,7 +115,6 @@ public:
 
 	std::unique_ptr<ShaderProgram> uiShader; // shader for ui elements that are colored 
 	std::unique_ptr<ShaderProgram> textProg; // shader for text
-	std::unique_ptr<ShaderProgram> uiTextureShader; // shader for ui elements that contains a textur
 
 	// instead of doing some funky passing, just keep a pointer to the correct information
 	// just be cautious of what you're storing though

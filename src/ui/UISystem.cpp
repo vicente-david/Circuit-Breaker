@@ -133,8 +133,6 @@ void UISystem::initializeRenderingParams(){
 	// ui initialization
 	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
 
-	uiTextureShader = std::make_unique<ShaderProgram>("shaders/uiText.vert", "shaders/uiText.frag"); // ui shader for texture
-
 	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT),0.0f); // create iniital ortho projection
 	uiShader->use(); // use it first
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
