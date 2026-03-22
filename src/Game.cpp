@@ -166,7 +166,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, "AI Player");
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
@@ -179,7 +179,7 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI Player 2");
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
 	coordinator->addComponent(testSpark3, Leaderboard());

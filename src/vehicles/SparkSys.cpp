@@ -69,7 +69,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
 
 	// Spark needs a name
-	sData.mVehicleName = name.c_str();
+	sData.mVehicleName = name;
 
 	// SparkData sData;
 	// Load the params from json or set directly.
@@ -99,7 +99,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
 	PxTransform startPose(startP, PxQuat(PxIdentity));
-	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName);
+	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName.c_str());
 
 	sData.rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 

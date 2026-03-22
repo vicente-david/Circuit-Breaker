@@ -9,7 +9,7 @@
 // leaderboard component which stores the entity's current leaderbord position, and the full standings (might not need the full standings?)
 struct Leaderboard {
 	//int leaderboardPos = 0;
-	std::vector<Entity> standings; // vector of entities in order of first to second (standings[0] = 1st place)
+	std::vector<std::string> standings; // vehicle names in order of first to last (standings[0] = 1st place)
 };
 
 class LeaderboardSystem : public System {
@@ -18,5 +18,5 @@ public:
 	void update(GameState& game); // does the respawn logic, probably safe to check every frame
 
 private:
-	std::vector<std::pair<float, Entity>> scores; // vector of pairs to keep track of each entity's "score".. easiest way to keep track of total progress for each entity
+	std::vector<std::pair<float, std::string>> scores; // vector of pairs to keep track of each entity's "score".. easiest way to keep track of total progress for each entity
 };

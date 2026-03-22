@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "debugUtils/Logger.h"
 #include <algorithm>
+#include "vehicles/SparkComponents.h"
 
 std::shared_ptr<LeaderboardSystem> LeaderboardSystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
 	auto system = coord->registerSystem<LeaderboardSystem>();
@@ -10,6 +11,7 @@ std::shared_ptr<LeaderboardSystem> LeaderboardSystem::registerSystem(std::shared
 	sig.set(coord->getComponentType<Leaderboard>());
 	//sig.set(coord->getComponentType<Transform>());
 	sig.set(coord->getComponentType<LapCounter>());
+	sig.set(coord->getComponentType<SparkData>());
 
 	coord->setSystemSignature<LeaderboardSystem>(sig);
 
@@ -22,11 +24,15 @@ void LeaderboardSystem::update(GameState& game) {
 	// iterate through all spark entities
 	for (auto& entity : entities) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
+		SparkData& sparkData = game.coordinator->getComponent<SparkData>(entity);
+		const std::string& sparkName = sparkData.mVehicleName;
 		float score = lapProg.currentLap * lapProg.progress;
-		scores.push_back({score, entity});
+		scores.push_back({score, sparkName});
 	}
 
-	std::sort(scores.begin(), scores.end(), std::greater<std::pair<float, Entity>>());
+	std::sort(scores.begin(), scores.end(), [](const auto& a, const auto& b) {
+		return a.first > b.first; // sort by score descending
+	});
 
 	// write standings to each entity's Leaderboard component
 	for (auto& entity : entities) {
@@ -34,10 +40,9 @@ void LeaderboardSystem::update(GameState& game) {
 		lb.standings.clear();
 		for (int i = 0; i < scores.size(); i++) {
 			lb.standings.push_back(scores[i].second);
+			dbug::log("LEADERBOARD", 0, "Place (%d): %s", i + 1, scores[i].second.c_str());
 		}
 	}
 
-	//for (int i = 0; i < scores.size(); i++)
-		//dbug::log("LEADERBOARD", 0, "Place (%d): Entity %d", i + 1, scores[i].second);
 
 }
