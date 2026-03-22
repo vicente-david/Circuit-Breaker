@@ -14,15 +14,7 @@ std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>&
 	return system;
 }
 
-// called by rendering likely
-void UISystem::update() {
-	// we will assume game automatically updates which UI elements to show
-	// so loop through active UI elements
-
-	// disable depth test, only render in order
-	glDisable(GL_DEPTH_TEST);
-	
-	// for all screens render the containers
+void UISystem::updateUI() {
 
 	uiShader->use();
 
@@ -40,9 +32,12 @@ void UISystem::update() {
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
 
 	// data is populated when screens are added/removed
-	glDrawArrays(GL_TRIANGLES, 0, uiData.size()/2);
+	// division by 2 since it stores positions + colors (equal amount of both)
+	// it only needs the positions
+	glDrawArrays(GL_TRIANGLES, 0, uiData.size() / 2);
+}
 
-
+void UISystem::updateText() {
 	// render text
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
@@ -55,14 +50,29 @@ void UISystem::update() {
 			UIElement& uiElement = coordinator->getComponent<UIElement>(entity);
 
 			if (!uiElement.text.empty()) {
-				textPositions p1  = calculateTextContainer(uiElement);
+				textPositions p1 = calculateTextContainer(uiElement);
 
 				RenderText(textProg->id, textVAO, textVBO, uiElement.text, p1, 1.0f, uiElement.textColor, textFont);
 			}
-			
+
 			// additionally you can test for visiblity, if something else controls it
 		}
 	}
+}
+
+// called by rendering likely
+void UISystem::update() {
+	// we will assume game automatically updates which UI elements to show
+	// so loop through active UI elements
+
+	// disable depth test, only render in order
+	glDisable(GL_DEPTH_TEST);
+	
+	// for all screens render the containers
+	updateUI();
+
+	// render text after the ui elements
+	updateText();
 
 	// re enable depth testing for 3d scenes
 	glEnable(GL_DEPTH_TEST);

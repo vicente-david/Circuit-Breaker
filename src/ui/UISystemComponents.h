@@ -44,7 +44,11 @@ struct UIElement {
 
 	// combined together with anchor offsets 
 	std::string path; // path to texture
-	glm::vec3 colors[6]; // solid fill bg color
+	unsigned int textureID; // id of texture
+	// color of background (if no background this is used for texture coord)
+	// texture coords will not use the z component of the vec3 
+	// design texture to fill container, not the screen
+	glm::vec3 colors[6];
 	bool hasBackgroundColor; // toggle bg color on/off
 
 	// anchors:

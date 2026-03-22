@@ -53,6 +53,16 @@ struct UIScreen {
 	std::vector<Entity> UIElements; // what elements make it up
 };
 
+// each ui vertex will contain
+// a position
+// a vec3 (denoting either color or texture coordinate)
+// a float flag (to let shader know how to use the vec3) 
+struct UIVertex {
+	glm::vec3 position;
+	glm::vec3 color;
+	float interpretFlag;
+};
+
 
 class UISystem : public System{
 public:
@@ -60,15 +70,18 @@ public:
 
 	// iterate through active screens
 	// and draw those ui elements
+	// will call either updateSolidUI() if there is no texture
+	// or updateTextureUI() if there is a texture
+	// will not do both
 	void update();
+	void updateUI(); // renders UI using stored colors
+	void updateText(); // renders text if there is any
 
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
 	textPositions calculateTextContainer(UIElement u1); // exclusively used for defining a text container anchor
 
 	void initializeRenderingParams(); // sets all necessary rendering params
-
-	void renderUI();
 
 	// add the screen to the screenstack
 	// also update the uiData at the same time
