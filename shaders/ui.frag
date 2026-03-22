@@ -8,7 +8,7 @@ uniform sampler2D uiTexture;
 void main(){
 
     if (textureFlag >= 1.0f){
-        col = texture(uiTexture, color.xy);
+        col = texture(uiTexture, vec2(color.x, color.y));
     } else {
         col = vec4(color, 1.0);
     }

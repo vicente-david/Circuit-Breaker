@@ -14,49 +14,64 @@ std::shared_ptr<UISystem> UISystem::registerSystem(std::shared_ptr<Coordinator>&
 	return system;
 }
 
-void UISystem::updateUI() {
+void UISystem::recalcMat() {
+	// optimization recalc matrix only on window resize
+	uiShader->use();
+	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT), 0.0f);
+	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+	textProg->use();
+	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+}
 
+void UISystem::updateUIElement(Entity& e) {
 	uiShader->use();
 
-	// detect window resize by comparing previous windowSize and now window size
-	if (!(*SCR_WIDTH == prevSCR_WIDTH) || !(*SCR_HEIGHT == prevSCR_HEIGHT)) {
-		// optimization recalc matrix only on window resize
-		uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT), 0.0f);
-		glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
-		recalcScreenData();
-		prevSCR_WIDTH = *SCR_WIDTH;
-		prevSCR_HEIGHT = *SCR_HEIGHT;
-	}
-
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	uiData.clear();
 	glBindVertexArray(uiVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
 
-	// data is populated when screens are added/removed
-	glDrawArrays(GL_TRIANGLES, 0, uiData.size());
-}
-
-void UISystem::updateText() {
-	// render text
-	textProg->use();
-	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-		GL_FALSE, glm::value_ptr(uiMat));
-
-	// for all screens render their text
-	for (UIScreen& screen : screenStack) {
-
-		for (Entity& entity : screen.UIElements) {
-			UIElement& uiElement = coordinator->getComponent<UIElement>(entity);
-
-			if (!uiElement.text.empty()) {
-				textPositions p1 = calculateTextContainer(uiElement);
-
-				RenderText(textProg->id, textVAO, textVBO, uiElement.text, p1, 1.0f, uiElement.textColor, textFont);
-			}
-
-			// additionally you can test for visiblity, if something else controls it
+	if (u1.hasBackgroundColor) {
+		// if it has a bacground color 
+		// then push the position, and the color
+		UIPositions positions = calculateAnchorPositions(u1);
+		// 6 points in a triangle based quad
+		for (int i = 0; i < 6; i++) {
+			UIVertex v1;
+			v1.position = positions.points[i];
+			v1.color = u1.colors[i];
+			v1.interpretFlag = 0.0f;
+			uiData.push_back(v1);
 		}
+		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, uiData.size());
 	}
+	else if (!u1.path.empty()) {
+		// render with texture
+		UIPositions positions = calculateAnchorPositions(u1);
+		// 6 points in a triangle based quad
+		for (int i = 0; i < 6; i++) {
+			UIVertex v1;
+			v1.position = positions.points[i];
+			v1.color = u1.colors[i];
+			v1.interpretFlag = 1.0f;
+			uiData.push_back(v1);
+		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, uiData.size());
+
+	}
+
+	if (!u1.text.empty()) {
+		textProg->use();
+		textPositions p1 = calculateTextContainer(u1);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+	}
+
 }
+
 
 // called by rendering likely
 void UISystem::update() {
@@ -65,12 +80,24 @@ void UISystem::update() {
 
 	// disable depth test, only render in order
 	glDisable(GL_DEPTH_TEST);
+
+	// detect window resize by comparing previous windowSize and now window size
+	if (!(*SCR_WIDTH == prevSCR_WIDTH) || !(*SCR_HEIGHT == prevSCR_HEIGHT)) {
+		recalcMat(); // recalc ortho projection matrix when screen size changes
+		prevSCR_WIDTH = *SCR_WIDTH;
+		prevSCR_HEIGHT = *SCR_HEIGHT;
+	}
 	
-	// for all screens render the containers
-	updateUI();
+	// for all screens render the containers and the text
+	for (UIScreen& u1 : screenStack) {
+		for (Entity& e : u1.UIElements) {
+			updateUIElement(e);
+		}
+	}
+	
 
 	// render text after the ui elements
-	updateText();
+	//updateText();
 
 	// re enable depth testing for 3d scenes
 	glEnable(GL_DEPTH_TEST);
@@ -195,95 +222,15 @@ void UISystem::addScreen(std::string screenName) {
 	UIScreen u1 = nameToScreen[screenName];
 	// push it into active screens
 	screenStack.push_back(u1);
-
-	// then push it's data into the data
-	for (Entity& e : u1.UIElements) {
-		UIElement& element = coordinator->getComponent<UIElement>(e);
-		if (element.hasBackgroundColor) {
-			// if it has a bacground color 
-			// then push the position, and the color
-			UIPositions positions = calculateAnchorPositions(element);
-			// 6 points in a triangle based quad
-			for (int i = 0; i < 6; i++) {
-				UIVertex v1;
-				v1.position = positions.points[i];
-				v1.color = element.colors[i];
-				v1.interpretFlag = 0.0f;
-				uiData.push_back(v1);
-			}
-
-		}
-		else if (!element.path.empty()) {
-			// otherwise if the texture path exists
-		}
-	}
-
-	// resize the vbo
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, uiData.size()*7*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 }
 
 void UISystem::popScreen() {
 	UIScreen u1 = screenStack.back();
 	screenStack.pop_back();
-	
-	for (Entity& e : u1.UIElements) {
-
-		UIElement& element = coordinator->getComponent<UIElement>(e);
-		if (element.hasBackgroundColor) {
-			// if it has a bacground color 
-			// then pop the position, and the color
-			// 6 points in a triangle based quad
-			for (int i = 0; i < 6; i++) {
-				uiData.pop_back();
-			}
-
-		}
-		else if (!element.path.empty()) {
-			// otherwise if the texture path exists
-		}
-		
-	}
-
-	// resize the vbo
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, uiData.size()*7*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
-
-}
-
-void UISystem::recalcScreenData() {
-	uiData.clear();
-	for (UIScreen& u1 : screenStack) {
-		// then push it's data into the data
-		for (Entity& e : u1.UIElements) {
-			UIElement& element = coordinator->getComponent<UIElement>(e);
-			if (element.hasBackgroundColor) {
-				// if it has a bacground color 
-				// then push the position, and the color
-				UIPositions positions = calculateAnchorPositions(element);
-				// 6 points in a triangle based quad
-				for (int i = 0; i < 6; i++) {
-					UIVertex v1;
-					v1.position = positions.points[i];
-					v1.color = element.colors[i];
-					v1.interpretFlag = 0.0f;
-					uiData.push_back(v1);
-				}
-
-			}
-			else if (!element.path.empty()) {
-				// otherwise if the texture path exists
-			}
-		}
-	}
-	// resize the vbo
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 }
 
 void UISystem::clearAllScreens() {
 	screenStack.clear();
-	uiData.clear();
 }
 
 void UISystem::screenInitialization(){
@@ -314,13 +261,23 @@ void UISystem::createFPSCounter(){
 	counter1.textAlignmentX = RIGHT;
 	counter1.textAlignmentY = BOTTOM;
 
-	counter1.hasBackgroundColor = true;
+	counter1.hasBackgroundColor = false;
 	counter1.colors[0] = glm::vec3(1.0f, 0.0f, 0.0f); // bottom left
 	counter1.colors[1] = glm::vec3(1.0f, 1.0f, 0.0f); // bottom right
 	counter1.colors[2] = glm::vec3(1.0f, 0.0, 1.0f); // top right
 	counter1.colors[3] = glm::vec3(1.0, 0.0f, 0.0f); // bottom left
 	counter1.colors[4] = glm::vec3(1.0, 0.0f, 1.0f); // top right
 	counter1.colors[5] = glm::vec3(0.0f, 1.0f, 1.0f); // top left
+
+	counter1.colors[0] = glm::vec3(0.0f, 0.0f, 0.0f); // bottom left
+	counter1.colors[1] = glm::vec3(1.0f, 0.0f, 0.0f); // bottom right
+	counter1.colors[2] = glm::vec3(1.0f, 1.0, 1.0f); // top right
+	counter1.colors[3] = glm::vec3(0.0, 0.0f, 0.0f); // bottom left
+	counter1.colors[4] = glm::vec3(1.0, 1.0f, 1.0f); // top right
+	counter1.colors[5] = glm::vec3(0.0f, 1.0f, 1.0f); // top left
+
+	counter1.path = "assets/textures/Start_Menu_2.jpg";
+	counter1.textureID = GenerateTexture(counter1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, counter1);
@@ -334,7 +291,7 @@ void UISystem::createFPSCounter(){
 
 void UISystem::updateFPSCounter() {
 	// can assume it's only the first thing (we hard coded it above)
-	Entity e1 = nameToScreen["fpsCounter"].UIElements[0];
+	Entity& e1 = nameToScreen["fpsCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "FPS: " + *fps;
 }

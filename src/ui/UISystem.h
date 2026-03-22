@@ -53,10 +53,12 @@ struct UIScreen {
 	std::vector<Entity> UIElements; // what elements make it up
 };
 
-// each ui vertex will contain
-// a position
-// a vec3 (denoting either color or texture coordinate)
-// a float flag (to let shader know how to use the vec3) 
+// contains all the data being passed to the uivbo
+// contains both positions and colors/texture coords 
+// if it has a bg color then the layout is (x,y,z,r,g,b) 
+// if it has a texture then the layout is (x,y,z,u,v, unused) 
+// because it is UIelements, z = 0
+// the UIelement itself decides if it uses a bg color or a texture (it cannot do both)
 struct UIVertex {
 	glm::vec3 position;
 	glm::vec3 color;
@@ -74,7 +76,8 @@ public:
 	// or updateTextureUI() if there is a texture
 	// will not do both
 	void update();
-	void updateUI(); // renders UI using stored colors
+	void recalcMat();
+	void updateUIElement(Entity& e); // renders UI using stored colors
 	void updateText(); // renders text if there is any
 
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
@@ -87,7 +90,6 @@ public:
 	// also update the uiData at the same time
 	void addScreen(std::string screenName);
 	void popScreen(); // pop a ui screen from the stack (and erase it's data from the uiData)
-	void recalcScreenData(); // on window resize, we need to recalc the data
 	void clearAllScreens(); // clears all screens from the stack (and clears the uiData)
 
 	// initialization
@@ -134,15 +136,8 @@ private:
 	int prevSCR_HEIGHT = 0;
 
 	std::vector<UIScreen> screenStack; // pretend this is a stack
-	// we iterate forwards since last element gets drawn on top
-
-	// contains all the data being passed to the uivbo
-	// contains both positions and colors/texture coords 
-	// if it has a bg color then the layout is (x,y,z,r,g,b) 
-	// if it has a texture then the layout is (x,y,z,u,v, unused) 
-	// because it is UIelements, z = 0
-	// the UIelement itself decides if it uses a bg color or a texture (it cannot do both)
 	std::vector<UIVertex> uiData;
+	// we iterate forwards since last element gets drawn on top
 	
 	// this could be useful
 	// std::vector<UIElement> alwaysVisible; // a vector of always visible UI elements
