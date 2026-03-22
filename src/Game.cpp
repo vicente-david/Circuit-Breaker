@@ -140,8 +140,8 @@ void Game::initializeTrack() {
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -13.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -1.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -4.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -7.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
+	//initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -7.0f));
+	//initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
 
 
 	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);

@@ -53,7 +53,7 @@ void AIControllerSys::update(GameState& game) {
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
 		}
-		else if (spark.health < 70.0f) {
+		else if (spark.health < 101.0f) {
 			defenseState->run(ctx);
 		}
 		else if (spark.health <= 100.f) { // replace this condition with 'if not in first'

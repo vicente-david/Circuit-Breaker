@@ -30,6 +30,6 @@ struct AIController {
 	int targetIdx = 0; // index of target position
 	int currentPosIdx = 0; // approx index current position of spark
 	int lookAheadSteps = 8; // how far to look ahead on the track curve
-	
+	float boostAtkTimer = 0.0f;
 };
 

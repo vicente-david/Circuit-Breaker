@@ -163,12 +163,13 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 		controls.boost = false;
 		controls.shimmyL = false;
 		controls.shimmyR = false;
+		ai.boostAtkTimer = 0.0f;
 		return std::make_unique<S_Driving>();
 	}
 
 	// Boost attack
 	if (sweepResult.first == FWD) {
-		if (spark.boost > 0.0f) {
+		if (spark.boost > 0.001f) {
 			calcSteering(ai, controls, transform, spark, sweepResult.second); // steer to position of collision point
 
 			float distTo = glm::length(sweepResult.second - transform.pos);
@@ -177,12 +178,14 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 			controls.throttle = 1.0f;
 			controls.brake = 0.0f;
 			controls.boost = true;
-			dbug::log("AI", 0, "[ATTACKING] -> DIST TO TARGET: %.2f, BOOST: %.2f, HEALTH: %.2f", distTo, spark.boost, spark.health);
+			ai.boostAtkTimer += 1.f;
+			dbug::log("AI", 0, "[ATTACKING] -> TIMER: %.2f, DIST TO TARGET: %.2f, BOOST: %.2f, HEALTH: %.2f", ai.boostAtkTimer, distTo, spark.boost, spark.health);
 
 		}
 
-		if (spark.boost <= 0.0f) {
+		if (spark.boost <= 0.001f || ai.boostAtkTimer > boostAtkMaxLength) {
 			controls.boost = false;
+			ai.boostAtkTimer = 0.0f;
 			ai.state = DRIVING; // out of boost: exit attack
 			return std::make_unique<S_Driving>();
 		}
@@ -199,7 +202,8 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 		dbug::log("AI", 0, "[ATTACKING] -> SHIMMY RIGHT");
 	}
 
-	if (spark.shimmyTimer > 0.0f) {
+	if (spark.shimmyTimer > 0.0f || spark.speed < ai.maxTargetSpeed / 2.f) {
+		ai.boostAtkTimer = 0.0f;
 		return std::make_unique<S_Driving>();
 	}
 
@@ -224,14 +228,14 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 	float angleBetween = glm::acos(glm::dot(glm::normalize(transform.forwardD), glm::normalize(vecToOpponent))); // angle between the forward direction and direction to the detected opponent
 
 	std::cout << "angle btwn: " << angleBetween << std::endl;
-	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f) {
+	if (angleBetween > glm::radians(120.f) && spark.boost > 0.0f) {
 		// opponent is slightly behind: try to boost away
 		glm::quat rotateAway;
 		if (sweepResult.first == LEFT) {
-			rotateAway = glm::angleAxis(glm::radians(10.f), glm::vec3(0.f, 1.f, 0.f));
+			rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
 		}
 		else
-			rotateAway = glm::angleAxis(glm::radians(-10.f), glm::vec3(0.f, 1.f, 0.f));
+			rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
 
 		glm::vec3 escapeDir = ai.route.at(ai.targetIdx) - transform.pos; // vector between spark and target index
 		escapeDir = rotateAway * escapeDir;
@@ -268,7 +272,7 @@ std::pair<bool, glm::vec3> AIHelpers::lookFwd(Transform& transform, PxRigidBody*
 	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC); // NOTE: detects any dynamic actor. Could not get it to work otherwise.
 	//filter.flags |= PxQueryFlag::eANY_HIT;
 	//filter.data.word0 = COLLISION_FLAG_CHASSIS;
-	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 100.f, hitInfo, outFlags, filter);
+	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 75.f, hitInfo, outFlags, filter);
 
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
@@ -308,7 +312,7 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
 	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC);
 
-	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 50.f, hitInfo, outFlags, filter);
+	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 35.f, hitInfo, outFlags, filter);
 
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
