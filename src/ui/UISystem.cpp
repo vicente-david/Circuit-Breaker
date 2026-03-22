@@ -136,8 +136,6 @@ void UISystem::initializeRenderingParams(){
 	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT),0.0f); // create iniital ortho projection
 	uiShader->use(); // use it first
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
-	uiTextureShader->use(); 
-	glUniformMatrix4fv(glGetUniformLocation(uiTextureShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
 
 
