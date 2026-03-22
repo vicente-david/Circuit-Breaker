@@ -268,6 +268,7 @@ void Game::stateTransition() {
 			case (MAINMENU):
 				uiSys->popScreen();
 				initializeRace();
+				uiSys->addScreen("lapCounter");
 				break;
 
 			// our likely next state is paused or game ended
@@ -277,6 +278,7 @@ void Game::stateTransition() {
 
 			// we're likely resuming the game, so pop all pause menus
 			case (PAUSED): 
+				uiSys->clearAllScreens();
 				break;
 
 			// we're likely restarting the game
@@ -295,7 +297,6 @@ void Game::stateTransition() {
 				// we are resuming gameplay
 			case (GAMEPLAY):
 				break;
-
 				// we will be in a pause menu
 			case (PAUSED):
 				break;
@@ -336,6 +337,7 @@ void Game::update() {
 		aiControllerSys->update(gameState);
 		// after physics update
 		lapSys->update(gameState);
+		uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
 		respawnSys->update(gameState);
 	}
 

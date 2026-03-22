@@ -236,6 +236,7 @@ void UISystem::clearAllScreens() {
 void UISystem::screenInitialization(){
 	createFPSCounter();
 	createMainMenu();
+	createLapCounter();
 }
 
 // Recall UIElement has the following fields
@@ -303,4 +304,33 @@ void UISystem::createMainMenu() {
 	mainMenu.UIElements.push_back(e1);
 
 	nameToScreen["mainMenu"] = mainMenu;
+}
+
+
+void UISystem::createLapCounter() {
+	UIElement lapc1;
+	lapc1.text = "Lap: ";
+	lapc1.textScale = 1.0f;
+	// default anchors are whole screen (0,0,1,1)
+	lapc1.textColor = glm::vec3(1.0f);
+	lapc1.textAlignmentX = LEFT;
+	lapc1.textAlignmentY = BOTTOM;
+
+	lapc1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, lapc1);
+
+	UIScreen lapCounter;
+	lapCounter.name = "lapCounter";
+	lapCounter.UIElements.push_back(e1);
+
+	nameToScreen["lapCounter"] = lapCounter;
+}
+
+void UISystem::updateLapCounter(int lapCount) {
+	// can assume it's only the first thing (we hard coded it above)
+	Entity& e1 = nameToScreen["lapCounter"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+	u1.text = "Lap: " + std::to_string(lapCount);
 }

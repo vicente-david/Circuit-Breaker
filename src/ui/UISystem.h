@@ -78,7 +78,6 @@ public:
 	void update();
 	void recalcMat();
 	void updateUIElement(Entity& e); // renders UI using stored colors
-	void updateText(); // renders text if there is any
 
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
