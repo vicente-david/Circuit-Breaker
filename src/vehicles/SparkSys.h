@@ -1,11 +1,7 @@
 #pragma once
 
 #include "GameState.h"
-#include "PxRigidBody.h"
 #include "SparkComponents.h"
-#include "ecs/Coordinator.h"
-#include "ecs/EntityManager.h"
-#include "ecs/System.h"
 
 // this updates the sparks and turns the controls to actual movements and
 // gameplay.
@@ -14,9 +10,6 @@ class SparkSys : public System {
   public:
 	static std::shared_ptr<SparkSys>
 	registerSystem(std::shared_ptr<Coordinator> &coord);
-
-	static void sparkWallCollision(Entity s, GameState& game);
-	static void sparkSparkCollision(Entity s1,Entity s2, GameState& game);
 
 	// updates all the sparks in the game
 	void updateSparks(double dt, GameState &gameState);
@@ -31,8 +24,38 @@ class SparkSys : public System {
 	void reloadSparkParams( GameState& gameState);
 
   private:
-	// helper functions for doing the movements
-	void shimmy(PxRigidBody *rBody, SparkData &sData, bool rightDir);
-	void boost(PxRigidBody *rBody, SparkData &sData, bool useHealth, float dt);
-	void respawn(PxRigidBody *rBody);
+	// === Helpers ===
+	void checkDeath(SparkData& sData, double dt);
+	void checkAirborne(SparkData& sData, double dt);
+
+	void angularResistance(SparkData& sData, PxReal val = 0.05f, double duration = 0);
+	void checkAngResistace(SparkData& sData, double dt);
+
+	// Collision
+	void sparkCollision(GameState& game);
+	void wallCollision(GameState& game);
+	void healZoneCheck(GameState& game, double dt);
+
+	// Commands
+	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);
+	void reverse(SparkData& sData, SparkControls& sControls);
+
+	// Features
+	void updateMaxBoost(SparkData &sData);
+	void applyBoost(SparkData &sData, bool useHealth, double dt);
+	void boost(SparkData &sData, SparkControls &sControls, double dt);
+	void regenBoost(SparkData& sData, double dt);
+	
+	void applyShimmy(SparkData& sData, bool dir);
+	void shimmy(SparkData& sData, SparkControls& sControls, double dt);
+
+	// Handling
+	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
+	void driftStabilizer(SparkData& sData, SparkControls& sControls);
+	void yawStabilizer(SparkData& sData);
+	void sparkHandling(SparkData& sData, SparkControls& sControls);
+
+	// Respawn
+	void sparkValuesReset(SparkData& sData);
+	void respawn(SparkData& sData, SparkControls& sControls, double dt);
 };
