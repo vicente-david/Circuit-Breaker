@@ -224,11 +224,13 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 		return std::make_unique<S_Driving>();
 	}
 
-	glm::vec3 vecToOpponent = transform.pos - sweepResult.second;
+	glm::vec3 vecToOpponent = sweepResult.second - transform.pos;
 	float angleBetween = glm::acos(glm::dot(glm::normalize(transform.forwardD), glm::normalize(vecToOpponent))); // angle between the forward direction and direction to the detected opponent
-
-	std::cout << "angle btwn: " << angleBetween << std::endl;
-	if (angleBetween > glm::radians(120.f) && spark.boost > 0.0f) {
+	float distFromCurve = glm::length(ai.route.at(ai.currentPosIdx) - transform.pos);
+	std::cout << "dist from curve: " << distFromCurve << std::endl;
+	std::cout << "angle btwn : " << angleBetween << std::endl;
+	// measure the angle between forward direction and opponent
+	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f) {
 		// opponent is slightly behind: try to boost away
 		glm::quat rotateAway;
 		if (sweepResult.first == LEFT) {
@@ -246,7 +248,7 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 		controls.boost = true;
 		dbug::log("AI", 0, "[DODGING] -> BOOST AWAY");
 	}
-	else if (spark.boost <= 0.0f || sweepResult.first == NONE) {
+	else {
 		ai.state = DRIVING;
 		controls.boost = false;
 		return std::make_unique<S_Driving>();
@@ -312,7 +314,7 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
 	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC);
 
-	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 35.f, hitInfo, outFlags, filter);
+	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 50.f, hitInfo, outFlags, filter);
 
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
