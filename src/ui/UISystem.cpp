@@ -32,9 +32,7 @@ void UISystem::updateUI() {
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
 
 	// data is populated when screens are added/removed
-	// division by 2 since it stores positions + colors (equal amount of both)
-	// it only needs the positions
-	glDrawArrays(GL_TRIANGLES, 0, uiData.size() / 2);
+	glDrawArrays(GL_TRIANGLES, 0, uiData.size());
 }
 
 void UISystem::updateText() {
@@ -147,21 +145,25 @@ void UISystem::initializeRenderingParams(){
 
 	// modify as needed
 
-	// currently 6 floats (x,y,z,r,g,b) per point
+	// currently 7 floats (x,y,z,r,g,b, textFlag) per point
 	// 6 total because that's how many you need for a quad (2 triangles)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 6, NULL, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 7 * 6, NULL, GL_DYNAMIC_DRAW);
 
 	// first position is just (x,y, z) but z=0
-	// position is mapped to layout = 0, size is 3 since (x,y,z) the stride is 6 because [x,y,z,r,g,b,x] skip 6 for the next starting point
+	// position is mapped to layout = 0, size is 3 since (x,y,z) the stride is 7 because [x,y,z,r,g,b, flag, x] skip 6 for the next starting point
 	// and it starts at 0 so (void*)0
-	// color is mapped to layout = 1 size is 3 since (r,g,b) the stride is 6 again [r,g,b,x,y,z,r] skips 6 to get to the next starting point
+	// color is mapped to layout = 1 size is 3 since (r,g,b) the stride is 7 again [r,g,b,x,y,z,flag,r] skips 7 to get to the next starting point
 	// and it starts after 3 floats so (void*)(3*sizeof(float)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
-	// enable both
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(3 * sizeof(float)));
+	// starts after 6 floats 
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 7 * sizeof(float), (void*)(6 * sizeof(float)));
+
+	// enable all
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
 
 
 	// Initialize and bind VAO
@@ -203,8 +205,11 @@ void UISystem::addScreen(std::string screenName) {
 			UIPositions positions = calculateAnchorPositions(element);
 			// 6 points in a triangle based quad
 			for (int i = 0; i < 6; i++) {
-				uiData.push_back(positions.points[i]);
-				uiData.push_back(element.colors[i]);
+				UIVertex v1;
+				v1.position = positions.points[i];
+				v1.color = element.colors[i];
+				v1.interpretFlag = 0.0f;
+				uiData.push_back(v1);
 			}
 
 		}
@@ -215,7 +220,7 @@ void UISystem::addScreen(std::string screenName) {
 
 	// resize the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, uiData.size()*3*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, uiData.size()*7*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 }
 
 void UISystem::popScreen() {
@@ -231,7 +236,6 @@ void UISystem::popScreen() {
 			// 6 points in a triangle based quad
 			for (int i = 0; i < 6; i++) {
 				uiData.pop_back();
-				uiData.pop_back();
 			}
 
 		}
@@ -243,7 +247,7 @@ void UISystem::popScreen() {
 
 	// resize the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, uiData.size()*3*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, uiData.size()*7*sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 
 }
 
@@ -259,8 +263,11 @@ void UISystem::recalcScreenData() {
 				UIPositions positions = calculateAnchorPositions(element);
 				// 6 points in a triangle based quad
 				for (int i = 0; i < 6; i++) {
-					uiData.push_back(positions.points[i]);
-					uiData.push_back(element.colors[i]);
+					UIVertex v1;
+					v1.position = positions.points[i];
+					v1.color = element.colors[i];
+					v1.interpretFlag = 0.0f;
+					uiData.push_back(v1);
 				}
 
 			}
@@ -271,7 +278,7 @@ void UISystem::recalcScreenData() {
 	}
 	// resize the vbo
 	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, uiData.size() * 3 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 }
 
 void UISystem::clearAllScreens() {

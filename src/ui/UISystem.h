@@ -142,7 +142,7 @@ private:
 	// if it has a texture then the layout is (x,y,z,u,v, unused) 
 	// because it is UIelements, z = 0
 	// the UIelement itself decides if it uses a bg color or a texture (it cannot do both)
-	std::vector<glm::vec3> uiData;
+	std::vector<UIVertex> uiData;
 	
 	// this could be useful
 	// std::vector<UIElement> alwaysVisible; // a vector of always visible UI elements
