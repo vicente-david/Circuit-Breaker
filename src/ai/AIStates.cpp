@@ -95,7 +95,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
 
 	// Only check forward direction if spark has boost
-	if (spark.currBoost > 0.0f) {
+	if (spark.boost > 0.0f) {
 		std::pair<bool, glm::vec3> resultFwd = lookFwd(transform, body);
 		// Check if hit returned true and if the hit was not itself
 		if (resultFwd.first) {
