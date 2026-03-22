@@ -248,6 +248,7 @@ void Game::initializeUI() {
 	uiSys->screenInitialization();
 
 	uiSys->addScreen("fpsCounter");
+	uiSys->addScreen("mainMenu");
 }
 
 void Game::stateTransition() {
@@ -265,6 +266,7 @@ void Game::stateTransition() {
 			// we're likely initializing here, so pop the main menu from UI
 			// initialize everything 
 			case (MAINMENU):
+				uiSys->popScreen();
 				initializeRace();
 				break;
 

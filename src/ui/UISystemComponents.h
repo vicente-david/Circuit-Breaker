@@ -48,7 +48,15 @@ struct UIElement {
 	// color of background (if no background this is used for texture coord)
 	// texture coords will not use the z component of the vec3 
 	// design texture to fill container, not the screen
-	glm::vec3 colors[6];
+	// Note: uv's are default initialized to the full texture
+	glm::vec3 colors[6] = {
+		glm::vec3(0.0f, 0.0f, 0.0f), // bottom left
+		glm::vec3(1.0f, 0.0f, 0.0f), // bottom right
+		glm::vec3(1.0f, 1.0, 1.0f), // top right
+		glm::vec3(0.0, 0.0f, 0.0f), // bottom left
+		glm::vec3(1.0, 1.0f, 1.0f), // top right
+		glm::vec3(0.0f, 1.0f, 1.0f) // top left
+	};
 	bool hasBackgroundColor; // toggle bg color on/off
 
 	// anchors:

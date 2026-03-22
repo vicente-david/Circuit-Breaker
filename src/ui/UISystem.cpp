@@ -235,6 +235,7 @@ void UISystem::clearAllScreens() {
 
 void UISystem::screenInitialization(){
 	createFPSCounter();
+	createMainMenu();
 }
 
 // Recall UIElement has the following fields
@@ -262,22 +263,6 @@ void UISystem::createFPSCounter(){
 	counter1.textAlignmentY = BOTTOM;
 
 	counter1.hasBackgroundColor = false;
-	counter1.colors[0] = glm::vec3(1.0f, 0.0f, 0.0f); // bottom left
-	counter1.colors[1] = glm::vec3(1.0f, 1.0f, 0.0f); // bottom right
-	counter1.colors[2] = glm::vec3(1.0f, 0.0, 1.0f); // top right
-	counter1.colors[3] = glm::vec3(1.0, 0.0f, 0.0f); // bottom left
-	counter1.colors[4] = glm::vec3(1.0, 0.0f, 1.0f); // top right
-	counter1.colors[5] = glm::vec3(0.0f, 1.0f, 1.0f); // top left
-
-	counter1.colors[0] = glm::vec3(0.0f, 0.0f, 0.0f); // bottom left
-	counter1.colors[1] = glm::vec3(1.0f, 0.0f, 0.0f); // bottom right
-	counter1.colors[2] = glm::vec3(1.0f, 1.0, 1.0f); // top right
-	counter1.colors[3] = glm::vec3(0.0, 0.0f, 0.0f); // bottom left
-	counter1.colors[4] = glm::vec3(1.0, 1.0f, 1.0f); // top right
-	counter1.colors[5] = glm::vec3(0.0f, 1.0f, 1.0f); // top left
-
-	counter1.path = "assets/textures/Start_Menu_2.jpg";
-	counter1.textureID = GenerateTexture(counter1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, counter1);
@@ -294,4 +279,28 @@ void UISystem::updateFPSCounter() {
 	Entity& e1 = nameToScreen["fpsCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "FPS: " + *fps;
+}
+
+void UISystem::createMainMenu() {
+	UIElement menu1;
+	menu1.text = "WOAH THE MENU CAN HAVE INDEPENDENT TEXT CRAZY!";
+	menu1.textScale = 1.0f;
+	// default anchors are whole screen (0,0,1,1)
+	menu1.textColor = glm::vec3(1.0f);
+	menu1.textAlignmentX = CENTER;
+	menu1.textAlignmentY = BOTTOM;
+
+	menu1.hasBackgroundColor = false;
+
+	menu1.path = "assets/textures/Start_Menu_2.jpg";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	UIScreen mainMenu;
+	mainMenu.name = "mainMenu";
+	mainMenu.UIElements.push_back(e1);
+
+	nameToScreen["mainMenu"] = mainMenu;
 }
