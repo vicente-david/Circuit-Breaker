@@ -85,7 +85,7 @@ struct SparkData {
 	PxConvexMesh *mCylinderSweepMesh = NULL;
 
 	const char *mVehicleDataPath = NULL;
-	const char *mVehicleName = "unnamed_vehicle";
+	const char *mVehicleName;
 
 	CollisionData physData = CollisionData{SPARK, -1};
 	void destroy() {

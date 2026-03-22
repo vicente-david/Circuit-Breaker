@@ -153,7 +153,7 @@ void Game::initializeTrack() {
 void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc);
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "Player");
 	coordinator->addComponent(sparkEntity, HumanController{ 0 });
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());

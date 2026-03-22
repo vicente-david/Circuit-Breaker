@@ -57,7 +57,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	}
 }
 
-Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
+Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	Entity sparkEntity = game.coordinator->createEntity();
 
@@ -67,6 +67,9 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, SparkData());
 	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
 	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
+
+	// Spark needs a name
+	sData.mVehicleName = name.c_str();
 
 	// SparkData sData;
 	// Load the params from json or set directly.
