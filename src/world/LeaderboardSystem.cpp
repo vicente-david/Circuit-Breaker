@@ -17,22 +17,27 @@ std::shared_ptr<LeaderboardSystem> LeaderboardSystem::registerSystem(std::shared
 }
 
 void LeaderboardSystem::update(GameState& game) {
-	Leaderboard lb;
-	lb.standings.clear();
+	scores.clear();
+
 	// iterate through all spark entities
 	for (auto& entity : entities) {
-		//Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		float score = lapProg.currentLap * lapProg.progress;
-		// store the entity and it's score.
 		scores.push_back({score, entity});
 	}
 
-	std::sort(scores.begin(), scores.end(), std::greater<std::pair<float, Entity>>()); // sort entity positions in descending order
+	std::sort(scores.begin(), scores.end(), std::greater<std::pair<float, Entity>>());
 
-	// write the standings
-	for (int i = 0; i < scores.size(); i++) {
-		lb.standings.push_back(scores[i].second);
-		//dbug::log("LEADERBOARD", 0, "Place (%d): %d", i + 1, lb.standings[i]);
+	// write standings to each entity's Leaderboard component
+	for (auto& entity : entities) {
+		Leaderboard& lb = game.coordinator->getComponent<Leaderboard>(entity);
+		lb.standings.clear();
+		for (int i = 0; i < scores.size(); i++) {
+			lb.standings.push_back(scores[i].second);
+		}
 	}
+
+	//for (int i = 0; i < scores.size(); i++)
+		//dbug::log("LEADERBOARD", 0, "Place (%d): Entity %d", i + 1, scores[i].second);
+
 }
