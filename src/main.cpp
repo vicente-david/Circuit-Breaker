@@ -18,6 +18,7 @@ int main() {
 	// dbug::logIgnore("INPUT");
 	// dbug::logIgnore("GAME");
 	dbug::logIgnore("AI");
+	//dbug::logIgnore("LEADERBOARD");
 	// dbug::logListType = dbug::WHITE_LIST;
 	//  dbug::logIgnore("ECS");
 	// dbug::logIgnoreType = dbug::WHITE_LIST;

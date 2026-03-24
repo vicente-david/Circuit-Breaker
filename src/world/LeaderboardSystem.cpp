@@ -26,7 +26,7 @@ void LeaderboardSystem::update(GameState& game) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		SparkData& sparkData = game.coordinator->getComponent<SparkData>(entity);
 		const std::string& sparkName = sparkData.mVehicleName;
-		float score = (lapProg.currentLap * 100000.0f) + lapProg.progress; // 100000.0f to ensure that lap count takes priority
+		float score = (lapProg.currentLap * 100000.0f) + lapProg.progress - lapProg.distToCheckpoint; // 100000.0f to ensure that lap count takes priority
 		scores.push_back({score, sparkName});
 	}
 
@@ -40,7 +40,7 @@ void LeaderboardSystem::update(GameState& game) {
 		lb.standings.clear();
 		for (int i = 0; i < scores.size(); i++) {
 			lb.standings.push_back(scores[i].second);
-			//dbug::log("LEADERBOARD", 0, "Place (%d): %s (score: %.2f)", i + 1, scores[i].second.c_str(), scores[i].first);
+			dbug::log("LEADERBOARD", 0, "Place (%d): %s (score: %.2f)", i + 1, scores[i].second.c_str(), scores[i].first);
 		}
 	}
 
