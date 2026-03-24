@@ -467,7 +467,7 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 void SparkSys::regenBoost(SparkData& sData, double dt) {
 	// Regenerate boost based on how 'hard' the drift is.
 	// Traveling parallel to your lateral direction (90 deg from the direction you're 
-	// facing) gives full regen rate.
+	// facing) grants the maximum boost regeneration rate.
 	if (sData.speed < sData.minDriftSpeed)
 		return;
 
@@ -530,11 +530,10 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-
 	const float lateralSpeed = linVel.dot(lateral);
 
 	int ccw = PxSign(sData.rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
-	int steerCcw = PxSign(sControls.steering); // steering ccw = 1 and cw = -1
+	int countersteering = ccw * sControls.steering; // negative = steering out of corner, positive = steering into corner
 
 	float driftCurve = 2.1f * sControls.steering;
 	float angleCurve = 1.4f * sControls.steering;
@@ -544,17 +543,17 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	PxVec3 driftDir = (forward + lateral * driftCurve);
 	driftDir.y = 0.f;
 	driftDir.normalize();
-	float forceStrength = ccw == steerCcw ? 600.f : 1400.f;
+	float forceStrength = countersteering > 0 ? 1600.f : 400.f;
 	sData.rBody->addForce(driftDir * forceStrength);
 
-	float torqueStrength = ccw == steerCcw ? 200.f : 800.f;
+	float torqueStrength = countersteering > 0 ? -50.f : 600.f;
 	sData.rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
 
 	float gripStrength = 240.f;
-	sData.rBody->addForce(-lateral * lateralSpeed * gripStrength * yawVel);
+	sData.rBody->addForce(lateral * gripStrength * countersteering * cosTheta);
 
 	// TODO: make sure roll damping is working properly
-	float rollDamping = sData.speed * 0.4f;
+	float rollDamping = PxMin(lateralSpeed * lateralSpeed, 100.f);
 	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
 		PxForceMode::eACCELERATION);
 }
@@ -570,7 +569,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
-			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));
+			changeWheelParams(sData, 3.8, 55600, PxDegToRad(30));
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
