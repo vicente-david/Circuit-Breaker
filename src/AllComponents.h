@@ -8,6 +8,7 @@
 #include "graphics/CameraComp.h"
 #include "world/LapSystem.h"
 #include "world/RespawnSystem.h"
+#include "world/LeaderboardSystem.h"
 #include "ai/AISparkComponents.h"
 #include "audio/Sound.h"
 #include "ui/UISystemComponents.h"

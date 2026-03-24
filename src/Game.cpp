@@ -56,6 +56,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIElement>();
+	coordinator->registerComponent<Leaderboard>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -66,6 +67,7 @@ void Game::initializeECS() {
 	audioSys = AudioSystem::registerSystem(coordinator);
 	aiControllerSys = AIControllerSys::registerSystem(coordinator);
 	respawnSys = RespawnSystem::registerSystem(coordinator);
+	leaderboardSys = LeaderboardSystem::registerSystem(coordinator);
 	lapSys = LapSystem::registerSystem(coordinator);
 	uiSys = UISystem::registerSystem(coordinator);
 
@@ -152,11 +154,12 @@ void Game::initializeTrack() {
 void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc);
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "Player");
 	coordinator->addComponent(sparkEntity, HumanController{ 0 });
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());
 	coordinator->addComponent(sparkEntity, Respawnable());
+	coordinator->addComponent(sparkEntity, Leaderboard());
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
@@ -164,9 +167,10 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, "AI Player");
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
+	coordinator->addComponent(testSpark2, Leaderboard());
 	coordinator->addComponent(testSpark2, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
@@ -176,9 +180,10 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI Player 2");
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
+	coordinator->addComponent(testSpark3, Leaderboard());
 	coordinator->addComponent(testSpark3, AIController{
 		AIState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
@@ -339,6 +344,7 @@ void Game::update() {
 		lapSys->update(gameState);
 		uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
 		respawnSys->update(gameState);
+		leaderboardSys->update(gameState);
 	}
 
 	updateFPS();

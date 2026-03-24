@@ -31,6 +31,9 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
 
+		// Check in air
+		checkAirborne(sData, dt);
+
 		// TODO: Put in helper (audio stuff)
 		// CANCEL TODO: hold off for now, there might be a different system for this later on
 		{
@@ -54,7 +57,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	}
 }
 
-Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
+Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	Entity sparkEntity = game.coordinator->createEntity();
 
@@ -64,6 +67,9 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, SparkData());
 	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
 	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
+
+	// Spark needs a name
+	sData.mVehicleName = name;
 
 	// SparkData sData;
 	// Load the params from json or set directly.
@@ -93,7 +99,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
 	PxTransform startPose(startP, PxQuat(PxIdentity));
-	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName);
+	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName.c_str());
 
 	sData.rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 
@@ -274,10 +280,57 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 }
 
 void SparkSys::checkDeath(SparkData& sData, double dt) {
-	if (sData.health <= 0 && !sData.isDead) {
-		sData.isDead = true;
-		sData.respawnTimer = sData.respawnCooldown;
+	if (sData.health > 0)
+		return;
+	
+	if (sData.isDead && sData.deathTimer > 0) {
+		sData.deathTimer -= dt;
+		return;
 	}
+
+	// don't want negative health for UI purposes
+	if (sData.health < 0) 
+		sData.health = 0; 
+	
+	sData.isDead = true;
+}
+
+void SparkSys::checkAirborne(SparkData& sData, double dt) {
+	// do check after simulation step
+	bool grounded = false; // assume you're airborne
+	for (int i = 0; i < 4; i++) {
+		// if 1 tire is has contact -> you are grounded
+		grounded |= sData.mVehicle->mBaseState.roadGeomStates[i].hitState;
+	}
+
+	if (grounded) 
+		sData.offGroundTimer = sData.offGroundLimit;
+
+	else if (sData.offGroundTimer > 0)
+			sData.offGroundTimer -= dt;
+
+	if (sData.isGrounded && !grounded) // just became airborne
+		angularResistance(sData, PX_MAX_REAL, sData.offGroundLimit);
+	else if (!sData.isGrounded && grounded) // just touched ground
+		angularResistance(sData); // pre-maturely kill angResTimer
+
+	sData.isGrounded = grounded;
+}
+
+void SparkSys::angularResistance(SparkData& sData, PxReal val, double duration) {
+	sData.rBody->setAngularDamping(val);
+	sData.angResTimer = duration; // duration of zero means indefinitely
+}
+
+void SparkSys::checkAngResistace(SparkData& sData, double dt) {
+	if (sData.angResTimer <= 0)
+		return;
+	
+	sData.angResTimer -= dt;
+	
+	// restore to default resistance
+	if (sData.angResTimer <= 0) 
+		angularResistance(sData);
 }
 
 // FLAG CHECKS
@@ -288,13 +341,13 @@ void SparkSys::sparkCollision(GameState& game) {
 
 		// don't do damage from hitting each other if sliding or boosting
 		// Spark 1 logic
-		if (sData1.shimmyTimer < 0.5 && !sData1.isBoosting)
+		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting)
 			sData1.health -= colData.magnitude;
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
 
 		// Spark 2 logic
-		if (sData2.shimmyTimer < 0.5 && !sData2.isBoosting)
+		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting)
 			sData2.health -= colData.magnitude;
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
@@ -343,10 +396,14 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	// shimmying
 	shimmy(sData, sControls, dt);
 
+	if (!sData.isGrounded)
+		return;
+
 	// handling
-	// TODO: if (!sData.inAir)
-	sparkHandling(sData, sControls, dt);
-	regenBoost(sData, dt); 
+	checkAngResistace(sData, dt);
+	sparkHandling(sData, sControls);
+	regenBoost(sData, dt);
+	
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
@@ -432,30 +489,31 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 
 void SparkSys::applyShimmy(SparkData& sData, bool moveRight) {
 	const PxVec3 lateralVector = sData.rBody->getGlobalPose().q.getBasisVector0();
-	
 	int flip = moveRight ? -1 : 1;
 	
 	sData.rBody->addForce(lateralVector * sData.shimmyForce * flip, PxForceMode::eVELOCITY_CHANGE);
+	sData.shimmyTimer = sData.shimmyCooldown;
 
-	sData.shimmyTimer = sData.ShimmyCooldown;
+	float iFramesInSecs = sData.shimmyCooldown - sData.shimmyInvincible;
+	angularResistance(sData, PX_MAX_REAL, iFramesInSecs);
+
 }
 
 void SparkSys::shimmy(SparkData& sData, SparkControls& sControls, double dt) {
-	if (sData.shimmyTimer <= 0) {
-		if (sControls.shimmyL) {
-			//dbug::log("GAME", 0, "slide to the left");
-			applyShimmy(sData, false);
-		}
-
-		if (sControls.shimmyR) {
-			//dbug::log("GAME", 0, "slide to the right");
-			applyShimmy(sData, true);
-		}
-	}
-	else {
+	if (sData.shimmyTimer > 0) {
 		sData.shimmyTimer -= dt;
+		return;
 	}
 
+	if (sControls.shimmyL) {
+		//dbug::log("GAME", 0, "slide to the left");
+		applyShimmy(sData, false);
+	}
+
+	if (sControls.shimmyR) {
+		//dbug::log("GAME", 0, "slide to the right");
+		applyShimmy(sData, true);
+	}
 }
 
 // HANDLING
@@ -508,7 +566,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 }
 
-void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls, double dt) {
+void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
 			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));
@@ -554,32 +612,37 @@ PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
 
 void SparkSys::sparkValuesReset(SparkData& sData) {
 	sData.health = sData.maxHealth;
-	sData.maxBoost = 0.0f;
 	sData.boost = sData.maxBoost;
 	sData.shimmyTimer = 0;
-	sData.speed = 0.0f;
+	sData.deathTimer = sData.deathCooldown;
+	sData.offGroundTimer = sData.offGroundLimit;
+	
 	sData.inReverse = false;
-	sData.inDrift = false;
 	sData.isBoosting = false;
 	sData.isDead = false;
+
+	dbug::log("GAME", 0, "reset spark");
 }
 
 void SparkSys::respawn(Entity entity, GameState& game, double dt) {
 	SparkData& sData = game.coordinator->getComponent<SparkData>(entity);
 	SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
 
-	if (sData.respawnTimer <= 0) {
-		if (sData.isDead) {
-			sparkValuesReset(sData);
-			sControls.reset = true;
-		}
-
-		if (sControls.reset) {
-			respawnSpark(sData, getRespawnPose(entity, game));
-			sControls.reset = false; // so AI doesn't get stuck in a loop
-		}
-	}
-	else {
+	if (sData.respawnTimer > 0) {
 		sData.respawnTimer -= dt;
+		return;
+	}
+	
+	if (sData.deathTimer <= 0) {
+		sparkValuesReset(sData);
+		sControls.reset = true;
+	}
+
+	if (sData.offGroundTimer <= 0 && !sData.isDead)
+		sControls.reset = true;
+
+	if (sControls.reset) {
+		respawnSpark(sData, getRespawnPose(entity, game));
+		sControls.reset = false; // so AI doesn't get stuck in a loop
 	}
 }

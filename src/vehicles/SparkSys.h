@@ -17,7 +17,7 @@ class SparkSys : public System {
 
 	// very convinient function to just make a spark instead of needing to go
 	// though whatever physX makes you to do
-	Entity createSpark(GameState &game, PxVec3 startP);
+	Entity createSpark(GameState &game, PxVec3 startP, std::string name = "unnamed_spark");
 
 	bool init();
 	void cleanup();
@@ -26,6 +26,10 @@ class SparkSys : public System {
   private:
 	// === Helpers ===
 	void checkDeath(SparkData& sData, double dt);
+	void checkAirborne(SparkData& sData, double dt);
+
+	void angularResistance(SparkData& sData, PxReal val = 0.05f, double duration = 0);
+	void checkAngResistace(SparkData& sData, double dt);
 
 	// Collision
 	void sparkCollision(GameState& game);
@@ -49,7 +53,7 @@ class SparkSys : public System {
 	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
 	void driftStabilizer(SparkData& sData, SparkControls& sControls);
 	void yawStabilizer(SparkData& sData);
-	void sparkHandling(SparkData& sData, SparkControls& sControls, double dt);
+	void sparkHandling(SparkData& sData, SparkControls& sControls);
 
 	// Respawn
 	void respawnSpark(SparkData& sData, PxTransform respawnPose);
