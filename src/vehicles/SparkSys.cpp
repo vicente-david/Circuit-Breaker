@@ -541,6 +541,12 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	float yawVel = sData.rBody->getAngularVelocity().y;
 	float cosTheta = lateralSpeed / sData.speed;
 
+	// slow down when hitting a hard drift
+	if (sData.speed > 40 && cosTheta > 0.42f) {
+		float speedDamp = 0.7;
+		sData.rBody->addForce((-linVel - up) * speedDamp * cosTheta * cosTheta, PxForceMode::eACCELERATION);
+	}
+
 	// Opposite forces automatically apply due to opposite sign when counter-steering
 	PxVec3 driftDir = (forward + lateral * driftCurve);
 	driftDir.y = 0.f;
