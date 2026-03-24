@@ -39,7 +39,7 @@ struct SparkData {
 	float health = maxHealth;
 	float healthRegenRate = 10.f;
 
-	float boostUseRate = 15.f;
+	float boostUseRate = 20.f;
 	float boostStrength = 10.0f;
 	float boostRegenRate = 20.0f;
 	float maxBoost = 100.0f;
