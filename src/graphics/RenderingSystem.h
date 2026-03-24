@@ -1,11 +1,9 @@
 #pragma once 
-
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-
+#include "ShaderProgram.h"
 #include "GameState.h"
-#include "Text.h"
 #include "Camera.h"
 #include "ecs/System.h"
 #include "graphics/CameraSystem.h"
@@ -23,23 +21,11 @@ class RenderingSystem:public System {
 public:
 	RenderingSystem();
 	void initializeShaders();
-	void initializeText();
+	void initializeLines();
 	void initShadowMap();
 
 	void update(GameState& gamestate, std::string fps, std::shared_ptr<CameraSystem> cameraSystem);
 	void renderShadows(GameState& gamestate, std::string& fps, std::shared_ptr<CameraSystem> camSystem); // Render pass 1 
-	// ui functions
-	void renderUI(GameState& gamestate, std::string& fps, std::shared_ptr<CameraSystem> camSystem); // render ui, takes the current Ui objects, converts to screen space, and renders
-	// not sure how to actually do multiple UI elements, or just load images and do it that way
-	// gameState contains which UI elements to display
-	// acc we could create multiple Basic UI components and just have their own create vert function instead of manually doing it here
-	
-	// TODO: split rendershadows into two render passes
-	// currently it contains both cause of variables and stuff
-	//void renderTheScene();  // Render pass 2
-
-	// all functions that are stored in the renderpasses vector must have the same args
-
 
 
 	void drawPhysxDebug(GameState &game, glm::mat4& view, glm::mat4& proj);
@@ -53,25 +39,18 @@ public:
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
 	unsigned int SHADOW_WIDTH = SCR_WIDTH * 10, SHADOW_HEIGHT = SCR_HEIGHT * 10;
-	unsigned int textVBO;
-	unsigned int textVAO;
+
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
-	unsigned int uiVAO, uiVBO;
 
-	std::map<char, Character> textFont;
-	glm::mat4 textMat;
-
-	glm::mat4 uiMat;
+	
 
 	GLFWwindow* window;
 	std::unique_ptr<ShaderProgram> basicShader;
-	std::unique_ptr<ShaderProgram> textProg;
+	
 	std::unique_ptr<ShaderProgram> solidColour;
 
 	std::unique_ptr<ShaderProgram> shadowShader;
-
-	std::unique_ptr<ShaderProgram> uiShader;
 
 	// ah yes my favourite type in c++
 	// let's break this down

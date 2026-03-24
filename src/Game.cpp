@@ -21,15 +21,17 @@ void Game::initializeGame() {
 	gameState.physics = physics;
 	gameState.coordinator = coordinator;
 	gameState.audio = audio;
-	gameState.uiSystem = uiSystem;
+
 
 	initializeAudio();
 
 	renderer->initializeShaders(); // Create shader programs
-	renderer->initializeText();
+	renderer->initializeLines();
 	
 
 	inputSystem.attachWindow(renderer->window);
+
+	initializeUI();
 
 	gameActions = inputSystem.getActions();
 
@@ -53,9 +55,8 @@ void Game::initializeECS() {
 	coordinator->registerComponent<CollisionData>();
 	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
+	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
-	coordinator->registerComponent<UIComponent>();
-	coordinator->registerComponent<RectUI>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -146,7 +147,7 @@ void Game::initializeTrack() {
 	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
 
 
-	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
+	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
 
@@ -241,6 +242,80 @@ void Game::initializeAudio() {
 	//float soundX = 0;
 }
 
+void Game::initializeUI() {
+	uiSys->window = renderer->window;
+	uiSys->SCR_WIDTH = &renderer->SCR_WIDTH;
+	uiSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
+	uiSys->initializeRenderingParams();
+	uiSys->coordinator = coordinator;
+	uiSys->fps = &fps;
+
+	uiSys->screenInitialization();
+
+	uiSys->addScreen("fpsCounter");
+	uiSys->addScreen("mainMenu");
+}
+
+void Game::stateTransition() {
+	// if a transition happened
+	if (!(gameState.currentState == gameState.nextState)) {
+		// we can have a switch case statement here
+		// for every possible state
+
+		// we know this is the "old" state
+		// we can do cleanup here if necessary
+		// outgoing transition
+		// exit
+		switch (gameState.currentState) {
+			
+			// we're likely initializing here, so pop the main menu from UI
+			// initialize everything 
+			case (MAINMENU):
+				uiSys->popScreen();
+				initializeRace();
+				uiSys->addScreen("lapCounter");
+				break;
+
+			// our likely next state is paused or game ended
+			// we may want to pop heads up display
+			case (GAMEPLAY): 
+				break;
+
+			// we're likely resuming the game, so pop all pause menus
+			case (PAUSED): 
+				uiSys->clearAllScreens();
+				break;
+
+			// we're likely restarting the game
+			case (END):
+				break;
+		}
+
+		// this is the new state, do things that you want to update
+		// incoming transition
+		// entry
+		switch (gameState.nextState) {
+			// HOW DID WE GET HERE, this shouldn't run
+			case (MAINMENU):
+				break;
+
+				// we are resuming gameplay
+			case (GAMEPLAY):
+				break;
+				// we will be in a pause menu
+			case (PAUSED):
+				break;
+
+				// someone has finished the race
+			case (END):
+				break;
+		}
+
+		gameState.currentState = gameState.nextState;
+	}
+}
+
+
 // update stuff
 void Game::update() {
 	// update inputs
@@ -250,18 +325,28 @@ void Game::update() {
 	controllerSys->update(gameState);
 
 	if (gameActions.intializeGame) {
-		initializeRace();
 		gameActions.intializeGame = false;
+		gameState.nextState = GAMEPLAY;
 	}
 
+	stateTransition(); // handle any state transitions
+
 	updateTime();
-	updatePhysics();
-	// AI
-	aiControllerSys->update(gameState);
-	// after physics update
-	lapSys->update(gameState);
-	//respawnSys->update(gameState);
-	leaderboardSys->update(gameState);
+
+
+	// do our updates only if in game
+	if (gameState.currentState == GAMEPLAY) {
+
+		updatePhysics();
+		// AI
+		aiControllerSys->update(gameState);
+		// after physics update
+		lapSys->update(gameState);
+		uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
+		respawnSys->update(gameState);
+		leaderboardSys->update(gameState);
+	}
+
 	updateFPS();
 
 	updateRendering();
@@ -276,6 +361,8 @@ void Game::updateTime() {
 	accumulator += frameTime;
 	accumulator = std::min(accumulator, 1 / minFps);
 	framesPassed++;
+
+	t += frameTime;
 }
 
 void Game::updatePhysics() {
@@ -289,7 +376,7 @@ void Game::updatePhysics() {
 		cameraSys->update(gameState, dt);
 		audioSys->updateSounds(gameState);
 		accumulator -= dt;
-		t += dt;
+		//t += dt;
 
 		// dopler shift test
 		// this stuff would  go in whatever is playing a sound (ex. physics
@@ -322,11 +409,19 @@ void Game::updateFPS() {
 		t -= 1.0;
 		framesPassed = 0;
 	}
+
+	uiSys->updateFPSCounter();
 }
 
 void Game::updateRendering() {
 	// rendering
 	renderer->update(gameState, fps, cameraSys);
+
+	// update UI
+	uiSys->update();
+
+	glfwPollEvents();
+	glfwSwapBuffers(renderer->window);
 }
 
 void Game::updateAudio() {

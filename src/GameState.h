@@ -4,14 +4,23 @@
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
 #include "physics/PhysicsManager.h"
-#include "ui/UISystemComponents.h"
-#include "ui/UISystem.h"
 
 #include <memory>
+
+enum GAMESTATE {
+	MAINMENU,
+	GAMEPLAY,
+	PAUSED,
+	END
+};
+
 
 class GameState {
   public:
 	Actions inputActions;
+
+	GAMESTATE currentState = MAINMENU; // stores the current state of the game
+	GAMESTATE nextState = MAINMENU; // used for handling state transitions
 
 	// Public functions
 	GameState();
@@ -47,12 +56,12 @@ class GameState {
 	int numLaps = 4;
 
 	// temp UI
-	RectUI activeUIRect; 
-	TextUI uiText;
+	//RectUI activeUIRect; 
+	//TextUI uiText;
 
 	//temporary to make everything work
 	std::shared_ptr<Coordinator> coordinator;
-	std::shared_ptr<UISystem> uiSystem;
+	//std::shared_ptr<UISystem> uiSystem;
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<AudioEngine> audio;
 };

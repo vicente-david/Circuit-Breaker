@@ -39,6 +39,7 @@ public:
 	void initializeTrack();
 	void initializeFinishLine(); // ???
 	void initializeAudio();
+	void initializeUI();
 
 	//void initializePlayers();
 	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
@@ -47,6 +48,9 @@ public:
 
 
 	//void resetGame(); // todo: implement
+
+	void stateTransition(); // if gamestate changes update things
+	// mostly a convenience function
 
 	// update every frame 
 	void update(); // calls the various updates, ex first update physics then rendering
