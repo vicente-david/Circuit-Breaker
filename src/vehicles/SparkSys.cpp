@@ -530,6 +530,7 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
+	const PxVec3 up = sData.rBody->getGlobalPose().q.getBasisVector1(); // already normalized
 	const float lateralSpeed = linVel.dot(lateral);
 
 	int ccw = PxSign(sData.rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
@@ -538,6 +539,7 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	float driftCurve = 2.1f * sControls.steering;
 	float angleCurve = 1.4f * sControls.steering;
 	float yawVel = sData.rBody->getAngularVelocity().y;
+	float cosTheta = lateralSpeed / sData.speed;
 
 	// Opposite forces automatically apply due to opposite sign when counter-steering
 	PxVec3 driftDir = (forward + lateral * driftCurve);
@@ -556,6 +558,9 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	float rollDamping = PxMin(lateralSpeed * lateralSpeed, 100.f);
 	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
 		PxForceMode::eACCELERATION);
+
+	float downforce = sData.speed * sData.speed * 0.2;
+	sData.rBody->addForce(PxVec3(0.f, -downforce, 0.f));
 }
 
 void SparkSys::yawStabilizer(SparkData& sData) {
