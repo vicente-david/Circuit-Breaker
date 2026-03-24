@@ -38,6 +38,7 @@ class SparkSys : public System {
 
 	// Commands
 	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);
+	void brake(SparkData& sData, SparkControls& sControls);
 	void reverse(SparkData& sData, SparkControls& sControls);
 
 	// Features

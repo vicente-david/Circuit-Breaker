@@ -402,9 +402,15 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	
 }
 
+void SparkSys::brake(SparkData& sData, SparkControls& sControls) {
+	const PxVec3 linVel = sData.rBody->getLinearVelocity();
+	float brakingForce = 1000.f;
+	sData.rBody->addForce(-linVel * brakingForce);
+}
+
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 	// Must be basically stopped or already in reverse
-	if ((sData.speed < 0.1f || sData.inReverse) && sControls.brake) {
+	if (sData.speed < 0.1f || sData.inReverse) {
 		sData.mVehicle->mCommandState.brakes[0] = sControls.throttle; // Brake becomes throttle
 		sData.mVehicle->mCommandState.throttle = sControls.brake; // Throttle becomes brake
 		sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear - 1; // Shifts to reverse
