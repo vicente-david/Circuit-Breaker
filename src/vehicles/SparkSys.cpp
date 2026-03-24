@@ -383,22 +383,21 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	sData.mVehicle->mCommandState.throttle = sControls.throttle;
 	sData.mVehicle->mCommandState.steer = sControls.steering;
 
-	// Check for reverse 
-	reverse(sData, sControls);
-
-	// boosting
 	boost(sData, sControls, dt);
-
-	// shimmying
 	shimmy(sData, sControls, dt);
+
+	if (sControls.brake) {
+		brake(sData, sControls); // stronger braking
+		reverse(sData, sControls); // check for reverse
+	}
 
 	if (!sData.isGrounded)
 		return;
 
-	// handling
 	checkAngResistace(sData, dt);
 	sparkHandling(sData, sControls);
-	regenBoost(sData, dt);
+	
+	regenBoost(sData, dt); // boost regeneration
 	
 }
 
