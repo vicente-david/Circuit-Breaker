@@ -431,7 +431,7 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	if (useHealth && sData.health > 1)
-		sData.health -= sData.boostUseRate * dt;
+		sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
 	else if (sData.boost > 0)
 		sData.boost -= sData.boostUseRate * dt;
 
@@ -475,11 +475,15 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
 	const float lateralSpeed = linVel.dot(lateral);
 
-	// calculating the factor like this is much better for performance and gives similar results
-	// recall A.dot(B) = ||A|| ||B|| cosTheta   -->   cosTheta = A.dot(B) / (||A|| ||B||)
-	// cosTheta = 1 if lateralSpeed is perfectly aligned with travel speed
-	// ensure you're traveling fast enough so to not divide by zero
-	float cosTheta = lateralSpeed / sData.speed; 
+	// this will be the drift angle at which you have increased boost regeneration rate.
+	// can calculate specified value as arccos(1 / threshold) = drift angle threshold.
+	float threshold = 1.4f; // 1.15 ~= 29.6 deg, 1.5 ~= 48.2 deg, 2 = 60 deg
+
+	// calculating the factor like this is much better for performance and gives similar results.
+	// recall A.dot(B) = ||A|| ||B|| cosTheta   -->   cosTheta = A.dot(B) / (||A|| ||B||).
+	// if cosTheta = 1 lateralSpeed is perfectly aligned with travel speed.
+	// ensure you're traveling fast enough so to not divide by zero.
+	float cosTheta = threshold * lateralSpeed / sData.speed; 
 	sData.boost += sData.boostRegenRate * dt * cosTheta * cosTheta;
 }
 
