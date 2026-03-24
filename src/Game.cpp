@@ -77,17 +77,17 @@ void Game::initializeRace() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/track1.obj");
+	lapSys->generateCheckpoints("assets/tTest.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); // loads model and paths
+	Track Track("assets/tTest.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 
-	renderer->setTrackBounds(Track.model.GetMesh("Track").GetBounds());
+	renderer->setTrackBounds(Track.model.GetMesh("Cube").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
@@ -98,24 +98,24 @@ void Game::initializeTrack() {
 		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
 		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
 		auto trackActor =
-			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
+			physics->initStaticMesh(Track.model.GetMesh("Cube"), none);
 		trackActor->userData = &trackPhys;
 
-		// add walls
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = coordinator->createEntity();
-		coordinator->addComponent(walls, none);
-		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, CollisionData{GROUND, walls});
-		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
+		//// add walls
+		//Model wallsModel("assets/walls.obj"); // loads model and paths
+		//Entity walls = coordinator->createEntity();
+		//coordinator->addComponent(walls, none);
+		//coordinator->addComponent(walls, wallsModel);
+		//coordinator->addComponent(track, CollisionData{GROUND, walls});
+		//CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
 
 
-		for (auto& i : wallsModel.GetMeshes()) {
-			auto actor = physics->initStaticMesh(i, none);
-			actor->userData = &planePhys;
-		}
+		//for (auto& i : wallsModel.GetMeshes()) {
+		//	auto actor = physics->initStaticMesh(i, none);
+		//	actor->userData = &planePhys;
+		//}
 
-		dbug::log(0, "track entity id:%d", track);
+		//dbug::log(0, "track entity id:%d", track);
 
 		// add heal zones
 		Model healModel("assets/heals.obj"); // loads model and paths
