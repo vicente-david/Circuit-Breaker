@@ -60,11 +60,11 @@ void AIControllerSys::update(GameState& game) {
 			defenseState->run(ctx);
 		}
 		else if (leaderboard.standings[0] == spark.mVehicleName) {
-			ctx.healthBoostMin = 0.85; // allowed to use health to boost in this state
+			ctx.healthBoostMin = 0.90; // allowed to use health to boost in this state
 			maintainState->run(ctx);
 		}
 		else { // Not in first and not low health
-			ctx.healthBoostMin = 0.95f;
+			ctx.healthBoostMin = 0.80f;
 			overtakeState->run(ctx);
 		}
 
