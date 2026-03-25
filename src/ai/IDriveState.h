@@ -16,8 +16,8 @@ struct AIDriveContext {
 // Direction enum for labelling sweep/hit direction
 enum Direction {
 	FWD,
-	LEFT,
-	RIGHT,
+	SIDE_L,
+	SIDE_R,
 	NONE // no hit
 };
 

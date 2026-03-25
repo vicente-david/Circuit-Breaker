@@ -154,7 +154,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 				lapProg.currentLap++;
 				lapProg.progress = 0.0f;
 				lapProg.closestTrackPoint = 0;
-				if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
+				//if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
 				std::cout << "on lap: " << lapProg.currentLap << std::endl;
 				if (lapProg.currentLap >= 4 && !game.gameEnded) game.endGame(entity);
 			}
@@ -257,6 +257,7 @@ void LapSystem::update(GameState& game) {
 
 		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
 		lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
+		lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID] - eTransform.pos);
 
 		// compute the track forward direction at this checkpoint used for respawning
 			// use the vector from this checkpoint to the next one

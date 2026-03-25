@@ -33,19 +33,19 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 	auto& body = ctx.body;
 	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
 
-	Direction dir = LEFT;
+	Direction dir = SIDE_L;
 	std::pair<bool, glm::vec3> resultSide = lookSide(transform, body, dir);
 	if (resultSide.first) {
 		ai.state = DODGING;
-		result = { LEFT, resultSide.second };
+		result = { SIDE_L, resultSide.second };
 		return result;
 	}
 
-	dir = RIGHT;
+	dir = SIDE_R;
 	resultSide = lookSide(transform, body, dir);
 	if (resultSide.first) {
 		ai.state = DODGING;
-		result = { RIGHT, resultSide.second };
+		result = { SIDE_R, resultSide.second };
 		return result;
 	}
 
@@ -107,19 +107,19 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 
 	// Test side directions (left and right)
 	else {
-		Direction dir = LEFT;
+		Direction dir = SIDE_L;
 		std::pair<bool, glm::vec3> resultSide = lookSide(transform, body, dir);
 		if (resultSide.first) {
 			ai.state = ATTACKING;
-			result = { LEFT, resultSide.second };
+			result = { SIDE_L, resultSide.second };
 			return result;
 		}
 
-		dir = RIGHT;
+		dir = SIDE_R;
 		resultSide = lookSide(transform, body, dir);
 		if (resultSide.first) {
 			ai.state = ATTACKING;
-			result = { RIGHT, resultSide.second };
+			result = { SIDE_R, resultSide.second };
 			return result;
 		}
 	}

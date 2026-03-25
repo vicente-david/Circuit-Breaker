@@ -193,11 +193,11 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 
 
 	// Shimmy attack
-	else if (sweepResult.first == LEFT) {
+	else if (sweepResult.first == SIDE_L) {
 		controls.shimmyL = true;
 		dbug::log("AI", 0, "[ATTACKING] -> SHIMMY LEFT");
 	}
-	else if (sweepResult.first == RIGHT) {
+	else if (sweepResult.first == SIDE_R) {
 		controls.shimmyR = true;
 		dbug::log("AI", 0, "[ATTACKING] -> SHIMMY RIGHT");
 	}
@@ -230,7 +230,7 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f) {
 		// opponent is slightly behind: try to boost away
 		glm::quat rotateAway;
-		if (sweepResult.first == LEFT) {
+		if (sweepResult.first == SIDE_L) {
 			rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
 		}
 		else
@@ -294,7 +294,7 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 
 	// Locally rotate forward direction by -90(L) or 90(R) degrees
 	glm::quat rotate;
-	if (dir == LEFT) {
+	if (dir == SIDE_L) {
 		rotate = glm::angleAxis(glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
 	}
 	else {

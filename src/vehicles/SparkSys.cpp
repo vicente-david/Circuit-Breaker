@@ -45,7 +45,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	}
 }
 
-Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
+Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	Entity sparkEntity = game.coordinator->createEntity();
 
@@ -55,6 +55,9 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 	game.coordinator->addComponent(sparkEntity, SparkData());
 	SparkData &sData = game.coordinator->getComponent<SparkData>(sparkEntity);
 	sData.mVehicle = std::make_shared<EngineDriveVehicle>();
+
+	// Spark needs a name
+	sData.mVehicleName = name;
 
 	// SparkData sData;
 	// Load the params from json or set directly.
@@ -84,7 +87,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP) {
 
 	// Apply a start pose to the physx actor and add it to the physx scene.
 	PxTransform startPose(startP, PxQuat(PxIdentity));
-	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName);
+	sData.mVehicle->setUpActor(*game.physics->gScene, startPose, sData.mVehicleName.c_str());
 
 	sData.rBody = sData.mVehicle->mPhysXState.physxActor.rigidBody;
 

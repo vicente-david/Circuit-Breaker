@@ -17,7 +17,7 @@ class SparkSys : public System {
 
 	// very convinient function to just make a spark instead of needing to go
 	// though whatever physX makes you to do
-	Entity createSpark(GameState &game, PxVec3 startP);
+	Entity createSpark(GameState &game, PxVec3 startP, std::string name = "unnamed_spark");
 
 	bool init();
 	void cleanup();
