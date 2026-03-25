@@ -304,6 +304,8 @@ void Game::stateTransition() {
 				break;
 				// we will be in a pause menu
 			case (PAUSED):
+				uiSys->clearAllScreens();
+				uiSys->addScreen("pauseMenu");
 				break;
 
 				// someone has finished the race

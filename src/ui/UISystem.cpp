@@ -236,6 +236,7 @@ void UISystem::clearAllScreens() {
 void UISystem::screenInitialization(){
 	createFPSCounter();
 	createMainMenu();
+	createPauseMenu();
 	createLapCounter();
 }
 
@@ -304,6 +305,25 @@ void UISystem::createMainMenu() {
 	mainMenu.UIElements.push_back(e1);
 
 	nameToScreen["mainMenu"] = mainMenu;
+}
+
+void UISystem::createPauseMenu() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
+
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/Pause_menu_1.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	UIScreen pauseMenu;
+	pauseMenu.name = "pauseMenu";
+	pauseMenu.UIElements.push_back(e1);
+
+	nameToScreen["pauseMenu"] = pauseMenu;
 }
 
 
