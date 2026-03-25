@@ -386,28 +386,33 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	sData.mVehicle->mCommandState.throttle = sControls.throttle;
 	sData.mVehicle->mCommandState.steer = sControls.steering;
 
-	// Check for reverse 
-	reverse(sData, sControls);
-
-	// boosting
 	boost(sData, sControls, dt);
-
-	// shimmying
 	shimmy(sData, sControls, dt);
+
+	if (sControls.brake) {
+		brake(sData, sControls); // stronger braking
+		reverse(sData, sControls); // check for reverse
+	}
 
 	if (!sData.isGrounded)
 		return;
 
-	// handling
 	checkAngResistace(sData, dt);
 	sparkHandling(sData, sControls);
-	regenBoost(sData, dt);
 	
+	regenBoost(sData, dt); // boost regeneration
+	
+}
+
+void SparkSys::brake(SparkData& sData, SparkControls& sControls) {
+	const PxVec3 linVel = sData.rBody->getLinearVelocity();
+	float brakingForce = 1000.f;
+	sData.rBody->addForce(-linVel * brakingForce);
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 	// Must be basically stopped or already in reverse
-	if ((sData.speed < 0.1f || sData.inReverse) && sControls.brake) {
+	if (sData.speed < 0.1f || sData.inReverse) {
 		sData.mVehicle->mCommandState.brakes[0] = sControls.throttle; // Brake becomes throttle
 		sData.mVehicle->mCommandState.throttle = sControls.brake; // Throttle becomes brake
 		sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear - 1; // Shifts to reverse
@@ -434,7 +439,7 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	if (useHealth && sData.health > 1)
-		sData.health -= sData.boostUseRate * dt;
+		sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
 	else if (sData.boost > 0)
 		sData.boost -= sData.boostUseRate * dt;
 
@@ -470,7 +475,7 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 void SparkSys::regenBoost(SparkData& sData, double dt) {
 	// Regenerate boost based on how 'hard' the drift is.
 	// Traveling parallel to your lateral direction (90 deg from the direction you're 
-	// facing) gives full regen rate.
+	// facing) grants the maximum boost regeneration rate.
 	if (sData.speed < sData.minDriftSpeed)
 		return;
 
@@ -478,11 +483,15 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
 	const float lateralSpeed = linVel.dot(lateral);
 
-	// calculating the factor like this is much better for performance and gives similar results
-	// recall A.dot(B) = ||A|| ||B|| cosTheta   -->   cosTheta = A.dot(B) / (||A|| ||B||)
-	// cosTheta = 1 if lateralSpeed is perfectly aligned with travel speed
-	// ensure you're traveling fast enough so to not divide by zero
-	float cosTheta = lateralSpeed / sData.speed; 
+	// this will be the drift angle at which you have increased boost regeneration rate.
+	// can calculate specified value as arccos(1 / threshold) = drift angle threshold.
+	float threshold = 1.4f; // 1.15 ~= 29.6 deg, 1.5 ~= 48.2 deg, 2 = 60 deg
+
+	// calculating the factor like this is much better for performance and gives similar results.
+	// recall A.dot(B) = ||A|| ||B|| cosTheta   -->   cosTheta = A.dot(B) / (||A|| ||B||).
+	// if cosTheta = 1 lateralSpeed is perfectly aligned with travel speed.
+	// ensure you're traveling fast enough so to not divide by zero.
+	float cosTheta = threshold * lateralSpeed / sData.speed; 
 	sData.boost += sData.boostRegenRate * dt * cosTheta * cosTheta;
 }
 
@@ -529,33 +538,43 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-
+	const PxVec3 up = sData.rBody->getGlobalPose().q.getBasisVector1(); // already normalized
 	const float lateralSpeed = linVel.dot(lateral);
 
 	int ccw = PxSign(sData.rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
-	int steerCcw = PxSign(sControls.steering); // steering ccw = 1 and cw = -1
+	int countersteering = ccw * sControls.steering; // negative = steering out of corner, positive = steering into corner
 
 	float driftCurve = 2.1f * sControls.steering;
 	float angleCurve = 1.4f * sControls.steering;
 	float yawVel = sData.rBody->getAngularVelocity().y;
+	float cosTheta = lateralSpeed / sData.speed;
+
+	// slow down when hitting a hard drift
+	if (sData.speed > 40 && cosTheta > 0.42f) {
+		float speedDamp = 0.7;
+		sData.rBody->addForce((-linVel - up) * speedDamp * cosTheta * cosTheta, PxForceMode::eACCELERATION);
+	}
 
 	// Opposite forces automatically apply due to opposite sign when counter-steering
 	PxVec3 driftDir = (forward + lateral * driftCurve);
 	driftDir.y = 0.f;
 	driftDir.normalize();
-	float forceStrength = ccw == steerCcw ? 600.f : 1400.f;
+	float forceStrength = countersteering > 0 ? 1600.f : 400.f;
 	sData.rBody->addForce(driftDir * forceStrength);
 
-	float torqueStrength = ccw == steerCcw ? 200.f : 800.f;
+	float torqueStrength = countersteering > 0 ? -50.f : 600.f;
 	sData.rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
 
 	float gripStrength = 240.f;
-	sData.rBody->addForce(-lateral * lateralSpeed * gripStrength * yawVel);
+	sData.rBody->addForce(lateral * gripStrength * countersteering * cosTheta);
 
 	// TODO: make sure roll damping is working properly
-	float rollDamping = sData.speed * 0.4f;
+	float rollDamping = PxMin(lateralSpeed * lateralSpeed, 100.f);
 	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
 		PxForceMode::eACCELERATION);
+
+	float downforce = sData.speed * sData.speed * 0.2;
+	sData.rBody->addForce(PxVec3(0.f, -downforce, 0.f));
 }
 
 void SparkSys::yawStabilizer(SparkData& sData) {
@@ -569,7 +588,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
-			changeWheelParams(sData, 3.8, 105600, PxDegToRad(30));
+			changeWheelParams(sData, 3.8, 55600, PxDegToRad(30));
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
