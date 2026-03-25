@@ -26,6 +26,7 @@ public:
 		ctx.controls.reverse = 0.0f;
 		ctx.controls.brake = 0.0f;
 		ctx.controls.boost = false;
+		ctx.controls.boostWithHealth = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
 	}
@@ -37,6 +38,7 @@ public:
 	void enter(AIDriveContext& ctx) override {
 		ctx.controls.reverse = 0.0f;
 		ctx.controls.boost = false;
+		ctx.controls.boostWithHealth = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
 	}
@@ -50,6 +52,7 @@ public:
 		ctx.controls.reverse = 0.0f;
 		ctx.controls.brake = 0.0f;
 		ctx.controls.boost = false;
+		ctx.controls.boostWithHealth = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
 	}
@@ -61,14 +64,16 @@ public:
 	void enter(AIDriveContext& ctx) override {
 		ctx.controls.reverse = 0.0f;
 		ctx.controls.brake = 0.0f;
-		ctx.controls.boost = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
 
 		ctx.controls.throttle = 1.0f;
-		ctx.controls.boost = true;
+		
+		
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
+
+
 };
 
 class S_Attacking : public IDriveState {
