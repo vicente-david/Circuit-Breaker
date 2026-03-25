@@ -11,7 +11,7 @@ struct AIDriveContext {
 	Transform& transform;
 	SparkData& spark;
 	PxRigidBody* body;
-	bool boostUseHealth;
+	float healthBoostMin;
 };
 
 // Direction enum for labelling sweep/hit direction
@@ -36,5 +36,4 @@ public:
 
 	std::pair<Direction, glm::vec3> sweepResult;
 
-	float boostHealthMin = 0.80f;
 };

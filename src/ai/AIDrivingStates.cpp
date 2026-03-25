@@ -33,8 +33,8 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	if (curvature < ai.curveBoostThresh && abs(controls.steering) < 0.8f) {
 		// Check if spark has enough boost
 		// OR if spark is allowed to boost with health & has enough health
-		if (spark.boost >= 0.05f || (ctx.boostUseHealth && spark.health > boostHealthMin)) {
-			dbug::log("AI", 1, "[%s] boost use health: %d", spark.mVehicleName.c_str(), ctx.boostUseHealth);
+		if (spark.boost >= 0.05f || (spark.health > ctx.healthBoostMin)) {
+			dbug::log("AI", 1, "[%s] boost use health: %d", spark.mVehicleName.c_str(), ctx.healthBoostMin);
 			ai.state = BOOSTING;
 			return std::make_unique<S_Boosting>();
 		}
@@ -143,11 +143,11 @@ std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext& ctx) {
 
 	dbug::log("AI", 0, "[%s] BOOSTING -> BOOST: %.3f, HEALTH: %.2f", spark.mVehicleName.c_str(), spark.boost, spark.health);
 	// Choose whether to use health or not
-	if (!ctx.boostUseHealth || spark.boost > 0.0f) { // not allowed to use health or could use boost instead
+	if (ctx.healthBoostMin > 1.f || spark.boost > 0.0f) { // not allowed to use health or could use boost instead
 		controls.boostWithHealth = false;
 		controls.boost = true;
 	}
-	else if (ctx.boostUseHealth){ // allowed to use health to boost
+	else if (ctx.healthBoostMin < 1.f){ // allowed to use health to boost
 		controls.boost = true;
 		controls.boostWithHealth = true;
 	}
@@ -159,8 +159,8 @@ std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext& ctx) {
 		controls.boostWithHealth = false;
 		return std::make_unique<S_Braking>();
 	}
-	else if (ctx.boostUseHealth) {
-		if (curvature >= ai.curveBoostThresh || (!controls.boostWithHealth && spark.boost <= 0.0f) || (controls.boostWithHealth && spark.health <= boostHealthMin)) {
+	else if (ctx.healthBoostMin < 1.f) {
+		if (curvature >= ai.curveBoostThresh || (!controls.boostWithHealth && spark.boost <= 0.0f) || (controls.boostWithHealth && spark.health <= ctx.healthBoostMin)) {
 			ai.state = DRIVING;
 			controls.boost = false;
 			controls.boostWithHealth = false;
