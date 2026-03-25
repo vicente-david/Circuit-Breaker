@@ -284,6 +284,7 @@ void Game::stateTransition() {
 				uiSys->clearAllScreens();
 				uiSys->addScreen("fpsCounter");
 				uiSys->addScreen("lapCounter");
+				renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 				break;
 
 			// we're likely restarting the game
@@ -306,6 +307,8 @@ void Game::stateTransition() {
 			case (PAUSED):
 				uiSys->clearAllScreens();
 				uiSys->addScreen("pauseMenu");
+				uiSys->addScreen("fpsCounter");
+				renderer->renderPasses.clear();
 				break;
 
 				// someone has finished the race

@@ -294,15 +294,30 @@ void UISystem::createMainMenu() {
 
 	menu1.hasBackgroundColor = false;
 
-	menu1.path = "assets/textures/ui/mainMenu/_layout.png";
+	menu1.path = "assets/textures/ui/mainMenu/startmenu_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
+	// button 
+	UIElement b1;
+	b1.hasBackgroundColor = false;
+	b1.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
+	b1.textureID = GenerateTexture(b1.path.c_str(), false);
+
+	b1.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
+	//b1.anchorOffsets = glm::vec4(325, 602, 325 + 450, 602 + 64);
+	
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, b1);
+
 	UIScreen mainMenu;
 	mainMenu.name = "mainMenu";
 	mainMenu.UIElements.push_back(e1);
+
+	mainMenu.UIElements.push_back(e2);
 
 	nameToScreen["mainMenu"] = mainMenu;
 }
