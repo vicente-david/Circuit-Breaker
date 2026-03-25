@@ -50,5 +50,7 @@ class MaintainState : public AIState {
 
 public:
 	void run(AIDriveContext& ctx) override;
+
+	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
 };
 

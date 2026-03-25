@@ -141,10 +141,10 @@ void Game::initializeTrack() {
 
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(10.0f, -1.0f, -16.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, -1.0f, -12.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, -1.0f, -8.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-5.0f, -1.0f, -4.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-10.0f, -1.0f, -0.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, -1.0f, -12.0f), "P2");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, -1.0f, -8.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, -1.0f, -4.0f), "P4");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-10.0f, -1.0f, -0.0f), "P5");
 
 
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
@@ -165,9 +165,9 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	player = sparkEntity;
 }
 
-void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
+void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, "AI Player");
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, name);
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
@@ -180,7 +180,7 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI Player 2");
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI P3");
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
 	coordinator->addComponent(testSpark3, Leaderboard());

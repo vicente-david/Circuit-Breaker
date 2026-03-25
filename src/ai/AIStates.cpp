@@ -8,6 +8,8 @@ using namespace AIHelpers;
 */
 void DefenseState::run(AIDriveContext& ctx) {
 	
+	// TODO: set appropriate path to follow
+
 	// Line of sight sweep: detect other players and change state accordingly
 	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx);
 	if (sweepResult.first != NONE) {
@@ -137,8 +139,18 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
 void MaintainState::run(AIDriveContext& ctx) {
-	// TODO: maintain state behaviour when in lead
+	dbug::log("AI", 0, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
+	// TODO: set appropriate path to follow
+
+	// run state update function
+	auto next = currentState->update(ctx);
+
+	if (next) {
+		// if the returned pointer was not nullptr (points to a new state), change states
+		currentState = std::move(next);
+		currentState->enter(ctx);
+	}
 	
 }
 

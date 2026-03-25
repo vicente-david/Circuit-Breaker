@@ -206,8 +206,14 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
-	if (sData.mVehicleName == "AI Player 2") {
+	if (sData.mVehicleName == "P2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
+	}
+	else if (sData.mVehicleName == "P3") {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark3.obj"));
+	}
+	else if (sData.mVehicleName == "P4") {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark4.obj"));
 	}
 	else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));

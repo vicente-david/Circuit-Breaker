@@ -58,11 +58,11 @@ void AIControllerSys::update(GameState& game) {
 		else if (spark.health < 50.0f) {
 			defenseState->run(ctx);
 		}
-		else if (spark.health <= 100.f) { // replace this condition with 'if not in first'
-			overtakeState->run(ctx);
+		else if (leaderboard.standings[0] == spark.mVehicleName) {
+			maintainState->run(ctx);
 		}
-		else { // if in first
-			//maintainState->run(ctx);
+		else { // Not in first and not low health
+			overtakeState->run(ctx);
 		}
 
 	}

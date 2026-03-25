@@ -43,7 +43,7 @@ public:
 
 	//void initializePlayers();
 	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
-	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // ai spark
+	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name); // ai spark
 	void initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // to-do join above line together 
 
 
