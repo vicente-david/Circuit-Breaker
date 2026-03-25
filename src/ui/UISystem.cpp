@@ -294,7 +294,7 @@ void UISystem::createMainMenu() {
 
 	menu1.hasBackgroundColor = false;
 
-	menu1.path = "assets/textures/Start_Menu_2.jpg";
+	menu1.path = "assets/textures/ui/mainMenu/_layout.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
@@ -313,7 +313,7 @@ void UISystem::createPauseMenu() {
 
 	menu1.hasBackgroundColor = false; // render texture
 
-	menu1.path = "assets/textures/Pause_menu_1.png";
+	menu1.path = "assets/textures/ui/pauseMenu/_layout.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
