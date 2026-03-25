@@ -7,7 +7,7 @@ using namespace AIHelpers;
 * prioritize dodging and recovering HP
 */
 void DefenseState::run(AIDriveContext& ctx) {
-	
+	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
 	// TODO: set appropriate path to follow
 
 	// Line of sight sweep: detect other players and change state accordingly
@@ -65,6 +65,7 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 * overtake other players: prioritize speed and attacking others
 */
 void OvertakeState::run(AIDriveContext& ctx) {
+	dbug::log("AI", 1, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
 	// TODO: set appropriate path to follow
 
@@ -139,7 +140,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
 void MaintainState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 0, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
+	dbug::log("AI", 1, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
 	// TODO: set appropriate path to follow
 
