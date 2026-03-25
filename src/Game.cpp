@@ -279,8 +279,11 @@ void Game::stateTransition() {
 				break;
 
 			// we're likely resuming the game, so pop all pause menus
+			// add back our gameplay uis (order matters)
 			case (PAUSED): 
 				uiSys->clearAllScreens();
+				uiSys->addScreen("fpsCounter");
+				uiSys->addScreen("lapCounter");
 				break;
 
 			// we're likely restarting the game
@@ -327,6 +330,13 @@ void Game::update() {
 
 	if (gameUIActions.intializeGame) {
 		gameUIActions.intializeGame = false;
+		gameState.nextState = GAMEPLAY;
+	}
+
+	if (gameUIActions.menuControl == 2) {
+		gameState.nextState = PAUSED;
+	}
+	else if (gameUIActions.menuControl == 1) {
 		gameState.nextState = GAMEPLAY;
 	}
 

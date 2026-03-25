@@ -95,6 +95,9 @@ class TestInput1 : public CallbackInterface {
 		}
 
 		if (key == GLFW_KEY_ENTER && (action == GLFW_PRESS) && (action != GLFW_REPEAT)) {
+
+			// menuControl is current state, then we change the current state
+			// so on game launch it's -1
 			// 2 paused, 1 normal gameplay, 0 is initialization, -1 title screen
 			if (uiActions->menuControl == 2) {
 				uiActions->menuControl = 1;
@@ -105,6 +108,7 @@ class TestInput1 : public CallbackInterface {
 				std::cout << "paused now" << std::endl;
 			}
 			else if (uiActions->menuControl == 0) {
+				// this is distinct as otherwise you might be toggling back to main menu
 				uiActions->menuControl = 2;
 				std::cout << "first pause" << std::endl;
 			}
