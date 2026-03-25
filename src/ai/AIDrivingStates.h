@@ -46,6 +46,7 @@ public:
 class S_Drifting : public IDriveState {
 public:
 	void enter(AIDriveContext& ctx) override {
+		ctx.controls.throttle = 1.0f;
 		ctx.controls.reverse = 0.0f;
 		ctx.controls.brake = 0.0f;
 		ctx.controls.boost = false;

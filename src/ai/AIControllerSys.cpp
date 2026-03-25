@@ -3,6 +3,7 @@
 #include "ecs/Coordinator.h"
 #include "ecs/Component.h"
 #include "../world/CurveLoader.h"
+#include "world/LeaderboardSystem.h"
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
@@ -24,6 +25,7 @@ void AIControllerSys::update(GameState& game) {
 		auto &transform = game.coordinator->getComponent<Transform>(entity);
 		auto& spark = game.coordinator->getComponent<SparkData>(entity);
 		auto& body = game.coordinator->getComponent<physx::PxRigidBody*>(entity);
+		auto& leaderboard = game.coordinator->getComponent<Leaderboard>(entity);
 		
 		// update current position index
 		int i = ai.currentPosIdx;
