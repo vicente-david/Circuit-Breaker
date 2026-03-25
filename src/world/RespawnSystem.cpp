@@ -3,6 +3,7 @@
 #include "debugUtils/Logger.h"
 #include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
+#include "vehicles/SparkComponents.h"
 
 std::shared_ptr<RespawnSystem> RespawnSystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
 	auto system = coord->registerSystem<RespawnSystem>();
@@ -23,8 +24,9 @@ void RespawnSystem::update(GameState& game) {
 	for (auto& entity : entities) {
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
+		SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
 
-		if (eTransform.pos.y > yDeadzone) // entity hasn't fallen below the deadzone, skip
+		if (eTransform.pos.y > yDeadzone && !sControls.reset) // entity hasn't fallen below the deadzone, skip
 			continue;
 
 		// entity fell below yDeadzone, respawn at last checkpoint
@@ -32,7 +34,7 @@ void RespawnSystem::update(GameState& game) {
 
 		// compute the respawn position: last checkpoint + deltaY above it
 		glm::vec3 respawnPos = lapProg.lastCheckpointPos;
-		//respawnPos.y += deltaY;
+		respawnPos.y += deltaY;
 
 		// compute the respawn rotation so the vehicle faces along the track
 		// the vehicle's forward axis is +Z, so we need the angle from +Z to lastCheckpointDir
@@ -59,5 +61,6 @@ void RespawnSystem::update(GameState& game) {
 		// PhysicsSystem will sync the new PhysX position into Transform on the next frame,
 		// but update it now too so the camera/rendering sees it immediately this frame
 		eTransform.pos = respawnPos;
+		sControls.reset = false; // so AI doesn't get stuck in a loop
 	}
 }

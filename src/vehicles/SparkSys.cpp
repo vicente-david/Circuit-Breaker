@@ -24,7 +24,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 			sparkInputs(sData, sControls, dt);
 
 		// Respawn
-		respawn(entity, game, dt);
+		respawn(sData, sControls, dt);
 
 		// do the physx vehicle movement
 		sData.mVehicle->mComponentSequence.setSubsteps(
@@ -33,18 +33,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// Check in air
 		checkAirborne(sData, dt);
-
-		// TODO: Put in helper (audio stuff)
-		// CANCEL TODO: hold off for now, there might be a different system for this later on
-		{
-			// update sound
-			auto& sound = game.coordinator->getComponent<Sound>(entity);
-			auto pos = sData.rBody->getGlobalPose().p;
-			sData.rBody->getLinearVelocity();
-			sound.position = glm::vec3(pos.x, pos.y, pos.z);
-			auto vel = sData.rBody->getGlobalPose().p;
-			sound.position = glm::vec3(vel.x, vel.y, vel.z);
-		}
 
 		reload = sControls.reload;
 
@@ -109,17 +97,23 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
 		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f), PxQuat(PxIdentity));
 
-		PxBoxGeometry midBoxGeom(PxVec3(0.6f, 0.25f, 0.1f));
-		PxShape* midBox = game.physics->gPhysics->createShape(midBoxGeom, *game.physics->gMaterial, true);
-		PxTransform midBoxLocalPose(PxVec3(0.0f, 0.0f, 0.1f), PxQuat(PxIdentity));
+		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.25f, 0.5f));
+		PxShape* leftSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
+		PxShape* rightSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
+		PxTransform leftSideBoxLocalPose(PxVec3(0.41f, 0.0f, 0.28f), PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
+		PxTransform rightSideBoxLocalPose(PxVec3(-0.41f, 0.0f, 0.28f), PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		sData.rBody->attachShape(*rearBox);
 		rearBox->release();
 
-		midBox->setLocalPose(midBoxLocalPose);
-		sData.rBody->attachShape(*midBox);
-		midBox->release();
+		leftSideBox->setLocalPose(leftSideBoxLocalPose);
+		sData.rBody->attachShape(*leftSideBox);
+		leftSideBox->release();
+
+		rightSideBox->setLocalPose(rightSideBoxLocalPose);
+		sData.rBody->attachShape(*rightSideBox);
+		rightSideBox->release();
 
 		PxReal newMass = sData.mVehicle->mBaseParams.rigidBodyParams.mass;
 		PxRigidBodyExt::updateMassAndInertia(*sData.rBody, newMass);
@@ -157,7 +151,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		}
 
 		// special ground trigger
-		if (i == 7) {
+		if (i == 8) {
 			shape->setSimulationFilterData(groundFilter);
 			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
@@ -205,13 +199,14 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	//Larger lateral damping factor than default to avoid drift when nearly rest
 	sData.mVehicleSimContext.tireStickyParams.stickyParams[PxVehicleTireDirectionModes::eLATERAL].damping = 1.0f;
 
-
+	sData.rBody->setMaxAngularVelocity(6.f);
+	
 	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
-	if (sparkEntity == 3) {
+	if (sData.mVehicleName == "AI Player 2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	}
 	else
@@ -303,6 +298,7 @@ void SparkSys::checkAirborne(SparkData& sData, double dt) {
 		grounded |= sData.mVehicle->mBaseState.roadGeomStates[i].hitState;
 	}
 
+	// TODO: find a way to detect if you're grounded but just flipped over 
 	if (grounded) 
 		sData.offGroundTimer = sData.offGroundLimit;
 
@@ -361,7 +357,10 @@ void SparkSys::wallCollision(GameState &game) {
 		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
 
 		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
-		dbug::log("GAME", 0, "Hit a wall!");
+		if (sData.health < 0)
+			sData.health = 0;
+
+		//dbug::log("GAME", 0, "Hit a wall!");
 	}
 }
 
@@ -553,6 +552,7 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	float gripStrength = 240.f;
 	sData.rBody->addForce(-lateral * lateralSpeed * gripStrength * yawVel);
 
+	// TODO: make sure roll damping is working properly
 	float rollDamping = sData.speed * 0.4f;
 	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
 		PxForceMode::eACCELERATION);
@@ -585,31 +585,6 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 }
 
 // RESPAWN
-void SparkSys::respawnSpark(SparkData& sData, PxTransform respawnPose) {
-	dbug::log("GAME", 0, "resetting");
-
-	sData.rBody->setGlobalPose(respawnPose);
-
-	PxRigidDynamic* dBody = sData.rBody->is<PxRigidDynamic>();
-	dBody->setLinearVelocity(PxVec3(PxIdentity));
-	dBody->setAngularVelocity(PxVec3(PxIdentity));
-
-	sData.respawnTimer = sData.respawnCooldown;
-}
-
-PxTransform SparkSys::getRespawnPose(Entity entity, GameState& game) {
-	// copied logic from RespawnSystem::update
-	LapCounter& prog = game.coordinator->getComponent<LapCounter>(entity);
-
-	glm::vec3 p = prog.lastCheckpointPos;
-	PxVec3 pos(p.x, p.y, p.z);
-
-	glm::vec3 q = prog.lastCheckpointDir;
-	PxQuat quat(PxAtan2(q.x, q.z), PxVec3(0.f, 1.f, 0.f));
-
-	return PxTransform(pos, quat);
-}
-
 void SparkSys::sparkValuesReset(SparkData& sData) {
 	sData.health = sData.maxHealth;
 	sData.boost = sData.maxBoost;
@@ -624,10 +599,7 @@ void SparkSys::sparkValuesReset(SparkData& sData) {
 	dbug::log("GAME", 0, "reset spark");
 }
 
-void SparkSys::respawn(Entity entity, GameState& game, double dt) {
-	SparkData& sData = game.coordinator->getComponent<SparkData>(entity);
-	SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
-
+void SparkSys::respawn(SparkData& sData, SparkControls& sControls, double dt) {
 	if (sData.respawnTimer > 0) {
 		sData.respawnTimer -= dt;
 		return;
@@ -638,11 +610,12 @@ void SparkSys::respawn(Entity entity, GameState& game, double dt) {
 		sControls.reset = true;
 	}
 
+	// TODO: make it so that after offGroundTimer is up, display a message indicating
+	// you can use Y button (Xbox) to reset.
 	if (sData.offGroundTimer <= 0 && !sData.isDead)
 		sControls.reset = true;
 
-	if (sControls.reset) {
-		respawnSpark(sData, getRespawnPose(entity, game));
-		sControls.reset = false; // so AI doesn't get stuck in a loop
-	}
+	// Respawn logic in RespawnSystem::update
+	if (sControls.reset)
+		sData.respawnTimer = sData.respawnCooldown;
 }
