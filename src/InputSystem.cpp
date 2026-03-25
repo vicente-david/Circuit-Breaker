@@ -87,27 +87,30 @@ class TestInput1 : public CallbackInterface {
 			actions->kRespawn = false;
 		}
 
-		if (actions->intializeGame) {
-			actions->intializeGame = false;
+
+	// UI callbacks for keyboard
+
+		if (uiActions->intializeGame) {
+			uiActions->intializeGame = false;
 		}
 
 		if (key == GLFW_KEY_ENTER && (action == GLFW_PRESS) && (action != GLFW_REPEAT)) {
 			// 2 paused, 1 normal gameplay, 0 is initialization, -1 title screen
-			if (actions->menuControl == 2) {
-				actions->menuControl = 1;
+			if (uiActions->menuControl == 2) {
+				uiActions->menuControl = 1;
 				std::cout << "resume the game" << std::endl;
 			}
-			else if (actions->menuControl == 1) {
-				actions->menuControl = 2;
+			else if (uiActions->menuControl == 1) {
+				uiActions->menuControl = 2;
 				std::cout << "paused now" << std::endl;
 			}
-			else if (actions->menuControl == 0) {
-				actions->menuControl = 2;
+			else if (uiActions->menuControl == 0) {
+				uiActions->menuControl = 2;
 				std::cout << "first pause" << std::endl;
 			}
-			else if (actions->menuControl == -1) {
-				actions->menuControl = 0; 
-				actions->intializeGame = true;
+			else if (uiActions->menuControl == -1) {
+				uiActions->menuControl = 0; 
+				uiActions->intializeGame = true;
 			}
 		}
 
@@ -139,12 +142,14 @@ class TestInput1 : public CallbackInterface {
 		glViewport(0, 0, width, height);
 	}
 public:
-	void setActions(Actions* actionsPtr) {
+	void setActions(Actions* actionsPtr, UIActions* uiActionsPtr) {
 		actions = actionsPtr;
+		uiActions = uiActionsPtr;
 	}
 
 private: 
 		Actions* actions = nullptr;
+		UIActions* uiActions = nullptr;
 };
 
 // if we have .ini we could parse contorls here
@@ -155,7 +160,7 @@ InputSystem::InputSystem() : window(nullptr), callbacks(nullptr){
 void InputSystem::attachWindow(GLFWwindow* w1) {
 	window = w1;
 	TestInput1 t1;
-	t1.setActions(&actions);
+	t1.setActions(&actions, &uiActions);
 	setCallback(std::make_shared<TestInput1>(t1));
 }
 
@@ -185,6 +190,11 @@ const Actions& InputSystem::getActions() {
 	updateGamepad();
 	combineInputs();
 	return actions;
+}
+
+const UIActions& InputSystem::getUIActions() {
+
+	return uiActions;
 }
 
 void InputSystem::combineInputs() {
@@ -305,6 +315,8 @@ void InputSystem::updateGamepad() {
 		actions.reload = true;
 	else
 		actions.reload = false;
+
+
 }
 
 void InputSystem::keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {

@@ -79,6 +79,7 @@ public:
 	GameState gameState;
 
 	Actions gameActions;
+	UIActions gameUIActions;
 
 	bool isInitialized;
 

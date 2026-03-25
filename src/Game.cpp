@@ -318,11 +318,15 @@ void Game::update() {
 	// update inputs
 	// input
 	gameActions = inputSystem.getActions();
+	gameUIActions = inputSystem.getUIActions();
+
 	gameState.inputActions = gameActions;
+	gameState.uiActions = gameUIActions;
+
 	controllerSys->update(gameState);
 
-	if (gameActions.intializeGame) {
-		gameActions.intializeGame = false;
+	if (gameUIActions.intializeGame) {
+		gameUIActions.intializeGame = false;
 		gameState.nextState = GAMEPLAY;
 	}
 

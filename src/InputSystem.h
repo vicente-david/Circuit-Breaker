@@ -82,10 +82,18 @@ struct Actions {
 	float controllerXRot = 0.0;
 	float controllerYRot = 0.0;
 
+	
+
+};
+
+struct UIActions {
+
+	// menu callbacks
+	// 
 	// controls which menu is being displayed right now
 	// -1 is main menu, 1 is normal gameplay (for now)
 	// 2 could be pause for example
-	int menuControl = -1; 
+	int menuControl = -1;
 	bool intializeGame = false;
 
 };
@@ -100,6 +108,7 @@ public:
 	// scan code input is probably better, since it is keyboard independent, can implement later
 	void setCallback(std::shared_ptr<CallbackInterface> callbacks);
 	const Actions& getActions();
+	const UIActions& getUIActions();
 	void combineInputs();
 	void updateGamepad();
 
@@ -111,6 +120,7 @@ private:
 	GLFWgamepadstate controllerState;
 
 	Actions actions;
+	UIActions uiActions;
 	// necessary for glfw 
 	static void keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonMetaCallback(GLFWwindow* window, int button, int action, int mods);

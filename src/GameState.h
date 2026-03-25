@@ -18,6 +18,7 @@ enum GAMESTATE {
 class GameState {
   public:
 	Actions inputActions;
+	UIActions uiActions;
 
 	GAMESTATE currentState = MAINMENU; // stores the current state of the game
 	GAMESTATE nextState = MAINMENU; // used for handling state transitions
