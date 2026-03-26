@@ -425,11 +425,82 @@ void UISystem::createSettingsMenu() {
 
 	// --- BUTTONS ---
 
+	// easy button
+	UIElement easyButton;
+	easyButton.hasBackgroundColor = false;
+	easyButton.path = "assets/textures/ui/settings/diff_easy.png";
+	easyButton.textureID = GenerateTexture(easyButton.path.c_str(), false);
+	easyButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+
+	// medium button
+	UIElement mediumButton;
+	mediumButton.hasBackgroundColor = false;
+	mediumButton.path = "assets/textures/ui/settings/diff_medium.png";
+	mediumButton.textureID = GenerateTexture(mediumButton.path.c_str(), false);
+	mediumButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	mediumButton.anchorOffsets = glm::vec4(144, 0, 144, 0);
+
+	// hard button
+	UIElement hardButton;
+	hardButton.hasBackgroundColor = false;
+	hardButton.path = "assets/textures/ui/settings/diff_hard.png";
+	hardButton.textureID = GenerateTexture(hardButton.path.c_str(), false);
+	hardButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	hardButton.anchorOffsets = glm::vec4(288, 0, 288, 0);
+
+	// track decorations button
+	UIElement decorationsButton;
+	decorationsButton.hasBackgroundColor = false;
+	decorationsButton.path = "assets/textures/ui/settings/settings_trackdecorations.png";
+	decorationsButton.textureID = GenerateTexture(decorationsButton.path.c_str(), false);
+	decorationsButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
+
+	// vfx particles button
+	UIElement particlesButton;
+	particlesButton.hasBackgroundColor = false;
+	particlesButton.path = "assets/textures/ui/settings/settings_vfxparticles.png";
+	particlesButton.textureID = GenerateTexture(particlesButton.path.c_str(), false);
+	particlesButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
+	particlesButton.anchorOffsets = glm::vec4(465, 0, 465, 0);
+
+	// back to menu button
+	UIElement menuButton;
+	menuButton.hasBackgroundColor = false;
+	menuButton.path = "assets/textures/ui/settings/settings_backtomenu.png";
+	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
+	menuButton.anchors = glm::vec4(0.0935, 0.8206, 0.9073, 0.902);
+
 	// --- ---
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, easyButton);
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, mediumButton);
+
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, hardButton);
+
+	Entity e5 = coordinator->createEntity();
+	coordinator->addComponent(e5, decorationsButton);
+
+	Entity e6 = coordinator->createEntity();
+	coordinator->addComponent(e6, particlesButton);
+
+	Entity e7 = coordinator->createEntity();
+	coordinator->addComponent(e7, menuButton);
+
 
 	UIScreen settingsMenu;
 	settingsMenu.name = "settingsMenu";
 	settingsMenu.UIElements.push_back(e1);
+
+	settingsMenu.UIElements.push_back(e2);
+	settingsMenu.UIElements.push_back(e3);
+	settingsMenu.UIElements.push_back(e4);
+	settingsMenu.UIElements.push_back(e5);
+	settingsMenu.UIElements.push_back(e6);
+	settingsMenu.UIElements.push_back(e7);
 
 	nameToScreen["settingsMenu"] = settingsMenu;
 }
