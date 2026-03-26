@@ -237,6 +237,7 @@ void UISystem::screenInitialization(){
 	createFPSCounter();
 	createMainMenu();
 	createPauseMenu();
+	createSettingsMenu();
 	createLapCounter();
 }
 
@@ -356,15 +357,43 @@ void UISystem::createPauseMenu() {
 
 	menu1.hasBackgroundColor = false; // render texture
 
-	menu1.path = "assets/textures/ui/pauseMenu/_layout.png";
+	menu1.path = "assets/textures/ui/pauseMenu/pause_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
+	// --- BUTTONS --
+	// exit button 
+	UIElement exitButton;
+	exitButton.hasBackgroundColor = false;
+	exitButton.path = "assets/textures/ui/pauseMenu/pause_quittomenu.png";
+	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
+	exitButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+
+	// settings button
+	UIElement settingsButton;
+	settingsButton.hasBackgroundColor = false;
+	settingsButton.path = "assets/textures/ui/pauseMenu/pause_settings.png";
+	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
+	settingsButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+	settingsButton.anchorOffsets = glm::vec4(0, -32, 0, -32);
+	
+	// --- ---
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, exitButton);
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, settingsButton);
+
+
 	UIScreen pauseMenu;
 	pauseMenu.name = "pauseMenu";
 	pauseMenu.UIElements.push_back(e1);
+
+	pauseMenu.UIElements.push_back(e2);
+	pauseMenu.UIElements.push_back(e3);
 
 	nameToScreen["pauseMenu"] = pauseMenu;
 }
