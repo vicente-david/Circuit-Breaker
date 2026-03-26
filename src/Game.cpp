@@ -250,7 +250,7 @@ void Game::initializeUI() {
 	uiSys->screenInitialization();
 
 	uiSys->addScreen("fpsCounter");
-	uiSys->addScreen("standingsScreen");
+	uiSys->addScreen("mainMenu");
 }
 
 void Game::stateTransition() {
@@ -276,6 +276,8 @@ void Game::stateTransition() {
 			// our likely next state is paused or game ended
 			// we may want to pop heads up display
 			case (GAMEPLAY): 
+				uiSys->clearAllScreens();
+				uiSys->addScreen("racingHUD");
 				break;
 
 			// we're likely resuming the game, so pop all pause menus

@@ -239,6 +239,7 @@ void UISystem::screenInitialization(){
 	createPauseMenu();
 	createSettingsMenu();
 	createStandingsScreen();
+	createRacingHUD();
 	createLapCounter();
 }
 
@@ -639,6 +640,25 @@ void UISystem::createStandingsScreen() {
 	standingsScreen.UIElements.push_back(e11);
 
 	nameToScreen["standingsScreen"] = standingsScreen;
+}
+
+void UISystem::createRacingHUD() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
+
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/ui/racing/racing_hud.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	UIScreen racingHUD;
+	racingHUD.name = "racingHUD";
+	racingHUD.UIElements.push_back(e1);
+
+	nameToScreen["racingHUD"] = racingHUD;
 }
 
 void UISystem::createLapCounter() {
