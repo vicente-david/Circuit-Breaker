@@ -364,6 +364,7 @@ void UISystem::createPauseMenu() {
 	coordinator->addComponent(e1, menu1);
 
 	// --- BUTTONS --
+	
 	// exit button 
 	UIElement exitButton;
 	exitButton.hasBackgroundColor = false;
@@ -377,7 +378,15 @@ void UISystem::createPauseMenu() {
 	settingsButton.path = "assets/textures/ui/pauseMenu/pause_settings.png";
 	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
 	settingsButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
-	settingsButton.anchorOffsets = glm::vec4(0, -32, 0, -32);
+	settingsButton.anchorOffsets = glm::vec4(0, -84, 0, -84);
+
+	// resume button
+	UIElement resumeButton;
+	resumeButton.hasBackgroundColor = false;
+	resumeButton.path = "assets/textures/ui/pauseMenu/pause_resume.png";
+	resumeButton.textureID = GenerateTexture(resumeButton.path.c_str(), false);
+	resumeButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+	resumeButton.anchorOffsets = glm::vec4(0, -168, 0, -168);
 	
 	// --- ---
 
@@ -387,6 +396,9 @@ void UISystem::createPauseMenu() {
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, settingsButton);
 
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, resumeButton);
+
 
 	UIScreen pauseMenu;
 	pauseMenu.name = "pauseMenu";
@@ -394,12 +406,32 @@ void UISystem::createPauseMenu() {
 
 	pauseMenu.UIElements.push_back(e2);
 	pauseMenu.UIElements.push_back(e3);
+	pauseMenu.UIElements.push_back(e4);
 
 	nameToScreen["pauseMenu"] = pauseMenu;
 }
 
 void UISystem::createSettingsMenu() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
 
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/ui/settings/settings_bg.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	// --- BUTTONS ---
+
+	// --- ---
+
+	UIScreen settingsMenu;
+	settingsMenu.name = "settingsMenu";
+	settingsMenu.UIElements.push_back(e1);
+
+	nameToScreen["settingsMenu"] = settingsMenu;
 }
 
 
