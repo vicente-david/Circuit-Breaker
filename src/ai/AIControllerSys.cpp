@@ -35,8 +35,15 @@ void AIControllerSys::update(GameState& game) {
 		ai.currentPosIdx = i;
 		// update target based on current position and the lookAheadSteps value
 		ai.targetIdx = (ai.currentPosIdx + ai.lookAheadSteps) % ai.route.size();
-		
-		
+	
+		if (spark.speed <= 0.02) {
+			ai.stillTimer++;
+			dbug::log("AI", 2, "[%s] still timer: %.1f", spark.mVehicleName.c_str(), ai.stillTimer);
+		}
+		else if (ai.stillTimer > 0.0f) ai.stillTimer -= 0.5f;
+		if (ai.stillTimer > 4.f) {
+			dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
+		}
 		// Adjust lookahead target based on speed
 		if (spark.speed < 10.0f)
 			ai.lookAheadSteps = 4;
@@ -67,6 +74,8 @@ void AIControllerSys::update(GameState& game) {
 			ctx.healthBoostMin = 0.80f;
 			overtakeState->run(ctx);
 		}
+
+		ai.lastPosIdx = i;
 
 	}
 }
