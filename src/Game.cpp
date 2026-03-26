@@ -250,7 +250,7 @@ void Game::initializeUI() {
 	uiSys->screenInitialization();
 
 	uiSys->addScreen("fpsCounter");
-	uiSys->addScreen("settingsMenu");
+	uiSys->addScreen("standingsScreen");
 }
 
 void Game::stateTransition() {
