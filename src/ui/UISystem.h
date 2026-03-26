@@ -101,6 +101,7 @@ public:
 	// the return value will be the name of the string it maps the screen to
 	void createMainMenu(); // create the main menu and push it to the hash map
 	void createPauseMenu(); // create the pause menu and push it to hashmap
+	void createSettingsMenu(); // create the settings menu and push it to hashmap
 
 	// persistent ui elements (elements that change every frame)
 	void createFPSCounter(); // create an fps counter

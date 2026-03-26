@@ -369,6 +369,10 @@ void UISystem::createPauseMenu() {
 	nameToScreen["pauseMenu"] = pauseMenu;
 }
 
+void UISystem::createSettingsMenu() {
+
+}
+
 
 void UISystem::createLapCounter() {
 	UIElement lapc1;
