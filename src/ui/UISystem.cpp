@@ -300,24 +300,52 @@ void UISystem::createMainMenu() {
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
-	// button 
-	UIElement b1;
-	b1.hasBackgroundColor = false;
-	b1.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
-	b1.textureID = GenerateTexture(b1.path.c_str(), false);
+	// --- BUTTONS ---
 
-	b1.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
-	//b1.anchorOffsets = glm::vec4(325, 602, 325 + 450, 602 + 64);
+	// exit button 
+	UIElement exitButton;
+	exitButton.hasBackgroundColor = false;
+	exitButton.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
+	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
+
+	exitButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
 	
+	// settings button
+	UIElement settingsButton;
+	settingsButton.hasBackgroundColor = false;
+	settingsButton.path = "assets/textures/ui/mainMenu/startmenu_settings.png";
+	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
+
+	settingsButton.anchors = glm::vec4(0.3, 0.66539, 0.7, 0.74682);
+	settingsButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+
+	// start game button
+	UIElement startGameButton;
+	startGameButton.hasBackgroundColor = false;
+	startGameButton.path = "assets/textures/ui/mainMenu/startmenu_startgame.png";
+	startGameButton.textureID = GenerateTexture(startGameButton.path.c_str(), false);
+
+	startGameButton.anchors = glm::vec4(0.3, 0.56298, 0.7, 0.6444);
+	startGameButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+
+	// --- ---
 
 	Entity e2 = coordinator->createEntity();
-	coordinator->addComponent(e2, b1);
+	coordinator->addComponent(e2, exitButton);
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, settingsButton);
+
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, startGameButton);
 
 	UIScreen mainMenu;
 	mainMenu.name = "mainMenu";
 	mainMenu.UIElements.push_back(e1);
 
 	mainMenu.UIElements.push_back(e2);
+	mainMenu.UIElements.push_back(e3);
+	mainMenu.UIElements.push_back(e4);
 
 	nameToScreen["mainMenu"] = mainMenu;
 }
