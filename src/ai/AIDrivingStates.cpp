@@ -34,7 +34,6 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 		// Check if spark has enough boost
 		// OR if spark is allowed to boost with health & has enough health
 		if (spark.boost >= 0.05f || (spark.health > ctx.healthBoostMin)) {
-			dbug::log("AI", 1, "[%s] boost use health: %d", spark.mVehicleName.c_str(), ctx.healthBoostMin);
 			ai.state = BOOSTING;
 			return std::make_unique<S_Boosting>();
 		}
@@ -193,7 +192,7 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 
 	// Boost attack
 	if (sweepResult.first == FWD) {
-		if (spark.boost > 0.5f) {
+		if (spark.boost > 0.05f) {
 			calcSteering(ai, controls, transform, spark, sweepResult.second); // steer to position of collision point
 
 			float distTo = glm::length(sweepResult.second - transform.pos);
@@ -207,7 +206,7 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 
 		}
 
-		if (spark.boost <= 0.5f || ai.boostAtkTimer > boostAtkMaxLength) {
+		if (spark.boost <= 0.05f || ai.boostAtkTimer > boostAtkMaxLength) {
 			controls.boost = false;
 			ai.boostAtkTimer = 0.0f;
 			ai.state = DRIVING; // out of boost: exit attack
@@ -226,8 +225,10 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 		dbug::log("AI", 0, "[%s] [ATTACKING] -> SHIMMY RIGHT", spark.mVehicleName.c_str());
 	}
 
-	if (spark.shimmyTimer > 0.0f || spark.speed < ai.maxTargetSpeed / 2.f) {
+	if (spark.shimmyTimer > 0.01f || spark.speed < ai.maxTargetSpeed / 2.f) {
 		ai.boostAtkTimer = 0.0f;
+		controls.shimmyR = false;
+		controls.shimmyL = false;
 		return std::make_unique<S_Driving>();
 	}
 
@@ -322,12 +323,13 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 		rotate = glm::angleAxis(glm::radians(90.f), glm::vec3(0.f, 1.f, 0.f));
 	}
 	else {
+		
 		rotate = glm::angleAxis(glm::radians(-90.f), glm::vec3(0.f, 1.f, 0.f));
 	}
 	glm::vec3 d = rotate * transform.forwardD;
 	PxVec3 direction(d.x, d.y, d.z);
 
-	PxBoxGeometry sweepBox(.2f, 0.25f, 0.5f); // geometry to sweep
+	PxBoxGeometry sweepBox(.2f, 0.25f, 0.25f); // geometry to sweep
 	PxTransform initPose = body->getGlobalPose();
 	initPose.p += direction.getNormalized() * 2.f; // set initial pose to be a bit away from spark
 
