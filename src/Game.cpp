@@ -21,15 +21,17 @@ void Game::initializeGame() {
 	gameState.physics = physics;
 	gameState.coordinator = coordinator;
 	gameState.audio = audio;
-	gameState.uiSystem = uiSystem;
+
 
 	initializeAudio();
 
 	renderer->initializeShaders(); // Create shader programs
-	renderer->initializeText();
+	renderer->initializeLines();
 	
 
 	inputSystem.attachWindow(renderer->window);
+
+	initializeUI();
 
 	gameActions = inputSystem.getActions();
 
@@ -53,8 +55,8 @@ void Game::initializeECS() {
 	coordinator->registerComponent<CollisionData>();
 	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
-	coordinator->registerComponent<UIComponent>();
-	coordinator->registerComponent<RectUI>();
+	coordinator->registerComponent<UIElement>();
+	coordinator->registerComponent<Leaderboard>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -65,6 +67,7 @@ void Game::initializeECS() {
 	audioSys = AudioSystem::registerSystem(coordinator);
 	aiControllerSys = AIControllerSys::registerSystem(coordinator);
 	respawnSys = RespawnSystem::registerSystem(coordinator);
+	leaderboardSys = LeaderboardSystem::registerSystem(coordinator);
 	lapSys = LapSystem::registerSystem(coordinator);
 	uiSys = UISystem::registerSystem(coordinator);
 
@@ -162,25 +165,26 @@ void Game::initializeTrack() {
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -13.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -1.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -4.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-3.0f, -1.0f, -7.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(3.0f, -1.0f, -10.0f));
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(10.0f, -1.0f, -16.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, -1.0f, -12.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, -1.0f, -8.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-5.0f, -1.0f, -4.0f));
+	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-10.0f, -1.0f, -0.0f));
 
 
-	gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
+	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
 
 void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc);
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "Player");
 	coordinator->addComponent(sparkEntity, HumanController{ 0 });
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());
 	coordinator->addComponent(sparkEntity, Respawnable());
+	coordinator->addComponent(sparkEntity, Leaderboard());
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
@@ -188,11 +192,12 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc);
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, "AI Player");
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
+	coordinator->addComponent(testSpark2, Leaderboard());
 	coordinator->addComponent(testSpark2, AIController{
-		AIState::IDLE, // start AI in idle state
+		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
 		});
@@ -200,17 +205,15 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	auto testSpark3 = sparkSys->createSpark(gameState, startLoc);
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI Player 2");
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
+	coordinator->addComponent(testSpark3, Leaderboard());
 	coordinator->addComponent(testSpark3, AIController{
-		AIState::IDLE, // start AI in idle state
+		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		0.10f, // curveBrakeThresh
-		22.0f, // maxTargetSpeed
-		0.02f, // curveBoostThresh
-		8, // steeringSharpness
+		
 		});
 }
 
@@ -261,6 +264,80 @@ void Game::initializeAudio() {
 	//float soundX = 0;
 }
 
+void Game::initializeUI() {
+	uiSys->window = renderer->window;
+	uiSys->SCR_WIDTH = &renderer->SCR_WIDTH;
+	uiSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
+	uiSys->initializeRenderingParams();
+	uiSys->coordinator = coordinator;
+	uiSys->fps = &fps;
+
+	uiSys->screenInitialization();
+
+	uiSys->addScreen("fpsCounter");
+	uiSys->addScreen("mainMenu");
+}
+
+void Game::stateTransition() {
+	// if a transition happened
+	if (!(gameState.currentState == gameState.nextState)) {
+		// we can have a switch case statement here
+		// for every possible state
+
+		// we know this is the "old" state
+		// we can do cleanup here if necessary
+		// outgoing transition
+		// exit
+		switch (gameState.currentState) {
+			
+			// we're likely initializing here, so pop the main menu from UI
+			// initialize everything 
+			case (MAINMENU):
+				uiSys->popScreen();
+				initializeRace();
+				uiSys->addScreen("lapCounter");
+				break;
+
+			// our likely next state is paused or game ended
+			// we may want to pop heads up display
+			case (GAMEPLAY): 
+				break;
+
+			// we're likely resuming the game, so pop all pause menus
+			case (PAUSED): 
+				uiSys->clearAllScreens();
+				break;
+
+			// we're likely restarting the game
+			case (END):
+				break;
+		}
+
+		// this is the new state, do things that you want to update
+		// incoming transition
+		// entry
+		switch (gameState.nextState) {
+			// HOW DID WE GET HERE, this shouldn't run
+			case (MAINMENU):
+				break;
+
+				// we are resuming gameplay
+			case (GAMEPLAY):
+				break;
+				// we will be in a pause menu
+			case (PAUSED):
+				break;
+
+				// someone has finished the race
+			case (END):
+				break;
+		}
+
+		gameState.currentState = gameState.nextState;
+	}
+}
+
+
 // update stuff
 void Game::update() {
 	// update inputs
@@ -270,17 +347,27 @@ void Game::update() {
 	controllerSys->update(gameState);
 
 	if (gameActions.intializeGame) {
-		initializeRace();
 		gameActions.intializeGame = false;
+		gameState.nextState = GAMEPLAY;
 	}
 
+	stateTransition(); // handle any state transitions
+
 	updateTime();
-	updatePhysics();
-	// AI
-	aiControllerSys->update(gameState);
-	// after physics update
-	lapSys->update(gameState);
-	respawnSys->update(gameState);
+
+
+	// do our updates only if in game
+	if (gameState.currentState == GAMEPLAY) {
+
+		updatePhysics();
+		// AI
+		aiControllerSys->update(gameState);
+		// after physics update
+		lapSys->update(gameState);
+		uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
+		respawnSys->update(gameState);
+		leaderboardSys->update(gameState);
+	}
 
 	updateFPS();
 
@@ -296,6 +383,8 @@ void Game::updateTime() {
 	accumulator += frameTime;
 	accumulator = std::min(accumulator, 1 / minFps);
 	framesPassed++;
+
+	t += frameTime;
 }
 
 void Game::updatePhysics() {
@@ -309,7 +398,7 @@ void Game::updatePhysics() {
 		cameraSys->update(gameState, dt);
 		audioSys->updateSounds(gameState);
 		accumulator -= dt;
-		t += dt;
+		//t += dt;
 
 		// dopler shift test
 		// this stuff would  go in whatever is playing a sound (ex. physics
@@ -342,11 +431,19 @@ void Game::updateFPS() {
 		t -= 1.0;
 		framesPassed = 0;
 	}
+
+	uiSys->updateFPSCounter();
 }
 
 void Game::updateRendering() {
 	// rendering
 	renderer->update(gameState, fps, cameraSys);
+
+	// update UI
+	uiSys->update();
+
+	glfwPollEvents();
+	glfwSwapBuffers(renderer->window);
 }
 
 void Game::updateAudio() {
