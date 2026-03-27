@@ -1,7 +1,7 @@
-# Blender 4.3.2 MTL File: 'Level1.blend'
+# Blender 5.0.1 MTL File: 'New Track Test.blend'
 # www.blender.org
 
-newmtl HealMaterial
+newmtl RibbonMaterial
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
 Ks 0.500000 0.500000 0.500000
@@ -9,4 +9,4 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd textures/heal.jpg
+map_Kd textures/track1texture.jpg

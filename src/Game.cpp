@@ -77,28 +77,28 @@ void Game::initializeRace() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/tTest.obj");
+	lapSys->generateCheckpoints("assets/curve.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/tTest.obj"); // loads model and paths
+	Track track("assets/mainTrack.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 
-	renderer->setTrackBounds(Track.model.GetMesh("Cube").GetBounds());
+	renderer->setTrackBounds(track.model.GetMesh("Track").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
 		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
-		Entity track = gameState.coordinator->createEntity();
-		gameState.coordinator->addComponent(track, none);
-		gameState.coordinator->addComponent(track, Track.model);
-		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
-		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
+		Entity trackE = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(trackE, none);
+		gameState.coordinator->addComponent(trackE, track.model);
+		gameState.coordinator->addComponent(trackE, CollisionData{GROUND, trackE});
+		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(trackE);
 		auto trackActor =
-			physics->initStaticMesh(Track.model.GetMesh("Cube"), none);
+			physics->initStaticMesh(track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
 		//// add walls
@@ -117,23 +117,48 @@ void Game::initializeTrack() {
 
 		//dbug::log(0, "track entity id:%d", track);
 
-		// add heal zones
-		Model healModel("assets/heals.obj"); // loads model and paths
+		// Ribbons
+		Model ribbonModel("assets/ribbons.obj"); // loads model and paths
+		Entity ribbon = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(ribbon, none);
+		gameState.coordinator->addComponent(ribbon, ribbonModel);
+		gameState.coordinator->addComponent(ribbon, CollisionData{ GROUND, ribbon });
+		auto& ribbonPhys = gameState.coordinator->getComponent<CollisionData>(ribbon);
+
+		for (auto& i : ribbonModel.GetMeshes()) {
+			auto actor = physics->initStaticMesh(i, none);
+			actor->userData = &ribbonPhys;
+		}
+
+		// Healzone Tracks
+		Model healTrackModel("assets/healzoneTracks.obj"); // loads model and paths
+		Entity healTrack = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(healTrack, none);
+		gameState.coordinator->addComponent(healTrack, healTrackModel);
+		gameState.coordinator->addComponent(healTrack, CollisionData{GROUND, healTrack});
+		auto& healTrackPhys = gameState.coordinator->getComponent<CollisionData>(healTrack);
+
+		for (auto& i : healTrackModel.GetMeshes()) {
+			auto actor = physics->initStaticMesh(i, none);
+			actor->userData = &healTrackPhys;
+		}
+
+		// Healzones
+		Model healModel("assets/healzones.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
 		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
 		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
-		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
-		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
+
 		for(auto& i : healModel.GetMeshes()){
 			auto actor = physics->initHealZones(i, none);
 			actor->userData = &healPhys;
 		}
 	}
 
-
-	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
+	Track curve("assets/curve.obj");
+	std::vector<TrackCurve> trackPaths = curve.paths; // set of paths
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// initialize players
