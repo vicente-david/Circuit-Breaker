@@ -80,11 +80,11 @@ void Game::initializeRace() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/track1.obj");
+	lapSys->generateCheckpoints("assets/testNew.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); // loads model and paths
+	Track Track("assets/testNew.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
@@ -105,23 +105,23 @@ void Game::initializeTrack() {
 		trackActor->userData = &trackPhys;
 
 		// add walls
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = coordinator->createEntity();
-		coordinator->addComponent(walls, none);
-		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, CollisionData{GROUND, walls});
-		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
+		//Model wallsModel("assets/walls.obj"); // loads model and paths
+		//Entity walls = coordinator->createEntity();
+		//coordinator->addComponent(walls, none);
+		//coordinator->addComponent(walls, wallsModel);
+		//coordinator->addComponent(track, CollisionData{GROUND, walls});
+		//CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
 
 
-		for (auto& i : wallsModel.GetMeshes()) {
+		/*for (auto& i : wallsModel.GetMeshes()) {
 			auto actor = physics->initStaticMesh(i, none);
 			actor->userData = &planePhys;
-		}
+		}*/
 
 		dbug::log(0, "track entity id:%d", track);
 
 		// add heal zones
-		Model healModel("assets/heals.obj"); // loads model and paths
+		Model healModel("assets/testNewheal.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
@@ -140,11 +140,11 @@ void Game::initializeTrack() {
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(10.0f, -1.0f, -16.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, -1.0f, -12.0f), "P2");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, -1.0f, -8.0f), "P3");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, -1.0f, -4.0f), "P4");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-10.0f, -1.0f, -0.0f), "P5");
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(10.0f, 2.0f, -16.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, 2.0f, -12.0f), "P2");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -8.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, 2.0f, -4.0f), "P4");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-10.0f, 2.0f, -0.0f), "P5");
 
 
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);

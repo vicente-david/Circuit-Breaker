@@ -46,15 +46,15 @@ void AIControllerSys::update(GameState& game) {
 		}
 		// Adjust lookahead target based on speed
 		if (spark.speed < 10.0f)
-			ai.lookAheadSteps = 4;
+			ai.lookAheadSteps = 2;
 		else if (spark.speed < 16.0f)
-			ai.lookAheadSteps = 6;
+			ai.lookAheadSteps = 2;
 		else if (spark.speed < 32.f)
-			ai.lookAheadSteps = 8;
+			ai.lookAheadSteps = 2;
 		else if (spark.speed < 40.f)
-			ai.lookAheadSteps = 12;
+			ai.lookAheadSteps = 2;
 		else if (spark.speed >= 48.f)
-			ai.lookAheadSteps = 20;
+			ai.lookAheadSteps = 2;
 		
 		
 		AIDriveContext ctx{ ai, controls, transform, spark, body, false};
