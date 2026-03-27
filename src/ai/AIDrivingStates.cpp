@@ -33,7 +33,7 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	if (curvature < ai.curveBoostThresh && abs(controls.steering) < 0.8f) {
 		// Check if spark has enough boost
 		// OR if spark is allowed to boost with health & has enough health
-		if (spark.boost >= 0.05f || (spark.health > ctx.healthBoostMin)) {
+		if (spark.boost >= 0.10f || (spark.health > ctx.healthBoostMin)) {
 			ai.state = BOOSTING;
 			return std::make_unique<S_Boosting>();
 		}
@@ -83,18 +83,18 @@ std::unique_ptr<IDriveState> S_Braking::update(AIDriveContext& ctx) {
 
 	// amount of throttle/brake to add per unit difference in speed
 	float throttleGain = 0.3f;
-	float brakeGain = 0.2f;
+	float brakeGain = 0.05f;
 
 	float speedDiff = targetSpeed - spark.speed;
 
-	if (speedDiff > 20.f) { // if speed differenece is very high, do not slam on brakes
+	if (speedDiff > 10.f) { // if speed differenece is very high, do not slam on brakes
 		controls.brake = 0.f;
 		controls.throttle = 0.f;
 	}
 	else
 		controls.brake = glm::clamp(-speedDiff * brakeGain, 0.0f, 1.0f);
 
-	if (controls.brake > 0.05)
+	if (controls.brake >= 0.05)
 		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
 	else controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
 
@@ -252,7 +252,7 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 	glm::vec3 vecToOpponent = sweepResult.second - transform.pos;
 	float angleBetween = glm::acos(glm::dot(glm::normalize(transform.forwardD), glm::normalize(vecToOpponent))); // angle between the forward direction and direction to the detected opponent
 	// measure the angle between forward direction and opponent
-	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f) {
+	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f && ai.dodgeTimer < dodgeMaxLength) {
 		// opponent is slightly behind: try to boost away
 		glm::quat rotateAway;
 		if (sweepResult.first == SIDE_L) {
@@ -268,11 +268,13 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 
 		calcSteering(ai, controls, transform, spark, target); // Calculate steering towards escape direction
 		controls.boost = true;
-		dbug::log("AI", 0, "[%s] [DODGING] -> BOOST AWAY", spark.mVehicleName.c_str());
+		ai.dodgeTimer += 1.f;
+		dbug::log("AI", 0, "[%s] [DODGING] -> BOOST AWAY (time: %.1f)", spark.mVehicleName.c_str(), ai.dodgeTimer);
 	}
 	else {
 		ai.state = DRIVING;
 		controls.boost = false;
+		ai.dodgeTimer = 0.f;
 		return std::make_unique<S_Driving>();
 	}
 

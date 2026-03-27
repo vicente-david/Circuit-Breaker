@@ -85,7 +85,7 @@ public:
 	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
 
 private:
-	const float boostAtkMaxLength = 15.f; // The max amount of time the ai will boost to attack
+	const float boostAtkMaxLength = 10.f; // The max amount of time the ai will boost to attack
 
 };
 
@@ -96,6 +96,9 @@ public:
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
+
+private:
+	const float dodgeMaxLength = 10.f; // max amount of time the ai will boost to dodge
 };
 
 

@@ -19,7 +19,7 @@ class AIControllerSys : public System {
 
 private:
 	
-	float arrivalRadius = 14.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
+	float arrivalRadius = 20.0f; // how close a spark needs to be from the targetPos to consider it as "arrived"
 	std::unique_ptr<AIState> defenseState = std::make_unique<DefenseState>();
 	std::unique_ptr<AIState> overtakeState = std::make_unique<OvertakeState>();
 	std::unique_ptr<AIState> maintainState = std::make_unique<MaintainState>();
