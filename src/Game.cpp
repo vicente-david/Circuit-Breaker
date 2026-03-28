@@ -236,7 +236,7 @@ void Game::initializeAudio() {
 	testSound = gameState.audio->createSound("muteCity",false);
 	alSourcef(testSound->source, AL_GAIN, 0.8f);
 	testSound->setLooping(true);
-	testSound->start();
+	// testSound->start();
 	//float soundX = 0;
 }
 

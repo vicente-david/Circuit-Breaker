@@ -2,6 +2,7 @@
 // helper to register the system
 #include "vehicles/SparkSoundSys.h"
 #include "GameState.h"
+#include "debugUtils/Logger.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "vehicles/ControllerSys.h"
@@ -16,20 +17,38 @@ void SparkSoundSys::updateSounds(double dt, GameState &game) {
 		auto &sounds = game.coordinator->getComponent<SparkSounds>(entity);
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 
-		if (controls.throttle > 0) {
+		float pitch = 1;
+		pitch += rBody->getLinearVelocity().magnitude() / 40.f;
+		if (sData.isBoosting) {
+			printf("boost sound!");
+			pitch += sounds.currBoostPitch;
+			sounds.currBoostPitch += dt * sounds.boostPitchSpeed;
+			if (sounds.currBoostPitch > sounds.maxBoostPitch) {
+				sounds.currBoostPitch = sounds.maxBoostPitch;
+			}
+		} else {
+			sounds.currBoostPitch = 0;
+		}
+
+		if (controls.throttle > 0 || sData.isBoosting) {
 			sounds.engine->start();
+			sounds.engine->pitchMulti(pitch);
+			if (sData.isHuman) {
+				dbug::log("AUDIO", -1, "vel:%f  engine pitch: %f",
+						  rBody->getLinearVelocity().magnitude(), pitch);
+			}
 		} else {
 			sounds.engine->pause();
 		}
 
-		if (sData.isBoosting) {
-			if (!sounds.boost->playing) {
-				sounds.boost = game.audio->createSound("boost");
-				sounds.boost->start();
-			}
-		} else {
-			sounds.boost->stop();
-		}
+		// if (sData.isBoosting) {
+		// 	if (!sounds.boost->playing) {
+		// 		sounds.boost = game.audio->createSound("boost");
+		// 		sounds.boost->start();
+		// 	}
+		// } else {
+		// 	sounds.boost->stop();
+		// }
 
 		// if(controls.throttle>0){
 		// 	alSourcef(sounds.engine.source, AL_GAIN, controls.throttle);
@@ -38,7 +57,7 @@ void SparkSoundSys::updateSounds(double dt, GameState &game) {
 		// // update sound
 		// auto &sound = game.coordinator->getComponent<Sound>(entity);
 		// rBody->getLinearVelocity();
-		sounds.boost->updateFromRbody(rBody);
+		// sounds.boost->updateFromRbody(rBody);
 		sounds.engine->updateFromRbody(rBody);
 	}
 }

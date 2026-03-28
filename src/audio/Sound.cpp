@@ -40,6 +40,20 @@ void Sound::stop() {
 	AudioEngine::checkALErrors("stopping " + soundName);
 }
 
+void Sound::pitchMulti(float pitch){
+	if(freed){
+		return;
+	}
+	alSourcef(source, AL_PITCH, pitch);
+	AudioEngine::checkALErrors("setting pitch " + soundName);
+}
+void Sound::volume(float gain){
+	if(freed){
+		return;
+	}
+	alSourcef(source, AL_GAIN, gain);
+	AudioEngine::checkALErrors("setting volume " + soundName);
+}
 void Sound::updateFromRbody(physx::PxRigidBody *rBody) {
 	auto pos = rBody->getGlobalPose().p;
 	position = glm::vec3(pos.x, pos.y, pos.z);

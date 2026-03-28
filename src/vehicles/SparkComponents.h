@@ -46,7 +46,7 @@ struct SparkData {
 	float boostRegenRate = 20.0f;
 	float maxBoost = 100.0f;
 	float boost = maxBoost;
-	
+
 	float shimmyForce = 15.0f;
 	double shimmyCooldown = 2;
 	double shimmyInvincible = shimmyCooldown - 0.5;
@@ -62,7 +62,7 @@ struct SparkData {
 	double offGroundLimit = 2;
 	double offGroundTimer = offGroundLimit;
 	double angResTimer = 0;
-	
+
 	bool inReverse = false;
 	bool inDrift = false;
 	bool isBoosting = false;
@@ -77,7 +77,7 @@ struct SparkData {
 	PxU32 neutralGear = 0;
 
 	// Easy access to vehicle's rigid body
-	PxRigidBody* rBody = NULL;
+	PxRigidBody *rBody = NULL;
 
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];
 	PxU32 mNbMaterialFrictions = 0;
@@ -101,12 +101,12 @@ struct SparkData {
 };
 struct SparkSounds {
 	std::shared_ptr<Sound> engine;
-	std::shared_ptr<Sound> boost;
+	float currBoostPitch = 0;
+	constexpr static float maxBoostPitch = 1;
+	constexpr static float boostPitchSpeed = 3;
 
 	SparkSounds() {};
 	SparkSounds(std::shared_ptr<AudioEngine> audio) {
 		engine = audio->createSound("engine");
-		boost = audio->createSound("boost");
 	};
-
 };

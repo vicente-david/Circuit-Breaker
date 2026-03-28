@@ -1,6 +1,7 @@
 #include "SparkSys.h"
 #include "debugUtils/Panel.h"
 #include "graphics/Model.h"
+#include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
 
 void SparkSys::updateSparks(double dt, GameState &game) {
@@ -206,6 +207,8 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
+	game.coordinator->addComponent(sparkEntity, SparkSounds(game.audio));
+
 	if (sData.mVehicleName == "AI Player 2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	}
@@ -450,10 +453,10 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 	updateMaxBoost(sData);
 
+	sData.isBoosting = false;
 	// MAYBE TODO: change to a small delay before applying bigger boost (leave alone for now)
 	// stop boosting if we've run out of normal boost
 	if (sData.boost <= 0 && !sControls.boostWithHealth) {
-		sData.isBoosting = false;
 		//dbug::log("GAME", -1, "No boost!");
 		return;
 	}
