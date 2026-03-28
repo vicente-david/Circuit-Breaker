@@ -51,6 +51,7 @@ public:
 	//void resetGame(); // todo: implement
 
 	void stateTransition(); // if gamestate changes update things
+	void handleMenuControl(); // convenience function for setting gamestate based on menu and stuff 
 	// mostly a convenience function
 
 	// update every frame 
@@ -79,6 +80,7 @@ public:
 	GameState gameState;
 
 	Actions gameActions;
+	UIActions gameUIActions;
 
 	bool isInitialized;
 

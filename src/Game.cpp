@@ -152,7 +152,7 @@ void Game::initializeTrack() {
 		Entity heal = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
-		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
+		gameState.coordinator->addComponent(heal, CollisionData{ HEAL, heal });
 		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
 
 		for(auto& i : healModel.GetMeshes()){
@@ -223,7 +223,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pat
 		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		
+
 		});
 }
 
@@ -286,6 +286,31 @@ void Game::initializeUI() {
 
 	uiSys->addScreen("fpsCounter");
 	uiSys->addScreen("mainMenu");
+
+	// give gameState access to uiSystem for controller-driven UI navigation
+	gameState.uiSystem = uiSys;
+}
+
+void Game::handleMenuControl() {
+	UIActions& ui = gameState.uiActions;
+
+	if (gameState.nextState == END) return;
+
+	if (ui.intializeGame) {
+		ui.intializeGame = false;
+		ui.menuControl = 1; // transition to gameplay
+		uiSys->resetSelection();
+		gameState.nextState = GAMEPLAY;
+	}
+
+	if (ui.menuControl == 2) {
+		gameState.nextState = PAUSED;
+	}
+	else if (ui.menuControl == 1) {
+		gameState.nextState = GAMEPLAY;
+	}
+
+
 }
 
 void Game::stateTransition() {
@@ -299,28 +324,33 @@ void Game::stateTransition() {
 		// outgoing transition
 		// exit
 		switch (gameState.currentState) {
-			
+
 			// we're likely initializing here, so pop the main menu from UI
 			// initialize everything 
-			case (MAINMENU):
-				uiSys->popScreen();
-				initializeRace();
-				uiSys->addScreen("lapCounter");
-				break;
+		case (MAINMENU):
+			uiSys->popScreen();
+			initializeRace();
+			uiSys->addScreen("lapCounter");
+			break;
 
 			// our likely next state is paused or game ended
 			// we may want to pop heads up display
-			case (GAMEPLAY): 
-				break;
+		case (GAMEPLAY):
+			uiSys->clearAllScreens();
+			break;
 
 			// we're likely resuming the game, so pop all pause menus
-			case (PAUSED): 
-				uiSys->clearAllScreens();
-				break;
+			// add back our gameplay uis (order matters)
+		case (PAUSED):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("fpsCounter");
+			uiSys->addScreen("lapCounter");
+			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
+			break;
 
 			// we're likely restarting the game
-			case (END):
-				break;
+		case (END):
+			break;
 		}
 
 		// this is the new state, do things that you want to update
@@ -328,19 +358,26 @@ void Game::stateTransition() {
 		// entry
 		switch (gameState.nextState) {
 			// HOW DID WE GET HERE, this shouldn't run
-			case (MAINMENU):
-				break;
+		case (MAINMENU):
+			break;
 
-				// we are resuming gameplay
-			case (GAMEPLAY):
-				break;
-				// we will be in a pause menu
-			case (PAUSED):
-				break;
+			// we are resuming gameplay
+		case (GAMEPLAY):
+			//uiSys->addScreen("racingHUD");
+			break;
+			// we will be in a pause menu
+		case (PAUSED):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("fpsCounter");
+			uiSys->addScreen("pauseMenu"); // ensure this menu is pushed last, so that it goes on top, else UI input wont work
+			renderer->renderPasses.clear();
+			break;
 
-				// someone has finished the race
-			case (END):
-				break;
+			// someone has finished the race
+		case (END):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("standingsScreen");
+			break;
 		}
 
 		gameState.currentState = gameState.nextState;
@@ -353,13 +390,23 @@ void Game::update() {
 	// update inputs
 	// input
 	gameActions = inputSystem.getActions();
+	gameUIActions = inputSystem.getUIActions();
+
 	gameState.inputActions = gameActions;
+	gameState.uiActions = gameUIActions;
+
+	// controllerSys handles both vehicle controls AND UI navigation
+	// UI navigation modifies game.uiActions directly (confirm, goBack, menuControl, etc.)
 	controllerSys->update(gameState);
 
-	if (gameActions.intializeGame) {
-		gameActions.intializeGame = false;
-		gameState.nextState = GAMEPLAY;
-	}
+	// --- State transition from menuControl ---
+	// Read back uiActions after controllerSys may have modified them
+	UIActions& ui = gameState.uiActions;
+
+	handleMenuControl();
+
+	// sync menuControl back to InputSystem so controller/keyboard checks can see the current state
+	inputSystem.setMenuControl(ui.menuControl);
 
 	stateTransition(); // handle any state transitions
 

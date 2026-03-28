@@ -39,6 +39,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../GameState.h"
+#include <algorithm>
 
 
 // positions of the triangle to render the quad
@@ -66,7 +67,7 @@ struct UIVertex {
 };
 
 
-class UISystem : public System{
+class UISystem : public System {
 public:
 	static std::shared_ptr<UISystem> registerSystem(std::shared_ptr<Coordinator>& coord); // ecs shenanigans
 
@@ -99,12 +100,18 @@ public:
 	// fps counter
 	// etc
 	// the return value will be the name of the string it maps the screen to
-	void createMainMenu(); // create the pause menu and push it to the hash map
+	void createMainMenu(); // create the main menu and push it to the hash map
+	void createPauseMenu(); // create the pause menu and push it to hashmap
+	void createSettingsMenu(); // create the settings menu and push it to hashmap
+	void createStandingsScreen(); // create the standings menu and push it to hashmap
+	void createRacingHUD(); // create the racing hud and push it to the hashmap
+
+	// persistent ui elements (elements that change every frame)
 	void createFPSCounter(); // create an fps counter
 	void updateFPSCounter();
 	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
-	
+
 	unsigned int uiVAO, uiVBO, textVBO, textVAO;
 
 	std::map<char, Character> textFont;
@@ -122,12 +129,27 @@ public:
 	// and ofc lifetimes
 	// currently fps is a field of Game, so it should be ok
 	// scr_width and scr_height are stored in the rendering system, it should be ok
-	int* SCR_WIDTH; 
+	int* SCR_WIDTH;
 	int* SCR_HEIGHT;
 	std::string* fps;
 	// entity based pointers will need a little more managment
-	
+
 	std::shared_ptr<Coordinator> coordinator;
+
+	// --- Button Selection ---
+	int selectedButton = 0; // index of currently selected button (0-based, buttons only, excludes background. sliders TBD)
+
+	// returns the number of selectable buttons on the top screen (excludes the background element at index 0)
+	int getButtonCount();
+	void buttonHighlighting(Entity& e, float& shaderFlag); // does some checks to see if a button can be highlighted
+
+	// returns the name of the top screen on the stack (empty string if no screens)
+	std::string getTopScreenName();
+
+	// resets selectedButton to 0 (call when switching screens)
+	void resetSelection();
+
+	// --- Button Selection End ---
 
 private:
 
@@ -137,7 +159,7 @@ private:
 	std::vector<UIScreen> screenStack; // pretend this is a stack
 	std::vector<UIVertex> uiData;
 	// we iterate forwards since last element gets drawn on top
-	
+
 	// this could be useful
 	// std::vector<UIElement> alwaysVisible; // a vector of always visible UI elements
 
