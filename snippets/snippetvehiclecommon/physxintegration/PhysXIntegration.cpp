@@ -116,7 +116,7 @@ void setPhysXIntegrationParams(const PxVehicleAxleDescription& axleDescription,
 	//The physx integration params are hardcoded rather than loaded from file.
 	const PxQueryFilterData queryFilterData(PxFilterData(0, 0, 0, 0), PxQueryFlag::eSTATIC);
 	PxQueryFilterCallback* queryFilterCallback = NULL;
-	const PxTransform physxActorCMassLocalPose(PxVec3(0.0f, -0.5f, 0.0f), PxQuat(PxIdentity));
+	const PxTransform physxActorCMassLocalPose(PxVec3(0.0f, 0.0f, 0.0f), PxQuat(PxIdentity));
 	const PxVec3 physxActorBoxShapeHalfExtents(0.15f, 0.15f, 0.15f);
 	const PxTransform physxActorBoxShapeLocalPose(PxVec3(0.0f, 0.1f, 0.75f), PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
 

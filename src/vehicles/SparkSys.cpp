@@ -552,26 +552,30 @@ void SparkSys::changeWheelParams(SparkData& sData, PxReal friction, PxReal latFr
 	sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = maxSteerAngle;
 }
 
-void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
-
+void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {	
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-	const PxVec3 up = sData.rBody->getGlobalPose().q.getBasisVector1(); // already normalized
 	const float lateralSpeed = linVel.dot(lateral);
-
-	int ccw = PxSign(sData.rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
+	const float rollVel = sData.rBody->getAngularVelocity().x;
+	const float yawVel = sData.rBody->getAngularVelocity().y;
+	
+	int ccw = PxSign(yawVel); // rotating ccw = 1 and cw = -1
 	int countersteering = ccw * sControls.steering; // negative = steering out of corner, positive = steering into corner
 
 	float driftCurve = 2.1f * sControls.steering;
 	float angleCurve = 1.4f * sControls.steering;
-	float yawVel = sData.rBody->getAngularVelocity().y;
+	
 	float cosTheta = lateralSpeed / sData.speed;
+	
+	PxVec3 totalForce(PxIdentity);
+	PxVec3 totalTorque(PxIdentity);
 
-	// slow down when hitting a hard drift
-	if (sData.speed > 40 && cosTheta > 0.42f) {
-		float speedDamp = 0.7;
-		sData.rBody->addForce((-linVel - up) * speedDamp * cosTheta * cosTheta, PxForceMode::eACCELERATION);
+	// slow down when hitting a hard drift, ~60 deg
+	if (sData.speed > 40 && PxAbs(cosTheta) > 0.5f) {
+		float speedDamp = 0.85f;
+		float mass = sData.rBody->getMass();
+		totalForce += (-linVel) * speedDamp * cosTheta * cosTheta * mass;
 	}
 
 	// Opposite forces automatically apply due to opposite sign when counter-steering
@@ -579,21 +583,27 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	driftDir.y = 0.f;
 	driftDir.normalize();
 	float forceStrength = countersteering > 0 ? 1600.f : 400.f;
-	sData.rBody->addForce(driftDir * forceStrength);
-
+	totalForce += driftDir * forceStrength;
+	
 	float torqueStrength = countersteering > 0 ? -50.f : 600.f;
-	sData.rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
-
+	totalTorque += PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength;
+	
 	float gripStrength = 240.f;
-	sData.rBody->addForce(lateral * gripStrength * countersteering * cosTheta);
-
-	// TODO: make sure roll damping is working properly
-	float rollDamping = PxMin(lateralSpeed * lateralSpeed, 100.f);
-	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
-		PxForceMode::eACCELERATION);
+	totalForce += lateral * gripStrength * countersteering * cosTheta;
+	
 
 	float downforce = sData.speed * sData.speed * 0.2;
-	sData.rBody->addForce(PxVec3(0.f, -downforce, 0.f));
+	totalForce += PxVec3(0.f, -downforce, 0.f);
+
+	sData.rBody->addForce(totalForce);
+	sData.rBody->addTorque(totalTorque);
+
+	// this maks it really to hard to flip the car while cornering
+	const float rollLimit = 0.1f;
+	if (PxAbs(rollVel) > rollLimit) {
+		PxVec3 angVel(PxClamp(rollVel, -rollLimit, rollLimit), yawVel, 0.f);
+		sData.rBody->is<PxRigidDynamic>()->setAngularVelocity(angVel);
+	}
 }
 
 void SparkSys::yawStabilizer(SparkData& sData) {
