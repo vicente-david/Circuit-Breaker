@@ -608,8 +608,10 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 
 void SparkSys::yawStabilizer(SparkData& sData) {
 	const float yawVel = sData.rBody->getAngularVelocity().y;
-	const float yawDamping = sData.speed * 0.15f;
-	PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
+	const float alpha = PxMin(sData.speed / 20.f, 1.f);
+	const float dampForce = PxLerp(0.05f, 0.15f, alpha);
+	const float yawDamping = sData.speed * dampForce;
+	const PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
 
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 }
@@ -628,7 +630,7 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 			changeWheelParams(sData, 3.8f, 145600, PxDegToRad(45));
 
 		sData.inDrift = false;
-		yawStabilizer(sData); // Helps prevent oversteer
+		yawStabilizer(sData); // Helps prevent oversteer when turning
 	}
 }
 
