@@ -1,10 +1,10 @@
 # Blender 5.0.1 MTL File: 'New Track Test.blend'
 # www.blender.org
 
-newmtl RibbonMaterial
+newmtl TrackMaterial
 Ns 250.000000
 Ka 1.000000 1.000000 1.000000
-Kd 0.800023 0.510778 0.064473
+Kd 0.042193 0.800016 0.079044
 Ks 0.500000 0.500000 0.500000
 Ke 0.000000 0.000000 0.000000
 Ni 1.500000
