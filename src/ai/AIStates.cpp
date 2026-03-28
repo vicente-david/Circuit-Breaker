@@ -168,7 +168,7 @@ void AIState::checkRoute(AIController& ai) {
 		// get the distance between the current point the ai is at on its current route and the point on the desired route at the same index.
 		// * for this to work both curves must have the same number of points and line up on singular portions of the track
 		float dist = glm::length(ai.route.at(posIdx) - AIState::path->curvePoints.at(posIdx));
-		if (dist < 1000.f) {
+		if (dist < 1.f) {
 			// if the distance is within a small enough range, change to the new path
 			ai.route = AIState::path->curvePoints;
 			ai.angles = AIState::path->curvatures;
