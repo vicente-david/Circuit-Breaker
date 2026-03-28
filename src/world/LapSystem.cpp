@@ -159,7 +159,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 				lapProg.progress = 0.0f;
 				lapProg.closestTrackPoint = 0;
 				//if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
-				std::cout << "on lap: " << lapProg.currentLap << std::endl;
+				dbug::log("LAP", 1, "on lap: %d", lapProg.currentLap);
 				if (lapProg.currentLap >= 4 && !game.gameEnded) game.endGame(entity);
 			}
 
