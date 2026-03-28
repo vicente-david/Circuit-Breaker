@@ -13,6 +13,7 @@
 #include "ecs/Coordinator.h"
 #include "world/Track.h"
 #include "InputSystem.h"
+#include <memory>
 
 class Game{
 
@@ -43,7 +44,7 @@ public:
 
 	//void initializePlayers();
 	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
-	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // ai spark
+	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name); // ai spark
 	void initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // to-do join above line together 
 
 
@@ -59,7 +60,6 @@ public:
 	void updatePhysics();
 	void updateFPS();
 	void updateRendering();
-	void updateAudio();
 
 	// update not every frame (used for things that don't need to be updated every frame)
 
@@ -67,9 +67,9 @@ public:
 	std::shared_ptr<PhysicsSystem> physicsSys;
 	std::shared_ptr<RenderingSystem> renderer;
 	std::shared_ptr<SparkSys> sparkSys;
+	std::shared_ptr<SparkSoundSys> sparkSoundSys;
 	std::shared_ptr<ControllerSys> controllerSys;
 	std::shared_ptr<CameraSystem> cameraSys;
-	std::shared_ptr<AudioSystem> audioSys;
 	std::shared_ptr<AIControllerSys> aiControllerSys;
 	std::shared_ptr<RespawnSystem> respawnSys;
 	std::shared_ptr<LeaderboardSystem> leaderboardSys;
@@ -97,7 +97,7 @@ public:
 	std::string fps = std::to_string(0);
 
 	// sound
-	Sound testSound;
+	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
 	//Track activeTrack;

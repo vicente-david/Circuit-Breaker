@@ -18,6 +18,7 @@
 // the above seems like a pain, we could just use thresholds, if your jump along the spline is a valid threshhold, then you're ok
 #pragma once
 #include "LapSystem.h"
+#include <cstdio>
 #include <iostream>
 #include "CurveLoader.h"
 #include <glm/gtc/integer.hpp>
@@ -124,8 +125,11 @@ void LapSystem::generateCheckpoints(const std::string path) {
 	std::cout << trackDistances.size() << std::endl;
 	std::cout << trackPoints[0].curvePoints.size() << std::endl;
 	for (int i = 0; i < trackPoints[0].curvePoints.size(); i++) {
-		std::cout << trackPoints[0].curvePoints[i].x << " " << trackPoints[0].curvePoints[i].y << " "
-			<< trackPoints[0].curvePoints[i].z << " with distance along track: " << trackDistances[i] << std::endl;
+		dbug::log("TRACK", 1,"point [%.2f, %.2f, %.2f] distance along track %f",
+				trackPoints[0].curvePoints[i].x , 
+				trackPoints[0].curvePoints[i].y , 
+				trackPoints[0].curvePoints[i].z , 
+				trackDistances[i]);
 	}
 
 }
