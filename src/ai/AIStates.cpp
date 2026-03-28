@@ -9,7 +9,11 @@ using namespace AIHelpers;
 void DefenseState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
 	
-	// give ai the proper path
+	// Check if a route/curve change is needed
+	if (ctx.ai.routeID != AIState::path->id) {
+		int posIdx = ctx.ai.currentPosIdx;
+	}
+	
 	ctx.ai.route = AIState::path->curvePoints;
 	ctx.ai.angles = AIState::path->curvatures;
 

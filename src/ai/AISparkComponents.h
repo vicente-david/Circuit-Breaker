@@ -18,6 +18,7 @@ enum AIDriveState {
 struct AIController {
 	AIDriveState state = IDLE;
 
+	PathID routeID = pFAST;
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route
 	float curveDriftThresh = 0.10f; // minimum angle of turn for spark to drift

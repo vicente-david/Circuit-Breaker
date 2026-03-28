@@ -161,9 +161,11 @@ void Game::initializeTrack() {
 	}
 
 	Track curve("assets/curve.obj");
+	curve.paths[0].id = pFAST;
 	std::vector<TrackCurve> trackPaths{ (curve.paths[0]) }; // set of paths
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
 	Track healCurve("assets/healCurve.obj");
+	healCurve.paths[0].id = pHEAL;
 	trackPaths.push_back(healCurve.paths[0]); // add heal path to trackpaths
 
 	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
