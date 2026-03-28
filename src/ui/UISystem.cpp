@@ -28,8 +28,9 @@ void UISystem::recalcMat() {
 // a highlight as of right now is just doubling that number if 
 // a button is highlighted
 void UISystem::buttonHighlighting(Entity& e, float& shaderFlag) {
-
 	// check if button exists
+	if (getButtonCount() == 0) return;
+
 	if (selectedButton >= screenStack.back().UIElements.size() - 1) {
 		// there cannot exist a highlight with this input
 		return;  

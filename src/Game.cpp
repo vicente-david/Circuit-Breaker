@@ -306,7 +306,7 @@ void Game::stateTransition() {
 
 			// we are resuming gameplay
 		case (GAMEPLAY):
-			uiSys->addScreen("racingHUD");
+			//uiSys->addScreen("racingHUD");
 			break;
 			// we will be in a pause menu
 		case (PAUSED):
