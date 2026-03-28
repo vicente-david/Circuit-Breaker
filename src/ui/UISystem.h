@@ -141,6 +141,7 @@ public:
 
 	// returns the number of selectable buttons on the top screen (excludes the background element at index 0)
 	int getButtonCount();
+	void buttonHighlighting(Entity& e, float& shaderFlag); // does some checks to see if a button can be highlighted
 
 	// returns the name of the top screen on the stack (empty string if no screens)
 	std::string getTopScreenName();

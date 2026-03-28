@@ -23,6 +23,23 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
+// will only need to modify the magnitude as of right now
+// shader flag is guaranteed to be either 1.0 or -1.0
+// a highlight as of right now is just doubling that number if 
+// a button is highlighted
+void UISystem::buttonHighlighting(Entity& e, float& shaderFlag) {
+
+	// check if button exists
+	if (selectedButton >= screenStack.back().UIElements.size() - 1) {
+		// there cannot exist a highlight with this input
+		return;  
+	}
+
+	// otherwise 
+	// double check if the entity is the same one as the selected button
+	if (e == screenStack.back().UIElements[1 + selectedButton]) shaderFlag *= 2.0f;
+}
+
 void UISystem::updateUIElement(Entity& e) {
 	uiShader->use();
 
@@ -40,7 +57,8 @@ void UISystem::updateUIElement(Entity& e) {
 			UIVertex v1;
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
-			v1.interpretFlag = 0.0f;
+			v1.interpretFlag = -1.0f; // -1 (see ui.frag shader for why)
+			buttonHighlighting(e, v1.interpretFlag);
 			uiData.push_back(v1);
 		}
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
@@ -55,6 +73,7 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
 			v1.interpretFlag = 1.0f;
+			buttonHighlighting(e, v1.interpretFlag);
 			uiData.push_back(v1);
 		}
 		glActiveTexture(GL_TEXTURE0);
