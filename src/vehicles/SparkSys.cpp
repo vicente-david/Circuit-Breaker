@@ -93,15 +93,15 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	// Adds to the shape of the chassis
 	{
-		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.25f, 0.2f));
+		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.15f, 0.2f));
 		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
-		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f), PxQuat(PxIdentity));
+		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.1f, -0.2f), PxQuat(PxIdentity));
 
-		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.25f, 0.5f));
+		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.15f, 0.5f));
 		PxShape* leftSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
 		PxShape* rightSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
-		PxTransform leftSideBoxLocalPose(PxVec3(0.41f, 0.0f, 0.28f), PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
-		PxTransform rightSideBoxLocalPose(PxVec3(-0.41f, 0.0f, 0.28f), PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
+		PxTransform leftSideBoxLocalPose(PxVec3(0.43f, 0.1f, 0.3f), PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
+		PxTransform rightSideBoxLocalPose(PxVec3(-0.43f, 0.1f, 0.3f), PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		sData.rBody->attachShape(*rearBox);
