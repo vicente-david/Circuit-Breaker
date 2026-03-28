@@ -9,7 +9,7 @@ class TestInput1 : public CallbackInterface {
 		if (key == GLFW_KEY_W && action == GLFW_PRESS) {
 			actions->keyboardForward = true;
 		}
-		else if(key == GLFW_KEY_W && action == GLFW_RELEASE) {
+		else if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
 			actions->keyboardForward = false;
 		}
 
@@ -63,20 +63,20 @@ class TestInput1 : public CallbackInterface {
 		if (key == GLFW_KEY_L && action == GLFW_PRESS) {
 			actions->kshimmyRight = true;
 		}
-		else{
+		else {
 			actions->kshimmyRight = false;
 		}
 
 		if (key == GLFW_KEY_J && action == GLFW_PRESS) {
 			actions->kshimmyLeft = true;
 		}
-		else{
+		else {
 			actions->kshimmyLeft = false;
 		}
 		if (key == GLFW_KEY_K && action == GLFW_PRESS) {
 			actions->kdriftMode = true;
 		}
-		else{
+		else {
 			actions->kdriftMode = false;
 		}
 
@@ -88,33 +88,37 @@ class TestInput1 : public CallbackInterface {
 		}
 
 
-	// UI callbacks for keyboard
+		// UI callbacks for keyboard
 
 		if (uiActions->intializeGame) {
 			uiActions->intializeGame = false;
 		}
 
-		if (key == GLFW_KEY_ENTER && (action == GLFW_PRESS) && (action != GLFW_REPEAT)) {
+		// --- Menu Navigation ---
+		// Arrow keys (or W/S) to navigate up/down in menus
+		// Enter (or Space) to confirm selection
+		// Only active when in a menu state (not during gameplay)
+		if (uiActions->menuControl != 1) { // not in gameplay
 
-			// menuControl is current state, then we change the current state
-			// so on game launch it's -1
-			// 2 paused, 1 normal gameplay, 0 is initialization, -1 title screen
-			if (uiActions->menuControl == 2) {
-				uiActions->menuControl = 1;
-				std::cout << "resume the game" << std::endl;
+			if (key == GLFW_KEY_UP && action == GLFW_PRESS) {
+				uiActions->navigateUp = true;
 			}
-			else if (uiActions->menuControl == 1) {
+			if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
+				uiActions->navigateDown = true;
+			}
+			if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
+				uiActions->confirm = true;
+			}
+			if (key == GLFW_KEY_BACKSPACE && action == GLFW_PRESS) {
+				uiActions->goBack = true;
+			}
+		}
+
+		// ESC to pause/unpause during gameplay
+		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+			if (uiActions->menuControl == 1) {
 				uiActions->menuControl = 2;
 				std::cout << "paused now" << std::endl;
-			}
-			else if (uiActions->menuControl == 0) {
-				// this is distinct as otherwise you might be toggling back to main menu
-				uiActions->menuControl = 2;
-				std::cout << "first pause" << std::endl;
-			}
-			else if (uiActions->menuControl == -1) {
-				uiActions->menuControl = 0; 
-				uiActions->intializeGame = true;
 			}
 		}
 
@@ -151,13 +155,13 @@ public:
 		uiActions = uiActionsPtr;
 	}
 
-private: 
-		Actions* actions = nullptr;
-		UIActions* uiActions = nullptr;
+private:
+	Actions* actions = nullptr;
+	UIActions* uiActions = nullptr;
 };
 
 // if we have .ini we could parse contorls here
-InputSystem::InputSystem() : window(nullptr), callbacks(nullptr){
+InputSystem::InputSystem() : window(nullptr), callbacks(nullptr) {
 }
 
 // attach a window
@@ -196,9 +200,19 @@ const Actions& InputSystem::getActions() {
 	return actions;
 }
 
-const UIActions& InputSystem::getUIActions() {
+UIActions InputSystem::getUIActions() {
+	// get the current state, then clear flags so they only fire once per input
+	UIActions currState = uiActions;
+	uiActions.navigateUp = false;
+	uiActions.navigateDown = false;
+	uiActions.confirm = false;
+	uiActions.goBack = false;
+	return currState;
+}
 
-	return uiActions;
+void InputSystem::setMenuControl(int state) {
+	// without this function, menuControl changes made on gameState.uiActions would never come back to the source here
+	uiActions.menuControl = state;
 }
 
 void InputSystem::combineInputs() {
@@ -224,11 +238,11 @@ void InputSystem::combineInputs() {
 		actions.xRotation = actions.controllerDir;
 	else
 		actions.xRotation = actions.keyboardDir;
-	
+
 
 
 	if (actions.keyboardForward || actions.controllerForward) {
-		actions.moveForward = glm::clamp((actions.keyboardForward+(float)actions.controllerForward), 0.0f, 1.0f);
+		actions.moveForward = glm::clamp((actions.keyboardForward + (float)actions.controllerForward), 0.0f, 1.0f);
 	}
 
 	if (actions.keyboardBackward || actions.controllerBackward) {
@@ -253,17 +267,19 @@ void InputSystem::updateGamepad() {
 	bool button_LB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
 	bool button_BACK = controllerState.buttons[GLFW_GAMEPAD_BUTTON_BACK];
 
-	
+
 	if (leftTrigger >= triggerThreshold) {
 		actions.controllerBackward = leftTrigger;
-	}else if (leftTrigger < triggerThreshold) {
+	}
+	else if (leftTrigger < triggerThreshold) {
 		actions.controllerBackward = 0.0;
 	}
 
-	
+
 	if (rightTrigger >= triggerThreshold) {
 		actions.controllerForward = rightTrigger;
-	} else if (rightTrigger < triggerThreshold) {
+	}
+	else if (rightTrigger < triggerThreshold) {
 		actions.controllerForward = 0.0;
 	}
 
@@ -286,13 +302,14 @@ void InputSystem::updateGamepad() {
 		actions.controllerYRot = 0.0;
 
 
-	if (button_B || actions.kboost){
+	if (button_B || actions.kboost) {
 		actions.boostJustPressed = 0;
-		if(!actions.boost)
+		if (!actions.boost)
 			actions.boostJustPressed = 1;
 
 		actions.boost = 1;
-	}else
+	}
+	else
 		actions.boost = 0;
 
 	if (button_Y || actions.kRespawn)
@@ -305,7 +322,7 @@ void InputSystem::updateGamepad() {
 	else
 		actions.driftMode = false;
 
-	if (button_RB ||actions.kshimmyRight)
+	if (button_RB || actions.kshimmyRight)
 		actions.shimmyRight = true;
 	else
 		actions.shimmyRight = false;
@@ -314,12 +331,52 @@ void InputSystem::updateGamepad() {
 		actions.shimmyLeft = true;
 	else
 		actions.shimmyLeft = false;
-	
+
 	if (button_BACK)
 		actions.reload = true;
 	else
 		actions.reload = false;
 
+	// --- Controller Menu Navigation (edge-detected, only in menu states) ---
+	if (uiActions.menuControl != 1) { // not in gameplay
+		bool dpadUp = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
+		bool dpadDown = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+		bool leftStickUp = (lefty < -0.5f);   // stick pushed up (GLFW Y axis is inverted)
+		bool leftStickDown = (lefty > 0.5f);   // stick pushed down
+
+		// navigate up: D-pad up or left stick up (edge: wasn't pressed last frame, pressed now)
+		if ((dpadUp && !prevDpadUp) || (leftStickUp && !prevLeftStickUp)) {
+			uiActions.navigateUp = true;
+		}
+		// navigate down: D-pad down or left stick down
+		if ((dpadDown && !prevDpadDown) || (leftStickDown && !prevLeftStickDown)) {
+			uiActions.navigateDown = true;
+		}
+		// confirm: A button
+		if (button_A && !prevButtonA) {
+			uiActions.confirm = true;
+		}
+		// go back: B button
+		if (button_B && !prevButtonB) {
+			uiActions.goBack = true;
+		}
+
+		prevDpadUp = dpadUp;
+		prevDpadDown = dpadDown;
+		prevLeftStickUp = leftStickUp;
+		prevLeftStickDown = leftStickDown;
+		prevButtonA = button_A;
+		prevButtonB = button_B;
+	}
+
+	// Start button to pause during gameplay
+	bool button_START = controllerState.buttons[GLFW_GAMEPAD_BUTTON_START];
+	if (button_START && !prevButtonStart) {
+		if (uiActions.menuControl == 1) {
+			uiActions.menuControl = 2;
+		}
+	}
+	prevButtonStart = button_START;
 
 }
 
@@ -331,7 +388,7 @@ void InputSystem::keyMetaCallback(GLFWwindow* window, int key, int scancode, int
 	// now we just set the callbacks we wish to use
 	callbacks->keyCallback(key, scancode, action, mods);
 	// this works because of something called vptrs and vtables (something exclusive to virtual functions)
-	
+
 }
 void InputSystem::mouseButtonMetaCallback(GLFWwindow* window, int button, int action, int mods) {
 	CallbackInterface* callbacks = static_cast<CallbackInterface*>(glfwGetWindowUserPointer(window));

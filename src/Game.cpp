@@ -27,7 +27,7 @@ void Game::initializeGame() {
 
 	renderer->initializeShaders(); // Create shader programs
 	renderer->initializeLines();
-	
+
 
 	inputSystem.attachWindow(renderer->window);
 
@@ -94,11 +94,11 @@ void Game::initializeTrack() {
 
 	// create track as a static mesh with baked physics
 	{
-		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
+		Transform none = { glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0) };
 		Entity track = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(track, none);
 		gameState.coordinator->addComponent(track, Track.model);
-		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
+		gameState.coordinator->addComponent(track, CollisionData{ GROUND, track });
 		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
 		auto trackActor =
 			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
@@ -109,7 +109,7 @@ void Game::initializeTrack() {
 		Entity walls = coordinator->createEntity();
 		coordinator->addComponent(walls, none);
 		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, CollisionData{GROUND, walls});
+		coordinator->addComponent(track, CollisionData{ GROUND, walls });
 		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
 
 
@@ -125,11 +125,11 @@ void Game::initializeTrack() {
 		Entity heal = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
-		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
+		gameState.coordinator->addComponent(heal, CollisionData{ HEAL, heal });
 		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
 		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
 		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
-		for(auto& i : healModel.GetMeshes()){
+		for (auto& i : healModel.GetMeshes()) {
 			auto actor = physics->initHealZones(i, none);
 			actor->userData = &healPhys;
 		}
@@ -188,7 +188,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pat
 		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		
+
 		});
 }
 
@@ -251,6 +251,9 @@ void Game::initializeUI() {
 
 	uiSys->addScreen("fpsCounter");
 	uiSys->addScreen("mainMenu");
+
+	// give gameState access to uiSystem for controller-driven UI navigation
+	gameState.uiSystem = uiSys;
 }
 
 void Game::stateTransition() {
@@ -264,34 +267,34 @@ void Game::stateTransition() {
 		// outgoing transition
 		// exit
 		switch (gameState.currentState) {
-			
+
 			// we're likely initializing here, so pop the main menu from UI
 			// initialize everything 
-			case (MAINMENU):
-				uiSys->popScreen();
-				initializeRace();
-				uiSys->addScreen("lapCounter");
-				break;
+		case (MAINMENU):
+			uiSys->popScreen();
+			initializeRace();
+			uiSys->addScreen("lapCounter");
+			break;
 
 			// our likely next state is paused or game ended
 			// we may want to pop heads up display
-			case (GAMEPLAY): 
-				uiSys->clearAllScreens();
-				uiSys->addScreen("racingHUD");
-				break;
+		case (GAMEPLAY):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("racingHUD");
+			break;
 
 			// we're likely resuming the game, so pop all pause menus
 			// add back our gameplay uis (order matters)
-			case (PAUSED): 
-				uiSys->clearAllScreens();
-				uiSys->addScreen("fpsCounter");
-				uiSys->addScreen("lapCounter");
-				renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
-				break;
+		case (PAUSED):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("fpsCounter");
+			uiSys->addScreen("lapCounter");
+			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
+			break;
 
 			// we're likely restarting the game
-			case (END):
-				break;
+		case (END):
+			break;
 		}
 
 		// this is the new state, do things that you want to update
@@ -299,23 +302,23 @@ void Game::stateTransition() {
 		// entry
 		switch (gameState.nextState) {
 			// HOW DID WE GET HERE, this shouldn't run
-			case (MAINMENU):
-				break;
+		case (MAINMENU):
+			break;
 
-				// we are resuming gameplay
-			case (GAMEPLAY):
-				break;
-				// we will be in a pause menu
-			case (PAUSED):
-				uiSys->clearAllScreens();
-				uiSys->addScreen("pauseMenu");
-				uiSys->addScreen("fpsCounter");
-				renderer->renderPasses.clear();
-				break;
+			// we are resuming gameplay
+		case (GAMEPLAY):
+			break;
+			// we will be in a pause menu
+		case (PAUSED):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("fpsCounter");
+			uiSys->addScreen("pauseMenu");
+			renderer->renderPasses.clear();
+			break;
 
-				// someone has finished the race
-			case (END):
-				break;
+			// someone has finished the race
+		case (END):
+			break;
 		}
 
 		gameState.currentState = gameState.nextState;
@@ -333,19 +336,30 @@ void Game::update() {
 	gameState.inputActions = gameActions;
 	gameState.uiActions = gameUIActions;
 
+	// controllerSys handles both vehicle controls AND UI navigation
+	// UI navigation modifies game.uiActions directly (confirm, goBack, menuControl, etc.)
 	controllerSys->update(gameState);
 
-	if (gameUIActions.intializeGame) {
-		gameUIActions.intializeGame = false;
+	// --- State transition from menuControl ---
+	// Read back uiActions after controllerSys may have modified them
+	UIActions& ui = gameState.uiActions;
+
+	if (ui.intializeGame) {
+		ui.intializeGame = false;
+		ui.menuControl = 1; // transition to gameplay
+		uiSys->resetSelection();
 		gameState.nextState = GAMEPLAY;
 	}
 
-	if (gameUIActions.menuControl == 2) {
+	if (ui.menuControl == 2) {
 		gameState.nextState = PAUSED;
 	}
-	else if (gameUIActions.menuControl == 1) {
+	else if (ui.menuControl == 1) {
 		gameState.nextState = GAMEPLAY;
 	}
+
+	// sync menuControl back to InputSystem so controller/keyboard checks see the current state
+	inputSystem.setMenuControl(ui.menuControl);
 
 	stateTransition(); // handle any state transitions
 
