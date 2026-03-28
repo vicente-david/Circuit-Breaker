@@ -233,10 +233,10 @@ void Game::initializeFinishLine() {
 
 void Game::initializeAudio() {
 	// place holder test sounds
-	testSound = gameState.audio->createSound("muteCity",false);
-	alSourcef(testSound->source, AL_GAIN, 0.8f);
-	testSound->setLooping(true);
-	// testSound->start();
+	music = gameState.audio->createSound("muteCity",false);
+	music->volume(1.6);
+	music->setLooping(true);
+	music->start();
 	//float soundX = 0;
 }
 

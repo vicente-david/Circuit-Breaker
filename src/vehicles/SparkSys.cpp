@@ -1,5 +1,6 @@
 #include "SparkSys.h"
 #include "debugUtils/Panel.h"
+#include "ecs/Component.h"
 #include "graphics/Model.h"
 #include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
@@ -331,6 +332,8 @@ void SparkSys::sparkCollision(GameState& game) {
 		for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
 		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
 		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
+		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
+		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
 
 		// don't do damage from hitting each other if sliding or boosting
 		// Spark 1 logic
@@ -345,6 +348,9 @@ void SparkSys::sparkCollision(GameState& game) {
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
 
+		auto sound = game.audio->createSound("crash");
+		sound->position = (trans1.pos+trans2.pos)/2.f;
+		sound->start();
 		//dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id, colData.spark2Id);
 	}
 }
@@ -352,11 +358,15 @@ void SparkSys::sparkCollision(GameState& game) {
 void SparkSys::wallCollision(GameState &game) {
 	for (auto const& colData : game.physics->callbacks->sparkWallCol) {
 		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
+		auto& trans =game.coordinator->getComponent<Transform>(colData.sparkId);
 
 		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
 		if (sData.health < 0)
 			sData.health = 0;
 
+		auto sound = game.audio->createSound("crash");
+		sound->position = trans.pos;
+		sound->start();
 		//dbug::log("GAME", 0, "Hit a wall!");
 	}
 }
@@ -440,7 +450,6 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 
 	// use health to make up remainder 
 	if (useHealth && sData.health > 1 && sData.boost<0){
-		printf("use boost\n");
 		sData.health += sData.boost*0.7f;
 		// sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
 	 }
@@ -461,18 +470,13 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 	updateMaxBoost(sData);
 
 	sData.isBoosting = false;
-	if(sData.isHuman){
-		printf("boost %f  heath:%d do:%d \n",sData.boost, sControls.boostWithHealth, sControls.boost);
-	}
 	// MAYBE TODO: change to a small delay before applying bigger boost (leave alone for now)
 	// stop boosting if we've run out of normal boost
 	if (sData.boost <= dt*sData.boostUseRate && !sControls.boostWithHealth) {
-		printf("no boost\n");
 		return;
 	}
 
 	if (sControls.boost) {
-		printf(" boost\n");
 		//dbug::log("GAME", -1, "boosting!");
 		applyBoost(sData, sControls.boostWithHealth, dt);
 		sData.isBoosting = true;

@@ -95,7 +95,7 @@ public:
 	std::string fps = std::to_string(0);
 
 	// sound
-	std::shared_ptr<Sound> testSound;
+	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
 	//Track activeTrack;
