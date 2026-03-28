@@ -166,6 +166,8 @@ void Game::initializeTrack() {
 	Track healCurve("assets/healCurve.obj");
 	trackPaths.push_back(healCurve.paths[0]); // add heal path to trackpaths
 
+	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
+
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 1.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 2.0f, -1.0f), "P2");

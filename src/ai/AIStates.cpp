@@ -8,7 +8,10 @@ using namespace AIHelpers;
 */
 void DefenseState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
-	// TODO: set appropriate path to follow
+	
+	// give ai the proper path
+	ctx.ai.route = AIState::path->curvePoints;
+	ctx.ai.angles = AIState::path->curvatures;
 
 	// Line of sight sweep: detect other players and change state accordingly
 	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx);
@@ -69,7 +72,9 @@ void OvertakeState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
 	// TODO: set appropriate path to follow
-
+	// give ai the proper path
+	ctx.ai.route = AIState::path->curvePoints;
+	ctx.ai.angles = AIState::path->curvatures;
 
 	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
 	if (sweepResult.first != NONE) {
@@ -144,6 +149,9 @@ void MaintainState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
 	// TODO: set appropriate path to follow
+	// give ai the proper path
+	ctx.ai.route = AIState::path->curvePoints;
+	ctx.ai.angles = AIState::path->curvatures;
 
 	// run state update function
 	auto next = currentState->update(ctx);

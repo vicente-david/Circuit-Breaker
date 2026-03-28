@@ -13,6 +13,7 @@ class AIControllerSys : public System {
 	public:
 		void update(GameState& game);
 		static std::shared_ptr<AIControllerSys> registerSystem(std::shared_ptr<Coordinator>& coord);
+		void setStatePaths(std::vector<TrackCurve>& paths);
 
 		void AI_IDLE(AIController &ai, SparkControls &controls, GameState& game);
 		

@@ -57,7 +57,7 @@ void AIControllerSys::update(GameState& game) {
 			ai.lookAheadSteps = 12;
 		
 		
-		AIDriveContext ctx{ ai, controls, transform, spark, body, false};
+		AIDriveContext ctx{ ai, controls, transform, spark, body, 0.0f};
 
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
@@ -96,5 +96,13 @@ void AIControllerSys::AI_IDLE(AIController& ai, SparkControls& controls, GameSta
 		ai.state = DRIVING;
 	}
 	
+	return;
+}
+
+// Initialize the curve/path for each state
+void AIControllerSys::setStatePaths(std::vector<TrackCurve>& paths) {
+	defenseState->path = std::make_unique<TrackCurve>(paths[1]); // heal zone path
+	maintainState->path = std::make_unique<TrackCurve>(paths[0]); // regular path
+	overtakeState->path = std::make_unique<TrackCurve>(paths[0]);
 	return;
 }
