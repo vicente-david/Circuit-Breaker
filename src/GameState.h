@@ -7,6 +7,8 @@
 
 #include <memory>
 
+class UISystem; // forward declaration (UISystem.h includes GameState.h, so we can't include it here)
+
 enum GAMESTATE {
 	MAINMENU,
 	GAMEPLAY,
@@ -16,7 +18,7 @@ enum GAMESTATE {
 
 
 class GameState {
-  public:
+public:
 	Actions inputActions;
 	UIActions uiActions;
 
@@ -62,7 +64,7 @@ class GameState {
 
 	//temporary to make everything work
 	std::shared_ptr<Coordinator> coordinator;
-	//std::shared_ptr<UISystem> uiSystem;
+	std::shared_ptr<UISystem> uiSystem;
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<AudioEngine> audio;
 };
