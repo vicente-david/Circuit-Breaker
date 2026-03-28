@@ -599,7 +599,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
 		if (!sData.inDrift)
-			changeWheelParams(sData, 3.8, 55600, PxDegToRad(30));
+			changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
@@ -607,7 +607,7 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	else {
 		// Reset friction params to original values from JSON
 		if (sData.inDrift)
-			changeWheelParams(sData, 3.8, 145600, PxDegToRad(45));
+			changeWheelParams(sData, 3.8f, 145600, PxDegToRad(45));
 
 		sData.inDrift = false;
 		yawStabilizer(sData); // Helps prevent oversteer
