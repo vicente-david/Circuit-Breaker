@@ -51,7 +51,7 @@ struct SparkData {
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
-	float minDriftSpeed = 15.f;
+	float minDriftSpeed = 10.f;
 
 	double respawnCooldown = 3;
 	double respawnTimer = 0;
