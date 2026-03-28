@@ -19,12 +19,13 @@ void DefenseState::run(AIDriveContext& ctx) {
 	}
 	// run state update function
 	auto next = currentState->update(ctx);
-
+	
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
 		currentState = std::move(next);
 		currentState->enter(ctx);
 	}
+
 	
 }
 

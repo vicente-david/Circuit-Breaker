@@ -54,7 +54,7 @@ void AIControllerSys::update(GameState& game) {
 		else if (spark.speed < 40.f)
 			ai.lookAheadSteps = 8;
 		else if (spark.speed >= 48.f)
-			ai.lookAheadSteps = 8;
+			ai.lookAheadSteps = 12;
 		
 		
 		AIDriveContext ctx{ ai, controls, transform, spark, body, false};
@@ -63,15 +63,15 @@ void AIControllerSys::update(GameState& game) {
 			AI_IDLE(ai, controls, game);
 		}
 		else if (spark.health < 50.0f) {
-			ctx.healthBoostMin = 1.1f; // do not use health for boost
+			ctx.healthBoostMin = 101.f; // do not use health for boost
 			defenseState->run(ctx);
 		}
 		else if (leaderboard.standings[0] == spark.mVehicleName) {
-			ctx.healthBoostMin = 0.90; // allowed to use health to boost in this state
+			ctx.healthBoostMin = 95.0; // allowed to use health to boost in this state
 			maintainState->run(ctx);
 		}
 		else { // Not in first and not low health
-			ctx.healthBoostMin = 0.80f;
+			ctx.healthBoostMin = 90.f;
 			overtakeState->run(ctx);
 		}
 

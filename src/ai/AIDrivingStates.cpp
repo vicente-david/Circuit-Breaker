@@ -14,7 +14,6 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	auto& transform = ctx.transform;
 	auto& spark = ctx.spark;
 	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
-
 	if (abs(controls.steering) > 1.0f) {
 		// spark most likely has lost steering control
 		ai.state = BRAKING;
@@ -33,14 +32,14 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	if (curvature < ai.curveBoostThresh && abs(controls.steering) < 0.8f) {
 		// Check if spark has enough boost
 		// OR if spark is allowed to boost with health & has enough health
-		if (spark.boost >= 0.10f || (spark.health > ctx.healthBoostMin)) {
+		if (spark.boost >= 0.20f || (spark.health > ctx.healthBoostMin)) {
 			ai.state = BOOSTING;
 			return std::make_unique<S_Boosting>();
 		}
 		
 	}
 	// Brake if there is a sharp turn ahead and the spark is travelling faster than its target speed
-	if (curvature >= ai.curveBrakeThresh && (spark.speed - targetSpeed) > 15.f && curveIn < curvature) {
+	if (curvature >= ai.curveBrakeThresh && (spark.speed - targetSpeed) > 20.f && curveIn < curvature) {
 		ai.state = BRAKING;
 		return std::make_unique<S_Braking>();
 	}
@@ -52,10 +51,12 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	}
 	// Otherwise, continue in driving state
 	else {
-		if (spark.speed <= targetSpeed)
+		if (spark.speed < targetSpeed - 1.f)
 			controls.throttle = 1.0f;
-		else
+		else {
+			dbug::log("AI", 0, "coast");
 			controls.throttle = 0.0f;
+		}
 		controls.brake = 0.0f;
 	}
 
@@ -82,7 +83,7 @@ std::unique_ptr<IDriveState> S_Braking::update(AIDriveContext& ctx) {
 	}
 
 	// amount of throttle/brake to add per unit difference in speed
-	float throttleGain = 0.3f;
+	float throttleGain = 1.f;
 	float brakeGain = 0.05f;
 
 	float speedDiff = targetSpeed - spark.speed;
@@ -121,7 +122,7 @@ std::unique_ptr<IDriveState> S_Drifting::update(AIDriveContext& ctx) {
 	controls.driftMode = true;
 	controls.throttle = 1.0f;
 
-	dbug::log("AI", 0, "[%s] [DRIFTING] THROTTLE: %.2f, CURVE: %.2f, \n\tBOOST: %.2f, HP: %.2f", spark.mVehicleName.c_str(), controls.throttle, curvature, spark.boost, spark.health);
+	dbug::log("AI", 0, "[%s] [DRIFTING] SPEED: %.2f, CURVE: %.2f, \n\tBOOST: %.2f, HP: %.2f", spark.mVehicleName.c_str(), spark.speed, curvature, spark.boost, spark.health);
 
 	// Let go of drift when the curve flattens out
 	if (curvature < ai.curveDriftThresh) {
@@ -140,13 +141,13 @@ std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext& ctx) {
 	auto& spark = ctx.spark;
 	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
 
-	dbug::log("AI", 0, "[%s] BOOSTING -> BOOST: %.3f, HEALTH: %.2f", spark.mVehicleName.c_str(), spark.boost, spark.health);
+	dbug::log("AI", 0, "[%s] BOOSTING -> BOOST: %.5f, HEALTH: %.2f, CURVE: %.2f", spark.mVehicleName.c_str(), spark.boost, spark.health, ai.angles.at(ai.targetIdx));
 	// Choose whether to use health or not
-	if (ctx.healthBoostMin > 1.f || spark.boost > 0.0f) { // not allowed to use health or could use boost instead
+	if (ctx.healthBoostMin > 100.f || spark.boost > 0.0f) { // not allowed to use health or could use boost instead
 		controls.boostWithHealth = false;
 		controls.boost = true;
 	}
-	else if (ctx.healthBoostMin < 1.f){ // allowed to use health to boost
+	else if (ctx.healthBoostMin < 100.f){ // allowed to use health to boost
 		controls.boost = true;
 		controls.boostWithHealth = true;
 	}
@@ -158,7 +159,8 @@ std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext& ctx) {
 		controls.boostWithHealth = false;
 		return std::make_unique<S_Braking>();
 	}
-	else if (ctx.healthBoostMin < 1.f) {
+
+	else if (ctx.healthBoostMin < 100.f) {
 		if (curvature >= ai.curveBoostThresh || (!controls.boostWithHealth && spark.boost <= 0.0f) || (controls.boostWithHealth && spark.health <= ctx.healthBoostMin)) {
 			ai.state = DRIVING;
 			controls.boost = false;
@@ -254,19 +256,19 @@ std::unique_ptr<IDriveState> S_Dodging::update(AIDriveContext& ctx) {
 	// measure the angle between forward direction and opponent
 	if (angleBetween > glm::radians(90.f) && spark.boost > 0.0f && ai.dodgeTimer < dodgeMaxLength) {
 		// opponent is slightly behind: try to boost away
-		glm::quat rotateAway;
-		if (sweepResult.first == SIDE_L) {
-			rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
-		}
-		else
-			rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
+		//glm::quat rotateAway;
+		//if (sweepResult.first == SIDE_L) {
+		//	rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
+		//}
+		//else
+		//	rotateAway = glm::angleAxis(glm::radians(5.f), glm::vec3(0.f, 1.f, 0.f));
 
-		glm::vec3 escapeDir = ai.route.at(ai.targetIdx) - transform.pos; // vector between spark and target index
-		escapeDir = rotateAway * escapeDir;
-		glm::vec3 target = transform.pos + escapeDir; // Get lookahead position rotated away from detected opponent
+		//glm::vec3 target = ai.route.at(ai.targetIdx) - transform.pos; // vector between spark and target index
+		//escapeDir = rotateAway * escapeDir;
+		//glm::vec3 target = transform.pos + escapeDir; // Get lookahead position rotated away from detected opponent
 
 
-		calcSteering(ai, controls, transform, spark, target); // Calculate steering towards escape direction
+		calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx)); // Calculate steering towards escape direction
 		controls.boost = true;
 		ai.dodgeTimer += 1.f;
 		dbug::log("AI", 0, "[%s] [DODGING] -> BOOST AWAY (time: %.1f)", spark.mVehicleName.c_str(), ai.dodgeTimer);

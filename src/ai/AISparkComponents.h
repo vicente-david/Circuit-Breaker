@@ -21,9 +21,9 @@ struct AIController {
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route
 	float curveDriftThresh = 0.10f; // minimum angle of turn for spark to drift
-	float curveBrakeThresh = 0.35f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
+	float curveBrakeThresh = 0.20f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
 	float maxTargetSpeed = 20.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
-	float curveBoostThresh = 0.02f; // max angle for ai to consider boosting
+	float curveBoostThresh = 0.05f; // max angle for ai to consider boosting
 	float steeringSharpness = 4.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
 
 	// No reason to set these, default values are fine
