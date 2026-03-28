@@ -311,9 +311,7 @@ void SparkSys::checkAirborne(SparkData& sData, double dt) {
 	else if (sData.offGroundTimer > 0)
 			sData.offGroundTimer -= dt;
 
-	if (sData.isGrounded && !grounded) // just became airborne
-		angularResistance(sData, PX_MAX_REAL, sData.offGroundLimit);
-	else if (!sData.isGrounded && grounded) // just touched ground
+	if (!sData.isGrounded && grounded) // just touched ground
 		angularResistance(sData); // pre-maturely kill angResTimer
 
 	sData.isGrounded = grounded;
@@ -395,9 +393,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	boost(sData, sControls, dt);
 	shimmy(sData, sControls, dt);
 
-	if (sControls.brake) {
-		brake(sData, sControls); // stronger braking
-	}
+	brake(sData, sControls); // stronger braking
 	reverse(sData, sControls); // check for reverse
 
 	if (!sData.isGrounded)
@@ -411,8 +407,17 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 }
 
 void SparkSys::brake(SparkData& sData, SparkControls& sControls) {
+	if (!sControls.brake)
+		return;
+	
+	// stops arial rotation if brake is pressed
+	if (!sData.isGrounded) {
+		angularResistance(sData, PX_MAX_REAL, sData.offGroundLimit);
+		return;
+	}
+
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	float brakingForce = 1000.f;
+	float brakingForce = 100.f;
 	sData.rBody->addForce(-linVel * brakingForce);
 }
 
