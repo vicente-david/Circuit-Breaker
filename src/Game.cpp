@@ -256,6 +256,28 @@ void Game::initializeUI() {
 	gameState.uiSystem = uiSys;
 }
 
+void Game::handleMenuControl() {
+	UIActions& ui = gameState.uiActions;
+
+	if (gameState.nextState == END) return;
+
+	if (ui.intializeGame) {
+		ui.intializeGame = false;
+		ui.menuControl = 1; // transition to gameplay
+		uiSys->resetSelection();
+		gameState.nextState = GAMEPLAY;
+	}
+
+	if (ui.menuControl == 2) {
+		gameState.nextState = PAUSED;
+	}
+	else if (ui.menuControl == 1) {
+		gameState.nextState = GAMEPLAY;
+	}
+
+
+}
+
 void Game::stateTransition() {
 	// if a transition happened
 	if (!(gameState.currentState == gameState.nextState)) {
@@ -318,6 +340,8 @@ void Game::stateTransition() {
 
 			// someone has finished the race
 		case (END):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("standingsScreen");
 			break;
 		}
 
@@ -344,19 +368,7 @@ void Game::update() {
 	// Read back uiActions after controllerSys may have modified them
 	UIActions& ui = gameState.uiActions;
 
-	if (ui.intializeGame) {
-		ui.intializeGame = false;
-		ui.menuControl = 1; // transition to gameplay
-		uiSys->resetSelection();
-		gameState.nextState = GAMEPLAY;
-	}
-
-	if (ui.menuControl == 2) {
-		gameState.nextState = PAUSED;
-	}
-	else if (ui.menuControl == 1) {
-		gameState.nextState = GAMEPLAY;
-	}
+	handleMenuControl();
 
 	// sync menuControl back to InputSystem so controller/keyboard checks can see the current state
 	inputSystem.setMenuControl(ui.menuControl);
