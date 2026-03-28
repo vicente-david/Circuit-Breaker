@@ -16,7 +16,7 @@
 
 enum PathID {
 	pFAST = 0,
-	pHEAL = 1
+	pHEAL = 1,
 };
 
 // defines the curve of a track (assuming blender .obj file)

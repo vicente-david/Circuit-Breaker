@@ -51,8 +51,12 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	}
 	// Otherwise, continue in driving state
 	else {
-		if (spark.speed < targetSpeed - 1.f)
-			controls.throttle = 1.0f;
+		if (spark.speed < targetSpeed)
+		{
+			float throttleGain = 0.5f;
+			float speedDiff = targetSpeed - spark.speed;
+			controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
+		}
 		else {
 			dbug::log("AI", 0, "coast");
 			controls.throttle = 0.0f;
@@ -84,18 +88,18 @@ std::unique_ptr<IDriveState> S_Braking::update(AIDriveContext& ctx) {
 
 	// amount of throttle/brake to add per unit difference in speed
 	float throttleGain = 1.f;
-	float brakeGain = 0.05f;
+	float brakeGain = 0.01f;
 
 	float speedDiff = targetSpeed - spark.speed;
 
 	if (speedDiff > 10.f) { // if speed differenece is very high, do not slam on brakes
-		controls.brake = 0.f;
+		controls.brake = 0.0f;
 		controls.throttle = 0.f;
 	}
 	else
 		controls.brake = glm::clamp(-speedDiff * brakeGain, 0.0f, 1.0f);
 
-	if (controls.brake >= 0.05)
+	if (controls.brake >= 0.01)
 		controls.throttle = 0.0f; // avoid pressing brake and throttle at same time
 	else controls.throttle = glm::clamp(speedDiff * throttleGain, 0.0f, 1.0f);
 
@@ -131,51 +135,55 @@ std::unique_ptr<IDriveState> S_Drifting::update(AIDriveContext& ctx) {
 		return std::make_unique<S_Driving>();
 	}
 
-	return nullptr;
-}
-
-std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext& ctx) {
-	auto& ai = ctx.ai;
-	auto& controls = ctx.controls;
-	auto& transform = ctx.transform;
-	auto& spark = ctx.spark;
-	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
-
-	dbug::log("AI", 0, "[%s] BOOSTING -> BOOST: %.5f, HEALTH: %.2f, CURVE: %.2f", spark.mVehicleName.c_str(), spark.boost, spark.health, ai.angles.at(ai.targetIdx));
-	// Choose whether to use health or not
-	if (ctx.healthBoostMin > 100.f || spark.boost > 0.0f) { // not allowed to use health or could use boost instead
-		controls.boostWithHealth = false;
-		controls.boost = true;
-	}
-	else if (ctx.healthBoostMin < 100.f){ // allowed to use health to boost
-		controls.boost = true;
-		controls.boostWithHealth = true;
-	}
-
-	float curvature = ai.angles.at(ai.targetIdx);
-	if (curvature > ai.curveBrakeThresh) {
-		ai.state = BRAKING; // If curvature of lookahead is passed threshold, go straight to braking
-		controls.boost = false;
-		controls.boostWithHealth = false;
+	if (curvature >= ai.curveBrakeThresh && (spark.speed - targetSpeed) > 30.f) {
+		ai.state = BRAKING;
 		return std::make_unique<S_Braking>();
 	}
-
-	else if (ctx.healthBoostMin < 100.f) {
-		if (curvature >= ai.curveBoostThresh || (!controls.boostWithHealth && spark.boost <= 0.0f) || (controls.boostWithHealth && spark.health <= ctx.healthBoostMin)) {
-			ai.state = DRIVING;
-			controls.boost = false;
-			controls.boostWithHealth = false;
-			return std::make_unique<S_Driving>();
-		}
-	}
-	else if (curvature >= ai.curveBoostThresh || spark.boost <= 0.0f ) {
-		ai.state = DRIVING;
-		controls.boost = false;
-		return std::make_unique<S_Driving>();
-	}
-
 	return nullptr;
 }
+
+	std::unique_ptr<IDriveState> S_Boosting::update(AIDriveContext & ctx) {
+		auto& ai = ctx.ai;
+		auto& controls = ctx.controls;
+		auto& transform = ctx.transform;
+		auto& spark = ctx.spark;
+		calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
+
+		dbug::log("AI", 0, "[%s] BOOSTING -> BOOST: %.5f, HEALTH: %.2f, CURVE: %.2f", spark.mVehicleName.c_str(), spark.boost, spark.health, ai.angles.at(ai.targetIdx));
+		// Choose whether to use health or not
+		if (ctx.healthBoostMin > 100.f || spark.boost > 0.0f) { // not allowed to use health or could use boost instead
+			controls.boostWithHealth = false;
+			controls.boost = true;
+		}
+		else if (ctx.healthBoostMin < 100.f) { // allowed to use health to boost
+			controls.boost = true;
+			controls.boostWithHealth = true;
+		}
+
+		float curvature = ai.angles.at(ai.targetIdx);
+		if (curvature > ai.curveBrakeThresh) {
+			ai.state = BRAKING; // If curvature of lookahead is passed threshold, go straight to braking
+			controls.boost = false;
+			controls.boostWithHealth = false;
+			return std::make_unique<S_Braking>();
+		}
+
+		else if (ctx.healthBoostMin < 100.f) {
+			if (curvature >= ai.curveBoostThresh || (!controls.boostWithHealth && spark.boost <= 0.0f) || (controls.boostWithHealth && spark.health <= ctx.healthBoostMin)) {
+				ai.state = DRIVING;
+				controls.boost = false;
+				controls.boostWithHealth = false;
+				return std::make_unique<S_Driving>();
+			}
+		}
+		else if (curvature >= ai.curveBoostThresh || spark.boost <= 0.0f) {
+			ai.state = DRIVING;
+			controls.boost = false;
+			return std::make_unique<S_Driving>();
+		}
+
+		return nullptr;
+	}
 
 std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 	auto& ai = ctx.ai;

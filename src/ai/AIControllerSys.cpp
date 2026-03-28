@@ -45,16 +45,13 @@ void AIControllerSys::update(GameState& game) {
 			dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
 		}
 		// Adjust lookahead target based on speed
-		if (spark.speed < 10.0f)
+		if (spark.speed < 16.0f)
 			ai.lookAheadSteps = 2;
-		else if (spark.speed < 16.0f)
+		else if (spark.speed < 28.0f)
 			ai.lookAheadSteps = 4;
-		else if (spark.speed < 32.f)
+		else if (spark.speed < 42.f)
 			ai.lookAheadSteps = 6;
-		else if (spark.speed < 40.f)
-			ai.lookAheadSteps = 8;
-		else if (spark.speed >= 48.f)
-			ai.lookAheadSteps = 12;
+		
 		
 		
 		AIDriveContext ctx{ ai, controls, transform, spark, body, 0.0f};
@@ -67,11 +64,11 @@ void AIControllerSys::update(GameState& game) {
 			defenseState->run(ctx);
 		}
 		else if (leaderboard.standings[0] == spark.mVehicleName) {
-			ctx.healthBoostMin = 95.0; // allowed to use health to boost in this state
+			ctx.healthBoostMin = 95.0f; // allowed to use health to boost in this state
 			maintainState->run(ctx);
 		}
 		else { // Not in first and not low health
-			ctx.healthBoostMin = 90.f;
+			ctx.healthBoostMin = 85.f;
 			overtakeState->run(ctx);
 		}
 

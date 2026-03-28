@@ -10,13 +10,8 @@ void DefenseState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
 	
 	// Check if a route/curve change is needed
-	if (ctx.ai.routeID != AIState::path->id) {
-		int posIdx = ctx.ai.currentPosIdx;
-	}
+	checkRoute(ctx.ai);
 	
-	ctx.ai.route = AIState::path->curvePoints;
-	ctx.ai.angles = AIState::path->curvatures;
-
 	// Line of sight sweep: detect other players and change state accordingly
 	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx);
 	if (sweepResult.first != NONE) {
@@ -75,10 +70,8 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 void OvertakeState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
-	// TODO: set appropriate path to follow
 	// give ai the proper path
-	ctx.ai.route = AIState::path->curvePoints;
-	ctx.ai.angles = AIState::path->curvatures;
+	checkRoute(ctx.ai);
 
 	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
 	if (sweepResult.first != NONE) {
@@ -152,10 +145,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 void MaintainState::run(AIDriveContext& ctx) {
 	dbug::log("AI", 1, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
-	// TODO: set appropriate path to follow
-	// give ai the proper path
-	ctx.ai.route = AIState::path->curvePoints;
-	ctx.ai.angles = AIState::path->curvatures;
+	checkRoute(ctx.ai);
 
 	// run state update function
 	auto next = currentState->update(ctx);
@@ -168,7 +158,26 @@ void MaintainState::run(AIDriveContext& ctx) {
 	
 }
 
+void AIState::checkRoute(AIController& ai) {
 
+	// Check if a route/curve change is needed
+	if (ai.routeID != AIState::path->id) {
+		int posIdx = ai.currentPosIdx;
+
+		// check if the ai can switch routes (curve to follow)
+		// get the distance between the current point the ai is at on its current route and the point on the desired route at the same index.
+		// * for this to work both curves must have the same number of points and line up on singular portions of the track
+		float dist = glm::length(ai.route.at(posIdx) - AIState::path->curvePoints.at(posIdx));
+		if (dist < 1000.f) {
+			// if the distance is within a small enough range, change to the new path
+			ai.route = AIState::path->curvePoints;
+			ai.angles = AIState::path->curvatures;
+			ai.routeID = AIState::path->id;
+			dbug::log("AIPATH", 1, "Switching to path %d", AIState::path->id);
+		}
+		else dbug::log("AIPATH", 1, "Path switch refused");
+	}
+}
 
 
 

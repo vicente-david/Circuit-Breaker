@@ -167,15 +167,18 @@ void Game::initializeTrack() {
 	Track healCurve("assets/healCurve.obj");
 	healCurve.paths[0].id = pHEAL;
 	trackPaths.push_back(healCurve.paths[0]); // add heal path to trackpaths
+	if (curve.paths[0].curvePoints.size() != healCurve.paths[0].curvePoints.size()) {
+		dbug::log("DEF", 2, "\n\n WARNING: track curves of different lengths! \n\n");
+	}
 
 	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 1.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 2.0f, -1.0f), "P2");
-	/*initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, -8.0f), "P3");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-5.0f, 2.0f, -4.0f), "P4");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-10.0f, 2.0f, -0.0f), "P5");*/
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-8.0f, 2.0f, -8.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, -6.0f), "P2");
+	/*initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 2.0f, -4.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-2.0f, 2.0f, -2.0f), "P4");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 0.0f), "P5");*/
 
 
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
