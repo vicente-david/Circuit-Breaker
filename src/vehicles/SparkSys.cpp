@@ -17,8 +17,10 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.speed = sData.rBody->getLinearVelocity().magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
-		// TODO: flash "Short Circuit" on screen (like you're dead)
+		// state checks
 		checkDeath(sData, dt);
+		checkAngResistace(sData, dt);
+		checkAirborne(sData, dt);
 
 		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, dt);
@@ -30,9 +32,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
-
-		// Check in air
-		checkAirborne(sData, dt);
 
 		reload = sControls.reload;
 
@@ -407,7 +406,6 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	if (!sData.isGrounded)
 		return;
 
-	checkAngResistace(sData, dt);
 	sparkHandling(sData, sControls);
 	
 	regenBoost(sData, dt); // boost regeneration
