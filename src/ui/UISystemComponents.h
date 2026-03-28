@@ -14,6 +14,13 @@ enum textAlign {
 	BOTTOM
 };
 
+// enum to switch between shaders
+enum animatedType {
+	ANIM_BUTTON,
+	ANIM_HEALTHBAR,
+	ANIM_SPEEDOMETER
+};
+
 // where to place the text in pixel space
 struct textPositions {
 	float leftPx; // where is the left part of text container starting (typically ignored if using right align)
@@ -96,7 +103,11 @@ struct UIElement {
 
 // attach to all UI elements
 struct Animatable {
-	bool isEnabled = false; // disabled by default
+	bool isEnabled = true; // enabled by default
 
-	bool isSelected = false;
+	bool isSelected = false; // false by default
+
+	animatedType type = ANIM_BUTTON;  // edfault is a button
+
+	glm::vec3 hLightColor = glm::vec3(1.0f); // additive highlight 
 };

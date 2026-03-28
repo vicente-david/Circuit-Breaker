@@ -72,6 +72,7 @@ void ControllerSys::handleUINavigation(GameState& game) {
 			if (uiSys->selectedButton < 0) {
 				uiSys->selectedButton = buttonCount - 1; // wrap to bottom
 			}
+			uiSys->selectedEntities(); // tell the ui system to update what's currently selected
 			std::cout << "[UI] Selected button: " << uiSys->selectedButton
 				<< " on screen: " << uiSys->getTopScreenName() << std::endl;
 		}
@@ -84,6 +85,7 @@ void ControllerSys::handleUINavigation(GameState& game) {
 			if (uiSys->selectedButton >= buttonCount) {
 				uiSys->selectedButton = 0; // wrap to top
 			}
+			uiSys->selectedEntities(); // tell the ui system to update what's currently selected
 			std::cout << "[UI] Selected button: " << uiSys->selectedButton
 				<< " on screen: " << uiSys->getTopScreenName() << std::endl;
 		}

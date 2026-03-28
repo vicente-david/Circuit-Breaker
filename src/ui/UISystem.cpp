@@ -25,23 +25,6 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
-// will only need to modify the magnitude as of right now
-// shader flag is guaranteed to be either 1.0 or -1.0
-// a highlight as of right now is just doubling that number if 
-// a button is highlighted
-void UISystem::buttonHighlighting(Entity& e, float& shaderFlag) {
-	// check if button exists
-	if (getButtonCount() == 0) return;
-
-	if (selectedButton >= screenStack.back().UIElements.size() - 1) {
-		// there cannot exist a highlight with this input
-		return;  
-	}
-
-	// otherwise 
-	// double check if the entity is the same one as the selected button
-	if (e == screenStack.back().UIElements[1 + selectedButton]) shaderFlag *= 2.0f;
-}
 
 void UISystem::updateUIElement(Entity& e) {
 	uiShader->use();
@@ -60,8 +43,7 @@ void UISystem::updateUIElement(Entity& e) {
 			UIVertex v1;
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
-			v1.interpretFlag = -1.0f; // -1 (see ui.frag shader for why)
-			buttonHighlighting(e, v1.interpretFlag);
+			v1.interpretFlag = 0.0f;
 			uiData.push_back(v1);
 		}
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
@@ -76,7 +58,6 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
 			v1.interpretFlag = 1.0f;
-			buttonHighlighting(e, v1.interpretFlag);
 			uiData.push_back(v1);
 		}
 		glActiveTexture(GL_TEXTURE0);
@@ -92,6 +73,103 @@ void UISystem::updateUIElement(Entity& e) {
 		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
 	}
 
+}
+
+// we only need to check the topmost screen stack items
+// for right now only buttons can be highlighted
+void UISystem::selectedEntities() {
+	// return if screen stack is empty
+	if (screenStack.empty()) return; 
+
+	// if there exists a button
+	if (getButtonCount() > 0) {
+		// unhighlight all non selected buttons
+		int i = 0;
+		for (Entity& e : screenStack.back().UIElements) {
+
+			if (!coordinator->hasComponent<Animatable>(e)) continue;
+
+			if (i == selectedButton) {
+				coordinator->getComponent<Animatable>(e).isSelected = true;
+			}
+			else {
+				coordinator->getComponent<Animatable>(e).isSelected = false;
+			}
+			i++;
+		}
+	}
+
+}
+
+// basically the same as ui normal rendering except slightly different data
+void UISystem::updateButtonUIElement(Entity& e) {
+	hlightShader->use();
+
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	uiAnimData.clear();
+	glBindVertexArray(hlightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, hlightVBO);
+
+	if (u1.hasBackgroundColor) {
+		// if it has a bacground color 
+		// then push the position, and the color
+		UIPositions positions = calculateAnchorPositions(u1);
+		// 6 points in a triangle based quad
+		for (int i = 0; i < 6; i++) {
+			UIAnimVertex v1;
+			v1.position = positions.points[i];
+			v1.color = u1.colors[i];
+			v1.interpretFlag = 0.0f;
+			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
+			uiAnimData.push_back(v1);
+		}
+		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
+	}
+	else if (!u1.path.empty()) {
+		// render with texture
+		UIPositions positions = calculateAnchorPositions(u1);
+		// 6 points in a triangle based quad
+		for (int i = 0; i < 6; i++) {
+			UIAnimVertex v1;
+			v1.position = positions.points[i];
+			v1.color = u1.colors[i];
+			v1.interpretFlag = 1.0f;
+			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
+			uiAnimData.push_back(v1);
+		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
+
+	}
+
+	if (!u1.text.empty()) {
+		textProg->use();
+		textPositions p1 = calculateTextContainer(u1);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+	}
+
+}
+
+// assume everything is updated already
+void UISystem::updateAnimatedUIElement(Entity& e) {
+	Animatable& animComp = coordinator->getComponent<Animatable>(e);
+	switch (animComp.type) {
+	case(ANIM_BUTTON):
+		// if not selected run the normal uielement shader 
+		if (!animComp.isSelected) {
+			updateUIElement(e);
+		} else {
+			updateButtonUIElement(e);
+		}
+		break;
+	case(ANIM_HEALTHBAR):
+		break;
+	case(ANIM_SPEEDOMETER):
+		break;
+	}
 }
 
 
@@ -113,7 +191,16 @@ void UISystem::update() {
 	// for all screens render the containers and the text
 	for (UIScreen& u1 : screenStack) {
 		for (Entity& e : u1.UIElements) {
-			updateUIElement(e);
+			// two cases
+			// static ui 
+			// animated ui
+
+			// if does not have the animatable component, do normal ui updates
+			if (!coordinator->hasComponent<Animatable>(e))
+				updateUIElement(e);
+			else {
+				updateAnimatedUIElement(e);
+			}
 		}
 	}
 
@@ -249,22 +336,23 @@ void UISystem::initializeRenderingParams() {
 	glBindBuffer(GL_ARRAY_BUFFER, hlightVBO);
 
 
-	// 8 floats, 6 things for a quad
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 6, NULL, GL_DYNAMIC_DRAW);
+	// 10 floats, 6 things for a quad
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 10 * 6, NULL, GL_DYNAMIC_DRAW);
 
-
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	// starts after 6 floats 
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	// position, col/texcoord, flag, (additive) highlight color,
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(7 * sizeof(float)));
 
 
 	// enable all
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
 
-	// vao layout is vec3, vec3, vec2 (pos, col, flagStuff)
+	// vao layout is vec3, vec3, float, vec3
 
 
 
@@ -305,6 +393,7 @@ std::string UISystem::getTopScreenName() {
 
 void UISystem::resetSelection() {
 	selectedButton = 0;
+	selectedEntities(); // update selected components
 }
 // ---
 void UISystem::screenInitialization() {
@@ -408,12 +497,15 @@ void UISystem::createMainMenu() {
 
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, startGameButton); // button 0
+	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, settingsButton); // button 1
+	coordinator->addComponent(e3, Animatable());
 
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, exitButton); // button 2
+	coordinator->addComponent(e4, Animatable());
 
 	UIScreen mainMenu;
 	mainMenu.name = "mainMenu";
@@ -467,12 +559,15 @@ void UISystem::createPauseMenu() {
 
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, resumeButton); // button 0
+	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, settingsButton); // button 1
+	coordinator->addComponent(e3, Animatable());
 
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, exitButton); // button 2
+	coordinator->addComponent(e4, Animatable());
 
 
 	UIScreen pauseMenu;
@@ -549,21 +644,27 @@ void UISystem::createSettingsMenu() {
 
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, easyButton); // button 0
+	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, mediumButton); // button 1
+	coordinator->addComponent(e3, Animatable());
 
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, hardButton); // button 2
+	coordinator->addComponent(e4, Animatable());
 
 	Entity e5 = coordinator->createEntity();
 	coordinator->addComponent(e5, decorationsButton); // button 3
+	coordinator->addComponent(e5, Animatable());
 
 	Entity e6 = coordinator->createEntity();
 	coordinator->addComponent(e6, particlesButton); // button 4
+	coordinator->addComponent(e6, Animatable());
 
 	Entity e7 = coordinator->createEntity();
 	coordinator->addComponent(e7, menuButton); // button 5
+	coordinator->addComponent(e7, Animatable());
 
 
 	UIScreen settingsMenu;

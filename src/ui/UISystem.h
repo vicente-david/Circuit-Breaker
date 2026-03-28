@@ -68,6 +68,14 @@ struct UIVertex {
 	float interpretFlag;
 };
 
+// same thing as above but used for mainly animated components
+struct UIAnimVertex {
+	glm::vec3 position;
+	glm::vec3 color;
+	float interpretFlag;
+	glm::vec3 hLightColor;
+};
+
 
 class UISystem : public System {
 public:
@@ -81,6 +89,8 @@ public:
 	void update();
 	void recalcMat();
 	void updateUIElement(Entity& e); // renders UI using stored colors
+	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
+	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
 
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
@@ -113,6 +123,8 @@ public:
 	void updateFPSCounter();
 	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
+	
+	void selectedEntities(); // mainly used for iterating through all visible screens and toggling the highlight flag
 
 	unsigned int uiVAO, uiVBO, textVBO, textVAO;
 
@@ -146,7 +158,6 @@ public:
 
 	// returns the number of selectable buttons on the top screen (excludes the background element at index 0)
 	int getButtonCount();
-	void buttonHighlighting(Entity& e, float& shaderFlag); // does some checks to see if a button can be highlighted
 
 	// returns the name of the top screen on the stack (empty string if no screens)
 	std::string getTopScreenName();
@@ -163,6 +174,8 @@ private:
 
 	std::vector<UIScreen> screenStack; // pretend this is a stack
 	std::vector<UIVertex> uiData;
+	std::vector<UIAnimVertex> uiAnimData;
+
 	// we iterate forwards since last element gets drawn on top
 
 	// this could be useful
