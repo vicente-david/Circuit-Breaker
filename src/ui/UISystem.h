@@ -51,6 +51,8 @@ struct UIPositions {
 struct UIScreen {
 	std::string name; // name of the ui screen
 	std::vector<Entity> UIElements; // what elements make it up
+
+	std::vector<Entity> Buttons; // list of buttons that get animated (have an animatable component)
 };
 
 // contains all the data being passed to the uivbo
@@ -114,7 +116,6 @@ public:
 	unsigned int uiVAO, uiVBO, textVBO, textVAO;
 
 	std::map<char, Character> textFont;
-	glm::mat4 textMat;
 
 	glm::mat4 uiMat;
 
@@ -134,6 +135,13 @@ public:
 	// entity based pointers will need a little more managment
 	
 	std::shared_ptr<Coordinator> coordinator;
+
+	// animated component stuff
+
+	Entity currentlySelected; // currently selected UIComponent (likely button)
+
+	unsigned int hlightVAO, hlightVBO;
+	std::unique_ptr<ShaderProgram> hlightShader;
 
 private:
 

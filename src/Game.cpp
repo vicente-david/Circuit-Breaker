@@ -57,6 +57,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
+	coordinator->registerComponent<Animatable>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);

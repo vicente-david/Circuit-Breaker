@@ -21,6 +21,8 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+	hlightShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
 void UISystem::updateUIElement(Entity& e) {
@@ -209,11 +211,42 @@ void UISystem::initializeRenderingParams(){
 	glBindVertexArray(0);
 
 	textFont = initFont("assets/SquareAntiqua-Book.ttf");
-	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
-		static_cast<float>(*SCR_HEIGHT));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-		GL_FALSE, glm::value_ptr(textMat));
+		GL_FALSE, glm::value_ptr(uiMat));
+
+
+	// highlight shadder stuff
+	hlightShader = std::make_unique<ShaderProgram>("shaders/uiHighlight.vert", "shaders/uiHighlight.frag");
+
+	hlightShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	glGenVertexArrays(1,  &hlightVAO);
+	glBindVertexArray(hlightVAO);
+
+	glGenBuffers(1, &hlightVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, hlightVBO);
+
+
+	// 8 floats, 6 things for a quad
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 6, NULL, GL_DYNAMIC_DRAW);
+
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	// starts after 6 floats 
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
+
+	// enable all
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
+	// vao layout is vec3, vec3, vec2 (pos, col, flagStuff)
+
+
 
 }
 

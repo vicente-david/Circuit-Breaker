@@ -92,3 +92,11 @@ struct UIElement {
 
 
 };
+
+
+// attach to all UI elements
+struct Animatable {
+	bool isEnabled = false; // disabled by default
+
+	bool isSelected = false;
+};
