@@ -500,7 +500,7 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-	const float lateralSpeed = linVel.dot(lateral);
+	const float lateralSpeed = PxAbs(linVel.dot(lateral)); // don't want it to be negative
 
 	// this will be the drift angle at which you have increased boost regeneration rate.
 	// can calculate specified value as arccos(1 / threshold) = drift angle threshold.
@@ -615,7 +615,7 @@ void SparkSys::yawStabilizer(SparkData& sData) {
 }
 
 void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
-	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
+	if (sControls.driftMode) {
 		if (!sData.inDrift)
 			changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
 
