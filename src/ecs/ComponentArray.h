@@ -86,6 +86,10 @@ public:
 		return componentArray[entityToIndex[entity]];
 	}
 
+	bool hasComponent(Entity entity) {
+		return (entityToIndex.find(entity) != entityToIndex.end());
+	}
+
 	// if an entity was destroyed 
 	void entityDestroyed(Entity entity) override{
 
