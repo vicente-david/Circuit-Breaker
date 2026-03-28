@@ -3,6 +3,7 @@
 #include "graphics/Model.h"
 #include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
+#include <cstdio>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	
@@ -434,10 +435,16 @@ void SparkSys::updateMaxBoost(SparkData& sData) {
 void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
-	if (useHealth && sData.health > 1)
-		sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
-	else if (sData.boost > 0)
-		sData.boost -= sData.boostUseRate * dt;
+	// use boost meter
+	sData.boost -= sData.boostUseRate * dt;
+
+	// use health to make up remainder 
+	if (useHealth && sData.health > 1 && sData.boost<0){
+		printf("use boost\n");
+		sData.health += sData.boost*0.7f;
+		// sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
+	 }
+														
 
 	// don't kill yourself from boosting
 	if (sData.health < 1)
@@ -454,14 +461,18 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 	updateMaxBoost(sData);
 
 	sData.isBoosting = false;
+	if(sData.isHuman){
+		printf("boost %f  heath:%d do:%d \n",sData.boost, sControls.boostWithHealth, sControls.boost);
+	}
 	// MAYBE TODO: change to a small delay before applying bigger boost (leave alone for now)
 	// stop boosting if we've run out of normal boost
-	if (sData.boost <= 0 && !sControls.boostWithHealth) {
-		//dbug::log("GAME", -1, "No boost!");
+	if (sData.boost <= dt*sData.boostUseRate && !sControls.boostWithHealth) {
+		printf("no boost\n");
 		return;
 	}
 
 	if (sControls.boost) {
+		printf(" boost\n");
 		//dbug::log("GAME", -1, "boosting!");
 		applyBoost(sData, sControls.boostWithHealth, dt);
 		sData.isBoosting = true;

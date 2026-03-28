@@ -20,7 +20,6 @@ void SparkSoundSys::updateSounds(double dt, GameState &game) {
 		float pitch = 1;
 		pitch += rBody->getLinearVelocity().magnitude() / 40.f;
 		if (sData.isBoosting) {
-			printf("boost sound!");
 			pitch += sounds.currBoostPitch;
 			sounds.currBoostPitch += dt * sounds.boostPitchSpeed;
 			if (sounds.currBoostPitch > sounds.maxBoostPitch) {
@@ -41,23 +40,6 @@ void SparkSoundSys::updateSounds(double dt, GameState &game) {
 			sounds.engine->pause();
 		}
 
-		// if (sData.isBoosting) {
-		// 	if (!sounds.boost->playing) {
-		// 		sounds.boost = game.audio->createSound("boost");
-		// 		sounds.boost->start();
-		// 	}
-		// } else {
-		// 	sounds.boost->stop();
-		// }
-
-		// if(controls.throttle>0){
-		// 	alSourcef(sounds.engine.source, AL_GAIN, controls.throttle);
-		// }
-
-		// // update sound
-		// auto &sound = game.coordinator->getComponent<Sound>(entity);
-		// rBody->getLinearVelocity();
-		// sounds.boost->updateFromRbody(rBody);
 		sounds.engine->updateFromRbody(rBody);
 	}
 }
