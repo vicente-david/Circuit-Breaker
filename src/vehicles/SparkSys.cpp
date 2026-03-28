@@ -211,9 +211,9 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	
 	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());
-	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
+
 	if (sData.mVehicleName == "P2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 	}
