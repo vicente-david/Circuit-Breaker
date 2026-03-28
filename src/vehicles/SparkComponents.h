@@ -2,6 +2,8 @@
 #include "../snippets/snippetvehiclecommon/enginedrivetrain/EngineDrivetrain.h"
 #include "../snippets/snippetvehiclecommon/serialization/BaseSerialization.h"
 #include "../snippets/snippetvehiclecommon/serialization/EngineDrivetrainSerialization.h"
+#include "audio/AudioEngine.h"
+#include "audio/Sound.h"
 #include "physics/CollisionData.h"
 
 using namespace snippetvehicle;
@@ -44,7 +46,7 @@ struct SparkData {
 	float boostRegenRate = 20.0f;
 	float maxBoost = 100.0f;
 	float boost = maxBoost;
-	
+
 	float shimmyForce = 15.0f;
 	double shimmyCooldown = 2;
 	double shimmyInvincible = shimmyCooldown - 0.5;
@@ -60,7 +62,7 @@ struct SparkData {
 	double offGroundLimit = 2;
 	double offGroundTimer = offGroundLimit;
 	double angResTimer = 0;
-	
+
 	bool inReverse = false;
 	bool inDrift = false;
 	bool isBoosting = false;
@@ -75,7 +77,7 @@ struct SparkData {
 	PxU32 neutralGear = 0;
 
 	// Easy access to vehicle's rigid body
-	PxRigidBody* rBody = NULL;
+	PxRigidBody *rBody = NULL;
 
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];
 	PxU32 mNbMaterialFrictions = 0;
@@ -96,4 +98,15 @@ struct SparkData {
 	}
 
 	bool isHuman = false;
+};
+struct SparkSounds {
+	std::shared_ptr<Sound> engine;
+	float currBoostPitch = 0;
+	constexpr static float maxBoostPitch = 1;
+	constexpr static float boostPitchSpeed = 3;
+
+	SparkSounds() {};
+	SparkSounds(std::shared_ptr<AudioEngine> audio) {
+		engine = audio->createSound("engine");
+	};
 };

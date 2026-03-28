@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "AllSystem.h"
 #include "physics/CollisionData.h"
 
 Game::Game() {
@@ -48,12 +49,12 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Model>();
 	coordinator->registerComponent<SparkControls>();
 	coordinator->registerComponent<SparkData>();
+	coordinator->registerComponent<SparkSounds>();
 	coordinator->registerComponent<HumanController>();
 	coordinator->registerComponent<CameraComp>();
 	coordinator->registerComponent<LapCounter>();
 	coordinator->registerComponent<AIController>();
 	coordinator->registerComponent<CollisionData>();
-	coordinator->registerComponent<Sound>();
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
@@ -62,9 +63,9 @@ void Game::initializeECS() {
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
 	renderer = RenderingSystem::registerSystem(coordinator);
 	sparkSys = SparkSys::registerSystem(coordinator);
+	sparkSoundSys = SparkSoundSys::registerSystem(coordinator);
 	controllerSys = ControllerSys::registerSystem(coordinator);
 	cameraSys = CameraSystem::registerSystem(coordinator);
-	audioSys = AudioSystem::registerSystem(coordinator);
 	aiControllerSys = AIControllerSys::registerSystem(coordinator);
 	respawnSys = RespawnSystem::registerSystem(coordinator);
 	leaderboardSys = LeaderboardSystem::registerSystem(coordinator);
@@ -266,10 +267,10 @@ void Game::initializeFinishLine() {
 
 void Game::initializeAudio() {
 	// place holder test sounds
-	testSound = gameState.audio->createSound("muteCity");
-	// alSourcef(testSound.source, AL_GAIN, 0.6f);
-	testSound.setLooping(true);
-	testSound.start();
+	music = gameState.audio->createSound("muteCity",false);
+	music->volume(1.6);
+	music->setLooping(true);
+	music->start();
 	//float soundX = 0;
 }
 
@@ -405,7 +406,8 @@ void Game::updatePhysics() {
 		gameState.physics->callbacks->resetLists();
 		physicsSys->updatePhysics(dt, gameState);
 		cameraSys->update(gameState, dt);
-		audioSys->updateSounds(gameState);
+		sparkSoundSys->updateSounds(dt, gameState);
+		audio->update(dt);
 		accumulator -= dt;
 		//t += dt;
 
@@ -426,8 +428,8 @@ void Game::updatePhysics() {
 		// 	gameActions.shimmyRight = false;
 		// }
 		// position at 0,0,0 for testing
-		gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
-		gameState.audio->updateSoundVel(testSound, 0, 0, 0);
+		// gameState.audio->updateSoundLoc(testSound, 0, 0, 0);
+		// gameState.audio->updateSoundVel(testSound, 0, 0, 0);
 	}
 
 }
@@ -453,8 +455,4 @@ void Game::updateRendering() {
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);
-}
-
-void Game::updateAudio() {
-	gameState.audio->update(dt);
 }

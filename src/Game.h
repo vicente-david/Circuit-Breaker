@@ -13,6 +13,7 @@
 #include "ecs/Coordinator.h"
 #include "world/Track.h"
 #include "InputSystem.h"
+#include <memory>
 
 class Game{
 
@@ -58,7 +59,6 @@ public:
 	void updatePhysics();
 	void updateFPS();
 	void updateRendering();
-	void updateAudio();
 
 	// update not every frame (used for things that don't need to be updated every frame)
 
@@ -66,9 +66,9 @@ public:
 	std::shared_ptr<PhysicsSystem> physicsSys;
 	std::shared_ptr<RenderingSystem> renderer;
 	std::shared_ptr<SparkSys> sparkSys;
+	std::shared_ptr<SparkSoundSys> sparkSoundSys;
 	std::shared_ptr<ControllerSys> controllerSys;
 	std::shared_ptr<CameraSystem> cameraSys;
-	std::shared_ptr<AudioSystem> audioSys;
 	std::shared_ptr<AIControllerSys> aiControllerSys;
 	std::shared_ptr<RespawnSystem> respawnSys;
 	std::shared_ptr<LeaderboardSystem> leaderboardSys;
@@ -95,7 +95,7 @@ public:
 	std::string fps = std::to_string(0);
 
 	// sound
-	Sound testSound;
+	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
 	//Track activeTrack;

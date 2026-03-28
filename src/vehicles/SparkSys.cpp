@@ -1,7 +1,10 @@
 #include "SparkSys.h"
 #include "debugUtils/Panel.h"
+#include "ecs/Component.h"
 #include "graphics/Model.h"
+#include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
+#include <cstdio>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 	
@@ -212,6 +215,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	game.coordinator->addComponent(sparkEntity, SparkControls());
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
+	game.coordinator->addComponent(sparkEntity, SparkSounds(game.audio));
 
 	if (sData.mVehicleName == "P2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
@@ -224,12 +228,6 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	}
 	else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
-
-	// add engine sound
-	Sound sound = game.audio->createSound("engine");
-	sound.position = glm::vec3(startP.x, startP.y, startP.z);
-	sound.start();
-	game.coordinator->addComponent(sparkEntity, sound);
 
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
@@ -280,7 +278,6 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	sig.set(coord->getComponentType<SparkControls>());
 	sig.set(coord->getComponentType<SparkData>());
 	sig.set(coord->getComponentType<physx::PxRigidBody *>());
-	sig.set(coord->getComponentType<Sound>());
 	sig.set(coord->getComponentType<LapCounter>());
 	coord->setSystemSignature<SparkSys>(sig);
 
@@ -345,6 +342,8 @@ void SparkSys::sparkCollision(GameState& game) {
 		for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
 		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
 		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
+		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
+		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
 
 		// don't do damage from hitting each other if sliding or boosting
 		// Spark 1 logic
@@ -359,6 +358,9 @@ void SparkSys::sparkCollision(GameState& game) {
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
 
+		auto sound = game.audio->createSound("crash");
+		sound->position = (trans1.pos+trans2.pos)/2.f;
+		sound->start();
 		//dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id, colData.spark2Id);
 	}
 }
@@ -366,11 +368,15 @@ void SparkSys::sparkCollision(GameState& game) {
 void SparkSys::wallCollision(GameState &game) {
 	for (auto const& colData : game.physics->callbacks->sparkWallCol) {
 		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
+		auto& trans =game.coordinator->getComponent<Transform>(colData.sparkId);
 
 		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
 		if (sData.health < 0)
 			sData.health = 0;
 
+		auto sound = game.audio->createSound("crash");
+		sound->position = trans.pos;
+		sound->start();
 		//dbug::log("GAME", 0, "Hit a wall!");
 	}
 }
@@ -455,10 +461,15 @@ void SparkSys::updateMaxBoost(SparkData& sData) {
 void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
-	if (useHealth && sData.health > 1)
-		sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
-	else if (sData.boost > 0)
-		sData.boost -= sData.boostUseRate * dt;
+	// use boost meter
+	sData.boost -= sData.boostUseRate * dt;
+
+	// use health to make up remainder 
+	if (useHealth && sData.health > 1 && sData.boost<0){
+		sData.health += sData.boost*0.7f;
+		// sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when using health
+	 }
+														
 
 	// don't kill yourself from boosting
 	if (sData.health < 1)
@@ -474,11 +485,10 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 	updateMaxBoost(sData);
 
+	sData.isBoosting = false;
 	// MAYBE TODO: change to a small delay before applying bigger boost (leave alone for now)
 	// stop boosting if we've run out of normal boost
-	if (sData.boost <= 0 && !sControls.boostWithHealth) {
-		sData.isBoosting = false;
-		//dbug::log("GAME", -1, "No boost!");
+	if (sData.boost <= dt*sData.boostUseRate && !sControls.boostWithHealth) {
 		return;
 	}
 
