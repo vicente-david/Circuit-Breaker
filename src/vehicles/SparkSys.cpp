@@ -397,8 +397,8 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 
 	if (sControls.brake) {
 		brake(sData, sControls); // stronger braking
-		reverse(sData, sControls); // check for reverse
 	}
+	reverse(sData, sControls); // check for reverse
 
 	if (!sData.isGrounded)
 		return;
@@ -418,14 +418,14 @@ void SparkSys::brake(SparkData& sData, SparkControls& sControls) {
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 	// Must be basically stopped or already in reverse
-	if (sData.speed < 0.1f || sData.inReverse) {
+	if ((sData.speed < 0.1f || sData.inReverse) && sControls.brake) {
 		sData.mVehicle->mCommandState.brakes[0] = sControls.throttle; // Brake becomes throttle
 		sData.mVehicle->mCommandState.throttle = sControls.brake; // Throttle becomes brake
 		sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear - 1; // Shifts to reverse
 		sData.inReverse = true;
 	}
-	// By necessity this can only happen if brake is fully released
-	else if (sControls.throttle) {
+	// Brake must be fully released
+	else if (sControls.throttle && !sControls.brake) {
 		// Shifts into 1st throttle is applied immediately
 		if (sData.mVehicle->mEngineDriveState.gearboxState.currentGear <= sData.neutralGear) {
 			sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear + 1;
