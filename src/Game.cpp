@@ -280,7 +280,6 @@ void Game::stateTransition() {
 			// we may want to pop heads up display
 		case (GAMEPLAY):
 			uiSys->clearAllScreens();
-			uiSys->addScreen("racingHUD");
 			break;
 
 			// we're likely resuming the game, so pop all pause menus
@@ -307,6 +306,7 @@ void Game::stateTransition() {
 
 			// we are resuming gameplay
 		case (GAMEPLAY):
+			uiSys->addScreen("racingHUD");
 			break;
 			// we will be in a pause menu
 		case (PAUSED):
