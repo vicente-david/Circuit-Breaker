@@ -569,8 +569,8 @@ void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
 	PxVec3 totalForce(PxIdentity);
 	PxVec3 totalTorque(PxIdentity);
 
-	// slow down when hitting a hard drift, ~60 deg
-	if (sData.speed > 40 && PxAbs(cosTheta) > 0.5f) {
+	// slow down when hitting a hard drift, ~55 deg
+	if (sData.speed > 40 && PxAbs(cosTheta) > 0.42f) {
 		float speedDamp = 0.85f;
 		float mass = sData.rBody->getMass();
 		totalForce += (-linVel) * speedDamp * cosTheta * cosTheta * mass;
