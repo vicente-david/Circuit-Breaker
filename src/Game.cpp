@@ -312,7 +312,7 @@ void Game::stateTransition() {
 		case (PAUSED):
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
-			uiSys->addScreen("pauseMenu");
+			uiSys->addScreen("pauseMenu"); // ensure this menu is pushed last, so that it goes on top, else UI input wont work
 			renderer->renderPasses.clear();
 			break;
 
@@ -358,7 +358,7 @@ void Game::update() {
 		gameState.nextState = GAMEPLAY;
 	}
 
-	// sync menuControl back to InputSystem so controller/keyboard checks see the current state
+	// sync menuControl back to InputSystem so controller/keyboard checks can see the current state
 	inputSystem.setMenuControl(ui.menuControl);
 
 	stateTransition(); // handle any state transitions

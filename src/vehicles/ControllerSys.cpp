@@ -23,7 +23,7 @@ ControllerSys::registerSystem(std::shared_ptr<Coordinator>& coord) {
 
 void ControllerSys::update(GameState& game) {
 
-	// --- UI navigation (runs regardless of whether vehicle entities exist) ---
+	// only handle UI input if we're in the main menu or paused states, settings menu is only accessible from these states
 	if (game.currentState == MAINMENU || game.currentState == PAUSED)
 		handleUINavigation(game);
 

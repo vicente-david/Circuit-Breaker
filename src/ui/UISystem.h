@@ -148,6 +148,8 @@ public:
 	// resets selectedButton to 0 (call when switching screens)
 	void resetSelection();
 
+	// --- Button Selection End ---
+
 private:
 
 	int prevSCR_WIDTH = 0;
