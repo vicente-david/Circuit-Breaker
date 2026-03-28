@@ -120,13 +120,21 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	}
 	// collision box to detect heal zones/if youre grounded
 	{
-		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.3f));
-		PxShape *groundBox = game.physics->gPhysics->createShape(groundBoxGeom, *game.physics->gMaterial, true);
-		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.1f), PxQuat(PxIdentity));
+		PxBoxGeometry groundRearBoxGeom(PxVec3(0.85f, 0.4f, 0.3f));
+		PxShape *groundRearBox = game.physics->gPhysics->createShape(groundRearBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundRearBoxLocalPose(PxVec3(0.0f, -0.1f, -0.1f), PxQuat(PxIdentity));
 
-		groundBox->setLocalPose(groundBoxLocalPose);
-		sData.rBody->attachShape(*groundBox);
-		groundBox->release();
+		PxBoxGeometry groundFrontBoxGeom(PxVec3(0.3f, 0.4f, 0.3f));
+		PxShape* groundFrontBox = game.physics->gPhysics->createShape(groundFrontBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundFrontBoxLocalPose(PxVec3(0.0f, -0.1f, 0.5f), PxQuat(PxIdentity));
+
+		groundRearBox->setLocalPose(groundRearBoxLocalPose);
+		sData.rBody->attachShape(*groundRearBox);
+		groundRearBox->release();
+
+		groundFrontBox->setLocalPose(groundFrontBoxLocalPose);
+		sData.rBody->attachShape(*groundFrontBox);
+		groundFrontBox->release();
 	}
 
 	// Create vehicle filter
@@ -151,18 +159,18 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		}
 
 		// special ground trigger
-		if (i == 8) {
+		if (i == 8 || i == 9) {
 			shape->setSimulationFilterData(groundFilter);
 			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
-			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, false); // can remove for performance
 		} else {
 
 			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
 			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true); // can remove for performance
 		}
 	}
 
