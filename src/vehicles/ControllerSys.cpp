@@ -27,7 +27,7 @@ void ControllerSys::update(GameState &game) {
 
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
 		sControl.brake = input.moveBackward;
-		sControl.handbrake = input.handBrake;
+		sControl.driftMode = input.driftMode;
 		sControl.throttle = input.moveForward;
 		sControl.steering = input.xRotation;
 		sControl.boost = input.boost;
@@ -36,10 +36,11 @@ void ControllerSys::update(GameState &game) {
 		sControl.reset = input.respawn;
 		sControl.boost = input.boost;
 
+		// I feel like this logic should not be in this file. Should move to SparkSys.cpp
 		// activate health override when you start boosting with no boost left
 		if (!input.boost) {
 			sControl.boostWithHealth = false;
-		} else if (input.boostJustPressed && sData.currBoost < 1) {
+		} else if (input.boostJustPressed && sData.boost < 0.01f) {
 			sControl.boostWithHealth = true;
 		}
 		sControl.reload = input.reload;

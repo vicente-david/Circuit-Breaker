@@ -22,8 +22,7 @@ struct LapCounter {
 	glm::vec3 lastCheckpointDir = { 0.0f, 0.0f, 1.0f }; // forward direction of the track at the last checkpoint
 
 	bool isPlayer = false;
-
-
+	float distToCheckpoint = 0.0f; // used by the leaderboard system to decide who's closest to the next checkpoint
 };
 
 

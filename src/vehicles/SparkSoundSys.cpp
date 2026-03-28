@@ -1,6 +1,6 @@
 
 // helper to register the system
-#include "vehicles/SparkSoundsSys.h"
+#include "vehicles/SparkSoundSys.h"
 #include "GameState.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"

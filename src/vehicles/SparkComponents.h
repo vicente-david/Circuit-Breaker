@@ -5,8 +5,6 @@
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "physics/CollisionData.h"
-#include <cstdio>
-#include <memory>
 
 using namespace snippetvehicle;
 
@@ -26,7 +24,7 @@ struct SparkControls {
 	float brake;
 	float reverse; // [0-1] for going backwards
 
-	bool handbrake;
+	bool driftMode;
 	bool boost;
 	bool boostWithHealth;
 	bool shimmyL;
@@ -39,29 +37,63 @@ struct SparkControls {
 // this is basically the current state of the spark. things can sometimes break
 // if you forget to use refences to this stuff because physx makes no sense
 struct SparkData {
-	float health = 100;
-	float currBoost = 0;
-	float boostRegenSpeed = 10.0f;
+	float maxHealth = 100.0f;
+	float health = maxHealth;
+	float healthRegenRate = 10.f;
 
-	double ShimmyCooldown = 1;
+	float boostUseRate = 20.f;
+	float boostStrength = 10.0f;
+	float boostRegenRate = 20.0f;
+	float maxBoost = 100.0f;
+	float boost = maxBoost;
+	
+	float shimmyForce = 15.0f;
+	double shimmyCooldown = 2;
+	double shimmyInvincible = shimmyCooldown - 0.5;
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
+	float minDriftSpeed = 15.f;
+
+	double respawnCooldown = 3;
+	double respawnTimer = 0;
+	double deathCooldown = 2;
+	double deathTimer = deathCooldown;
+	double offGroundLimit = 2;
+	double offGroundTimer = offGroundLimit;
+	double angResTimer = 0;
+	
+	bool inReverse = false;
+	bool inDrift = false;
 	bool isBoosting = false;
+	bool isDead = false;
+	bool isGrounded = false;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;
 	PxVehiclePhysXSimulationContext mVehicleSimContext;
 
+	// Easy access to vehicle's neutral gear
+	PxU32 neutralGear = 0;
+
+	// Easy access to vehicle's rigid body
+	PxRigidBody* rBody = NULL;
+
 	PxVehiclePhysXMaterialFriction mMaterialFrictions[16];
 	PxU32 mNbMaterialFrictions = 0;
 	PxReal mDefaultMaterialFriction = 1.0f;
 
+	// sweeps for wheels instead of ray cast (cylinder with unit size)
+	PxConvexMesh *mCylinderSweepMesh = NULL;
+
 	const char *mVehicleDataPath = NULL;
-	const char *mVehicleName = "unnamed_vehicle";
+	std::string mVehicleName = "unnamed_vehicle";
 
 	CollisionData physData = CollisionData{SPARK, -1};
 	void destroy() {
+		if (mCylinderSweepMesh)
+			PxVehicleUnitCylinderSweepMeshDestroy(mCylinderSweepMesh);
+
 		mVehicle->destroy();
 	}
 
