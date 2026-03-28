@@ -7,9 +7,16 @@ uniform sampler2D uiTexture;
 
 void main(){
 
+    // will encode the highlight in the texture flag
+
+    // if texture flag is 1.0, then no highlight
     if (textureFlag >= 1.0f){
-        col = texture(uiTexture, vec2(color.x, color.y));
+        vec4 textureColor = texture(uiTexture, vec2(color.x, color.y));
+        col = vec4(textureColor.xyz * textureFlag, 1.0);
     } else {
-        col = vec4(color, 1.0);
+    // don't use texture but color could still be highlighted
+    // assume solid color flag is negative 
+    // -1.0 means no highlight
+        col = vec4(-1.0*textureFlag*color, 1.0);
     }
 }

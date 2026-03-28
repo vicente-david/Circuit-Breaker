@@ -42,7 +42,7 @@ void LeaderboardSystem::update(GameState& game) {
 			lb.standings.push_back(scores[i].second);
 			dbug::log("LEADERBOARD", 0, "Place (%d): %s (score: %.2f)", i + 1, scores[i].second.c_str(), scores[i].first);
 		}
-	}
+	} 
 
 
 }

@@ -20,8 +20,10 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.speed = sData.rBody->getLinearVelocity().magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
-		// TODO: flash "Short Circuit" on screen (like you're dead)
+		// state checks
 		checkDeath(sData, dt);
+		checkAngResistace(sData, dt);
+		checkAirborne(sData, dt);
 
 		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, dt);
@@ -33,9 +35,6 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		sData.mVehicle->mComponentSequence.setSubsteps(
 			sData.mVehicle->mComponentSequenceSubstepGroupHandle, nbSubsteps);
 		sData.mVehicle->step(dt, sData.mVehicleSimContext);
-
-		// Check in air
-		checkAirborne(sData, dt);
 
 		reload = sControls.reload;
 
@@ -96,15 +95,15 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	// Adds to the shape of the chassis
 	{
-		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.25f, 0.2f));
+		PxBoxGeometry rearBoxGeom(PxVec3(0.85f, 0.15f, 0.2f));
 		PxShape* rearBox = game.physics->gPhysics->createShape(rearBoxGeom, *game.physics->gMaterial, true);
-		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.0f, -0.2f), PxQuat(PxIdentity));
+		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.1f, -0.2f), PxQuat(PxIdentity));
 
-		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.25f, 0.5f));
+		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.15f, 0.5f));
 		PxShape* leftSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
 		PxShape* rightSideBox = game.physics->gPhysics->createShape(sideBoxGeom, *game.physics->gMaterial, true);
-		PxTransform leftSideBoxLocalPose(PxVec3(0.41f, 0.0f, 0.28f), PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
-		PxTransform rightSideBoxLocalPose(PxVec3(-0.41f, 0.0f, 0.28f), PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
+		PxTransform leftSideBoxLocalPose(PxVec3(0.43f, 0.1f, 0.3f), PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
+		PxTransform rightSideBoxLocalPose(PxVec3(-0.43f, 0.1f, 0.3f), PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		sData.rBody->attachShape(*rearBox);
@@ -123,13 +122,21 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	}
 	// collision box to detect heal zones/if youre grounded
 	{
-		PxBoxGeometry groundBoxGeom(PxVec3(0.6f, 0.2f, 0.3f));
-		PxShape *groundBox = game.physics->gPhysics->createShape(groundBoxGeom, *game.physics->gMaterial, true);
-		PxTransform groundBoxLocalPose(PxVec3(0.0f, -0.5f, 0.1f), PxQuat(PxIdentity));
+		PxBoxGeometry groundRearBoxGeom(PxVec3(0.85f, 0.4f, 0.3f));
+		PxShape *groundRearBox = game.physics->gPhysics->createShape(groundRearBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundRearBoxLocalPose(PxVec3(0.0f, -0.1f, -0.1f), PxQuat(PxIdentity));
 
-		groundBox->setLocalPose(groundBoxLocalPose);
-		sData.rBody->attachShape(*groundBox);
-		groundBox->release();
+		PxBoxGeometry groundFrontBoxGeom(PxVec3(0.3f, 0.4f, 0.3f));
+		PxShape* groundFrontBox = game.physics->gPhysics->createShape(groundFrontBoxGeom, *game.physics->gMaterial, true);
+		PxTransform groundFrontBoxLocalPose(PxVec3(0.0f, -0.1f, 0.5f), PxQuat(PxIdentity));
+
+		groundRearBox->setLocalPose(groundRearBoxLocalPose);
+		sData.rBody->attachShape(*groundRearBox);
+		groundRearBox->release();
+
+		groundFrontBox->setLocalPose(groundFrontBoxLocalPose);
+		sData.rBody->attachShape(*groundFrontBox);
+		groundFrontBox->release();
 	}
 
 	// Create vehicle filter
@@ -154,18 +161,18 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		}
 
 		// special ground trigger
-		if (i == 8) {
+		if (i == 8 || i == 9) {
 			shape->setSimulationFilterData(groundFilter);
 			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, false);
 			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, true);
-			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, false); // can remove for performance
 		} else {
 
 			shape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, true);
 			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, true);
 			shape->setFlag(PxShapeFlag::eTRIGGER_SHAPE, false);
-			shape->setFlag(PxShapeFlag::eVISUALIZATION, true);
+			shape->setFlag(PxShapeFlag::eVISUALIZATION, true); // can remove for performance
 		}
 	}
 
@@ -206,13 +213,18 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	
 	// SparkControls controls;
 	game.coordinator->addComponent(sparkEntity, SparkControls());
-	game.coordinator->addComponent(sparkEntity, sData);
 	game.coordinator->addComponent(sparkEntity, Transform());
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
 	game.coordinator->addComponent(sparkEntity, SparkSounds(game.audio));
 
-	if (sData.mVehicleName == "AI Player 2") {
+	if (sData.mVehicleName == "P2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
+	}
+	else if (sData.mVehicleName == "P3") {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark3.obj"));
+	}
+	else if (sData.mVehicleName == "P4") {
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark4.obj"));
 	}
 	else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
@@ -303,9 +315,7 @@ void SparkSys::checkAirborne(SparkData& sData, double dt) {
 	else if (sData.offGroundTimer > 0)
 			sData.offGroundTimer -= dt;
 
-	if (sData.isGrounded && !grounded) // just became airborne
-		angularResistance(sData, PX_MAX_REAL, sData.offGroundLimit);
-	else if (!sData.isGrounded && grounded) // just touched ground
+	if (!sData.isGrounded && grounded) // just touched ground
 		angularResistance(sData); // pre-maturely kill angResTimer
 
 	sData.isGrounded = grounded;
@@ -396,15 +406,12 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 	boost(sData, sControls, dt);
 	shimmy(sData, sControls, dt);
 
-	if (sControls.brake) {
-		brake(sData, sControls); // stronger braking
-		reverse(sData, sControls); // check for reverse
-	}
+	brake(sData, sControls); // stronger braking
+	reverse(sData, sControls); // check for reverse
 
 	if (!sData.isGrounded)
 		return;
 
-	checkAngResistace(sData, dt);
 	sparkHandling(sData, sControls);
 	
 	regenBoost(sData, dt); // boost regeneration
@@ -412,21 +419,30 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt
 }
 
 void SparkSys::brake(SparkData& sData, SparkControls& sControls) {
+	if (!sControls.brake)
+		return;
+	
+	// stops arial rotation if brake is pressed
+	if (!sData.isGrounded) {
+		angularResistance(sData, PX_MAX_REAL, sData.offGroundLimit);
+		return;
+	}
+
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	float brakingForce = 1000.f;
+	float brakingForce = 100.f;
 	sData.rBody->addForce(-linVel * brakingForce);
 }
 
 void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 	// Must be basically stopped or already in reverse
-	if (sData.speed < 0.1f || sData.inReverse) {
+	if ((sData.speed < 0.1f || sData.inReverse) && sControls.brake) {
 		sData.mVehicle->mCommandState.brakes[0] = sControls.throttle; // Brake becomes throttle
 		sData.mVehicle->mCommandState.throttle = sControls.brake; // Throttle becomes brake
 		sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear - 1; // Shifts to reverse
 		sData.inReverse = true;
 	}
-	// By necessity this can only happen if brake is fully released
-	else if (sControls.throttle) {
+	// Brake must be fully released
+	else if (sControls.throttle && !sControls.brake) {
 		// Shifts into 1st throttle is applied immediately
 		if (sData.mVehicle->mEngineDriveState.gearboxState.currentGear <= sData.neutralGear) {
 			sData.mVehicle->mEngineDriveState.gearboxState.currentGear = sData.neutralGear + 1;
@@ -492,7 +508,7 @@ void SparkSys::regenBoost(SparkData& sData, double dt) {
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-	const float lateralSpeed = linVel.dot(lateral);
+	const float lateralSpeed = PxAbs(linVel.dot(lateral)); // don't want it to be negative
 
 	// this will be the drift angle at which you have increased boost regeneration rate.
 	// can calculate specified value as arccos(1 / threshold) = drift angle threshold.
@@ -544,62 +560,74 @@ void SparkSys::changeWheelParams(SparkData& sData, PxReal friction, PxReal latFr
 	sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = maxSteerAngle;
 }
 
-void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {
-
+void SparkSys::driftStabilizer(SparkData& sData, SparkControls& sControls) {	
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
 	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-	const PxVec3 up = sData.rBody->getGlobalPose().q.getBasisVector1(); // already normalized
+	const float forwardSpeed = linVel.dot(forward);
 	const float lateralSpeed = linVel.dot(lateral);
+	const float rollVel = sData.rBody->getAngularVelocity().x;
+	const float yawVel = sData.rBody->getAngularVelocity().y;
+	
+	int ccw = (yawVel >= 0.0f) ? 1 : -1; // rotating ccw = 1 and cw = -1
+	float slipAngle = (PxAbs(forwardSpeed) > 0.f) ? PxAtan2(lateralSpeed, forwardSpeed) : 0.f;
+	float steering = sControls.steering == 0.f ? 0.1f * -ccw : sControls.steering;
+	float countersteering = ccw * steering; // negative = steering out of corner, positive = steering into corner
 
-	int ccw = PxSign(sData.rBody->getAngularVelocity().y); // rotating ccw = 1 and cw = -1
-	int countersteering = ccw * sControls.steering; // negative = steering out of corner, positive = steering into corner
-
-	float driftCurve = 2.1f * sControls.steering;
-	float angleCurve = 1.4f * sControls.steering;
-	float yawVel = sData.rBody->getAngularVelocity().y;
+	float driftCurve = 2.1f; //* steering;
+	float angleCurve = 1.4f * steering;
 	float cosTheta = lateralSpeed / sData.speed;
+	
+	PxVec3 totalForce(PxIdentity);
+	PxVec3 totalTorque(PxIdentity);
 
-	// slow down when hitting a hard drift
-	if (sData.speed > 40 && cosTheta > 0.42f) {
-		float speedDamp = 0.7;
-		sData.rBody->addForce((-linVel - up) * speedDamp * cosTheta * cosTheta, PxForceMode::eACCELERATION);
+	// slow down when hitting a hard drift, ~60 deg
+	if (sData.speed > 40 && PxAbs(cosTheta) > 0.5f) {
+		float alpha = PxMin((sData.speed - 40.f) / 20, 1.f);
+		float speedDamp = PxLerp(1.f, 0.85f, alpha);
+		float mass = sData.rBody->getMass();
+		//totalForce += -linVel * speedDamp * cosTheta * cosTheta * mass;
 	}
 
 	// Opposite forces automatically apply due to opposite sign when counter-steering
-	PxVec3 driftDir = (forward + lateral * driftCurve);
-	driftDir.y = 0.f;
-	driftDir.normalize();
-	float forceStrength = countersteering > 0 ? 1600.f : 400.f;
-	sData.rBody->addForce(driftDir * forceStrength);
+	PxVec3 driftDir = (forward * 0.5f + lateral * driftCurve);
+	float forceStrength = 200 * PxAbs(slipAngle);
+	//totalForce += driftDir * forceStrength;
 
-	float torqueStrength = countersteering > 0 ? -50.f : 600.f;
-	sData.rBody->addTorque(PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength);
-
+	float torqueStrength = countersteering > 0 ? -200.f : 600.f;
+	totalTorque += PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength;
+	
 	float gripStrength = 240.f;
-	sData.rBody->addForce(lateral * gripStrength * countersteering * cosTheta);
-
-	// TODO: make sure roll damping is working properly
-	float rollDamping = PxMin(lateralSpeed * lateralSpeed, 100.f);
-	sData.rBody->addTorque(PxVec3(-sData.rBody->getAngularVelocity().x * rollDamping, 0.f, 0.f),
-		PxForceMode::eACCELERATION);
+	totalForce += lateral * gripStrength * countersteering * cosTheta;
 
 	float downforce = sData.speed * sData.speed * 0.2;
-	sData.rBody->addForce(PxVec3(0.f, -downforce, 0.f));
+	totalForce += PxVec3(0.f, -downforce, 0.f);
+
+	sData.rBody->addForce(totalForce);
+	sData.rBody->addTorque(totalTorque);
+
+	// this maks it really to hard to flip the car while cornering
+	const float rollLimit = 0.06f;
+	if (PxAbs(rollVel) > rollLimit) {
+		PxVec3 angVel(PxClamp(rollVel, -rollLimit, rollLimit), yawVel, 0.f);
+		sData.rBody->is<PxRigidDynamic>()->setAngularVelocity(angVel);
+	}
 }
 
 void SparkSys::yawStabilizer(SparkData& sData) {
 	const float yawVel = sData.rBody->getAngularVelocity().y;
-	const float yawDamping = sData.speed * 0.15f;
-	PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
+	const float alpha = PxMin(sData.speed / 20.f, 1.f);
+	const float dampForce = PxLerp(0.05f, 0.15f, alpha);
+	const float yawDamping = sData.speed * dampForce;
+	const PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
 
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
 }
 
 void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
-	if (sControls.driftMode && sData.speed >= sData.minDriftSpeed) {
+	if (sControls.driftMode) {
 		if (!sData.inDrift)
-			changeWheelParams(sData, 3.8, 55600, PxDegToRad(30));
+			changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
@@ -607,10 +635,10 @@ void SparkSys::sparkHandling(SparkData& sData, SparkControls& sControls) {
 	else {
 		// Reset friction params to original values from JSON
 		if (sData.inDrift)
-			changeWheelParams(sData, 3.8, 145600, PxDegToRad(45));
+			changeWheelParams(sData, 3.8f, 145600, PxDegToRad(45));
 
 		sData.inDrift = false;
-		yawStabilizer(sData); // Helps prevent oversteer
+		yawStabilizer(sData); // Helps prevent oversteer when turning
 	}
 }
 

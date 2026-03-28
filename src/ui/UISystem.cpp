@@ -23,6 +23,24 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
+// will only need to modify the magnitude as of right now
+// shader flag is guaranteed to be either 1.0 or -1.0
+// a highlight as of right now is just doubling that number if 
+// a button is highlighted
+void UISystem::buttonHighlighting(Entity& e, float& shaderFlag) {
+	// check if button exists
+	if (getButtonCount() == 0) return;
+
+	if (selectedButton >= screenStack.back().UIElements.size() - 1) {
+		// there cannot exist a highlight with this input
+		return;  
+	}
+
+	// otherwise 
+	// double check if the entity is the same one as the selected button
+	if (e == screenStack.back().UIElements[1 + selectedButton]) shaderFlag *= 2.0f;
+}
+
 void UISystem::updateUIElement(Entity& e) {
 	uiShader->use();
 
@@ -40,7 +58,8 @@ void UISystem::updateUIElement(Entity& e) {
 			UIVertex v1;
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
-			v1.interpretFlag = 0.0f;
+			v1.interpretFlag = -1.0f; // -1 (see ui.frag shader for why)
+			buttonHighlighting(e, v1.interpretFlag);
 			uiData.push_back(v1);
 		}
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
@@ -55,6 +74,7 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
 			v1.interpretFlag = 1.0f;
+			buttonHighlighting(e, v1.interpretFlag);
 			uiData.push_back(v1);
 		}
 		glActiveTexture(GL_TEXTURE0);
@@ -87,14 +107,14 @@ void UISystem::update() {
 		prevSCR_WIDTH = *SCR_WIDTH;
 		prevSCR_HEIGHT = *SCR_HEIGHT;
 	}
-	
+
 	// for all screens render the containers and the text
 	for (UIScreen& u1 : screenStack) {
 		for (Entity& e : u1.UIElements) {
 			updateUIElement(e);
 		}
 	}
-	
+
 
 	// render text after the ui elements
 	//updateText();
@@ -110,11 +130,11 @@ UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
 	float left, top, right, bottom, leftO, topO, rightO, bottomO;
 
 	// recall u1 stores  a vec4 of anchors in the following order (left, top, right, bottom)
-	
+
 	// 0,0 is top left corner
 
-	left = u1.anchors.x; 
-	top = u1.anchors.y; 
+	left = u1.anchors.x;
+	top = u1.anchors.y;
 	right = u1.anchors.z;
 	bottom = u1.anchors.w;
 
@@ -130,35 +150,35 @@ UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
 	// same thing for bottom, (bottom*height) + bottomOffset
 
 	// start at bottom left then follow counter clockwise (bottom up) to build triangles
-	uF.points.push_back(glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f)); // (left, bottom, 0.0)
-	uF.points.push_back(glm::vec3(right*width + rightO, bottom*height + bottomO, 0.0f)); // (right, bottom, 0.0)
-	uF.points.push_back(glm::vec3(right*width + rightO, top*height + topO, 0.0f)); // (right, top, 0.0)
+	uF.points.push_back(glm::vec3(left * width + leftO, bottom * height + bottomO, 0.0f)); // (left, bottom, 0.0)
+	uF.points.push_back(glm::vec3(right * width + rightO, bottom * height + bottomO, 0.0f)); // (right, bottom, 0.0)
+	uF.points.push_back(glm::vec3(right * width + rightO, top * height + topO, 0.0f)); // (right, top, 0.0)
 
-	uF.points.push_back(glm::vec3(left*width + leftO, bottom*height + bottomO, 0.0f)); // (left, bottom, 0.0)
-	uF.points.push_back(glm::vec3(right*width + rightO, top*height + topO, 0.0f)); // (right, top, 0.0)
-	uF.points.push_back(glm::vec3(left*width + leftO, top*height + topO, 0.0f)); // (left, top, 0.0)
-	
+	uF.points.push_back(glm::vec3(left * width + leftO, bottom * height + bottomO, 0.0f)); // (left, bottom, 0.0)
+	uF.points.push_back(glm::vec3(right * width + rightO, top * height + topO, 0.0f)); // (right, top, 0.0)
+	uF.points.push_back(glm::vec3(left * width + leftO, top * height + topO, 0.0f)); // (left, top, 0.0)
+
 	return uF;
 }
 
 textPositions UISystem::calculateTextContainer(UIElement u1) {
 	textPositions tp1;
-	tp1.leftPx = u1.anchors.x*(*SCR_WIDTH) + u1.anchorOffsets.x;
-	tp1.topPx = u1.anchors.y*(*SCR_HEIGHT) + u1.anchorOffsets.y;
-	tp1.rightPx = u1.anchors.z*(*SCR_WIDTH) + u1.anchorOffsets.z;
-	tp1.bottomPx = u1.anchors.w*(*SCR_HEIGHT) + u1.anchorOffsets.w;
+	tp1.leftPx = u1.anchors.x * (*SCR_WIDTH) + u1.anchorOffsets.x;
+	tp1.topPx = u1.anchors.y * (*SCR_HEIGHT) + u1.anchorOffsets.y;
+	tp1.rightPx = u1.anchors.z * (*SCR_WIDTH) + u1.anchorOffsets.z;
+	tp1.bottomPx = u1.anchors.w * (*SCR_HEIGHT) + u1.anchorOffsets.w;
 	tp1.textAlignX = u1.textAlignmentX;
 	tp1.textAlignY = u1.textAlignmentY;
 	return tp1;
 }
 
-void UISystem::initializeRenderingParams(){
+void UISystem::initializeRenderingParams() {
 	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert", "shaders/testText.frag");
 
 	// ui initialization
 	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
 
-	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT),0.0f); // create iniital ortho projection
+	uiMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), static_cast<float>(*SCR_HEIGHT), 0.0f); // create iniital ortho projection
 	uiShader->use(); // use it first
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
@@ -222,20 +242,45 @@ void UISystem::addScreen(std::string screenName) {
 	UIScreen u1 = nameToScreen[screenName];
 	// push it into active screens
 	screenStack.push_back(u1);
+	resetSelection(); // new screen on top, reset selection
 }
 
 void UISystem::popScreen() {
 	UIScreen u1 = screenStack.back();
 	screenStack.pop_back();
+	resetSelection(); // screen below is now active, reset selection
 }
 
 void UISystem::clearAllScreens() {
 	screenStack.clear();
+	resetSelection();
+}
+// ---
+int UISystem::getButtonCount() {
+	if (screenStack.empty()) 
+		return 0;
+	// the top screen's first element (index 0) is always the background, rest are buttons
+	int totalElements = (int)screenStack.back().UIElements.size();
+	return std::max(0, totalElements - 1); // subtract background
 }
 
-void UISystem::screenInitialization(){
+std::string UISystem::getTopScreenName() {
+	if (screenStack.empty()) 
+		return "";
+	return screenStack.back().name;
+}
+
+void UISystem::resetSelection() {
+	selectedButton = 0;
+}
+// ---
+void UISystem::screenInitialization() {
 	createFPSCounter();
 	createMainMenu();
+	createPauseMenu();
+	createSettingsMenu();
+	createStandingsScreen();
+	createRacingHUD();
 	createLapCounter();
 }
 
@@ -244,17 +289,17 @@ void UISystem::screenInitialization(){
 std::string text;
 float textScale;
 glm::vec4 anchors = glm::vec4(0.0f);
-glm::vec4 anchorOffsets = glm::vec4(0.0f); 
+glm::vec4 anchorOffsets = glm::vec4(0.0f);
 glm::vec3 textColor;
 textAlign textAlignmentY;
-textAlign textAlignmentX; 
-std::string path; 
-glm::vec3 color; 
+textAlign textAlignmentX;
+std::string path;
+glm::vec3 color;
 */
 
 // return the name of the screenName
-void UISystem::createFPSCounter(){
-	
+void UISystem::createFPSCounter() {
+
 	UIElement counter1;
 	counter1.text = "FPS: " + *fps;
 	counter1.textScale = 1.0f;
@@ -267,7 +312,7 @@ void UISystem::createFPSCounter(){
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, counter1);
-	
+
 	UIScreen fpsCounter;
 	fpsCounter.name = "fpsCounter";
 	fpsCounter.UIElements.push_back(e1);
@@ -284,28 +329,377 @@ void UISystem::updateFPSCounter() {
 
 void UISystem::createMainMenu() {
 	UIElement menu1;
-	menu1.text = "WOAH THE MENU CAN HAVE INDEPENDENT TEXT CRAZY!";
-	menu1.textScale = 1.0f;
+	//menu1.text = "WOAH THE MENU CAN HAVE INDEPENDENT TEXT CRAZY!";
+	//menu1.textScale = 1.0f;
 	// default anchors are whole screen (0,0,1,1)
-	menu1.textColor = glm::vec3(1.0f);
-	menu1.textAlignmentX = CENTER;
-	menu1.textAlignmentY = BOTTOM;
+	//menu1.textColor = glm::vec3(1.0f);
+	//menu1.textAlignmentX = CENTER;
+	//menu1.textAlignmentY = BOTTOM;
 
 	menu1.hasBackgroundColor = false;
 
-	menu1.path = "assets/textures/Start_Menu_2.jpg";
+	menu1.path = "assets/textures/ui/mainMenu/startmenu_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
+	// --- BUTTONS ---
+
+	// start game button
+	UIElement startGameButton;
+	startGameButton.hasBackgroundColor = false;
+	startGameButton.path = "assets/textures/ui/mainMenu/startmenu_startgame.png";
+	startGameButton.textureID = GenerateTexture(startGameButton.path.c_str(), false);
+
+	startGameButton.anchors = glm::vec4(0.3, 0.56298, 0.7, 0.6444);
+	startGameButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+
+	// exit button 
+	UIElement exitButton;
+	exitButton.hasBackgroundColor = false;
+	exitButton.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
+	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
+	exitButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
+
+	// settings button
+	UIElement settingsButton;
+	settingsButton.hasBackgroundColor = false;
+	settingsButton.path = "assets/textures/ui/mainMenu/startmenu_settings.png";
+	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
+
+	settingsButton.anchors = glm::vec4(0.3, 0.66539, 0.7, 0.74682);
+	settingsButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+
+	// --- ---
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, startGameButton); // button 0
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, settingsButton); // button 1
+
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, exitButton); // button 2
+
 	UIScreen mainMenu;
 	mainMenu.name = "mainMenu";
 	mainMenu.UIElements.push_back(e1);
 
+	mainMenu.UIElements.push_back(e2);
+	mainMenu.UIElements.push_back(e3);
+	mainMenu.UIElements.push_back(e4);
+
 	nameToScreen["mainMenu"] = mainMenu;
 }
 
+void UISystem::createPauseMenu() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
+
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/ui/pauseMenu/pause_bg.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	// --- BUTTONS --
+
+	// resume button
+	UIElement resumeButton;
+	resumeButton.hasBackgroundColor = false;
+	resumeButton.path = "assets/textures/ui/pauseMenu/pause_resume.png";
+	resumeButton.textureID = GenerateTexture(resumeButton.path.c_str(), false);
+	resumeButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+	resumeButton.anchorOffsets = glm::vec4(0, -168, 0, -168);
+
+	// settings button
+	UIElement settingsButton;
+	settingsButton.hasBackgroundColor = false;
+	settingsButton.path = "assets/textures/ui/pauseMenu/pause_settings.png";
+	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
+	settingsButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+	settingsButton.anchorOffsets = glm::vec4(0, -84, 0, -84);
+
+	// exit button 
+	UIElement exitButton;
+	exitButton.hasBackgroundColor = false;
+	exitButton.path = "assets/textures/ui/pauseMenu/pause_quittomenu.png";
+	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
+	exitButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+
+	// --- ---
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, resumeButton); // button 0
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, settingsButton); // button 1
+
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, exitButton); // button 2
+
+
+	UIScreen pauseMenu;
+	pauseMenu.name = "pauseMenu";
+	pauseMenu.UIElements.push_back(e1);
+
+	pauseMenu.UIElements.push_back(e2);
+	pauseMenu.UIElements.push_back(e3);
+	pauseMenu.UIElements.push_back(e4);
+
+	nameToScreen["pauseMenu"] = pauseMenu;
+}
+
+void UISystem::createSettingsMenu() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
+
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/ui/settings/settings_bg.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	// --- BUTTONS ---
+
+	// easy button
+	UIElement easyButton;
+	easyButton.hasBackgroundColor = false;
+	easyButton.path = "assets/textures/ui/settings/diff_easy.png";
+	easyButton.textureID = GenerateTexture(easyButton.path.c_str(), false);
+	easyButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+
+	// medium button
+	UIElement mediumButton;
+	mediumButton.hasBackgroundColor = false;
+	mediumButton.path = "assets/textures/ui/settings/diff_medium.png";
+	mediumButton.textureID = GenerateTexture(mediumButton.path.c_str(), false);
+	mediumButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	mediumButton.anchorOffsets = glm::vec4(144, 0, 144, 0);
+
+	// hard button
+	UIElement hardButton;
+	hardButton.hasBackgroundColor = false;
+	hardButton.path = "assets/textures/ui/settings/diff_hard.png";
+	hardButton.textureID = GenerateTexture(hardButton.path.c_str(), false);
+	hardButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	hardButton.anchorOffsets = glm::vec4(288, 0, 288, 0);
+
+	// track decorations button
+	UIElement decorationsButton;
+	decorationsButton.hasBackgroundColor = false;
+	decorationsButton.path = "assets/textures/ui/settings/settings_trackdecorations.png";
+	decorationsButton.textureID = GenerateTexture(decorationsButton.path.c_str(), false);
+	decorationsButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
+
+	// vfx particles button
+	UIElement particlesButton;
+	particlesButton.hasBackgroundColor = false;
+	particlesButton.path = "assets/textures/ui/settings/settings_vfxparticles.png";
+	particlesButton.textureID = GenerateTexture(particlesButton.path.c_str(), false);
+	particlesButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
+	particlesButton.anchorOffsets = glm::vec4(465, 0, 465, 0);
+
+	// back to menu button
+	UIElement menuButton;
+	menuButton.hasBackgroundColor = false;
+	menuButton.path = "assets/textures/ui/settings/settings_backtomenu.png";
+	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
+	menuButton.anchors = glm::vec4(0.0935, 0.8206, 0.9073, 0.902);
+
+	// --- ---
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, easyButton); // button 0
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, mediumButton); // button 1
+
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, hardButton); // button 2
+
+	Entity e5 = coordinator->createEntity();
+	coordinator->addComponent(e5, decorationsButton); // button 3
+
+	Entity e6 = coordinator->createEntity();
+	coordinator->addComponent(e6, particlesButton); // button 4
+
+	Entity e7 = coordinator->createEntity();
+	coordinator->addComponent(e7, menuButton); // button 5
+
+
+	UIScreen settingsMenu;
+	settingsMenu.name = "settingsMenu";
+	settingsMenu.UIElements.push_back(e1);
+
+	settingsMenu.UIElements.push_back(e2);
+	settingsMenu.UIElements.push_back(e3);
+	settingsMenu.UIElements.push_back(e4);
+	settingsMenu.UIElements.push_back(e5);
+	settingsMenu.UIElements.push_back(e6);
+	settingsMenu.UIElements.push_back(e7);
+
+	nameToScreen["settingsMenu"] = settingsMenu;
+}
+
+void UISystem::createStandingsScreen() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
+
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/ui/standings/standings_bg.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	// --- POSITIONS FIELDS ---
+	UIElement firstPlace;
+	firstPlace.hasBackgroundColor = false;
+	firstPlace.path = "assets/textures/ui/standings/standings_1st.png";
+	firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
+	firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+
+	UIElement secondPlace;
+	secondPlace.hasBackgroundColor = false;
+	secondPlace.path = "assets/textures/ui/standings/standings_2nd.png";
+	secondPlace.textureID = GenerateTexture(secondPlace.path.c_str(), false);
+	secondPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	secondPlace.anchorOffsets = glm::vec4(0, 66, 0, 66);
+
+	UIElement thirdPlace;
+	thirdPlace.hasBackgroundColor = false;
+	thirdPlace.path = "assets/textures/ui/standings/standings_3rd.png";
+	thirdPlace.textureID = GenerateTexture(thirdPlace.path.c_str(), false);
+	thirdPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	thirdPlace.anchorOffsets = glm::vec4(0, 66 * 2, 0, 66 * 2);
+
+	UIElement fourthPlace;
+	fourthPlace.hasBackgroundColor = false;
+	fourthPlace.path = "assets/textures/ui/standings/standings_4th.png";
+	fourthPlace.textureID = GenerateTexture(fourthPlace.path.c_str(), false);
+	fourthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	fourthPlace.anchorOffsets = glm::vec4(0, 66 * 3, 0, 66 * 3);
+
+	UIElement fifthPlace;
+	fifthPlace.hasBackgroundColor = false;
+	fifthPlace.path = "assets/textures/ui/standings/standings_5th.png";
+	fifthPlace.textureID = GenerateTexture(fifthPlace.path.c_str(), false);
+	fifthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	fifthPlace.anchorOffsets = glm::vec4(0, 66 * 4, 0, 66 * 4);
+
+	UIElement sixthPlace;
+	sixthPlace.hasBackgroundColor = false;
+	sixthPlace.path = "assets/textures/ui/standings/standings_6th.png";
+	sixthPlace.textureID = GenerateTexture(sixthPlace.path.c_str(), false);
+	sixthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	sixthPlace.anchorOffsets = glm::vec4(0, 66 * 5, 0, 66 * 5);
+
+	UIElement seventhPlace;
+	seventhPlace.hasBackgroundColor = false;
+	seventhPlace.path = "assets/textures/ui/standings/standings_7th.png";
+	seventhPlace.textureID = GenerateTexture(seventhPlace.path.c_str(), false);
+	seventhPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	seventhPlace.anchorOffsets = glm::vec4(0, 66 * 6, 0, 66 * 6);
+
+	UIElement eighthPlace;
+	eighthPlace.hasBackgroundColor = false;
+	eighthPlace.path = "assets/textures/ui/standings/standings_8th.png";
+	eighthPlace.textureID = GenerateTexture(eighthPlace.path.c_str(), false);
+	eighthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	eighthPlace.anchorOffsets = glm::vec4(0, 66 * 7, 0, 66 * 7);
+	// --- ---
+
+	// --- BUTTONS ---
+
+	// back to menu button
+	UIElement menuButton;
+	menuButton.hasBackgroundColor = false;
+	menuButton.path = "assets/textures/ui/standings/standings_backtomenu.png";
+	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
+	menuButton.anchors = glm::vec4(0.3225, 0.833, 0.485, 0.9148);
+
+	// restart game button
+	UIElement restartButton;
+	restartButton.hasBackgroundColor = false;
+	restartButton.path = "assets/textures/ui/standings/standings_restartgame.png";
+	restartButton.textureID = GenerateTexture(restartButton.path.c_str(), false);
+	restartButton.anchors = glm::vec4(0.3225, 0.833, 0.485, 0.9148);
+	restartButton.anchorOffsets = glm::vec4(226, 0, 226, 0);
+	// --- ---
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, firstPlace);
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, secondPlace);
+
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, thirdPlace);
+
+	Entity e5 = coordinator->createEntity();
+	coordinator->addComponent(e5, fourthPlace);
+
+	Entity e6 = coordinator->createEntity();
+	coordinator->addComponent(e6, fifthPlace);
+
+	Entity e7 = coordinator->createEntity();
+	coordinator->addComponent(e7, sixthPlace);
+
+	Entity e8 = coordinator->createEntity();
+	coordinator->addComponent(e8, seventhPlace);
+
+	Entity e9 = coordinator->createEntity();
+	coordinator->addComponent(e9, eighthPlace);
+
+	Entity e10 = coordinator->createEntity();
+	coordinator->addComponent(e10, menuButton);
+
+	Entity e11 = coordinator->createEntity();
+	coordinator->addComponent(e11, restartButton);
+
+	UIScreen standingsScreen;
+	standingsScreen.name = "standingsScreen";
+	standingsScreen.UIElements.push_back(e1);
+
+	standingsScreen.UIElements.push_back(e2);
+	standingsScreen.UIElements.push_back(e3);
+	standingsScreen.UIElements.push_back(e4);
+	standingsScreen.UIElements.push_back(e5);
+	standingsScreen.UIElements.push_back(e6);
+	standingsScreen.UIElements.push_back(e7);
+	standingsScreen.UIElements.push_back(e8);
+	standingsScreen.UIElements.push_back(e9);
+	standingsScreen.UIElements.push_back(e10);
+	standingsScreen.UIElements.push_back(e11);
+
+	nameToScreen["standingsScreen"] = standingsScreen;
+}
+
+void UISystem::createRacingHUD() {
+	UIElement menu1;
+	// default anchors are whole screen (0,0,1,1)
+
+	menu1.hasBackgroundColor = false; // render texture
+
+	menu1.path = "assets/textures/ui/racing/racing_hud.png";
+	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, menu1);
+
+	UIScreen racingHUD;
+	racingHUD.name = "racingHUD";
+	racingHUD.UIElements.push_back(e1);
+
+	nameToScreen["racingHUD"] = racingHUD;
+}
 
 void UISystem::createLapCounter() {
 	UIElement lapc1;
