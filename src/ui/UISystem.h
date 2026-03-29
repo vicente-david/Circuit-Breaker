@@ -40,6 +40,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "../GameState.h"
 #include <algorithm>
+#include "../world/LeaderboardSystem.h"
 
 
 // positions of the triangle to render the quad
@@ -115,7 +116,7 @@ public:
 	void createMainMenu(); // create the main menu and push it to the hash map
 	void createPauseMenu(); // create the pause menu and push it to hashmap
 	void createSettingsMenu(); // create the settings menu and push it to hashmap
-	void createStandingsScreen(); // create the standings menu and push it to hashmap
+	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap
 
 	// persistent ui elements (elements that change every frame)
