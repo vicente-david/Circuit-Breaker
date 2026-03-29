@@ -36,6 +36,16 @@ void RespawnSystem::update(GameState& game) {
 		glm::vec3 respawnPos = lapProg.lastCheckpointPos;
 		respawnPos.y += deltaY;
 
+		// if the entity has an ai controller component, reset its understanding of where it is on the track
+		if (game.coordinator->hasComponent<AIController>(entity)) {
+			AIController& ai = game.coordinator->getComponent<AIController>(entity);
+			ai.currentPosIdx = lapProg.lastCheckpointIdx;
+			ai.lastPosIdx = lapProg.lastCheckpointIdx - 1;
+			ai.lookAheadSteps = 2;
+			ai.targetIdx = (ai.currentPosIdx + ai.lookAheadSteps) % ai.route.size();
+
+		}
+
 		// compute the respawn rotation so the vehicle faces along the track
 		// the vehicle's forward axis is +Z, so we need the angle from +Z to lastCheckpointDir
 		glm::vec3 trackDir = lapProg.lastCheckpointDir; // already XZ-normalized by LapSystem

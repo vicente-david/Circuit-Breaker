@@ -4,6 +4,7 @@
 #include "ecs/Coordinator.h"
 #include "ecs/Component.h"
 #include "LapSystem.h"
+#include "ai/AIControllerSys.h"
 
 struct Respawnable {
 	// empty struct to act as a flag that the entity attached to this system can be respawned

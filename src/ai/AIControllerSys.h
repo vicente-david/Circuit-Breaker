@@ -15,6 +15,8 @@ class AIControllerSys : public System {
 		static std::shared_ptr<AIControllerSys> registerSystem(std::shared_ptr<Coordinator>& coord);
 		void setStatePaths(std::vector<TrackCurve>& paths);
 
+		void onRespawn(Entity& entity, int posIdx);
+
 		void AI_IDLE(AIController &ai, SparkControls &controls, GameState& game);
 		
 

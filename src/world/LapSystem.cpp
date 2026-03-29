@@ -114,6 +114,7 @@ void LapSystem::generateCheckpoints(const std::vector<TrackCurve> paths) {
 			checkpoint.first = trackPoints[0].curvePoints[i]; // add checkpoint on main path
 			checkpoint.second = trackPoints[1].curvePoints[i]; // add checkpoint on healing path
 			checkPoints.push_back(checkpoint);
+			checkpointIdx.push_back(i); // curve position index this checkpoint was placed at
 		}
 		// for every line segment, add that to our track distance
 		trackDistance += glm::length(trackPoints[0].curvePoints[i] - trackPoints[0].curvePoints[i+1]);
@@ -279,6 +280,7 @@ void LapSystem::update(GameState& game) {
 			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].first;
 			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos);
 			dir = checkPoints[followingCheckpoint].first - checkPoints[lapProg.lastCheckpointID].first;
+			
 		}
 		else {
 			// on heal path
@@ -286,6 +288,7 @@ void LapSystem::update(GameState& game) {
 			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos);
 			dir = checkPoints[followingCheckpoint].second - checkPoints[lapProg.lastCheckpointID].second;
 		}
+		lapProg.lastCheckpointIdx = checkpointIdx[lapProg.lastCheckpointID]; //curve index of last checkpoint
 
 		dir.y = 0.0f; // project onto XZ plane so the vehicle stays upright
 		if (glm::length(dir) > 0.001f) {
