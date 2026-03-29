@@ -101,24 +101,25 @@ std::shared_ptr<LapSystem> LapSystem::registerSystem(std::shared_ptr<Coordinator
 }
 
 // generate checkpoints
-void LapSystem::generateCheckpoints(const std::string path) {
-	// load track curve (could be multiple, as of right now only one)
-	// will need to be more sophisticated later when we add branches
-	trackPoints = CurveLoader::loadCurve(path);
-	
+void LapSystem::generateCheckpoints(const std::vector<TrackCurve> paths) {
+	trackPoints = paths;
 	trackDistances.push_back(0.0f); // cumulative distancce along track of the start line
 
-	// for every point
+	// for every point (both curves have the same number of points)
 	for (int i = 0; i < trackPoints[0].curvePoints.size()-1; i++) {
 		// say every 10 paces is a checkpoint
 		if (i % checkpointPlacement == 0) {
 			// add those to our track checkpoints
-			checkPoints.push_back(trackPoints[0].curvePoints[i]);
+			std::pair<glm::vec3, glm::vec3> checkpoint;
+			checkpoint.first = trackPoints[0].curvePoints[i]; // add checkpoint on main path
+			checkpoint.second = trackPoints[1].curvePoints[i]; // add checkpoint on healing path
+			checkPoints.push_back(checkpoint);
 		}
 		// for every line segment, add that to our track distance
 		trackDistance += glm::length(trackPoints[0].curvePoints[i] - trackPoints[0].curvePoints[i+1]);
 		trackDistances.push_back(trackDistance);
 	}
+	dbug::log("LAP", 1, "Number of generated checkpoints: %d", checkPoints.size());
 
 	// start calculating the track distance (start-end) segment should be added (will not be added in the loop)
 	trackDistance += glm::length(trackPoints[0].curvePoints.back() - trackPoints[0].curvePoints.front()); // end - start length
@@ -151,7 +152,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 		}
 
 		// check if vehicle is inside the next checkpoint
-		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 15.0f) < 0.0f) {
+		if (sphereSDF(checkPoints[indexI].first - eTransform.pos, 15.0f) < 0.0f || sphereSDF(checkPoints[indexI].second - eTransform.pos, 15.0f) < 0.0f) {
 			// if they are check if their target isn't the start/finish line
 			// the > 0 check is to make sure they don't immediately increment lap on race start
 			if (lapProg.lastCheckpointID > 0 && indexI == 0) {
@@ -163,7 +164,7 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 				if (lapProg.currentLap >= 4 && !game.gameEnded) game.endGame(entity);
 			}
 
-			//std::cout << "checkpoint: " << indexI << std::endl;
+			dbug::log("LAP", 0, "checkpoint %d reached", indexI);
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = indexI;
 			break;
@@ -246,7 +247,7 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 	// updateCheckpoints
 	LapSystem::updateCheckpoints(lapProg, eTransform, nextCheckpoints, game, entity);
 
-//	std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
+	dbug::log("LAP", -1, "Lap %.3f %% complete", (lapProg.progress / trackDistance) * 100);
 
 
 }
@@ -260,16 +261,32 @@ void LapSystem::update(GameState& game) {
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 
 		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
-		lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
-		lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID] - eTransform.pos);
 
-		// compute the track forward direction at this checkpoint used for respawning
+		// Use to check what path we're on
+		float distToC1 = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos); //main path
+		float distToC2 = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos); //healing path
+		
+		// use to compute the track forward direction at this checkpoint used for respawning
 			// use the vector from this checkpoint to the next one
 		int followingCheckpoint = lapProg.lastCheckpointID + 1;
 		if (followingCheckpoint >= checkPoints.size()) {
 			followingCheckpoint = 0; // wrap around for the last checkpoint
 		}
-		glm::vec3 dir = checkPoints[followingCheckpoint] - checkPoints[lapProg.lastCheckpointID];
+		glm::vec3 dir;
+
+		if (distToC1 <= distToC2) {
+			// on main path
+			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].first;
+			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos);
+			dir = checkPoints[followingCheckpoint].first - checkPoints[lapProg.lastCheckpointID].first;
+		}
+		else {
+			// on heal path
+			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].second;
+			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos);
+			dir = checkPoints[followingCheckpoint].second - checkPoints[lapProg.lastCheckpointID].second;
+		}
+
 		dir.y = 0.0f; // project onto XZ plane so the vehicle stays upright
 		if (glm::length(dir) > 0.001f) {
 			lapProg.lastCheckpointDir = glm::normalize(dir);

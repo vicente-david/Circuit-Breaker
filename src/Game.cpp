@@ -81,7 +81,7 @@ void Game::initializeRace() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/curve.obj");
+	//lapSys->generateCheckpoints("assets/curve.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -171,15 +171,15 @@ void Game::initializeTrack() {
 	if (curve.paths[0].curvePoints.size() != healCurve.paths[0].curvePoints.size()) {
 		dbug::log("DEF", 2, "\n\n WARNING: track curves of different lengths! \n\n");
 	}
-
+	lapSys->generateCheckpoints(trackPaths);
 	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
 
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-8.0f, 2.0f, -8.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, -6.0f), "P2");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 2.0f, -4.0f), "P3");
+	/*initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 2.0f, -4.0f), "P3");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-2.0f, 2.0f, -2.0f), "P4");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 0.0f), "P5");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 0.0f), "P5");*/
 
 
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);

@@ -26,10 +26,11 @@ struct LapCounter {
 };
 
 
+
 class LapSystem : public System {
 public:
 	static std::shared_ptr<LapSystem> registerSystem(std::shared_ptr<Coordinator>& coord); // ecs shenanigans
-	void generateCheckpoints(const std::string trackPath); // stores the checkpoints internally
+	void generateCheckpoints(const std::vector<TrackCurve> paths); // stores the checkpoints internally
 	void update(GameState& game); // does the logic, i feel like it doesn't have to be every frame
 
 
@@ -40,13 +41,13 @@ private:
 	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	
-	std::vector<glm::vec3> checkPoints; // will need to be more sophisticated for multiple branching paths
-	int checkpointPlacement = 10; // every x amount of points along the track, place 1 checkpoint
+	std::vector<std::pair<glm::vec3, glm::vec3>> checkPoints; // checkpoint has position on main path and position on 'heal' path
+	int checkpointPlacement = 50; // every x amount of points along the track, place 1 checkpoint
 
 	std::vector<TrackCurve> trackPoints; // vector of all track points
 	std::vector<float> trackDistances; // tracks cumulative distance along the track (same order as the trackPoints)
 	float trackDistance; // length of the track curve
-	float skipThresholdRatio = 0.1f; // How much of the track you can skip (0-1.0f)
+	float skipThresholdRatio = 0.12f; // How much of the track you can skip (0-1.0f)
 	
 
 };
