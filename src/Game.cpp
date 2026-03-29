@@ -378,6 +378,7 @@ void Game::stateTransition() {
 			// someone has finished the race
 		case (END):
 			uiSys->clearAllScreens();
+			uiSys->createStandingsScreen(coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
 			break;
 		}
