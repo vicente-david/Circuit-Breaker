@@ -92,7 +92,7 @@ void RenderingSystem::initializeLines() {
 // TODO: split the rendering passes
 void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
 	// Render pass 1: depth to texture
-	float near_plane = -70.f, far_plane = 25.0f;
+	float near_plane = -70.f, far_plane = 30.0f;
 	glm::mat4 lightProj = glm::ortho(bounds.first.x - 50.f, bounds.second.x + 50.f, bounds.first.z - 50.f, bounds.second.z + 50.f, near_plane, far_plane);
 	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 lightSpaceMat = lightProj * lightView;
