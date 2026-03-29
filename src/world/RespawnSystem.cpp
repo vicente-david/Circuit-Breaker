@@ -4,6 +4,7 @@
 #include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
 #include "vehicles/SparkComponents.h"
+#include "world/Clock.cpp"
 
 std::shared_ptr<RespawnSystem> RespawnSystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
 	auto system = coord->registerSystem<RespawnSystem>();
@@ -41,7 +42,7 @@ void RespawnSystem::update(GameState& game) {
 			AIController& ai = game.coordinator->getComponent<AIController>(entity);
 			SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
 			
-			ai.respawnRecoverTimer = 20; // sets the lookahead value low for this number of iterations after respawning (helps with 'resetting' steering)
+			ai.respawnRecoverTimer = 10.0f; // sets the lookahead value low for this recovery time
 			ai.lookAheadSteps = 1;
 			ai.currentPosIdx = lapProg.lastCheckpointIdx;
 			ai.lastPosIdx = ai.currentPosIdx - 1;

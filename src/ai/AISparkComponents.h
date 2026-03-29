@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "world/CurveLoader.h"
+#include "world/Clock.cpp"
 
 // FSM states for AI sparks
 // NOTE: no longer used (left in for debugging)
@@ -35,7 +36,8 @@ struct AIController {
 	float boostAtkTimer = 0.0f;
 	float dodgeTimer = 0.0f;
 	float stillTimer = 0.0f; // counts while ai is not moving
+	float respawnRecoverTimer = 0.0f;
 	int lastPosIdx = 0;
-	int respawnRecoverTimer = 0;
+	
 };
 
