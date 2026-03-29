@@ -260,12 +260,20 @@ void LapSystem::update(GameState& game) {
 	for (auto& entity : entities) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
+		SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
 
 		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
 
-		// Use to check what path we're on
-		float distToC1 = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos); //main path
-		float distToC2 = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos); //healing path
+		// Use to check what path we're on only if not in the air (falling)
+		if (spark.isGrounded) {
+			float distToC1 = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos); //main path
+			float distToC2 = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos); //healing path
+
+			if (distToC1 <= distToC2) {
+				spark.path = pFAST;
+			}
+			else spark.path = pHEAL;
+		}
 		
 		// use to compute the track forward direction at this checkpoint used for respawning
 			// use the vector from this checkpoint to the next one
@@ -275,7 +283,7 @@ void LapSystem::update(GameState& game) {
 		}
 		glm::vec3 dir;
 
-		if (distToC1 <= distToC2) {
+		if (spark.path = pFAST) {
 			// on main path
 			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].first;
 			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos);

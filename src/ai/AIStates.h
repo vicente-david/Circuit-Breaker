@@ -19,7 +19,7 @@ public:
 	virtual void run(AIDriveContext& ctx) {};
 	virtual std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) { return { NONE, glm::vec3(0.f) }; };
 	
-	void checkRoute(AIController& ai);
+	void checkRoute(AIController& ai, SparkData& spark);
 	std::unique_ptr<TrackCurve> path;
 private:
 

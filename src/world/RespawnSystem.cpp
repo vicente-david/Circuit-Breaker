@@ -39,12 +39,23 @@ void RespawnSystem::update(GameState& game) {
 		// if the entity has an ai controller component, reset its understanding of where it is on the track
 		if (game.coordinator->hasComponent<AIController>(entity)) {
 			AIController& ai = game.coordinator->getComponent<AIController>(entity);
-			ai.currentPosIdx = lapProg.lastCheckpointIdx;
-			ai.lastPosIdx = lapProg.lastCheckpointIdx - 1;
+			SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
+			
+			ai.respawnRecoverTimer = 20; // sets the lookahead value low for this number of iterations after respawning (helps with 'resetting' steering)
 			ai.lookAheadSteps = 1;
-			ai.targetIdx = (ai.currentPosIdx + ai.lookAheadSteps) % ai.route.size();
-			ai.respawnRecoverTimer = 5;
+			ai.currentPosIdx = lapProg.lastCheckpointIdx;
+			ai.lastPosIdx = ai.currentPosIdx - 1;
 
+			// if the position at the last checkpoint index on the route the ai is currently on is NOT the same as the checkpoint respawned at,
+			// override what path the ai thinks its on
+			if (ai.route.at(lapProg.lastCheckpointIdx) != lapProg.lastCheckpointPos) {
+				dbug::log("AIPATH", 1, "RespawnSys detects wrong path for %s.", spark.mVehicleName.c_str());
+				// force the desired path to switch
+				ai.routeID = static_cast<PathID>((static_cast<int>(ai.routeID) + 1) % 2);
+				int i = static_cast<int>(ai.routeID);
+				ai.route = paths[i].curvePoints;
+				ai.angles = paths[i].curvatures;
+			}
 		}
 
 		// compute the respawn rotation so the vehicle faces along the track
@@ -74,4 +85,8 @@ void RespawnSystem::update(GameState& game) {
 		eTransform.pos = respawnPos;
 		sControls.reset = false; // so AI doesn't get stuck in a loop
 	}
+}
+
+void RespawnSystem::setPaths(std::vector<TrackCurve>& paths) {
+	this->paths = paths;
 }

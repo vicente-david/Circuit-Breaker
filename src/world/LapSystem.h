@@ -7,6 +7,7 @@
 #include "../ecs/Component.h"
 #include "../GameState.h"
 #include "CurveLoader.h"
+#include "vehicles/SparkComponents.h"
 #include <glm/gtx/projection.hpp>
 
 
@@ -23,6 +24,7 @@ struct LapCounter {
 	int lastCheckpointIdx = 0; // curve index of the position of the last checkpoint
 	bool isPlayer = false;
 	float distToCheckpoint = 0.0f; // used by the leaderboard system to decide who's closest to the next checkpoint
+	
 };
 
 
@@ -33,18 +35,16 @@ public:
 	void generateCheckpoints(const std::vector<TrackCurve> paths); // stores the checkpoints internally
 	void update(GameState& game); // does the logic, i feel like it doesn't have to be every frame
 
-
-
+	
 private:
 	int nearestCheckpoints(LapCounter& lapProg); // find the next checkpoints to test for
 
 	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	
-	std::vector<std::pair<glm::vec3, glm::vec3>> checkPoints; // checkpoint has position on main path and position on 'heal' path
 	std::vector<int> checkpointIdx;
 	int checkpointPlacement = 10; // every x amount of points along the track, place 1 checkpoint
-
+	std::vector<std::pair<glm::vec3, glm::vec3>> checkPoints; // checkpoint has position on main path and position on 'heal' path
 	std::vector<TrackCurve> trackPoints; // vector of all track points
 	std::vector<float> trackDistances; // tracks cumulative distance along the track (same order as the trackPoints)
 	float trackDistance; // length of the track curve

@@ -175,6 +175,7 @@ void Game::initializeTrack() {
 	}
 	lapSys->generateCheckpoints(trackPaths);
 	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
+	respawnSys->setPaths(trackPaths);
 
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, 1.0f, -15.0f));

@@ -5,6 +5,7 @@
 #include "audio/AudioEngine.h"
 #include "audio/Sound.h"
 #include "physics/CollisionData.h"
+#include "world/CurveLoader.h"
 
 using namespace snippetvehicle;
 
@@ -68,6 +69,8 @@ struct SparkData {
 	bool isBoosting = false;
 	bool isDead = false;
 	bool isGrounded = false;
+
+	PathID path = pFAST;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;

@@ -26,6 +26,7 @@ int main() {
 	dbug::logIgnore("AUDIO");
 	dbug::logIgnore("REND");
 	dbug::logIgnore("LAP");
+	//dbug::logIgnore("AIPATH");
 	dbug::loggerInit();
 	
 	Game game = Game();

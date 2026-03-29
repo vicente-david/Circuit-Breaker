@@ -43,11 +43,13 @@ void AIControllerSys::update(GameState& game) {
 		else if (ai.stillTimer > 0.0f) ai.stillTimer -= 0.5f;
 		if (ai.stillTimer > 4.f) {
 			dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
+			// TODO: do something here
 		}
 		// Adjust lookahead target based on speed
 		if (ai.respawnRecoverTimer > 0) {
 			// respawn recovery
 			ai.lookAheadSteps = 1;
+			dbug::log("AIPATH", 0, "[%s] respawn recovery: %d, steering: %.3f", spark.mVehicleName.c_str(), ai.respawnRecoverTimer, controls.steering);
 			ai.respawnRecoverTimer -= 1;
 		}
 		else if (spark.speed < 16.0f)
@@ -108,3 +110,8 @@ void AIControllerSys::setStatePaths(std::vector<TrackCurve>& paths) {
 	overtakeState->path = std::make_unique<TrackCurve>(paths[0]);
 	return;
 }
+
+//std::shared_ptr<std::vector<TrackCurve>> pPaths = std::make_shared<std::vector<TrackCurve>>(paths);
+//defenseState->paths = pPaths;
+//maintainState->paths = pPaths;
+//overtakeState->paths = pPaths;
