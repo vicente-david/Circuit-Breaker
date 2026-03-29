@@ -14,6 +14,7 @@
 #include "world/Track.h"
 #include "InputSystem.h"
 #include <memory>
+#include "world/Clock.cpp"
 
 class Game{
 
@@ -92,6 +93,7 @@ public:
 	// more
 	const double minFps = 30.0;
 	double currentTime = glfwGetTime();
+	double frameTime = 0.0;
 	double accumulator = 0.0;
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
@@ -100,5 +102,9 @@ public:
 	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
+
+	// race countdown
+	Clock raceCountdown{ 3.0 };
+	int lastPrintedSecond = -1;
 	//Track activeTrack;
 };

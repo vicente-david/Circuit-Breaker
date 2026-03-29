@@ -17,13 +17,14 @@ int main() {
 	dbug::minLogSeverity = 0;
 	dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	//dbug::logIgnore("AI");
+	dbug::logIgnore("AI");
+	dbug::logIgnore("PHYS");
 	dbug::logIgnore("LEADERBOARD");
 	// dbug::logListType = dbug::WHITE_LIST;
 	 dbug::logIgnore("ECS");
 	 dbug::logIgnore("GEN");
 	 dbug::logIgnore("AUDIO");
-	dbug::logListType = dbug::WHITE_LIST;
+	//dbug::logListType = dbug::WHITE_LIST;
 
 	dbug::loggerInit();
 	
