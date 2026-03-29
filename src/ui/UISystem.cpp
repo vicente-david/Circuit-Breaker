@@ -480,7 +480,10 @@ void UISystem::updatePlaceCounter(Entity& p) {
 	Leaderboard& lb = coordinator->getComponent<Leaderboard>(p);
 	int placement = 0;
 	for (int i = 0; i < lb.standings.size(); i++) {
-		if (coordinator->getComponent<SparkData>(p).mVehicleName == lb.standings[i]) placement = i;
+		if (coordinator->getComponent<SparkData>(p).mVehicleName == lb.standings[i]) {
+			placement = i;
+			break;
+		}
 	}
 
 	u1.text = "Position: " + std::to_string(placement+1);

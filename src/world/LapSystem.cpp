@@ -196,14 +196,18 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 
 	for (int i = startIndex; i < endIndex-1; i++) {
 		std::pair<glm::vec3, float> result = closestPoint(trackPoints[0].curvePoints[i], trackPoints[0].curvePoints[(i+1) % trackSize], eTransform.pos);
-		if (result.second < 0.0 || result.second > 1.0) continue; // just means the player position is not closest to this segment
+		
+		// clamp t to [0,1] so we always find the nearest point on the segment (including endpoints)
+		// without this, junctions between segments can cause closestTrackPoint to get stuck
+		float t = glm::clamp(result.second, 0.0f, 1.0f);
+		glm::vec3 pointOnSegment = trackPoints[0].curvePoints[i] + t * (trackPoints[0].curvePoints[(i + 1) % trackSize] - trackPoints[0].curvePoints[i]);
 
 		// if the player position is closest to this segment, then update both progress and closest segment
-		float newDistSquared = glm::dot(result.first-eTransform.pos, result.first - eTransform.pos);// player distance to projected point
+		float newDistSquared = glm::dot(pointOnSegment - eTransform.pos, pointOnSegment - eTransform.pos);// player distance to projected point
 
 		if (newDistSquared < closestDistSquared) {
 			newClosestIndex = i;
-			newProg = trackDistances[i] + result.second * (trackDistances[(i + 1) % trackSize] - trackDistances[i]);
+			newProg = trackDistances[i] + t * (trackDistances[(i + 1) % trackSize] - trackDistances[i]);
 			closestDistSquared = newDistSquared;
 		}
 
@@ -261,7 +265,9 @@ void LapSystem::update(GameState& game) {
 
 		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
 		lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
-		lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID] - eTransform.pos);
+		int nextCheckpointID = (lapProg.lastCheckpointID + 1) % checkPoints.size();
+		lapProg.distToCheckpoint = glm::length(checkPoints[nextCheckpointID] - eTransform.pos);
+
 
 		// compute the track forward direction at this checkpoint used for respawning
 			// use the vector from this checkpoint to the next one

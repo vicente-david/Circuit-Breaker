@@ -19,7 +19,7 @@ int main() {
 	dbug::logIgnore("GAME");
 	dbug::logIgnore("AI");
 	dbug::logIgnore("PHYS");
-	dbug::logIgnore("LEADERBOARD");
+	//dbug::logIgnore("LEADERBOARD");
 	// dbug::logListType = dbug::WHITE_LIST;
 	 dbug::logIgnore("ECS");
 	 dbug::logIgnore("GEN");

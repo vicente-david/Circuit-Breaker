@@ -26,7 +26,7 @@ void LeaderboardSystem::update(GameState& game) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		SparkData& sparkData = game.coordinator->getComponent<SparkData>(entity);
 		const std::string& sparkName = sparkData.mVehicleName;
-		float score = (lapProg.currentLap * 100000.0f) + lapProg.progress - lapProg.distToCheckpoint; // 100000.0f to ensure that lap count takes priority
+		float score = lapProg.progress; // 100000.0f to ensure that lap count takes priority
 		scores.push_back({score, sparkName});
 	}
 
