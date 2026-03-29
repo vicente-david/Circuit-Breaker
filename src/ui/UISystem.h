@@ -40,6 +40,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "../GameState.h"
 #include <algorithm>
+#include "../world/LeaderboardSystem.h"
 
 
 // positions of the triangle to render the quad
@@ -52,6 +53,8 @@ struct UIPositions {
 struct UIScreen {
 	std::string name; // name of the ui screen
 	std::vector<Entity> UIElements; // what elements make it up
+
+	std::vector<Entity> Buttons; // list of buttons that get animated (have an animatable component)
 };
 
 // contains all the data being passed to the uivbo
@@ -64,6 +67,14 @@ struct UIVertex {
 	glm::vec3 position;
 	glm::vec3 color;
 	float interpretFlag;
+};
+
+// same thing as above but used for mainly animated components
+struct UIAnimVertex {
+	glm::vec3 position;
+	glm::vec3 color;
+	float interpretFlag;
+	glm::vec3 hLightColor;
 };
 
 
@@ -79,6 +90,8 @@ public:
 	void update();
 	void recalcMat();
 	void updateUIElement(Entity& e); // renders UI using stored colors
+	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
+	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
 
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
@@ -103,7 +116,7 @@ public:
 	void createMainMenu(); // create the main menu and push it to the hash map
 	void createPauseMenu(); // create the pause menu and push it to hashmap
 	void createSettingsMenu(); // create the settings menu and push it to hashmap
-	void createStandingsScreen(); // create the standings menu and push it to hashmap
+	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap
 
 	// persistent ui elements (elements that change every frame)
@@ -111,11 +124,12 @@ public:
 	void updateFPSCounter();
 	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
+	
+	void selectedEntities(); // mainly used for iterating through all visible screens and toggling the highlight flag
 
 	unsigned int uiVAO, uiVBO, textVBO, textVAO;
 
 	std::map<char, Character> textFont;
-	glm::mat4 textMat;
 
 	glm::mat4 uiMat;
 
@@ -136,12 +150,15 @@ public:
 
 	std::shared_ptr<Coordinator> coordinator;
 
+	// animated component stuff
+
+	unsigned int hlightVAO, hlightVBO;
+	std::unique_ptr<ShaderProgram> hlightShader;
 	// --- Button Selection ---
 	int selectedButton = 0; // index of currently selected button (0-based, buttons only, excludes background. sliders TBD)
 
 	// returns the number of selectable buttons on the top screen (excludes the background element at index 0)
 	int getButtonCount();
-	void buttonHighlighting(Entity& e, float& shaderFlag); // does some checks to see if a button can be highlighted
 
 	// returns the name of the top screen on the stack (empty string if no screens)
 	std::string getTopScreenName();
@@ -158,6 +175,8 @@ private:
 
 	std::vector<UIScreen> screenStack; // pretend this is a stack
 	std::vector<UIVertex> uiData;
+	std::vector<UIAnimVertex> uiAnimData;
+
 	// we iterate forwards since last element gets drawn on top
 
 	// this could be useful

@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "AllSystem.h"
 #include "physics/CollisionData.h"
+#include <cmath>
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
@@ -58,6 +59,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
+	coordinator->registerComponent<Animatable>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -186,7 +188,9 @@ void Game::initializeTrack() {
 	
 
 
-
+	// Start countdown
+	raceCountdown.start();
+	lastPrintedSecond = -1;
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
@@ -291,6 +295,7 @@ void Game::initializeUI() {
 
 	uiSys->addScreen("fpsCounter");
 	uiSys->addScreen("mainMenu");
+	uiSys->selectedEntities();
 
 	// give gameState access to uiSystem for controller-driven UI navigation
 	gameState.uiSystem = uiSys;
@@ -381,6 +386,7 @@ void Game::stateTransition() {
 			// someone has finished the race
 		case (END):
 			uiSys->clearAllScreens();
+			uiSys->createStandingsScreen(coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
 			break;
 		}
@@ -402,7 +408,9 @@ void Game::update() {
 
 	// controllerSys handles both vehicle controls AND UI navigation
 	// UI navigation modifies game.uiActions directly (confirm, goBack, menuControl, etc.)
-	controllerSys->update(gameState);
+	// skip vehicle controls during countdown so the player can't move early
+	if (!raceCountdown.activeTimer())
+		controllerSys->update(gameState);
 
 	// --- State transition from menuControl ---
 	// Read back uiActions after controllerSys may have modified them
@@ -417,18 +425,34 @@ void Game::update() {
 
 	updateTime();
 
-
 	// do our updates only if in game
 	if (gameState.currentState == GAMEPLAY) {
 
+		// physics and camera always run so vehicles settle on the track
 		updatePhysics();
-		// AI
-		aiControllerSys->update(gameState);
-		// after physics update
-		lapSys->update(gameState);
-		uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
-		respawnSys->update(gameState);
-		leaderboardSys->update(gameState);
+
+		// race countdown (runs once per frame)
+		if (raceCountdown.activeTimer()) {
+			raceCountdown.update(frameTime);
+			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
+			if (secondsLeft != lastPrintedSecond) { // prevents output console spam
+				lastPrintedSecond = secondsLeft;
+				std::cout << "RACE START IN: " << secondsLeft << "\n";
+			}
+			if (raceCountdown.completedTimer()) {
+				raceCountdown.resetTimer();
+				std::cout << "GO!\n";
+			}
+		}
+		else {
+			// countdown finished — race is live
+			aiControllerSys->update(gameState);
+			// after physics update
+			lapSys->update(gameState);
+			uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
+			respawnSys->update(gameState);
+			leaderboardSys->update(gameState);
+		}
 	}
 
 	updateFPS();
@@ -440,7 +464,7 @@ void Game::update() {
 void Game::updateTime() {
 	// time
 	double newTime = glfwGetTime();
-	double frameTime = newTime - currentTime;
+	frameTime = newTime - currentTime;
 	currentTime = newTime;
 	accumulator += frameTime;
 	accumulator = std::min(accumulator, 1 / minFps);

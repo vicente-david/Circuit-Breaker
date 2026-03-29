@@ -21,25 +21,10 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+	hlightShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
-// will only need to modify the magnitude as of right now
-// shader flag is guaranteed to be either 1.0 or -1.0
-// a highlight as of right now is just doubling that number if 
-// a button is highlighted
-void UISystem::buttonHighlighting(Entity& e, float& shaderFlag) {
-	// check if button exists
-	if (getButtonCount() == 0) return;
-
-	if (selectedButton >= screenStack.back().UIElements.size() - 1) {
-		// there cannot exist a highlight with this input
-		return;  
-	}
-
-	// otherwise 
-	// double check if the entity is the same one as the selected button
-	if (e == screenStack.back().UIElements[1 + selectedButton]) shaderFlag *= 2.0f;
-}
 
 void UISystem::updateUIElement(Entity& e) {
 	uiShader->use();
@@ -58,8 +43,7 @@ void UISystem::updateUIElement(Entity& e) {
 			UIVertex v1;
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
-			v1.interpretFlag = -1.0f; // -1 (see ui.frag shader for why)
-			buttonHighlighting(e, v1.interpretFlag);
+			v1.interpretFlag = 0.0f;
 			uiData.push_back(v1);
 		}
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
@@ -74,7 +58,6 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.position = positions.points[i];
 			v1.color = u1.colors[i];
 			v1.interpretFlag = 1.0f;
-			buttonHighlighting(e, v1.interpretFlag);
 			uiData.push_back(v1);
 		}
 		glActiveTexture(GL_TEXTURE0);
@@ -90,6 +73,103 @@ void UISystem::updateUIElement(Entity& e) {
 		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
 	}
 
+}
+
+// we only need to check the topmost screen stack items
+// for right now only buttons can be highlighted
+void UISystem::selectedEntities() {
+	// return if screen stack is empty
+	if (screenStack.empty()) return; 
+
+	// if there exists a button
+	if (getButtonCount() > 0) {
+		// unhighlight all non selected buttons
+		int i = 0;
+		for (Entity& e : screenStack.back().UIElements) {
+
+			if (!coordinator->hasComponent<Animatable>(e)) continue;
+
+			if (i == selectedButton) {
+				coordinator->getComponent<Animatable>(e).isSelected = true;
+			}
+			else {
+				coordinator->getComponent<Animatable>(e).isSelected = false;
+			}
+			i++;
+		}
+	}
+
+}
+
+// basically the same as ui normal rendering except slightly different data
+void UISystem::updateButtonUIElement(Entity& e) {
+	hlightShader->use();
+
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	uiAnimData.clear();
+	glBindVertexArray(hlightVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, hlightVBO);
+
+	if (u1.hasBackgroundColor) {
+		// if it has a bacground color 
+		// then push the position, and the color
+		UIPositions positions = calculateAnchorPositions(u1);
+		// 6 points in a triangle based quad
+		for (int i = 0; i < 6; i++) {
+			UIAnimVertex v1;
+			v1.position = positions.points[i];
+			v1.color = u1.colors[i];
+			v1.interpretFlag = 0.0f;
+			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
+			uiAnimData.push_back(v1);
+		}
+		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
+	}
+	else if (!u1.path.empty()) {
+		// render with texture
+		UIPositions positions = calculateAnchorPositions(u1);
+		// 6 points in a triangle based quad
+		for (int i = 0; i < 6; i++) {
+			UIAnimVertex v1;
+			v1.position = positions.points[i];
+			v1.color = u1.colors[i];
+			v1.interpretFlag = 1.0f;
+			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
+			uiAnimData.push_back(v1);
+		}
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
+		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
+
+	}
+
+	if (!u1.text.empty()) {
+		textProg->use();
+		textPositions p1 = calculateTextContainer(u1);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+	}
+
+}
+
+// assume everything is updated already
+void UISystem::updateAnimatedUIElement(Entity& e) {
+	Animatable& animComp = coordinator->getComponent<Animatable>(e);
+	switch (animComp.type) {
+	case(ANIM_BUTTON):
+		// if not selected run the normal uielement shader 
+		if (!animComp.isSelected) {
+			updateUIElement(e);
+		} else {
+			updateButtonUIElement(e);
+		}
+		break;
+	case(ANIM_HEALTHBAR):
+		break;
+	case(ANIM_SPEEDOMETER):
+		break;
+	}
 }
 
 
@@ -111,7 +191,16 @@ void UISystem::update() {
 	// for all screens render the containers and the text
 	for (UIScreen& u1 : screenStack) {
 		for (Entity& e : u1.UIElements) {
-			updateUIElement(e);
+			// two cases
+			// static ui 
+			// animated ui
+
+			// if does not have the animatable component, do normal ui updates
+			if (!coordinator->hasComponent<Animatable>(e))
+				updateUIElement(e);
+			else {
+				updateAnimatedUIElement(e);
+			}
 		}
 	}
 
@@ -228,12 +317,44 @@ void UISystem::initializeRenderingParams() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	textFont = initFont("assets/SquareAntiqua-Book.ttf");
-	textMat = glm::ortho(0.0f, static_cast<float>(*SCR_WIDTH), 0.0f,
-		static_cast<float>(*SCR_HEIGHT));
+	textFont = initFont("assets/PixelifySans-VariableFont_wght.ttf");
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-		GL_FALSE, glm::value_ptr(textMat));
+		GL_FALSE, glm::value_ptr(uiMat));
+
+
+	// highlight shadder stuff
+	hlightShader = std::make_unique<ShaderProgram>("shaders/uiHighlight.vert", "shaders/uiHighlight.frag");
+
+	hlightShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	glGenVertexArrays(1,  &hlightVAO);
+	glBindVertexArray(hlightVAO);
+
+	glGenBuffers(1, &hlightVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, hlightVBO);
+
+
+	// 10 floats, 6 things for a quad
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 10 * 6, NULL, GL_DYNAMIC_DRAW);
+
+	// position, col/texcoord, flag, (additive) highlight color,
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(6 * sizeof(float)));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 10 * sizeof(float), (void*)(7 * sizeof(float)));
+
+
+	// enable all
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+	glEnableVertexAttribArray(3);
+
+	// vao layout is vec3, vec3, float, vec3
+
+
 
 }
 
@@ -272,6 +393,7 @@ std::string UISystem::getTopScreenName() {
 
 void UISystem::resetSelection() {
 	selectedButton = 0;
+	selectedEntities(); // update selected components
 }
 // ---
 void UISystem::screenInitialization() {
@@ -279,7 +401,7 @@ void UISystem::screenInitialization() {
 	createMainMenu();
 	createPauseMenu();
 	createSettingsMenu();
-	createStandingsScreen();
+	//createStandingsScreen(); initialized seperately)
 	createRacingHUD();
 	createLapCounter();
 }
@@ -375,12 +497,15 @@ void UISystem::createMainMenu() {
 
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, startGameButton); // button 0
+	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, settingsButton); // button 1
+	coordinator->addComponent(e3, Animatable());
 
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, exitButton); // button 2
+	coordinator->addComponent(e4, Animatable());
 
 	UIScreen mainMenu;
 	mainMenu.name = "mainMenu";
@@ -434,12 +559,15 @@ void UISystem::createPauseMenu() {
 
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, resumeButton); // button 0
+	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, settingsButton); // button 1
+	coordinator->addComponent(e3, Animatable());
 
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, exitButton); // button 2
+	coordinator->addComponent(e4, Animatable());
 
 
 	UIScreen pauseMenu;
@@ -516,21 +644,27 @@ void UISystem::createSettingsMenu() {
 
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, easyButton); // button 0
+	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, mediumButton); // button 1
+	coordinator->addComponent(e3, Animatable());
 
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, hardButton); // button 2
+	coordinator->addComponent(e4, Animatable());
 
 	Entity e5 = coordinator->createEntity();
 	coordinator->addComponent(e5, decorationsButton); // button 3
+	coordinator->addComponent(e5, Animatable());
 
 	Entity e6 = coordinator->createEntity();
 	coordinator->addComponent(e6, particlesButton); // button 4
+	coordinator->addComponent(e6, Animatable());
 
 	Entity e7 = coordinator->createEntity();
 	coordinator->addComponent(e7, menuButton); // button 5
+	coordinator->addComponent(e7, Animatable());
 
 
 	UIScreen settingsMenu;
@@ -547,7 +681,7 @@ void UISystem::createSettingsMenu() {
 	nameToScreen["settingsMenu"] = settingsMenu;
 }
 
-void UISystem::createStandingsScreen() {
+void UISystem::createStandingsScreen(Leaderboard& lb) {
 	UIElement menu1;
 	// default anchors are whole screen (0,0,1,1)
 
@@ -559,62 +693,27 @@ void UISystem::createStandingsScreen() {
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
+	UIScreen standingsScreen;
+	standingsScreen.name = "standingsScreen";
+	standingsScreen.UIElements.push_back(e1);
+
 	// --- POSITIONS FIELDS ---
-	UIElement firstPlace;
-	firstPlace.hasBackgroundColor = false;
-	firstPlace.path = "assets/textures/ui/standings/standings_1st.png";
-	firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
-	firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+	for (int i = 0; i < lb.standings.size(); i++) {
+		UIElement firstPlace;
+		firstPlace.hasBackgroundColor = false;
+		firstPlace.path = "assets/textures/ui/standings/standings_position.png";
+		firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
+		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
+		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
+		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.standings[i];
+		firstPlace.textAlignmentY = CENTER;
+		firstPlace.textAlignmentX = LEFT;
+		firstPlace.textColor = glm::vec3(1.0f);
+		Entity e2 = coordinator->createEntity();
+		coordinator->addComponent<UIElement>(e2, firstPlace);
+		standingsScreen.UIElements.push_back(e2);
+	}
 
-	UIElement secondPlace;
-	secondPlace.hasBackgroundColor = false;
-	secondPlace.path = "assets/textures/ui/standings/standings_2nd.png";
-	secondPlace.textureID = GenerateTexture(secondPlace.path.c_str(), false);
-	secondPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	secondPlace.anchorOffsets = glm::vec4(0, 66, 0, 66);
-
-	UIElement thirdPlace;
-	thirdPlace.hasBackgroundColor = false;
-	thirdPlace.path = "assets/textures/ui/standings/standings_3rd.png";
-	thirdPlace.textureID = GenerateTexture(thirdPlace.path.c_str(), false);
-	thirdPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	thirdPlace.anchorOffsets = glm::vec4(0, 66 * 2, 0, 66 * 2);
-
-	UIElement fourthPlace;
-	fourthPlace.hasBackgroundColor = false;
-	fourthPlace.path = "assets/textures/ui/standings/standings_4th.png";
-	fourthPlace.textureID = GenerateTexture(fourthPlace.path.c_str(), false);
-	fourthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	fourthPlace.anchorOffsets = glm::vec4(0, 66 * 3, 0, 66 * 3);
-
-	UIElement fifthPlace;
-	fifthPlace.hasBackgroundColor = false;
-	fifthPlace.path = "assets/textures/ui/standings/standings_5th.png";
-	fifthPlace.textureID = GenerateTexture(fifthPlace.path.c_str(), false);
-	fifthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	fifthPlace.anchorOffsets = glm::vec4(0, 66 * 4, 0, 66 * 4);
-
-	UIElement sixthPlace;
-	sixthPlace.hasBackgroundColor = false;
-	sixthPlace.path = "assets/textures/ui/standings/standings_6th.png";
-	sixthPlace.textureID = GenerateTexture(sixthPlace.path.c_str(), false);
-	sixthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	sixthPlace.anchorOffsets = glm::vec4(0, 66 * 5, 0, 66 * 5);
-
-	UIElement seventhPlace;
-	seventhPlace.hasBackgroundColor = false;
-	seventhPlace.path = "assets/textures/ui/standings/standings_7th.png";
-	seventhPlace.textureID = GenerateTexture(seventhPlace.path.c_str(), false);
-	seventhPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	seventhPlace.anchorOffsets = glm::vec4(0, 66 * 6, 0, 66 * 6);
-
-	UIElement eighthPlace;
-	eighthPlace.hasBackgroundColor = false;
-	eighthPlace.path = "assets/textures/ui/standings/standings_8th.png";
-	eighthPlace.textureID = GenerateTexture(eighthPlace.path.c_str(), false);
-	eighthPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-	eighthPlace.anchorOffsets = glm::vec4(0, 66 * 7, 0, 66 * 7);
-	// --- ---
 
 	// --- BUTTONS ---
 
@@ -634,48 +733,13 @@ void UISystem::createStandingsScreen() {
 	restartButton.anchorOffsets = glm::vec4(226, 0, 226, 0);
 	// --- ---
 
-	Entity e2 = coordinator->createEntity();
-	coordinator->addComponent(e2, firstPlace);
-
-	Entity e3 = coordinator->createEntity();
-	coordinator->addComponent(e3, secondPlace);
-
-	Entity e4 = coordinator->createEntity();
-	coordinator->addComponent(e4, thirdPlace);
-
-	Entity e5 = coordinator->createEntity();
-	coordinator->addComponent(e5, fourthPlace);
-
-	Entity e6 = coordinator->createEntity();
-	coordinator->addComponent(e6, fifthPlace);
-
-	Entity e7 = coordinator->createEntity();
-	coordinator->addComponent(e7, sixthPlace);
-
-	Entity e8 = coordinator->createEntity();
-	coordinator->addComponent(e8, seventhPlace);
-
-	Entity e9 = coordinator->createEntity();
-	coordinator->addComponent(e9, eighthPlace);
-
 	Entity e10 = coordinator->createEntity();
 	coordinator->addComponent(e10, menuButton);
 
 	Entity e11 = coordinator->createEntity();
 	coordinator->addComponent(e11, restartButton);
 
-	UIScreen standingsScreen;
-	standingsScreen.name = "standingsScreen";
-	standingsScreen.UIElements.push_back(e1);
-
-	standingsScreen.UIElements.push_back(e2);
-	standingsScreen.UIElements.push_back(e3);
-	standingsScreen.UIElements.push_back(e4);
-	standingsScreen.UIElements.push_back(e5);
-	standingsScreen.UIElements.push_back(e6);
-	standingsScreen.UIElements.push_back(e7);
-	standingsScreen.UIElements.push_back(e8);
-	standingsScreen.UIElements.push_back(e9);
+	
 	standingsScreen.UIElements.push_back(e10);
 	standingsScreen.UIElements.push_back(e11);
 
