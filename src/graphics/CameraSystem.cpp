@@ -4,7 +4,9 @@
 #include "PxRigidBody.h"
 #include "debugUtils/Logger.h"
 #include "graphics/CameraComp.h"
+#include <cstdio>
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/geometric.hpp>
 
 std::shared_ptr<CameraSystem>
 CameraSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
@@ -30,17 +32,12 @@ void CameraSystem::update(GameState &game, float dt) {
 		// save the starting position so we can calculate velocity later
 		auto startLocation = camData.position;
 
-		// move camera to where it's proper position/orientation
-
-		// camData.yaw = (1 - camData.angleEasing) * camData.yaw +
-		// 			  camData.angleEasing * (game.inputActions.camXRot * 90);
-		// camData.pitch = (1 - camData.angleEasing) * camData.pitch +
-		// 			  camData.angleEasing * (30+game.inputActions.camXRot * 30);
-
-		float targetYaw = game.inputActions.camXRot * 90;
+		// lerp yaw
+		float targetYaw = game.inputActions.camXRot * 75;
 		camData.yaw = (1 - camData.yawEasing) * camData.yaw +
 					  camData.yawEasing * targetYaw;
 
+		// this can be used to move linearly, but i don't think it looks as good
 		// if (std::abs(camData.yaw) < std::abs(targetYaw)) {
 		// 	camData.yaw = targetYaw;
 		// } else {
@@ -85,6 +82,9 @@ void CameraSystem::update(GameState &game, float dt) {
 				  camData.position.y, camData.position.z);
 
 		auto camVel = (camData.position - startLocation) * (1.0f / dt);
+		camData.fov = 45.f + glm::length(camVel)*0.5;
+		camData.targetDist = 5.0 -( glm::length(camVel)*0.04f);
+		printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
 
 		// update the audio listner's frame and velocity for 3d audio
 		game.audio->updateListenerVel(camVel.x, camVel.y, camVel.z);

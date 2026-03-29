@@ -20,15 +20,16 @@ struct CameraComp {
 	// values for finding movement and stuff
 
 	// how far away from the car to be
-	float targetDist = 4.5;
+	float targetDist = 4;
 	// angle of the camera from the forward direction of the car (degrees)
 	float pitch = 45;
 	float yaw = 0;
 	// how far ahead of the car to look
-	float lookAheadDist = 2;
+	float lookAheadDist = 3;
 	// how fast to go to target position [0,1]
-	float posEasing = 0.15;
-	float yawEasing = 0.15;
+	float posEasing = 0.2;
+	float yawEasing = posEasing;
+
 
 	// float angleSpeed = 90;
 
