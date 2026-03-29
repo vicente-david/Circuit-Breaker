@@ -14,16 +14,16 @@ struct Clock {
 	}
 
 	void update(double dt) {
-		if (remaining < 0)
+		if (remaining > 0)
 			remaining -= dt;
 	}
 
-	bool activeTimer() {
+	bool activeTimer() const {
 		// returns a boolean True if there is still an active timer, else False.
 		return remaining > 0;
 	}
 
-	bool completedTimer() {
+	bool completedTimer() const {
 		// returns a boolean True if the timer is completed
 		return remaining <= 0;
 	}
