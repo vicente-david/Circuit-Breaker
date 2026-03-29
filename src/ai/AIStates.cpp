@@ -99,6 +99,23 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 	auto& spark = ctx.spark;
 	auto& body = ctx.body;
 	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
+
+
+	// Test side directions (left and right)
+	Direction dir = SIDE_L;
+	std::pair<bool, glm::vec3> resultSide = lookSide(transform, body, dir);
+	if (resultSide.first) {
+		ai.state = ATTACKING;
+		result = { SIDE_L, resultSide.second };
+		return result;
+	}
+	dir = SIDE_R;
+	resultSide = lookSide(transform, body, dir);
+	if (resultSide.first) {
+		ai.state = ATTACKING;
+		result = { SIDE_R, resultSide.second };
+		return result;
+	}
 	// Only check forward direction if spark has boost
 	if (spark.boost > 0.0f) {
 		std::pair<bool, glm::vec3> resultFwd = lookFwd(transform, body);
@@ -110,24 +127,6 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 		}
 	}
 
-	// Test side directions (left and right)
-	else {
-		Direction dir = SIDE_L;
-		std::pair<bool, glm::vec3> resultSide = lookSide(transform, body, dir);
-		if (resultSide.first) {
-			ai.state = ATTACKING;
-			result = { SIDE_L, resultSide.second };
-			return result;
-		}
-
-		dir = SIDE_R;
-		resultSide = lookSide(transform, body, dir);
-		if (resultSide.first) {
-			ai.state = ATTACKING;
-			result = { SIDE_R, resultSide.second };
-			return result;
-		}
-	}
 
 	// No sweep returned with a hit
 	ai.state = DRIVING; // if ai in attacking state but can no longer see an enemy, switch to driving state
