@@ -404,6 +404,7 @@ void UISystem::screenInitialization() {
 	//createStandingsScreen(); initialized seperately)
 	createRacingHUD();
 	createLapCounter();
+	createPlaceCounter();
 }
 
 // Recall UIElement has the following fields
@@ -428,7 +429,7 @@ void UISystem::createFPSCounter() {
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
-	counter1.textAlignmentY = BOTTOM;
+	counter1.textAlignmentY = TOP;
 
 	counter1.hasBackgroundColor = false;
 
@@ -447,6 +448,42 @@ void UISystem::updateFPSCounter() {
 	Entity& e1 = nameToScreen["fpsCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "FPS: " + *fps;
+}
+
+void UISystem::createPlaceCounter() {
+	UIElement counter1;
+	counter1.text = "Position: " + std::to_string(0);
+	counter1.textScale = 1.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = RIGHT;
+	counter1.textAlignmentY = BOTTOM;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen placeCounter;
+	placeCounter.name = "placeCounter";
+	placeCounter.UIElements.push_back(e1);
+
+	nameToScreen["placeCounter"] = placeCounter;
+}
+
+
+// assume the player is being passed
+void UISystem::updatePlaceCounter(Entity& p) {
+	Entity& e1 = nameToScreen["placeCounter"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+
+	Leaderboard& lb = coordinator->getComponent<Leaderboard>(p);
+	int placement = 0;
+	for (int i = 0; i < lb.standings.size(); i++) {
+		if (coordinator->getComponent<SparkData>(p).mVehicleName == lb.standings[i]) placement = i;
+	}
+
+	u1.text = "Position: " + std::to_string(placement+1);
 }
 
 void UISystem::createMainMenu() {

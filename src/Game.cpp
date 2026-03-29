@@ -336,6 +336,7 @@ void Game::stateTransition() {
 			uiSys->popScreen();
 			initializeRace();
 			uiSys->addScreen("lapCounter");
+			uiSys->addScreen("placeCounter");
 			break;
 
 			// our likely next state is paused or game ended
@@ -350,6 +351,7 @@ void Game::stateTransition() {
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
+			uiSys->addScreen("placeCounter");
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
@@ -447,6 +449,7 @@ void Game::update() {
 			uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
 			respawnSys->update(gameState);
 			leaderboardSys->update(gameState);
+			uiSys->updatePlaceCounter(player);
 		}
 	}
 

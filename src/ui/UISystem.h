@@ -41,6 +41,7 @@
 #include "../GameState.h"
 #include <algorithm>
 #include "../world/LeaderboardSystem.h"
+#include "../vehicles/SparkComponents.h"
 
 
 // positions of the triangle to render the quad
@@ -124,6 +125,8 @@ public:
 	void updateFPSCounter();
 	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
+	void createPlaceCounter();
+	void updatePlaceCounter(Entity& player);
 	
 	void selectedEntities(); // mainly used for iterating through all visible screens and toggling the highlight flag
 
