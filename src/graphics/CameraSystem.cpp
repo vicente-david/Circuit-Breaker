@@ -82,8 +82,12 @@ void CameraSystem::update(GameState &game, float dt) {
 				  camData.position.y, camData.position.z);
 
 		auto camVel = (camData.position - startLocation) * (1.0f / dt);
-		camData.fov = 45.f + glm::length(camVel)*0.5;
-		camData.targetDist = 5.0 -( glm::length(camVel)*0.04f);
+		camData.fov = 45.f + glm::length(camVel) * 0.4;
+
+		// move the camera closer at faster speeds
+		// this makes the camera closer to the ground, and compensates for some
+		// of the fov changes
+		camData.targetDist = 5.0 - (glm::length(camVel) * 0.04f);
 		printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
 
 		// update the audio listner's frame and velocity for 3d audio
