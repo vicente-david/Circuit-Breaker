@@ -705,7 +705,7 @@ void UISystem::createStandingsScreen() {
 		firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
 		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
 		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
-		firstPlace.text = " " + std::to_string(i) + ".";
+		firstPlace.text = " " + std::to_string(i+1) + ".";
 		firstPlace.textAlignmentY = CENTER;
 		firstPlace.textAlignmentX = LEFT;
 		firstPlace.textColor = glm::vec3(1.0f);
