@@ -18,12 +18,12 @@ struct Clock {
 			remaining -= dt;
 	}
 
-	void activeTimer() {
+	bool activeTimer() {
 		// returns a boolean True if there is still an active timer, else False.
 		return remaining > 0;
 	}
 
-	void completedTimer() {
+	bool completedTimer() {
 		// returns a boolean True if the timer is completed
 		return remaining <= 0;
 	}
