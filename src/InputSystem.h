@@ -62,6 +62,7 @@ struct Actions {
 
 	bool reload = false;
 	float cameraReset = true;
+	bool lookBack = false;
 
 	// raw inputs
 	// controller inputs (raw input)
@@ -72,6 +73,7 @@ struct Actions {
 	// keyboard inputs (raw input)
 	bool keyboardForward = false; 
 	bool keyboardBackward = false;
+	bool keyboardLookBack = false;
 	
 	// action
 	float keyboardDir = 0.0;

@@ -32,7 +32,9 @@ void CameraSystem::update(GameState &game, float dt) {
 		// save the starting position so we can calculate velocity later
 		auto startLocation = camData.position;
 
-		// lerp yaw
+		camData.backwards = game.inputActions.lookBack;
+
+		// lerp the yaw
 		float targetYaw = game.inputActions.camXRot * 75;
 		camData.yaw = (1 - camData.yawEasing) * camData.yaw +
 					  camData.yawEasing * targetYaw;
@@ -82,12 +84,14 @@ void CameraSystem::update(GameState &game, float dt) {
 				  camData.position.y, camData.position.z);
 
 		auto camVel = (camData.position - startLocation) * (1.0f / dt);
-		camData.fov = 45.f + glm::length(camVel) * 0.4;
+		camData.fov = 45.f + glm::length(camVel) * 0.3;
+		camData.fov = std::min(100.f, camData.fov);
 
 		// move the camera closer at faster speeds
 		// this makes the camera closer to the ground, and compensates for some
 		// of the fov changes
-		camData.targetDist = 5.0 - (glm::length(camVel) * 0.04f);
+		camData.targetDist = 5.0 - (glm::length(camVel) * 0.03f);
+		camData.targetDist = std::max(0.f, camData.targetDist);
 		printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
 
 		// update the audio listner's frame and velocity for 3d audio

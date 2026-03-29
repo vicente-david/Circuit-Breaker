@@ -17,10 +17,12 @@ struct CameraComp {
 	float fov = 50;
 	glm::vec3 lookPos;
 
+	bool backwards = false;
+
 	// values for finding movement and stuff
 
 	// how far away from the car to be
-	float targetDist = 4;
+	float targetDist = 4.5;
 	// angle of the camera from the forward direction of the car (degrees)
 	float pitch = 45;
 	float yaw = 0;
@@ -30,7 +32,6 @@ struct CameraComp {
 	float posEasing = 0.2;
 	float yawEasing = posEasing;
 
-
 	// float angleSpeed = 90;
 
 	glm::mat4 GetViewMatrix() {
@@ -38,8 +39,19 @@ struct CameraComp {
 		// eye is where the camera is located
 		// front is where you're looking at
 		// up is up vector
-		// return glm::lookAt(position, carPosition - position, up);
+		if (backwards)
+			return backwardsMat();
+
 		return glm::lookAt(position, lookPos, up);
+	}
+	glm::mat4 backwardsMat() {
+		glm::vec3 newPos = lookPos + (lookPos-position)/4.f;
+		newPos.y = position.y;
+
+		glm::vec3 newLook = position;
+		newLook.y = lookPos.y;
+
+		return glm::lookAt(newPos, newLook, up);
 	}
 
 	// where camera wants to be based on car and camera rotation
