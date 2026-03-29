@@ -36,5 +36,6 @@ struct AIController {
 	float dodgeTimer = 0.0f;
 	float stillTimer = 0.0f; // counts while ai is not moving
 	int lastPosIdx = 0;
+	int respawnRecoverTimer = 0;
 };
 

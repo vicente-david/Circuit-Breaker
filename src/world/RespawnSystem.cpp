@@ -41,8 +41,9 @@ void RespawnSystem::update(GameState& game) {
 			AIController& ai = game.coordinator->getComponent<AIController>(entity);
 			ai.currentPosIdx = lapProg.lastCheckpointIdx;
 			ai.lastPosIdx = lapProg.lastCheckpointIdx - 1;
-			ai.lookAheadSteps = 2;
+			ai.lookAheadSteps = 1;
 			ai.targetIdx = (ai.currentPosIdx + ai.lookAheadSteps) % ai.route.size();
+			ai.respawnRecoverTimer = 5;
 
 		}
 

@@ -45,7 +45,12 @@ void AIControllerSys::update(GameState& game) {
 			dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
 		}
 		// Adjust lookahead target based on speed
-		if (spark.speed < 16.0f)
+		if (ai.respawnRecoverTimer > 0) {
+			// respawn recovery
+			ai.lookAheadSteps = 1;
+			ai.respawnRecoverTimer -= 1;
+		}
+		else if (spark.speed < 16.0f)
 			ai.lookAheadSteps = 2;
 		else if (spark.speed < 28.0f)
 			ai.lookAheadSteps = 4;
