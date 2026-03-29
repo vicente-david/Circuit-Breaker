@@ -175,11 +175,15 @@ void Game::initializeTrack() {
 	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-8.0f, 2.0f, -8.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, -6.0f), "P2");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 2.0f, -4.0f), "P3");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-2.0f, 2.0f, -2.0f), "P4");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 0.0f), "P5");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, 1.0f, 0.0f), "P2");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -3.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -6.0f), "P4");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-3.0f, 1.0f, -9.0f), "P5");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, 1.0f, -6.0f), "P6");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -9.0f), "P7");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -12.0f), "P8");
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, 1.0f, -15.0f));
+
 
 
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);

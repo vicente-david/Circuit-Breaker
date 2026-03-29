@@ -103,7 +103,3 @@ void AIControllerSys::setStatePaths(std::vector<TrackCurve>& paths) {
 	overtakeState->path = std::make_unique<TrackCurve>(paths[0]);
 	return;
 }
-
-
-void AIControllerSys::onRespawn(Entity& entity, int posIdx) {
-}

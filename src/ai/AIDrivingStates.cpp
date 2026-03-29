@@ -23,7 +23,7 @@ std::unique_ptr<IDriveState> S_Driving::update(AIDriveContext& ctx) {
 	// Speed and curve of target and current positions.
 	// target speed is calculated based on how much curve is ahead (sharper curve = slower speed)
 	float curvature = ai.angles.at(ai.targetIdx); // curvature 0 = straight, 1 = curve
-	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
+	float targetSpeed = calcTargetSpeed(ai.maxTargetSpeed, curvature);
 	float curveIn = ai.angles.at(ai.currentPosIdx);
 	dbug::log("AI", 0, "[%s] [DRIVING] CURVE: %.2f, CURRENT SPEED: %.2f, TARGET SPEED: %.2f, LOOK: %d, BOOST: %.2f, HP: %.2f", spark.mVehicleName.c_str(), curvature, spark.speed, targetSpeed, ai.lookAheadSteps, spark.boost, spark.health);
 
@@ -76,7 +76,7 @@ std::unique_ptr<IDriveState> S_Braking::update(AIDriveContext& ctx) {
 
 	// Brake based on difference in current speed and target speed
 	float curvature = ai.angles.at(ai.targetIdx);
-	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
+	float targetSpeed = calcTargetSpeed(ai.maxTargetSpeed, curvature);
 
 	if (targetSpeed <= 0.0f) {
 		// Occasional bug where target speed would end up negative here, causes spark to brake to a stop
@@ -121,7 +121,7 @@ std::unique_ptr<IDriveState> S_Drifting::update(AIDriveContext& ctx) {
 	calcSteering(ai, controls, transform, spark, ai.route.at(ai.targetIdx));
 
 	float curvature = ai.angles.at(ai.targetIdx);
-	float targetSpeed = glm::mix(ai.maxTargetSpeed, 1.0f, curvature);
+	float targetSpeed = calcTargetSpeed(ai.maxTargetSpeed, curvature);
 
 	controls.driftMode = true;
 	controls.throttle = 1.0f;
@@ -190,7 +190,7 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 	auto& controls = ctx.controls;
 	auto& transform = ctx.transform;
 	auto& spark = ctx.spark;
-
+	controls.throttle = 1.0f;
 	// Sanity check that a hit was actually detected
 	if (sweepResult.first == NONE) {
 		controls.boost = false;
@@ -387,4 +387,10 @@ void AIHelpers::calcSteering(AIController& ai, SparkControls& controls, Transfor
 	controls.steering = glm::clamp(steerRaw, -1.0f, 1.0f);
 
 	return;
+}
+
+float AIHelpers::calcTargetSpeed(float maxSpeed, float curvature) {
+	float targetSpeed = glm::mix(maxSpeed, 1.0f, curvature);
+	targetSpeed = glm::clamp(targetSpeed, 1.0f, maxSpeed);
+	return targetSpeed;
 }
