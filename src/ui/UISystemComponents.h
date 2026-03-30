@@ -107,6 +107,8 @@ struct Animatable {
 
 	bool isSelected = false; // false by default
 
+	bool isHealth = false; // temu version of identifying if health bar 
+
 	animatedType type = ANIM_BUTTON;  // edfault is a button
 
 	glm::vec3 hLightColor = glm::vec3(1.0f); // additive highlight 

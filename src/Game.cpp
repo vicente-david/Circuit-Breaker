@@ -214,7 +214,9 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	// link health and boost to the UI system
 	auto& sparkData = coordinator->getComponent<SparkData>(player);
 	uiSys->playerHealth = &sparkData.health;
+	uiSys->maxPlayerHealth = &sparkData.maxHealth;
 	uiSys->playerBoost = &sparkData.boost;
+	uiSys->maxPlayerBoost = &sparkData.maxBoost;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
@@ -385,6 +387,8 @@ void Game::stateTransition() {
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
+			uiSys->addScreen("myHealthIsDeclining");
+			uiSys->addScreen("boostMeOffABridge");
 			uiSys->addScreen("countDown");
 			break;
 
@@ -402,6 +406,8 @@ void Game::stateTransition() {
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
+			uiSys->addScreen("myHealthIsDeclining");
+			uiSys->addScreen("boostMeOffABridge");
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
