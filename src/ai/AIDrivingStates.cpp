@@ -348,7 +348,7 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
 	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eDYNAMIC);
 
-	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 50.f, hitInfo, outFlags, filter);
+	bool status = scene->sweep(sweepBox, initPose, direction.getNormalized(), 10.f, hitInfo, outFlags, filter);
 
 	// Check if hit returned true and if the hit was not itself
 	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
