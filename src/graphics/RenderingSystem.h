@@ -38,7 +38,7 @@ public:
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
-	unsigned int SHADOW_WIDTH = SCR_WIDTH * 10, SHADOW_HEIGHT = SCR_HEIGHT * 10;
+	unsigned int SHADOW_WIDTH = SCR_WIDTH, SHADOW_HEIGHT = SCR_HEIGHT;
 
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
