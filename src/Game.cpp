@@ -203,6 +203,11 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
 	gameState.player = &player;
+
+	// link health and boost to the UI system
+	auto& sparkData = coordinator->getComponent<SparkData>(player);
+	uiSys->playerHealth = &sparkData.health;
+	uiSys->playerBoost = &sparkData.boost;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
