@@ -3,6 +3,7 @@
 #include "vehicles/SparkComponents.h"
 #include "ecs/Component.h"
 #include "IDriveState.h"
+#include "world/Clock.cpp"
 
 
 // Helper functions for any state

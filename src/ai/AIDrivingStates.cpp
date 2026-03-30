@@ -367,10 +367,18 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 
 // Steering calculations used in many of the above
 void AIHelpers::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos) {
+	
+	if (ai.attackCooldown.activeTimer() && ai.attackCooldown.timerDuration == 10.0) {
+		// it's the start of the race
+		if (ai.attackCooldown.remaining > 3.0) {
+			controls.steering = 0.0f;
+			return;
+		}
+	}
+	
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location
 	vectorToTarget.y = 0.0f;
 	float distance = glm::length(vectorToTarget); // get the length of this vector to get the distance
-
 
 	// compute the signed angle between car forward and direction to target, both projected onto XZ plane
 	// Z = forward, X = lateral, Y = vertical 

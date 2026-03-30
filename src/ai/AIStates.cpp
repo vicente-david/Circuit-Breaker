@@ -81,7 +81,6 @@ void OvertakeState::run(AIDriveContext& ctx) {
 			currentState = std::move(next);
 		}
 	}
-	else dbug::log("AI", 1, "[%s] in attack cooldown", ctx.spark.mVehicleName.c_str());
 
 	// run state update function
 	auto next = currentState->update(ctx);
