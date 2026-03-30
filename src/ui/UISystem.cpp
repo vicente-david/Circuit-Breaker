@@ -812,6 +812,8 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 	standingsScreen.name = "standingsScreen";
 	standingsScreen.UIElements.push_back(e1);
 
+	
+
 	// --- POSITIONS FIELDS ---
 	for (int i = 0; i < lb.standings.size(); i++) {
 		UIElement firstPlace;
@@ -821,6 +823,7 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
 		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
 		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.standings[i];
+		firstPlace.textScale = 1.0f;
 		firstPlace.textAlignmentY = CENTER;
 		firstPlace.textAlignmentX = LEFT;
 		firstPlace.textColor = glm::vec3(1.0f);
