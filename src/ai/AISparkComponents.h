@@ -39,7 +39,7 @@ struct AIController {
 	float respawnRecoverTimer = 0.0f;
 	int lastPosIdx = 0;
 	
-	Clock checkProgTimer{10.0, 10.0}; // counts while ai is not moving
+	Clock checkProgTimer{5.0, 5.0}; // counts while ai is not moving
 	Clock attackCooldown{ 10.0, 10.0 }; // only this long at the beginning of the race. Cooldown shorter after that
 };
 
