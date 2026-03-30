@@ -1,4 +1,5 @@
 #include "SparkSys.h"
+#include "GameState.h"
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "graphics/Model.h"
@@ -21,7 +22,14 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
 		// state checks
+		bool playDeathSound = !sData.isDead; // only play sound the 1st time
 		checkDeath(sData, dt);
+		if(playDeathSound && sData.isDead){
+			auto s = game.audio->createSound("death");
+			s->updateFromRbody(sData.rBody);
+			s->start();
+		
+		}
 		checkAngResistace(sData, dt);
 		checkAirborne(sData, dt);
 
@@ -284,7 +292,7 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	return system;
 }
 
-void SparkSys::checkDeath(SparkData& sData, double dt) {
+void SparkSys::checkDeath(SparkData& sData, double dt ) {
 	if (sData.health > 0)
 		return;
 	
