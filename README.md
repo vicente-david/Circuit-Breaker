@@ -58,11 +58,10 @@ Release builds for windows can be downloaded from [this drive link](https://driv
 ### Controller:
     - L-Stick: Turn 
     - R-Stick: Rotate Camera 
-    - R-Trigger: accelerate
+    - R-Trigger: Accelerate
     - LB/L1: Shimmy left
     - RB/R1: Shimmy right
-    - L-Trigger: Brake
-    - LT + RT: Reverse
+    - L-Trigger: Brake/Reverse
     - B/◯: Boost
     - Y/△: Look Backwards
     - A/X: Handbrake
@@ -71,8 +70,7 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     - A/D: Turn
     - Q/E: Rotate Camera
     - W: Accelerate
-    - S: Brake
-    - S + W: Reverse
+    - S: Brake/Reverse
     - J: Shimmy left
     - L: Shimmy right
     - Space: Boost
@@ -80,7 +78,7 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     - X: Look Backwards
     - K: Handbrake
 
-- Reversing happens when the brake and throttle are both active when the car is stationary.
+- Reversing happens when the brake is presed when the car is stationary.
 
 ---
 ## Members:
