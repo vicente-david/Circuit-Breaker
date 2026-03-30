@@ -30,6 +30,7 @@ class PhysXCallbacks : public PxSimulationEventCallback {
 	std::set<Entity> healingSparks;
 	std::vector<Entity> sparkFinishCol;
 	std::vector<SparkWallColData> sparkWallCol;
+	std::vector<Entity> killSparks;
 	std::vector<SparkSparkColData> sparkSparkCol;
 	//... add arrays with the data for whatever collision you need to detect
 

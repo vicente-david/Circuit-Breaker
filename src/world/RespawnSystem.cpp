@@ -4,6 +4,7 @@
 #include "PxRigidBody.h"
 #include "PxRigidDynamic.h"
 #include "vehicles/SparkComponents.h"
+#include "world/Clock.cpp"
 
 std::shared_ptr<RespawnSystem> RespawnSystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
 	auto system = coord->registerSystem<RespawnSystem>();
@@ -25,6 +26,7 @@ void RespawnSystem::update(GameState& game) {
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
+		SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
 
 		if (eTransform.pos.y > yDeadzone && !sControls.reset) // entity hasn't fallen below the deadzone, skip
 			continue;
@@ -35,6 +37,28 @@ void RespawnSystem::update(GameState& game) {
 		// compute the respawn position: last checkpoint + deltaY above it
 		glm::vec3 respawnPos = lapProg.lastCheckpointPos;
 		respawnPos.y += deltaY;
+		spark.isOffroad = false;
+
+		// if the entity has an ai controller component, reset its understanding of where it is on the track
+		if (game.coordinator->hasComponent<AIController>(entity)) {
+			AIController& ai = game.coordinator->getComponent<AIController>(entity);
+		
+			ai.respawnRecoverTimer = 10.0f; // sets the lookahead value low for this recovery time
+			ai.lookAheadSteps = 1;
+			ai.currentPosIdx = lapProg.lastCheckpointIdx;
+			ai.lastPosIdx = ai.currentPosIdx - 1;
+
+			// if the position at the last checkpoint index on the route the ai is currently on is NOT the same as the checkpoint respawned at,
+			// override what path the ai thinks its on
+			if (ai.route.at(lapProg.lastCheckpointIdx) != lapProg.lastCheckpointPos) {
+				dbug::log("AIPATH", 1, "RespawnSys detects wrong path for %s.", spark.mVehicleName.c_str());
+				// force the desired path to switch
+				ai.routeID = static_cast<PathID>((static_cast<int>(ai.routeID) + 1) % 2);
+				int i = static_cast<int>(ai.routeID);
+				ai.route = paths[i].curvePoints;
+				ai.angles = paths[i].curvatures;
+			}
+		}
 
 		// compute the respawn rotation so the vehicle faces along the track
 		// the vehicle's forward axis is +Z, so we need the angle from +Z to lastCheckpointDir
@@ -63,4 +87,8 @@ void RespawnSystem::update(GameState& game) {
 		eTransform.pos = respawnPos;
 		sControls.reset = false; // so AI doesn't get stuck in a loop
 	}
+}
+
+void RespawnSystem::setPaths(std::vector<TrackCurve>& paths) {
+	this->paths = paths;
 }

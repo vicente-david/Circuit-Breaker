@@ -17,11 +17,14 @@ public:
 	void friend attachShader(ShaderProgram& prog, Shader& shad);
 
 	void friend shaderCleanup(Shader& vert, Shader& frag);
+	void friend shaderCleanup(Shader& vert, Shader& frag, Shader& geom);
+	Shader() : id(0) {}
 
 private:
 	GLenum type;
 	GLuint id;
 	std::string path;
+	
 
 	bool compile();
 };

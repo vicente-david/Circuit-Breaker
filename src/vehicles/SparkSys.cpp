@@ -1,4 +1,5 @@
 #include "SparkSys.h"
+#include "GameState.h"
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "graphics/Model.h"
@@ -21,7 +22,14 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
 		// state checks
+		bool playDeathSound = !sData.isDead; // only play sound the 1st time
 		checkDeath(sData, dt);
+		if(playDeathSound && sData.isDead){
+			auto s = game.audio->createSound("death");
+			s->updateFromRbody(sData.rBody);
+			s->start();
+		
+		}
 		checkAngResistace(sData, dt);
 		checkAirborne(sData, dt);
 
@@ -226,6 +234,14 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	else if (sData.mVehicleName == "P4") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark4.obj"));
 	}
+	else if (sData.mVehicleName == "P5")
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark5.obj"));
+	else if (sData.mVehicleName == "P6")
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark6.obj"));
+	else if (sData.mVehicleName == "P7")
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark7.obj"));
+	else if (sData.mVehicleName == "P8")
+		game.coordinator->addComponent(sparkEntity, Model("assets/spark8.obj"));
 	else
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
 
@@ -284,7 +300,7 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	return system;
 }
 
-void SparkSys::checkDeath(SparkData& sData, double dt) {
+void SparkSys::checkDeath(SparkData& sData, double dt ) {
 	if (sData.health > 0)
 		return;
 	
@@ -366,6 +382,13 @@ void SparkSys::sparkCollision(GameState& game) {
 }
 
 void SparkSys::wallCollision(GameState &game) {
+	// kill everything touching the kill plane
+	for (auto const& entity : game.physics->callbacks->killSparks) {
+		auto& sData =game.coordinator->getComponent<SparkData>(entity);
+		sData.health = 0;
+		sData.isOffroad = true;
+
+	}
 	for (auto const& colData : game.physics->callbacks->sparkWallCol) {
 		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
 		auto& trans =game.coordinator->getComponent<Transform>(colData.sparkId);

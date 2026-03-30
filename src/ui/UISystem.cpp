@@ -913,7 +913,7 @@ void UISystem::updateLapCounter(int lapCount) {
 
 void UISystem::createCountdown() {
 	UIElement counter1;
-	counter1.text = "4";
+	counter1.text = "";
 	counter1.textScale = 5.0f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);

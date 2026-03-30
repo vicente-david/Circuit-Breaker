@@ -17,15 +17,16 @@ int main() {
 	dbug::minLogSeverity = 0;
 	dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	dbug::logIgnore("AI");
+	//dbug::logIgnore("AI");
 	dbug::logIgnore("PHYS");
 	dbug::logIgnore("LEADERBOARD");
 	// dbug::logListType = dbug::WHITE_LIST;
-	 dbug::logIgnore("ECS");
-	 dbug::logIgnore("GEN");
-	 dbug::logIgnore("AUDIO");
-	//dbug::logListType = dbug::WHITE_LIST;
-
+	dbug::logIgnore("ECS");
+	dbug::logIgnore("GEN");
+	dbug::logIgnore("AUDIO");
+	dbug::logIgnore("REND");
+	dbug::logIgnore("LAP");
+	//dbug::logIgnore("AIPATH");
 	dbug::loggerInit();
 	
 	Game game = Game();

@@ -3,6 +3,7 @@
 #include "vehicles/SparkComponents.h"
 #include "ecs/Component.h"
 #include "IDriveState.h"
+#include "world/Clock.cpp"
 
 
 // Helper functions for any state
@@ -10,6 +11,7 @@ namespace AIHelpers {
 	void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
 	std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
 	std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
+	float calcTargetSpeed(float maxSpeed, float curvature);
 }
 
 /*

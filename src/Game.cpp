@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "AllSystem.h"
+#include "PxActor.h"
 #include "physics/CollisionData.h"
 #include "debugUtils/Panel.h"
 #include <cmath>
@@ -82,10 +83,12 @@ void Game::initializeRace() {
 	initializeTrack();
 	// initializeFinishLine();
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
+	raceCountdown.start();
+	lastPrintedSecond = -1;
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/curve.obj");
+	//lapSys->generateCheckpoints("assets/curve.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
@@ -167,6 +170,33 @@ void Game::initializeTrack() {
 			auto actor = physics->initHealZones(i, none);
 			actor->userData = &healPhys;
 		}
+
+		// Walls
+		Model wallModel("assets/walls.obj"); // loads model and paths
+		Entity wall = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(wall, none);
+		gameState.coordinator->addComponent(wall, wallModel);
+		gameState.coordinator->addComponent(wall, CollisionData{ WALL, wall });
+		auto& wallPhys = gameState.coordinator->getComponent<CollisionData>(wall);
+
+		for(auto& i : wallModel.GetMeshes()){
+			auto actor = physics->initStaticMesh(i, none);
+			actor->userData = &wallPhys;
+		}
+
+		// Kill Plane
+		Model killModel("assets/killGround.obj"); // loads model and paths
+		Entity kill = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(kill, none);
+		gameState.coordinator->addComponent(kill, killModel);
+		gameState.coordinator->addComponent(kill, CollisionData{ KILL, kill });
+		auto& killPhys = gameState.coordinator->getComponent<CollisionData>(kill);
+
+		for(auto& i : killModel.GetMeshes()){
+			auto actor = physics->initStaticMesh(i, none, false);
+			actor->userData = &killPhys;
+
+		}
 	}
 
 	Track curve("assets/curve.obj");
@@ -179,19 +209,24 @@ void Game::initializeTrack() {
 	if (curve.paths[0].curvePoints.size() != healCurve.paths[0].curvePoints.size()) {
 		dbug::log("DEF", 2, "\n\n WARNING: track curves of different lengths! \n\n");
 	}
-
+	lapSys->generateCheckpoints(trackPaths);
 	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
+	respawnSys->setPaths(trackPaths);
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-8.0f, 2.0f, -8.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, -6.0f), "P2");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 2.0f, -4.0f), "P3");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-2.0f, 2.0f, -2.0f), "P4");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 0.0f), "P5");
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-3.0f, 1.0f, -15.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, 1.0f, 0.0f), "P2");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -3.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -6.0f), "P4");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-3.0f, 1.0f, -9.0f), "P5");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(3.0f, 1.0f, -6.0f), "P6");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -9.0f), "P7");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -12.0f), "P8");
+	
+
 
 	// Start countdown
-	raceCountdown.start();
-	lastPrintedSecond = -1;
+	
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
@@ -492,7 +527,7 @@ void Game::update() {
 		if (raceCountdown.activeTimer()) {
 			raceCountdown.update(frameTime);
 			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
-			if (secondsLeft != lastPrintedSecond) { // prevents output console spam
+			if (secondsLeft <= 3.0 && secondsLeft != lastPrintedSecond) { // prevents output console spam
 				lastPrintedSecond = secondsLeft;
 				uiSys->updateCountdown(std::to_string(secondsLeft), frameTime);
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
@@ -540,6 +575,7 @@ void Game::updateTime() {
 	accumulator = std::min(accumulator, 1 / minFps);
 	framesPassed++;
 
+	gameState.frameTime = &frameTime;
 	t += frameTime;
 }
 

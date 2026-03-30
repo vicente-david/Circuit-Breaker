@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "world/CurveLoader.h"
+#include "world/Clock.cpp"
 
 // FSM states for AI sparks
 // NOTE: no longer used (left in for debugging)
@@ -32,9 +33,13 @@ struct AIController {
 	int targetIdx = 0; // index of target position
 	int currentPosIdx = 0; // approx index current position of spark
 	int lookAheadSteps = 8; // how far to look ahead on the track curve
+	int logIdx = 0;
 	float boostAtkTimer = 0.0f;
 	float dodgeTimer = 0.0f;
-	float stillTimer = 0.0f; // counts while ai is not moving
+	float respawnRecoverTimer = 0.0f;
 	int lastPosIdx = 0;
+	
+	Clock checkProgTimer{5.0, 5.0}; // counts while ai is not moving
+	Clock attackCooldown{ 6.0, 6.0 }; // only this long at the beginning of the race. Cooldown shorter after that
 };
 
