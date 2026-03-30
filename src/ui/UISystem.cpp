@@ -23,6 +23,8 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	hlightShader->use();
 	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+	resShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
 
@@ -153,6 +155,45 @@ void UISystem::updateButtonUIElement(Entity& e) {
 
 }
 
+void UISystem::updateResBars(Entity& e, bool isHealth) {
+	// quick and dirty way
+	resShader->use();
+
+	glm::vec3 col;
+	// update uniforms 
+	if (isHealth) {
+		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerHealth);
+		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerHealth);
+		col = glm::vec3(0.0f, 1.0f, 0.0f);
+	}
+	else {
+		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerBoost);
+		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerBoost);
+		col = glm::vec3(0.0f, 0.0f, 1.0f);
+	}
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	glBindVertexArray(resVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+	resData.clear();
+
+	// god awful for readibility, but we encode the texture coords as the xy comp of UIelement color
+	// only reason we can do this is because it's hard coded that way
+	// see how the screen creation for each of these
+	UIPositions positions = calculateAnchorPositions(u1);
+	// 6 points in a triangle based quad
+	for (int i = 0; i < 6; i++) {
+		UIResVertex v1;
+		v1.position = positions.points[i];
+		v1.uvCoord = glm::vec2(u1.colors[i].x, u1.colors[i].y);
+		v1.resourceColor = col;
+		resData.push_back(v1);
+	}
+	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_TRIANGLES, 0, resData.size());
+
+
+}
+
 // assume everything is updated already
 void UISystem::updateAnimatedUIElement(Entity& e) {
 	Animatable& animComp = coordinator->getComponent<Animatable>(e);
@@ -166,6 +207,7 @@ void UISystem::updateAnimatedUIElement(Entity& e) {
 		}
 		break;
 	case(ANIM_HEALTHBAR):
+		updateResBars(e, animComp.isHealth);
 		break;
 	case(ANIM_SPEEDOMETER):
 		break;
@@ -355,6 +397,35 @@ void UISystem::initializeRenderingParams() {
 	// vao layout is vec3, vec3, float, vec3
 
 
+	// resource bar (health/boost)
+	resShader = std::make_unique<ShaderProgram>("shaders/bar.vert", "shaders/bar.frag");
+
+	resShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	glGenVertexArrays(1, &resVAO);
+	glBindVertexArray(resVAO);
+
+	glGenBuffers(1, &resVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+
+
+	// 8 floats, 6 things for a quad
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 6, NULL, GL_DYNAMIC_DRAW);
+
+	// position, uv, color
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+
+
+	// enable all
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
+	// layout, vec3, vec2, vec3
+
 
 }
 
@@ -407,6 +478,8 @@ void UISystem::screenInitialization() {
 	createPlaceCounter();
 	createCountdown();
 	createBackwardsDisplay();
+	createBoostBar();
+	createHealthBar();
 }
 
 // Recall UIElement has the following fields
@@ -917,4 +990,45 @@ void UISystem::updateBackwardsDisplay(float time) {
 	}
 
 
+}
+
+
+void UISystem::createHealthBar() {
+	UIElement hBar;
+	// default anchors are whole screen (0,0,1,1)
+	hBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
+	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 50.0);
+	hBar.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+
+	Animatable a = { true, false, true, ANIM_HEALTHBAR };
+	coordinator->addComponent(e1, hBar);
+	coordinator->addComponent(e1, a);
+
+	UIScreen myHealthIsDeclining;
+	myHealthIsDeclining.name = "myHealthIsDeclining";
+	myHealthIsDeclining.UIElements.push_back(e1);
+
+	nameToScreen["myHealthIsDeclining"] = myHealthIsDeclining;
+}
+
+void UISystem::createBoostBar(){
+	UIElement bBar;
+	// default anchors are whole screen (0,0,1,1)
+	bBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
+	bBar.anchorOffsets = glm::vec4(10.0, 65.0, 0.0, 105.0);
+	bBar.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+
+	Animatable a = { true, false, false, ANIM_HEALTHBAR };
+	coordinator->addComponent(e1, bBar);
+	coordinator->addComponent(e1, a);
+
+	UIScreen boostMeOffABridge;
+	boostMeOffABridge.name = "boostMeOffABridge";
+	boostMeOffABridge.UIElements.push_back(e1);
+
+	nameToScreen["boostMeOffABridge"] = boostMeOffABridge;
 }
