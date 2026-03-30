@@ -57,6 +57,7 @@ void AudioEngine::loadSounds() {
 
 	sounds.emplace("shimmy", WavData("assets/sounds/clank.wav"));
 	sounds.emplace("crash", WavData("assets/sounds/crash.wav"));
+	sounds.emplace("death", WavData("assets/sounds/death.wav"));
 }
 
 void AudioEngine::update(double dt) {

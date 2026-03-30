@@ -111,7 +111,7 @@ PxTriangleMesh *PhysicsManager::cookTriangleMesh(Mesh mesh) {
 	return gPhysics->createTriangleMesh(readBuffer);
 }
 
-PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, PxMaterial *material, PxFilterData filter) {
+PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, PxMaterial *material, PxFilterData filter, bool tireCollision) {
 	PxTriangleMesh *triangleMesh = cookTriangleMesh(mesh);
 
 	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
@@ -121,6 +121,11 @@ PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, Px
 	PxShape *triMeshShape = gPhysics->createShape(triGeom, *material);
 		triMeshShape->setSimulationFilterData(filter);
 	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
+
+	if(!tireCollision){
+		triMeshShape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
+	}
+
 	actor->attachShape(*triMeshShape);
 
 	// add ground collision filter to all the shapes on the ground mesh
@@ -133,9 +138,9 @@ PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, Px
 	triMeshShape->release();
 	return actor;
 }
-PxRigidStatic* PhysicsManager::initStaticMesh(Mesh mesh, Transform transform) {
+PxRigidStatic* PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, bool tireCollision) {
 	PxFilterData groundFilter(COLLISION_FLAG_GROUND,COLLISION_FLAG_GROUND_AGAINST, 0, 0);
-	return initStaticMesh(mesh, transform, gMaterial, groundFilter);
+	return initStaticMesh(mesh, transform, gMaterial, groundFilter,tireCollision);
 }
 PxRigidStatic* PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
 	PxFilterData groundHealFilter(COLLISION_FLAG_HEAL, COLLISION_FLAG_WHEEL, 0, 0);
