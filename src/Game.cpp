@@ -80,6 +80,8 @@ void Game::initializeRace() {
 	initializeTrack();
 	// initializeFinishLine();
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
+	raceCountdown.start();
+	lastPrintedSecond = -1;
 }
 
 void Game::initializeTrack() {
@@ -190,8 +192,7 @@ void Game::initializeTrack() {
 
 
 	// Start countdown
-	raceCountdown.start();
-	lastPrintedSecond = -1;
+	
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
@@ -436,7 +437,7 @@ void Game::update() {
 		if (raceCountdown.activeTimer()) {
 			raceCountdown.update(frameTime);
 			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
-			if (secondsLeft != lastPrintedSecond) { // prevents output console spam
+			if (secondsLeft <= 3.0 && secondsLeft != lastPrintedSecond) { // prevents output console spam
 				lastPrintedSecond = secondsLeft;
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
 			}

@@ -104,7 +104,7 @@ public:
 	Entity player; // player LOL
 
 	// race countdown
-	Clock raceCountdown{ 3.0 };
+	Clock raceCountdown{ 6.0 };
 	int lastPrintedSecond = -1;
 	//Track activeTrack;
 };
