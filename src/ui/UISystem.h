@@ -155,6 +155,8 @@ public:
 	int* SCR_HEIGHT;
 	std::string* fps;
 	// entity based pointers will need a little more managment
+	float* playerHealth;
+	float* playerBoost;
 
 	std::shared_ptr<Coordinator> coordinator;
 
