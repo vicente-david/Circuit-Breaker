@@ -14,6 +14,7 @@
 #include "world/Track.h"
 #include "InputSystem.h"
 #include <memory>
+#include "world/Clock.cpp"
 
 class Game{
 
@@ -44,13 +45,14 @@ public:
 
 	//void initializePlayers();
 	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
-	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // ai spark
+	void initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name); // ai spark
 	void initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // to-do join above line together 
 
 
 	//void resetGame(); // todo: implement
 
 	void stateTransition(); // if gamestate changes update things
+	void handleMenuControl(); // convenience function for setting gamestate based on menu and stuff 
 	// mostly a convenience function
 
 	// update every frame 
@@ -79,6 +81,7 @@ public:
 	GameState gameState;
 
 	Actions gameActions;
+	UIActions gameUIActions;
 
 	bool isInitialized;
 
@@ -90,6 +93,7 @@ public:
 	// more
 	const double minFps = 30.0;
 	double currentTime = glfwGetTime();
+	double frameTime = 0.0;
 	double accumulator = 0.0;
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
@@ -98,5 +102,9 @@ public:
 	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
+
+	// race countdown
+	Clock raceCountdown{ 3.0 };
+	int lastPrintedSecond = -1;
 	//Track activeTrack;
 };

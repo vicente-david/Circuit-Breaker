@@ -71,7 +71,7 @@ struct Actions {
 	float controllerDir = 0.0;
 
 	// keyboard inputs (raw input)
-	bool keyboardForward = false; 
+	bool keyboardForward = false;
 	bool keyboardBackward = false;
 	bool keyboardLookBack = false;
 	
@@ -84,11 +84,24 @@ struct Actions {
 	float controllerXRot = 0.0;
 	float controllerYRot = 0.0;
 
+
+
+};
+
+struct UIActions {
+
+	// menu callbacks
+	//
 	// controls which menu is being displayed right now
-	// -1 is main menu, 1 is normal gameplay (for now)
-	// 2 could be pause for example
-	int menuControl = -1; 
+	// -1 is main menu, 1 is normal gameplay (for now), 2 is paused
+	int menuControl = -1;
 	bool intializeGame = false;
+
+	// UI navigation inputs (consumed each frame)
+	bool navigateUp = false;    // move selection up
+	bool navigateDown = false;  // move selection down
+	bool confirm = false;       // confirm/activate selected button
+	bool goBack = false;        // go back to previous menu (when pressing backspace or B on controller)
 
 };
 
@@ -102,6 +115,8 @@ public:
 	// scan code input is probably better, since it is keyboard independent, can implement later
 	void setCallback(std::shared_ptr<CallbackInterface> callbacks);
 	const Actions& getActions();
+	UIActions getUIActions(); // changed to a copy instead of a reference, so that we can clear certain flags
+	void setMenuControl(int state); // lets external code change the menuControl value
 	void combineInputs();
 	void updateGamepad();
 
@@ -113,7 +128,18 @@ private:
 	GLFWgamepadstate controllerState;
 
 	Actions actions;
-	// necessary for glfw 
+	UIActions uiActions;
+
+	// previous frame controller button states for edge detection (menu navigation)
+	bool prevDpadUp = false;
+	bool prevDpadDown = false;
+	bool prevButtonA = false;
+	bool prevButtonB = false;
+	bool prevButtonStart = false;
+	bool prevLeftStickUp = false;   // left stick pushed up past threshold
+	bool prevLeftStickDown = false; // left stick pushed down past threshold
+
+	// necessary for glfw
 	static void keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 	static void mouseButtonMetaCallback(GLFWwindow* window, int button, int action, int mods);
 	static void cursorPositionMetaCallback(GLFWwindow* window, double xpos, double ypos);

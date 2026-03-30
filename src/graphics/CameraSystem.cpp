@@ -92,7 +92,7 @@ void CameraSystem::update(GameState &game, float dt) {
 		// of the fov changes
 		camData.targetDist = 5.0 - (glm::length(camVel) * 0.03f);
 		camData.targetDist = std::max(0.f, camData.targetDist);
-		printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
+		// printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
 
 		// update the audio listner's frame and velocity for 3d audio
 		game.audio->updateListenerVel(camVel.x, camVel.y, camVel.z);

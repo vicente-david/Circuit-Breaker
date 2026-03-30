@@ -42,6 +42,11 @@ public:
 		return getComponentArray < T >()->getData(entity);
 	}
 
+	template<typename T>
+	bool hasComponent(Entity entity) {
+		return getComponentArray<T>()->hasComponent(entity);
+	}
+
 	void entityDestroyed(Entity entity) {
 		// notify each component array that an entity has been destroyed
 		// if that component array has that entity, remove it

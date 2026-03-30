@@ -11,6 +11,7 @@ struct AIDriveContext {
 	Transform& transform;
 	SparkData& spark;
 	PxRigidBody* body;
+	float healthBoostMin;
 };
 
 // Direction enum for labelling sweep/hit direction
@@ -34,4 +35,5 @@ public:
 	virtual std::unique_ptr<IDriveState> update(AIDriveContext& ctx) = 0;
 
 	std::pair<Direction, glm::vec3> sweepResult;
+
 };

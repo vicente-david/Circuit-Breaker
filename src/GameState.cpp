@@ -16,10 +16,15 @@ void GameState::endGame(Entity gameWinner) {
 								// TODO: probably do some UI/game management stuff here to give endscreen, etc.
 	std::cout << "winner was found " << std::endl;
 
-	//if (coordinator->getComponent<SparkData>(gameWinner).isHuman) uiText = uiSystem->changeToWinScreen(); // todo fix lol
-	//else uiText = uiSystem->changeToLoseScreen();
+	if (coordinator->getComponent<SparkData>(gameWinner).isHuman){
+		// win
+		nextState = END;
+	}
+	else {
+		// lose
+	}
 
-	gameEnded = true;			// end the game
+
 }
 
 

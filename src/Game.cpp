@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "AllSystem.h"
 #include "physics/CollisionData.h"
+#include <cmath>
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
@@ -58,6 +59,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<Respawnable>();
 	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
+	coordinator->registerComponent<Animatable>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -81,73 +83,109 @@ void Game::initializeRace() {
 }
 
 void Game::initializeTrack() {
-	lapSys->generateCheckpoints("assets/track1.obj");
+	lapSys->generateCheckpoints("assets/curve.obj");
 
 	// create the track. this should eventually be moved to its own
 	// class/function
-	Track Track("assets/track1.obj"); // loads model and paths
+	Track track("assets/mainTrack.obj"); // loads model and paths
 	// Track Track("assets/biggertrack1.obj"); // loads model and paths
 
 	// Find max/min xyz coords of track for size of shadow map texture.
 	//Mesh plMesh = planeModel.GetMesh()[0]; // only one mesh in track model
 
-	renderer->setTrackBounds(Track.model.GetMesh("Track").GetBounds());
+	renderer->setTrackBounds(track.model.GetMesh("Track").GetBounds());
 
 	// create track as a static mesh with baked physics
 	{
 		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
-		Entity track = gameState.coordinator->createEntity();
-		gameState.coordinator->addComponent(track, none);
-		gameState.coordinator->addComponent(track, Track.model);
-		gameState.coordinator->addComponent(track, CollisionData{GROUND, track});
-		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(track);
+		Entity trackE = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(trackE, none);
+		gameState.coordinator->addComponent(trackE, track.model);
+		gameState.coordinator->addComponent(trackE, CollisionData{GROUND, trackE});
+		auto& trackPhys = gameState.coordinator->getComponent<CollisionData>(trackE);
 		auto trackActor =
-			physics->initStaticMesh(Track.model.GetMesh("Track"), none);
+			physics->initStaticMesh(track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
-		// add walls
-		Model wallsModel("assets/walls.obj"); // loads model and paths
-		Entity walls = coordinator->createEntity();
-		coordinator->addComponent(walls, none);
-		coordinator->addComponent(walls, wallsModel);
-		coordinator->addComponent(track, CollisionData{GROUND, walls});
-		CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
+		//// add walls
+		//Model wallsModel("assets/walls.obj"); // loads model and paths
+		//Entity walls = coordinator->createEntity();
+		//coordinator->addComponent(walls, none);
+		//coordinator->addComponent(walls, wallsModel);
+		//coordinator->addComponent(track, CollisionData{GROUND, walls});
+		//CollisionData& planePhys = gameState.coordinator->getComponent<CollisionData>(walls);
 
 
-		for (auto& i : wallsModel.GetMeshes()) {
+		//for (auto& i : wallsModel.GetMeshes()) {
+		//	auto actor = physics->initStaticMesh(i, none);
+		//	actor->userData = &planePhys;
+		//}
+
+		//dbug::log(0, "track entity id:%d", track);
+
+		// Ribbons
+		Model ribbonModel("assets/ribbons.obj"); // loads model and paths
+		Entity ribbon = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(ribbon, none);
+		gameState.coordinator->addComponent(ribbon, ribbonModel);
+		gameState.coordinator->addComponent(ribbon, CollisionData{ GROUND, ribbon });
+		auto& ribbonPhys = gameState.coordinator->getComponent<CollisionData>(ribbon);
+
+		for (auto& i : ribbonModel.GetMeshes()) {
 			auto actor = physics->initStaticMesh(i, none);
-			actor->userData = &planePhys;
+			actor->userData = &ribbonPhys;
 		}
 
-		dbug::log(0, "track entity id:%d", track);
+		// Healzone Tracks
+		Model healTrackModel("assets/healzoneTracks.obj"); // loads model and paths
+		Entity healTrack = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(healTrack, none);
+		gameState.coordinator->addComponent(healTrack, healTrackModel);
+		gameState.coordinator->addComponent(healTrack, CollisionData{GROUND, healTrack});
+		auto& healTrackPhys = gameState.coordinator->getComponent<CollisionData>(healTrack);
 
-		// add heal zones
-		Model healModel("assets/heals.obj"); // loads model and paths
+		for (auto& i : healTrackModel.GetMeshes()) {
+			auto actor = physics->initStaticMesh(i, none);
+			actor->userData = &healTrackPhys;
+		}
+
+		// Healzones
+		Model healModel("assets/healzones.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
-		gameState.coordinator->addComponent(heal, CollisionData{HEAL, heal});
+		gameState.coordinator->addComponent(heal, CollisionData{ HEAL, heal });
 		auto& healPhys = gameState.coordinator->getComponent<CollisionData>(heal);
-		// PxFilterData healFilter(COLLISION_FLAG_HEAL,
-		// 							  COLLISION_FLAG_CHASSIS, 0, 0);
+
 		for(auto& i : healModel.GetMeshes()){
 			auto actor = physics->initHealZones(i, none);
 			actor->userData = &healPhys;
 		}
 	}
 
-
-	std::vector<TrackCurve> trackPaths = Track.paths; // set of paths
+	Track curve("assets/curve.obj");
+	curve.paths[0].id = pFAST;
+	std::vector<TrackCurve> trackPaths{ (curve.paths[0]) }; // set of paths
 	glm::vec3 pathStartPt = trackPaths.at(0).curvePoints.at(0); // First point of first path (only one path for now)
+	Track healCurve("assets/healCurve.obj");
+	healCurve.paths[0].id = pHEAL;
+	trackPaths.push_back(healCurve.paths[0]); // add heal path to trackpaths
+	if (curve.paths[0].curvePoints.size() != healCurve.paths[0].curvePoints.size()) {
+		dbug::log("DEF", 2, "\n\n WARNING: track curves of different lengths! \n\n");
+	}
+
+	aiControllerSys->setStatePaths(trackPaths); // send track paths to the ai controller
 
 	// initialize players
-	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(10.0f, -1.0f, -16.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(5.0f, -1.0f, -12.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, -1.0f, -8.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-5.0f, -1.0f, -4.0f));
-	initializeAISpark2(trackPaths, pathStartPt + glm::vec3(-10.0f, -1.0f, -0.0f));
+	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-8.0f, 2.0f, -8.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-6.0f, 2.0f, -6.0f), "P2");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 2.0f, -4.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-2.0f, 2.0f, -2.0f), "P4");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(0.0f, 2.0f, 0.0f), "P5");
 
-
+	// Start countdown
+	raceCountdown.start();
+	lastPrintedSecond = -1;
 	//gameState.uiText = gameState.uiSystem->raceUI(coordinator->getComponent<LapCounter>(player).currentLap);
 
 }
@@ -166,9 +204,9 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	player = sparkEntity;
 }
 
-void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
+void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, "AI Player");
+	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, name);
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
@@ -181,7 +219,7 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI Player 2");
+	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI P3");
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
 	coordinator->addComponent(testSpark3, Leaderboard());
@@ -189,7 +227,7 @@ void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pat
 		AIDriveState::IDLE, // start AI in idle state
 		trackPaths.at(0).curvePoints, // planned route
 		trackPaths.at(0).curvatures, // angles at each point in route
-		
+
 		});
 }
 
@@ -252,6 +290,32 @@ void Game::initializeUI() {
 
 	uiSys->addScreen("fpsCounter");
 	uiSys->addScreen("mainMenu");
+	uiSys->selectedEntities();
+
+	// give gameState access to uiSystem for controller-driven UI navigation
+	gameState.uiSystem = uiSys;
+}
+
+void Game::handleMenuControl() {
+	UIActions& ui = gameState.uiActions;
+
+	if (gameState.nextState == END) return;
+
+	if (ui.intializeGame) {
+		ui.intializeGame = false;
+		ui.menuControl = 1; // transition to gameplay
+		uiSys->resetSelection();
+		gameState.nextState = GAMEPLAY;
+	}
+
+	if (ui.menuControl == 2) {
+		gameState.nextState = PAUSED;
+	}
+	else if (ui.menuControl == 1) {
+		gameState.nextState = GAMEPLAY;
+	}
+
+
 }
 
 void Game::stateTransition() {
@@ -265,28 +329,33 @@ void Game::stateTransition() {
 		// outgoing transition
 		// exit
 		switch (gameState.currentState) {
-			
+
 			// we're likely initializing here, so pop the main menu from UI
 			// initialize everything 
-			case (MAINMENU):
-				uiSys->popScreen();
-				initializeRace();
-				uiSys->addScreen("lapCounter");
-				break;
+		case (MAINMENU):
+			uiSys->popScreen();
+			initializeRace();
+			uiSys->addScreen("lapCounter");
+			break;
 
 			// our likely next state is paused or game ended
 			// we may want to pop heads up display
-			case (GAMEPLAY): 
-				break;
+		case (GAMEPLAY):
+			uiSys->clearAllScreens();
+			break;
 
 			// we're likely resuming the game, so pop all pause menus
-			case (PAUSED): 
-				uiSys->clearAllScreens();
-				break;
+			// add back our gameplay uis (order matters)
+		case (PAUSED):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("fpsCounter");
+			uiSys->addScreen("lapCounter");
+			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
+			break;
 
 			// we're likely restarting the game
-			case (END):
-				break;
+		case (END):
+			break;
 		}
 
 		// this is the new state, do things that you want to update
@@ -294,19 +363,27 @@ void Game::stateTransition() {
 		// entry
 		switch (gameState.nextState) {
 			// HOW DID WE GET HERE, this shouldn't run
-			case (MAINMENU):
-				break;
+		case (MAINMENU):
+			break;
 
-				// we are resuming gameplay
-			case (GAMEPLAY):
-				break;
-				// we will be in a pause menu
-			case (PAUSED):
-				break;
+			// we are resuming gameplay
+		case (GAMEPLAY):
+			//uiSys->addScreen("racingHUD");
+			break;
+			// we will be in a pause menu
+		case (PAUSED):
+			uiSys->clearAllScreens();
+			uiSys->addScreen("fpsCounter");
+			uiSys->addScreen("pauseMenu"); // ensure this menu is pushed last, so that it goes on top, else UI input wont work
+			renderer->renderPasses.clear();
+			break;
 
-				// someone has finished the race
-			case (END):
-				break;
+			// someone has finished the race
+		case (END):
+			uiSys->clearAllScreens();
+			uiSys->createStandingsScreen(coordinator->getComponent<Leaderboard>(player));
+			uiSys->addScreen("standingsScreen");
+			break;
 		}
 
 		gameState.currentState = gameState.nextState;
@@ -319,30 +396,58 @@ void Game::update() {
 	// update inputs
 	// input
 	gameActions = inputSystem.getActions();
-	gameState.inputActions = gameActions;
-	controllerSys->update(gameState);
+	gameUIActions = inputSystem.getUIActions();
 
-	if (gameActions.intializeGame) {
-		gameActions.intializeGame = false;
-		gameState.nextState = GAMEPLAY;
-	}
+	gameState.inputActions = gameActions;
+	gameState.uiActions = gameUIActions;
+
+	// controllerSys handles both vehicle controls AND UI navigation
+	// UI navigation modifies game.uiActions directly (confirm, goBack, menuControl, etc.)
+	// skip vehicle controls during countdown so the player can't move early
+	if (!raceCountdown.activeTimer())
+		controllerSys->update(gameState);
+
+	// --- State transition from menuControl ---
+	// Read back uiActions after controllerSys may have modified them
+	UIActions& ui = gameState.uiActions;
+
+	handleMenuControl();
+
+	// sync menuControl back to InputSystem so controller/keyboard checks can see the current state
+	inputSystem.setMenuControl(ui.menuControl);
 
 	stateTransition(); // handle any state transitions
 
 	updateTime();
 
-
 	// do our updates only if in game
 	if (gameState.currentState == GAMEPLAY) {
 
+		// physics and camera always run so vehicles settle on the track
 		updatePhysics();
-		// AI
-		aiControllerSys->update(gameState);
-		// after physics update
-		lapSys->update(gameState);
-		uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
-		respawnSys->update(gameState);
-		leaderboardSys->update(gameState);
+
+		// race countdown (runs once per frame)
+		if (raceCountdown.activeTimer()) {
+			raceCountdown.update(frameTime);
+			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
+			if (secondsLeft != lastPrintedSecond) { // prevents output console spam
+				lastPrintedSecond = secondsLeft;
+				std::cout << "RACE START IN: " << secondsLeft << "\n";
+			}
+			if (raceCountdown.completedTimer()) {
+				raceCountdown.resetTimer();
+				std::cout << "GO!\n";
+			}
+		}
+		else {
+			// countdown finished — race is live
+			aiControllerSys->update(gameState);
+			// after physics update
+			lapSys->update(gameState);
+			uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
+			respawnSys->update(gameState);
+			leaderboardSys->update(gameState);
+		}
 	}
 
 	updateFPS();
@@ -354,7 +459,7 @@ void Game::update() {
 void Game::updateTime() {
 	// time
 	double newTime = glfwGetTime();
-	double frameTime = newTime - currentTime;
+	frameTime = newTime - currentTime;
 	currentTime = newTime;
 	accumulator += frameTime;
 	accumulator = std::min(accumulator, 1 / minFps);

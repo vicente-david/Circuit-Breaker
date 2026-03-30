@@ -7,6 +7,10 @@ using namespace AIHelpers;
 * prioritize dodging and recovering HP
 */
 void DefenseState::run(AIDriveContext& ctx) {
+	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
+	
+	// Check if a route/curve change is needed
+	checkRoute(ctx.ai);
 	
 	// Line of sight sweep: detect other players and change state accordingly
 	std::pair<Direction, glm::vec3> sweepResult = DefenseState::detect(ctx);
@@ -17,12 +21,13 @@ void DefenseState::run(AIDriveContext& ctx) {
 	}
 	// run state update function
 	auto next = currentState->update(ctx);
-
+	
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
 		currentState = std::move(next);
 		currentState->enter(ctx);
 	}
+
 	
 }
 
@@ -63,9 +68,10 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 * overtake other players: prioritize speed and attacking others
 */
 void OvertakeState::run(AIDriveContext& ctx) {
+	dbug::log("AI", 1, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
-	// TODO: set appropriate path to follow
-
+	// give ai the proper path
+	checkRoute(ctx.ai);
 
 	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
 	if (sweepResult.first != NONE) {
@@ -93,7 +99,6 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 	auto& spark = ctx.spark;
 	auto& body = ctx.body;
 	std::pair<Direction, glm::vec3> result{ NONE, glm::vec3(0.f) };
-
 	// Only check forward direction if spark has boost
 	if (spark.boost > 0.0f) {
 		std::pair<bool, glm::vec3> resultFwd = lookFwd(transform, body);
@@ -138,12 +143,41 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
 void MaintainState::run(AIDriveContext& ctx) {
-	// TODO: maintain state behaviour when in lead
+	dbug::log("AI", 1, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
+	checkRoute(ctx.ai);
+
+	// run state update function
+	auto next = currentState->update(ctx);
+
+	if (next) {
+		// if the returned pointer was not nullptr (points to a new state), change states
+		currentState = std::move(next);
+		currentState->enter(ctx);
+	}
 	
 }
 
+void AIState::checkRoute(AIController& ai) {
 
+	// Check if a route/curve change is needed
+	if (ai.routeID != AIState::path->id) {
+		int posIdx = ai.currentPosIdx;
+
+		// check if the ai can switch routes (curve to follow)
+		// get the distance between the current point the ai is at on its current route and the point on the desired route at the same index.
+		// * for this to work both curves must have the same number of points and line up on singular portions of the track
+		float dist = glm::length(ai.route.at(posIdx) - AIState::path->curvePoints.at(posIdx));
+		if (dist < 1.f) {
+			// if the distance is within a small enough range, change to the new path
+			ai.route = AIState::path->curvePoints;
+			ai.angles = AIState::path->curvatures;
+			ai.routeID = AIState::path->id;
+			dbug::log("AIPATH", 1, "Switching to path %d", AIState::path->id);
+		}
+		else dbug::log("AIPATH", 1, "Path switch refused");
+	}
+}
 
 
 
