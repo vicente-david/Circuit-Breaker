@@ -99,6 +99,9 @@ void sparkInfo(int id, float health, float boost) {
 	}
 	sparkData.push_back(SparkUI{id, health, boost});
 }
+void clearSparkData() {
+	sparkData.clear();
+}
 void drawSparkInfo() {
 	if (sparkData.empty())
 		return;
