@@ -42,6 +42,7 @@ public:
 
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;
+	unsigned int matricesUBO;
 
 	
 
@@ -79,7 +80,14 @@ public:
 
 private:
 	std::pair<glm::vec3, glm::vec3> bounds;
-	
+
+	// some shadow map stuff
+	std::vector<glm::vec4> getFrustumCorners(const glm::mat4& proj, const glm::mat4& view);
+	glm::mat4 lightViewProjMat(const float nearPlane, const float farPlane, glm::mat4 view);
+	std::vector<glm::mat4> getLightSpaceMatrices(glm::mat4 view);
+	float nearPlane = 0.1f;
+	float farPlane = 200.0f;
+	std::vector<float> shadowCascadeLevels{ farPlane / 50.0f, farPlane / 25.0f, farPlane / 10.0f, farPlane / 2.0f };
 	
 };
 
