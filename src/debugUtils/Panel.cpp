@@ -52,6 +52,7 @@ void createPanel(GLFWwindow *window) {
 	ImGui_ImplOpenGL3_Init();
 }
 void debugPanel() {
+	return; // REMOVE
 	ImGui::Begin("Debug");
 
 	float startV = debug::volume;
@@ -72,6 +73,7 @@ void debugPanel() {
 	ImGui::End();
 }
 void vehicleTuningPanel() {
+	return; // REMOVE
 	ImGui::Begin("Vehicle Tuning");
 	ImGui::InputText("Folder", &tuning::configFolder);
 	ImGui::InputText("Base Conf.", &tuning::basePath);
@@ -103,6 +105,7 @@ void clearSparkData() {
 	sparkData.clear();
 }
 void drawSparkInfo() {
+	return; // REMOVE
 	if (sparkData.empty())
 		return;
 
