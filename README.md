@@ -64,7 +64,7 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     - L-Trigger: Brake
     - LT + RT: Reverse
     - B/◯: Boost
-    - Y/△: Reset
+    - Y/△: Look Backwards
     - A/X: Handbrake
 
 ### Keyboard:
@@ -77,7 +77,7 @@ Release builds for windows can be downloaded from [this drive link](https://driv
     - L: Shimmy right
     - Space: Boost
     - Back Space: Reset
-    - C: Camera Reset Toggle
+    - X: Look Backwards
     - K: Handbrake
 
 - Reversing happens when the brake and throttle are both active when the car is stationary.
