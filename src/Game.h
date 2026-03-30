@@ -107,7 +107,7 @@ public:
 	std::vector<Entity> raceEntities; // contains ALL entities that are created during initializeRace()
 
 	// race countdown
-	Clock raceCountdown{ 3.0 };
+	Clock raceCountdown{ 4.0 };
 	int lastPrintedSecond = -1;
 	//Track activeTrack;
 };

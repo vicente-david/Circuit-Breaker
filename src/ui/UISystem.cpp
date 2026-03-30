@@ -70,7 +70,7 @@ void UISystem::updateUIElement(Entity& e) {
 	if (!u1.text.empty()) {
 		textProg->use();
 		textPositions p1 = calculateTextContainer(u1);
-		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, u1.textScale, u1.textColor, textFont);
 	}
 
 }
@@ -148,7 +148,7 @@ void UISystem::updateButtonUIElement(Entity& e) {
 	if (!u1.text.empty()) {
 		textProg->use();
 		textPositions p1 = calculateTextContainer(u1);
-		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, u1.textScale, u1.textColor, textFont);
 	}
 
 }
@@ -404,6 +404,9 @@ void UISystem::screenInitialization() {
 	//createStandingsScreen(); initialized seperately)
 	createRacingHUD();
 	createLapCounter();
+	createPlaceCounter();
+	createCountdown();
+	createBackwardsDisplay();
 }
 
 // Recall UIElement has the following fields
@@ -428,7 +431,7 @@ void UISystem::createFPSCounter() {
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
-	counter1.textAlignmentY = BOTTOM;
+	counter1.textAlignmentY = TOP;
 
 	counter1.hasBackgroundColor = false;
 
@@ -447,6 +450,45 @@ void UISystem::updateFPSCounter() {
 	Entity& e1 = nameToScreen["fpsCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "FPS: " + *fps;
+}
+
+void UISystem::createPlaceCounter() {
+	UIElement counter1;
+	counter1.text = "Position: " + std::to_string(0);
+	counter1.textScale = 1.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = RIGHT;
+	counter1.textAlignmentY = BOTTOM;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen placeCounter;
+	placeCounter.name = "placeCounter";
+	placeCounter.UIElements.push_back(e1);
+
+	nameToScreen["placeCounter"] = placeCounter;
+}
+
+
+// assume the player is being passed
+void UISystem::updatePlaceCounter(Entity& p) {
+	Entity& e1 = nameToScreen["placeCounter"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+
+	Leaderboard& lb = coordinator->getComponent<Leaderboard>(p);
+	int placement = 0;
+	for (int i = 0; i < lb.standings.size(); i++) {
+		if (coordinator->getComponent<SparkData>(p).mVehicleName == lb.standings[i]) {
+			placement = i;
+			break;
+		}
+	}
+
+	u1.text = "Position: " + std::to_string(placement+1);
 }
 
 void UISystem::createMainMenu() {
@@ -791,4 +833,88 @@ void UISystem::updateLapCounter(int lapCount) {
 	Entity& e1 = nameToScreen["lapCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "Lap: " + std::to_string(lapCount);
+}
+
+void UISystem::createCountdown() {
+	UIElement counter1;
+	counter1.text = "4";
+	counter1.textScale = 5.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = CENTER;
+	counter1.textAlignmentY = CENTER;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen countDown;
+	countDown.name = "countDown";
+	countDown.UIElements.push_back(e1);
+
+	nameToScreen["countDown"] = countDown;
+}
+
+void UISystem::updateCountdown(std::string second, float time) {
+	// can assume it's only the first thing (we hard coded it above)
+	Entity& e1 = nameToScreen["countDown"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+	u1.text = second;
+}
+
+void UISystem::createBackwardsDisplay() {
+	UIElement counter1;
+	counter1.text = "";
+	counter1.textScale = 3.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = CENTER;
+	counter1.textAlignmentY = CENTER;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen backwardsDisplay;
+	backwardsDisplay.name = "backwardsDisplay";
+	backwardsDisplay.UIElements.push_back(e1);
+
+	nameToScreen["backwardsDisplay"] = backwardsDisplay;
+}
+
+void UISystem::updateBackwardsDisplay(float time) {
+	// if player is backwards then display "BACKWARDS" for 1 second
+	// off for one second, and then back on again
+	Entity& e1 = nameToScreen["backwardsDisplay"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+
+	if (*playerBackwards) {
+		// update the clock
+		backwardClock.update(time);
+
+		
+		// if the timer has completed, restart
+		if (backwardClock.completedTimer()) {
+			backwardClock.start(2.0);
+		}
+
+		if ((backwardClock.timerDuration - backwardClock.remaining) < 1.0) {
+			// show backwards
+			u1.text = "BACKWARDS!!!";
+		}
+		else {
+			// show nothing
+			u1.text = "";
+		}
+		
+	}
+	else {
+		// reset if player isn't backwards
+		backwardClock.resetTimer();
+		u1.text = "";
+	}
+
+
 }

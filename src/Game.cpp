@@ -209,6 +209,12 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
+	gameState.player = &player;
+
+	// link health and boost to the UI system
+	auto& sparkData = coordinator->getComponent<SparkData>(player);
+	uiSys->playerHealth = &sparkData.health;
+	uiSys->playerBoost = &sparkData.boost;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
@@ -294,6 +300,7 @@ void Game::initializeUI() {
 	uiSys->initializeRenderingParams();
 	uiSys->coordinator = coordinator;
 	uiSys->fps = &fps;
+	uiSys->playerBackwards = &gameState.playerBackwards;
 
 	uiSys->screenInitialization();
 
@@ -376,6 +383,9 @@ void Game::stateTransition() {
 			uiSys->popScreen();
 			initializeRace();
 			uiSys->addScreen("lapCounter");
+			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("backwardsDisplay");
+			uiSys->addScreen("countDown");
 			break;
 
 			// our likely next state is paused or game ended
@@ -390,6 +400,8 @@ void Game::stateTransition() {
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
+			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("backwardsDisplay");
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
@@ -476,14 +488,25 @@ void Game::update() {
 			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
 			if (secondsLeft != lastPrintedSecond) { // prevents output console spam
 				lastPrintedSecond = secondsLeft;
+				uiSys->updateCountdown(std::to_string(secondsLeft), frameTime);
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
 			}
 			if (raceCountdown.completedTimer()) {
 				raceCountdown.resetTimer();
+				uiSys->updateCountdown("GO!", frameTime);
+				uiSys->goTimer.timerDuration = 2.0;
+				uiSys->goTimer.start();
 				std::cout << "GO!\n";
 			}
 		}
 		else {
+			if (uiSys->goTimer.activeTimer()) {
+				uiSys->goTimer.update(frameTime);
+			}
+			else if (uiSys->go) {
+				uiSys->popScreen();
+				uiSys->go = false;
+			}
 			// countdown finished — race is live
 			aiControllerSys->update(gameState);
 			// after physics update
@@ -491,6 +514,8 @@ void Game::update() {
 			uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
 			respawnSys->update(gameState);
 			leaderboardSys->update(gameState);
+			uiSys->updatePlaceCounter(player);
+			uiSys->updateBackwardsDisplay(frameTime);
 		}
 	}
 
