@@ -369,7 +369,7 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 // Steering calculations used in many of the above
 void AIHelpers::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos) {
 	
-	if (ai.attackCooldown.activeTimer() && ai.attackCooldown.timerDuration == 10.0) {
+	if (ai.attackCooldown.activeTimer() && ai.attackCooldown.timerDuration == 6.0) {
 		// it's the start of the race
 		if (ai.attackCooldown.remaining > 3.0) {
 			controls.steering = 0.0f;
