@@ -111,7 +111,7 @@ void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text
         maxBearing = glm::max(maxBearing, ch.bearing.y);
     }
     
-    calcPositions(positions, x, y, totalWidth, maxHeight);
+    calcPositions(positions, x, y, totalWidth, maxHeight*scale);
     
 
     // iterate through all characters
