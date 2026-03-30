@@ -58,6 +58,8 @@ public:
 	int numActivePlayers = 8;
 	int numLaps = 4;
 
+	double* frameTime;
+
 	// temp UI
 	//RectUI activeUIRect; 
 	//TextUI uiText;

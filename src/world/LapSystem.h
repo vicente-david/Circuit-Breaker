@@ -8,6 +8,7 @@
 #include "../GameState.h"
 #include "CurveLoader.h"
 #include "vehicles/SparkComponents.h"
+#include "ai/AISparkComponents.h"
 #include <glm/gtx/projection.hpp>
 
 

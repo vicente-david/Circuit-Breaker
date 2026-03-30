@@ -17,7 +17,7 @@ int main() {
 	dbug::minLogSeverity = 0;
 	dbug::logIgnore("INPUT");
 	dbug::logIgnore("GAME");
-	dbug::logIgnore("AI");
+	//dbug::logIgnore("AI");
 	dbug::logIgnore("PHYS");
 	dbug::logIgnore("LEADERBOARD");
 	// dbug::logListType = dbug::WHITE_LIST;

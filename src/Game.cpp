@@ -471,6 +471,7 @@ void Game::updateTime() {
 	accumulator = std::min(accumulator, 1 / minFps);
 	framesPassed++;
 
+	gameState.frameTime = &frameTime;
 	t += frameTime;
 }
 

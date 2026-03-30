@@ -33,11 +33,12 @@ struct AIController {
 	int targetIdx = 0; // index of target position
 	int currentPosIdx = 0; // approx index current position of spark
 	int lookAheadSteps = 8; // how far to look ahead on the track curve
+	int logIdx = 0;
 	float boostAtkTimer = 0.0f;
 	float dodgeTimer = 0.0f;
-	float stillTimer = 0.0f; // counts while ai is not moving
 	float respawnRecoverTimer = 0.0f;
 	int lastPosIdx = 0;
 	
+	Clock checkProgTimer{10.0, 10.0}; // counts while ai is not moving
 };
 

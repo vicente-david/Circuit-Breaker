@@ -26,6 +26,7 @@ void AIControllerSys::update(GameState& game) {
 		auto& spark = game.coordinator->getComponent<SparkData>(entity);
 		auto& body = game.coordinator->getComponent<physx::PxRigidBody*>(entity);
 		auto& leaderboard = game.coordinator->getComponent<Leaderboard>(entity);
+		auto& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		
 		// update current position index
 		int i = ai.currentPosIdx;
@@ -35,16 +36,22 @@ void AIControllerSys::update(GameState& game) {
 		ai.currentPosIdx = i;
 		// update target based on current position and the lookAheadSteps value
 		ai.targetIdx = (ai.currentPosIdx + ai.lookAheadSteps) % ai.route.size();
-	
-		if (spark.speed <= 0.02) {
-			ai.stillTimer++;
-			dbug::log("AI", 2, "[%s] still timer: %.1f", spark.mVehicleName.c_str(), ai.stillTimer);
+
+		// check progress of the spark
+		ai.checkProgTimer.update(*game.frameTime);
+		if (ai.checkProgTimer.completedTimer()) {
+			if (ai.currentPosIdx == ai.logIdx) {
+				// no significant lap progress made since last check
+				dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
+				controls.reset = true;
+				ai.checkProgTimer.start(); //restart timer
+				continue;
+			}
+			ai.logIdx = ai.currentPosIdx;
+			ai.checkProgTimer.start(); //restart timer
 		}
-		else if (ai.stillTimer > 0.0f) ai.stillTimer -= 0.5f;
-		if (ai.stillTimer > 4.f) {
-			dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
-			// TODO: do something here
-		}
+
+
 		// Adjust lookahead target based on speed
 		if (ai.respawnRecoverTimer > 0.0f) {
 			// respawn recovery
