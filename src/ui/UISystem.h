@@ -132,6 +132,9 @@ public:
 	void updateCountdown(std::string second, float time);
 	Clock goTimer;
 	bool go = true; // bool to toggle the "go" visibility
+
+	void createBackwardsDisplay();
+	void updateBackwardsDisplay(float time);
 	
 	void selectedEntities(); // mainly used for iterating through all visible screens and toggling the highlight flag
 
@@ -155,6 +158,10 @@ public:
 	int* SCR_HEIGHT;
 	std::string* fps;
 	// entity based pointers will need a little more managment
+
+	//
+	bool* playerBackwards;
+	Clock backwardClock = {2.0, 2.0}; // initialize a timer for going backwards display
 
 	std::shared_ptr<Coordinator> coordinator;
 

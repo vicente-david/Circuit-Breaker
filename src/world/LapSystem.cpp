@@ -230,13 +230,11 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 
 	}
 
-	/*
-	float deltaDist = newProg - lapProg.progress; // detect forward or backward
-
-	if (deltaDist < 0.0) {
-		//std::cout << "backwards oml" << std::endl;
+	
+	if (entity == *game.player) {
+		playerDelta = newProg - lapProg.progress; // detect forward or backward
 	}
-	*/
+	
 	
 	// upper limit
 	if (newProg > trackDistances[lastSegment]) newProg = trackDistances[lastSegment];
@@ -281,6 +279,28 @@ void LapSystem::update(GameState& game) {
 			lapProg.lastCheckpointDir = glm::normalize(dir);
 		}
 		
+		// check if backwards
+		if (entity == *game.player) {
+			determineBackwards(lapProg, eTransform, game, entity);
+		}
 
+	}
+}
+
+void LapSystem::determineBackwards(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity) {
+	int i = lapProg.closestTrackPoint;
+	int trackSize = trackPoints[0].curvePoints.size();
+
+	// nextSeg - closest = from closest to next
+	glm::vec3 nextSeg = trackPoints[0].curvePoints[(i + 1)%trackSize] - trackPoints[0].curvePoints[i];
+
+	float orientation = glm::dot(nextSeg, eTransform.forwardD);
+
+	
+	if (playerDelta < 0.0 && orientation < 0.0f) {
+		game.playerBackwards = true;
+	}
+	else if (orientation >= 0.0f){
+		game.playerBackwards = false;
 	}
 }

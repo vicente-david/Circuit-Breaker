@@ -202,6 +202,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
+	gameState.player = &player;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
@@ -285,6 +286,7 @@ void Game::initializeUI() {
 	uiSys->initializeRenderingParams();
 	uiSys->coordinator = coordinator;
 	uiSys->fps = &fps;
+	uiSys->playerBackwards = &gameState.playerBackwards;
 
 	uiSys->screenInitialization();
 
@@ -337,6 +339,7 @@ void Game::stateTransition() {
 			initializeRace();
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("countDown");
 			break;
 
@@ -353,6 +356,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("backwardsDisplay");
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
@@ -462,6 +466,7 @@ void Game::update() {
 			respawnSys->update(gameState);
 			leaderboardSys->update(gameState);
 			uiSys->updatePlaceCounter(player);
+			uiSys->updateBackwardsDisplay(frameTime);
 		}
 	}
 

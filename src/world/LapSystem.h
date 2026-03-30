@@ -39,7 +39,11 @@ private:
 
 	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity); // update the checkpoint for the entity
+
+	void determineBackwards(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity);
 	
+	float playerDelta = 0.0;
+
 	std::vector<glm::vec3> checkPoints; // will need to be more sophisticated for multiple branching paths
 	int checkpointPlacement = 10; // every x amount of points along the track, place 1 checkpoint
 

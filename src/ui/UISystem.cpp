@@ -406,6 +406,7 @@ void UISystem::screenInitialization() {
 	createLapCounter();
 	createPlaceCounter();
 	createCountdown();
+	createBackwardsDisplay();
 }
 
 // Recall UIElement has the following fields
@@ -860,4 +861,60 @@ void UISystem::updateCountdown(std::string second, float time) {
 	Entity& e1 = nameToScreen["countDown"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = second;
+}
+
+void UISystem::createBackwardsDisplay() {
+	UIElement counter1;
+	counter1.text = "";
+	counter1.textScale = 3.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = CENTER;
+	counter1.textAlignmentY = CENTER;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen backwardsDisplay;
+	backwardsDisplay.name = "backwardsDisplay";
+	backwardsDisplay.UIElements.push_back(e1);
+
+	nameToScreen["backwardsDisplay"] = backwardsDisplay;
+}
+
+void UISystem::updateBackwardsDisplay(float time) {
+	// if player is backwards then display "BACKWARDS" for 1 second
+	// off for one second, and then back on again
+	Entity& e1 = nameToScreen["backwardsDisplay"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+
+	if (*playerBackwards) {
+		// update the clock
+		backwardClock.update(time);
+
+		
+		// if the timer has completed, restart
+		if (backwardClock.completedTimer()) {
+			backwardClock.start(2.0);
+		}
+
+		if ((backwardClock.timerDuration - backwardClock.remaining) < 1.0) {
+			// show backwards
+			u1.text = "BACKWARDS!!!";
+		}
+		else {
+			// show nothing
+			u1.text = "";
+		}
+		
+	}
+	else {
+		// reset if player isn't backwards
+		backwardClock.resetTimer();
+		u1.text = "";
+	}
+
+
 }
