@@ -366,6 +366,12 @@ void SparkSys::sparkCollision(GameState& game) {
 }
 
 void SparkSys::wallCollision(GameState &game) {
+	// kill everything touching the kill plane
+	for (auto const& entity : game.physics->callbacks->killSparks) {
+		auto& sData =game.coordinator->getComponent<SparkData>(entity);
+		sData.health = 0;
+
+	}
 	for (auto const& colData : game.physics->callbacks->sparkWallCol) {
 		auto& sData =game.coordinator->getComponent<SparkData>(colData.sparkId);
 		auto& trans =game.coordinator->getComponent<Transform>(colData.sparkId);

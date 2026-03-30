@@ -8,6 +8,7 @@ enum UserPhysicsType {
 	FINISH_LINE,
 	HEAL,
 	TESTING,
+	KILL,
 };
 
 // all physics actors should have one of these in its userdata so we

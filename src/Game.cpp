@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "AllSystem.h"
+#include "PxActor.h"
 #include "physics/CollisionData.h"
 #include <cmath>
 
@@ -162,7 +163,7 @@ void Game::initializeTrack() {
 			actor->userData = &healPhys;
 		}
 
-		// Healzones
+		// Walls
 		Model wallModel("assets/walls.obj"); // loads model and paths
 		Entity wall = gameState.coordinator->createEntity();
 		gameState.coordinator->addComponent(wall, none);
@@ -173,6 +174,20 @@ void Game::initializeTrack() {
 		for(auto& i : wallModel.GetMeshes()){
 			auto actor = physics->initStaticMesh(i, none);
 			actor->userData = &wallPhys;
+		}
+
+		// Kill Plane
+		Model killModel("assets/killGround.obj"); // loads model and paths
+		Entity kill = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(kill, none);
+		gameState.coordinator->addComponent(kill, killModel);
+		gameState.coordinator->addComponent(kill, CollisionData{ KILL, kill });
+		auto& killPhys = gameState.coordinator->getComponent<CollisionData>(kill);
+
+		for(auto& i : killModel.GetMeshes()){
+			auto actor = physics->initStaticMesh(i, none, false);
+			actor->userData = &killPhys;
+
 		}
 	}
 

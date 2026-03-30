@@ -44,7 +44,12 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		// send data to spark system
 		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
-	}
+	// death plane
+	}else if (d1->type == SPARK && d2->type == KILL) {
+		killSparks.push_back(d1->entity);
+	}else if (d2->type == SPARK && d1->type == KILL) {
+		killSparks.push_back(d2->entity);
+	} 
 }
 
 void updateEntityCollider(std::set<Entity> &set, PxPairFlag::Enum status,
@@ -141,4 +146,5 @@ void PhysXCallbacks::resetLists() {
 	sparkFinishCol.clear();
 	sparkWallCol.clear();
 	sparkSparkCol.clear();
+	killSparks.clear();
 }
