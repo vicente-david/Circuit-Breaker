@@ -25,5 +25,6 @@ void update(GameState &game);
 void render();
 
 void sparkInfo(int id, float health, float boost);
+void clearSparkData();
 void cleanup();
 } // namespace dbugPanel
