@@ -161,6 +161,19 @@ void Game::initializeTrack() {
 			auto actor = physics->initHealZones(i, none);
 			actor->userData = &healPhys;
 		}
+
+		// Healzones
+		Model wallModel("assets/walls.obj"); // loads model and paths
+		Entity wall = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(wall, none);
+		gameState.coordinator->addComponent(wall, wallModel);
+		gameState.coordinator->addComponent(wall, CollisionData{ WALL, wall });
+		auto& wallPhys = gameState.coordinator->getComponent<CollisionData>(wall);
+
+		for(auto& i : wallModel.GetMeshes()){
+			auto actor = physics->initStaticMesh(i, none);
+			actor->userData = &wallPhys;
+		}
 	}
 
 	Track curve("assets/curve.obj");

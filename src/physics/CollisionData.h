@@ -3,6 +3,7 @@
 
 enum UserPhysicsType {
 	GROUND,
+	WALL,
 	SPARK,
 	FINISH_LINE,
 	HEAL,

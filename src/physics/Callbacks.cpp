@@ -26,12 +26,12 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 			  d1->type, d1->entity, d2->type, d2->entity);
 
 	// spark/wall collisions
-	if (d1->type == SPARK && d2->type == GROUND) {
+	if (d1->type == SPARK && d2->type == WALL) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
 
-	} else if (d1->type == GROUND && d2->type == SPARK) {
+	} else if (d1->type == WALL && d2->type == SPARK) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
