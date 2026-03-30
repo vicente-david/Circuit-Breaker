@@ -23,6 +23,8 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	hlightShader->use();
 	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+	resShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 }
 
 
@@ -70,7 +72,7 @@ void UISystem::updateUIElement(Entity& e) {
 	if (!u1.text.empty()) {
 		textProg->use();
 		textPositions p1 = calculateTextContainer(u1);
-		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, u1.textScale, u1.textColor, textFont);
 	}
 
 }
@@ -148,8 +150,47 @@ void UISystem::updateButtonUIElement(Entity& e) {
 	if (!u1.text.empty()) {
 		textProg->use();
 		textPositions p1 = calculateTextContainer(u1);
-		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, u1.textScale, u1.textColor, textFont);
 	}
+
+}
+
+void UISystem::updateResBars(Entity& e, bool isHealth) {
+	// quick and dirty way
+	resShader->use();
+
+	glm::vec3 col;
+	// update uniforms 
+	if (isHealth) {
+		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerHealth);
+		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerHealth);
+		col = glm::vec3(0.0f, 1.0f, 0.0f);
+	}
+	else {
+		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerBoost);
+		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerBoost);
+		col = glm::vec3(0.0f, 0.0f, 1.0f);
+	}
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	glBindVertexArray(resVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+	resData.clear();
+
+	// god awful for readibility, but we encode the texture coords as the xy comp of UIelement color
+	// only reason we can do this is because it's hard coded that way
+	// see how the screen creation for each of these
+	UIPositions positions = calculateAnchorPositions(u1);
+	// 6 points in a triangle based quad
+	for (int i = 0; i < 6; i++) {
+		UIResVertex v1;
+		v1.position = positions.points[i];
+		v1.uvCoord = glm::vec2(u1.colors[i].x, u1.colors[i].y);
+		v1.resourceColor = col;
+		resData.push_back(v1);
+	}
+	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_TRIANGLES, 0, resData.size());
+
 
 }
 
@@ -166,6 +207,7 @@ void UISystem::updateAnimatedUIElement(Entity& e) {
 		}
 		break;
 	case(ANIM_HEALTHBAR):
+		updateResBars(e, animComp.isHealth);
 		break;
 	case(ANIM_SPEEDOMETER):
 		break;
@@ -355,6 +397,35 @@ void UISystem::initializeRenderingParams() {
 	// vao layout is vec3, vec3, float, vec3
 
 
+	// resource bar (health/boost)
+	resShader = std::make_unique<ShaderProgram>("shaders/bar.vert", "shaders/bar.frag");
+
+	resShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	glGenVertexArrays(1, &resVAO);
+	glBindVertexArray(resVAO);
+
+	glGenBuffers(1, &resVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+
+
+	// 8 floats, 6 things for a quad
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 8 * 6, NULL, GL_DYNAMIC_DRAW);
+
+	// position, uv, color
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+
+
+	// enable all
+	glEnableVertexAttribArray(0);
+	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(2);
+
+	// layout, vec3, vec2, vec3
+
 
 }
 
@@ -404,6 +475,11 @@ void UISystem::screenInitialization() {
 	//createStandingsScreen(); initialized seperately)
 	createRacingHUD();
 	createLapCounter();
+	createPlaceCounter();
+	createCountdown();
+	createBackwardsDisplay();
+	createBoostBar();
+	createHealthBar();
 }
 
 // Recall UIElement has the following fields
@@ -428,7 +504,7 @@ void UISystem::createFPSCounter() {
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
-	counter1.textAlignmentY = BOTTOM;
+	counter1.textAlignmentY = TOP;
 
 	counter1.hasBackgroundColor = false;
 
@@ -447,6 +523,45 @@ void UISystem::updateFPSCounter() {
 	Entity& e1 = nameToScreen["fpsCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "FPS: " + *fps;
+}
+
+void UISystem::createPlaceCounter() {
+	UIElement counter1;
+	counter1.text = "Position: " + std::to_string(0);
+	counter1.textScale = 1.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = RIGHT;
+	counter1.textAlignmentY = BOTTOM;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen placeCounter;
+	placeCounter.name = "placeCounter";
+	placeCounter.UIElements.push_back(e1);
+
+	nameToScreen["placeCounter"] = placeCounter;
+}
+
+
+// assume the player is being passed
+void UISystem::updatePlaceCounter(Entity& p) {
+	Entity& e1 = nameToScreen["placeCounter"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+
+	Leaderboard& lb = coordinator->getComponent<Leaderboard>(p);
+	int placement = 0;
+	for (int i = 0; i < lb.standings.size(); i++) {
+		if (coordinator->getComponent<SparkData>(p).mVehicleName == lb.standings[i]) {
+			placement = i;
+			break;
+		}
+	}
+
+	u1.text = "Position: " + std::to_string(placement+1);
 }
 
 void UISystem::createMainMenu() {
@@ -791,4 +906,129 @@ void UISystem::updateLapCounter(int lapCount) {
 	Entity& e1 = nameToScreen["lapCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "Lap: " + std::to_string(lapCount);
+}
+
+void UISystem::createCountdown() {
+	UIElement counter1;
+	counter1.text = "4";
+	counter1.textScale = 5.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = CENTER;
+	counter1.textAlignmentY = CENTER;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen countDown;
+	countDown.name = "countDown";
+	countDown.UIElements.push_back(e1);
+
+	nameToScreen["countDown"] = countDown;
+}
+
+void UISystem::updateCountdown(std::string second, float time) {
+	// can assume it's only the first thing (we hard coded it above)
+	Entity& e1 = nameToScreen["countDown"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+	u1.text = second;
+}
+
+void UISystem::createBackwardsDisplay() {
+	UIElement counter1;
+	counter1.text = "";
+	counter1.textScale = 3.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = CENTER;
+	counter1.textAlignmentY = CENTER;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen backwardsDisplay;
+	backwardsDisplay.name = "backwardsDisplay";
+	backwardsDisplay.UIElements.push_back(e1);
+
+	nameToScreen["backwardsDisplay"] = backwardsDisplay;
+}
+
+void UISystem::updateBackwardsDisplay(float time) {
+	// if player is backwards then display "BACKWARDS" for 1 second
+	// off for one second, and then back on again
+	Entity& e1 = nameToScreen["backwardsDisplay"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+
+	if (*playerBackwards) {
+		// update the clock
+		backwardClock.update(time);
+
+		
+		// if the timer has completed, restart
+		if (backwardClock.completedTimer()) {
+			backwardClock.start(2.0);
+		}
+
+		if ((backwardClock.timerDuration - backwardClock.remaining) < 1.0) {
+			// show backwards
+			u1.text = "BACKWARDS!!!";
+		}
+		else {
+			// show nothing
+			u1.text = "";
+		}
+		
+	}
+	else {
+		// reset if player isn't backwards
+		backwardClock.resetTimer();
+		u1.text = "";
+	}
+
+
+}
+
+
+void UISystem::createHealthBar() {
+	UIElement hBar;
+	// default anchors are whole screen (0,0,1,1)
+	hBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
+	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 50.0);
+	hBar.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+
+	Animatable a = { true, false, true, ANIM_HEALTHBAR };
+	coordinator->addComponent(e1, hBar);
+	coordinator->addComponent(e1, a);
+
+	UIScreen myHealthIsDeclining;
+	myHealthIsDeclining.name = "myHealthIsDeclining";
+	myHealthIsDeclining.UIElements.push_back(e1);
+
+	nameToScreen["myHealthIsDeclining"] = myHealthIsDeclining;
+}
+
+void UISystem::createBoostBar(){
+	UIElement bBar;
+	// default anchors are whole screen (0,0,1,1)
+	bBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
+	bBar.anchorOffsets = glm::vec4(10.0, 65.0, 0.0, 105.0);
+	bBar.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+
+	Animatable a = { true, false, false, ANIM_HEALTHBAR };
+	coordinator->addComponent(e1, bBar);
+	coordinator->addComponent(e1, a);
+
+	UIScreen boostMeOffABridge;
+	boostMeOffABridge.name = "boostMeOffABridge";
+	boostMeOffABridge.UIElements.push_back(e1);
+
+	nameToScreen["boostMeOffABridge"] = boostMeOffABridge;
 }

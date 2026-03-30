@@ -63,6 +63,8 @@ public:
 	// temp UI
 	//RectUI activeUIRect; 
 	//TextUI uiText;
+	Entity* player;
+	bool playerBackwards = false; // detect when the player is backwards
 
 	//temporary to make everything work
 	std::shared_ptr<Coordinator> coordinator;

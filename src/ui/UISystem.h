@@ -41,6 +41,8 @@
 #include "../GameState.h"
 #include <algorithm>
 #include "../world/LeaderboardSystem.h"
+#include "../vehicles/SparkComponents.h"
+#include "../world/Clock.cpp"
 
 
 // positions of the triangle to render the quad
@@ -77,6 +79,12 @@ struct UIAnimVertex {
 	glm::vec3 hLightColor;
 };
 
+struct UIResVertex {
+	glm::vec3 position;
+	glm::vec2 uvCoord;
+	glm::vec3 resourceColor;
+};
+
 
 class UISystem : public System {
 public:
@@ -92,6 +100,7 @@ public:
 	void updateUIElement(Entity& e); // renders UI using stored colors
 	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
 	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
+	void updateResBars(Entity& e, bool isHealth); 
 
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
@@ -119,11 +128,23 @@ public:
 	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap
 
+	void createHealthBar();
+	void createBoostBar();
+
 	// persistent ui elements (elements that change every frame)
 	void createFPSCounter(); // create an fps counter
 	void updateFPSCounter();
 	void createLapCounter(); // create the lap counter
 	void updateLapCounter(int lapcount);
+	void createPlaceCounter();
+	void updatePlaceCounter(Entity& player);
+	void createCountdown();
+	void updateCountdown(std::string second, float time);
+	Clock goTimer;
+	bool go = true; // bool to toggle the "go" visibility
+
+	void createBackwardsDisplay();
+	void updateBackwardsDisplay(float time);
 	
 	void selectedEntities(); // mainly used for iterating through all visible screens and toggling the highlight flag
 
@@ -147,6 +168,19 @@ public:
 	int* SCR_HEIGHT;
 	std::string* fps;
 	// entity based pointers will need a little more managment
+	float* playerHealth;
+	float* maxPlayerHealth;
+	float* playerBoost;
+	float* maxPlayerBoost;
+
+	// res bar shaders
+	std::unique_ptr<ShaderProgram> resShader;
+	unsigned int resVAO, resVBO;
+	std::vector<UIResVertex> resData;
+
+	//
+	bool* playerBackwards;
+	Clock backwardClock = {2.0, 2.0}; // initialize a timer for going backwards display
 
 	std::shared_ptr<Coordinator> coordinator;
 

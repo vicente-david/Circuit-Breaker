@@ -86,6 +86,12 @@ class TestInput1 : public CallbackInterface {
 		else {
 			actions->kRespawn = false;
 		}
+		if (key == GLFW_KEY_X && action == GLFW_PRESS) {
+			actions->keyboardLookBack = true;
+		}
+		else if (key == GLFW_KEY_X && action == GLFW_RELEASE) {
+			actions->keyboardLookBack = false;
+		}
 
 
 		// UI callbacks for keyboard
@@ -263,6 +269,7 @@ void InputSystem::updateGamepad() {
 	bool button_A = controllerState.buttons[GLFW_GAMEPAD_BUTTON_A];
 	bool button_B = controllerState.buttons[GLFW_GAMEPAD_BUTTON_B];
 	bool button_Y = controllerState.buttons[GLFW_GAMEPAD_BUTTON_Y];
+	bool button_X = controllerState.buttons[GLFW_GAMEPAD_BUTTON_X];
 	bool button_RB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER];
 	bool button_LB = controllerState.buttons[GLFW_GAMEPAD_BUTTON_LEFT_BUMPER];
 	bool button_BACK = controllerState.buttons[GLFW_GAMEPAD_BUTTON_BACK];
@@ -312,10 +319,15 @@ void InputSystem::updateGamepad() {
 	else
 		actions.boost = 0;
 
-	if (button_Y || actions.kRespawn)
-		actions.respawn = true;
+	// if (button_START || actions.kRespawn)
+	// 	actions.respawn = true;
+	// else
+	// 	actions.respawn = false;
+
+	if (button_Y || actions.keyboardLookBack)
+		actions.lookBack = true;
 	else
-		actions.respawn = false;
+		actions.lookBack = false;
 
 	if (button_A || actions.kdriftMode)
 		actions.driftMode = true;

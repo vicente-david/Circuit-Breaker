@@ -14,6 +14,7 @@
 #include "world/Track.h"
 #include "InputSystem.h"
 #include <memory>
+#include <vector>
 #include "world/Clock.cpp"
 
 class Game{
@@ -50,6 +51,7 @@ public:
 
 
 	//void resetGame(); // todo: implement
+	void cleanupGame();
 
 	void stateTransition(); // if gamestate changes update things
 	void handleMenuControl(); // convenience function for setting gamestate based on menu and stuff 
@@ -102,6 +104,7 @@ public:
 	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
+	std::vector<Entity> raceEntities; // contains ALL entities that are created during initializeRace()
 
 	// race countdown
 	Clock raceCountdown{ 6.0 };

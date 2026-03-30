@@ -2,6 +2,7 @@
 #include "AllSystem.h"
 #include "PxActor.h"
 #include "physics/CollisionData.h"
+#include "debugUtils/Panel.h"
 #include <cmath>
 
 Game::Game() {
@@ -78,6 +79,7 @@ void Game::initializeECS() {
 }
 
 void Game::initializeRace() {
+	raceEntities.clear(); // clear all players to ensure we start from a clean slate
 	initializeTrack();
 	// initializeFinishLine();
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
@@ -102,6 +104,7 @@ void Game::initializeTrack() {
 	{
 		Transform none = {glm::vec3(0, 0, 0), glm::quat(0, 0, 0, 0)};
 		Entity trackE = gameState.coordinator->createEntity();
+		raceEntities.push_back(trackE);
 		gameState.coordinator->addComponent(trackE, none);
 		gameState.coordinator->addComponent(trackE, track.model);
 		gameState.coordinator->addComponent(trackE, CollisionData{GROUND, trackE});
@@ -129,6 +132,7 @@ void Game::initializeTrack() {
 		// Ribbons
 		Model ribbonModel("assets/ribbons.obj"); // loads model and paths
 		Entity ribbon = gameState.coordinator->createEntity();
+		raceEntities.push_back(ribbon);
 		gameState.coordinator->addComponent(ribbon, none);
 		gameState.coordinator->addComponent(ribbon, ribbonModel);
 		gameState.coordinator->addComponent(ribbon, CollisionData{ GROUND, ribbon });
@@ -142,6 +146,7 @@ void Game::initializeTrack() {
 		// Healzone Tracks
 		Model healTrackModel("assets/healzoneTracks.obj"); // loads model and paths
 		Entity healTrack = gameState.coordinator->createEntity();
+		raceEntities.push_back(healTrack);
 		gameState.coordinator->addComponent(healTrack, none);
 		gameState.coordinator->addComponent(healTrack, healTrackModel);
 		gameState.coordinator->addComponent(healTrack, CollisionData{GROUND, healTrack});
@@ -155,6 +160,7 @@ void Game::initializeTrack() {
 		// Healzones
 		Model healModel("assets/healzones.obj"); // loads model and paths
 		Entity heal = gameState.coordinator->createEntity();
+		raceEntities.push_back(heal);
 		gameState.coordinator->addComponent(heal, none);
 		gameState.coordinator->addComponent(heal, healModel);
 		gameState.coordinator->addComponent(heal, CollisionData{ HEAL, heal });
@@ -229,6 +235,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "Player");
+	raceEntities.push_back(sparkEntity);
 	coordinator->addComponent(sparkEntity, HumanController{ 0 });
 	coordinator->addComponent(sparkEntity, CameraComp());
 	coordinator->addComponent(sparkEntity, LapCounter());
@@ -237,11 +244,20 @@ void Game::initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 
 	coordinator->getComponent<SparkData>(sparkEntity).isHuman = !(0 == 1);
 	coordinator->getComponent<LapCounter>(sparkEntity).isPlayer = true;
 	player = sparkEntity;
+	gameState.player = &player;
+
+	// link health and boost to the UI system
+	auto& sparkData = coordinator->getComponent<SparkData>(player);
+	uiSys->playerHealth = &sparkData.health;
+	uiSys->maxPlayerHealth = &sparkData.maxHealth;
+	uiSys->playerBoost = &sparkData.boost;
+	uiSys->maxPlayerBoost = &sparkData.maxBoost;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt, std::string name) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	Entity testSpark2 = sparkSys->createSpark(gameState, startLoc, name);
+	raceEntities.push_back(testSpark2);
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
@@ -255,6 +271,7 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
 	auto testSpark3 = sparkSys->createSpark(gameState, startLoc, "AI P3");
+	raceEntities.push_back(testSpark3);
 	coordinator->addComponent(testSpark3, LapCounter());
 	coordinator->addComponent(testSpark3, Respawnable());
 	coordinator->addComponent(testSpark3, Leaderboard());
@@ -320,6 +337,7 @@ void Game::initializeUI() {
 	uiSys->initializeRenderingParams();
 	uiSys->coordinator = coordinator;
 	uiSys->fps = &fps;
+	uiSys->playerBackwards = &gameState.playerBackwards;
 
 	uiSys->screenInitialization();
 
@@ -343,14 +361,45 @@ void Game::handleMenuControl() {
 		gameState.nextState = GAMEPLAY;
 	}
 
-	if (ui.menuControl == 2) {
+	if (ui.menuControl == -1) {
+		gameState.nextState = MAINMENU;
+	}
+
+	else if (ui.menuControl == 2) {
 		gameState.nextState = PAUSED;
 	}
+
 	else if (ui.menuControl == 1) {
 		gameState.nextState = GAMEPLAY;
 	}
 
 
+}
+
+void Game::cleanupGame() {
+	// remove alll physx actors for the sparks
+	for (Entity e : raceEntities) {
+		if (coordinator->hasComponent<SparkData>(e)) {
+			SparkData& sData = coordinator->getComponent<SparkData>(e);
+			if (sData.rBody)
+				physics->gScene->removeActor(*sData.rBody);
+		}
+		coordinator->destroyEntity(e);
+	}
+	raceEntities.clear();
+
+	// remove all the static actors from physx scene
+	PxU32 nbActors = physics->gScene->getNbActors(PxActorTypeFlag::eRIGID_STATIC);
+	if (nbActors > 0) {
+		std::vector<PxActor*> actors(nbActors);
+		physics->gScene->getActors(PxActorTypeFlag::eRIGID_STATIC, actors.data(), nbActors);
+		for (PxActor* actor : actors)
+			physics->gScene->removeActor(*actor);
+	}
+
+	renderer->renderPasses.clear();
+	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
+	gameState.resetGameState();
 }
 
 void Game::stateTransition() {
@@ -371,6 +420,11 @@ void Game::stateTransition() {
 			uiSys->popScreen();
 			initializeRace();
 			uiSys->addScreen("lapCounter");
+			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("backwardsDisplay");
+			uiSys->addScreen("myHealthIsDeclining");
+			uiSys->addScreen("boostMeOffABridge");
+			uiSys->addScreen("countDown");
 			break;
 
 			// our likely next state is paused or game ended
@@ -385,6 +439,10 @@ void Game::stateTransition() {
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
+			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("backwardsDisplay");
+			uiSys->addScreen("myHealthIsDeclining");
+			uiSys->addScreen("boostMeOffABridge");
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
@@ -399,6 +457,10 @@ void Game::stateTransition() {
 		switch (gameState.nextState) {
 			// HOW DID WE GET HERE, this shouldn't run
 		case (MAINMENU):
+			cleanupGame();
+			uiSys->clearAllScreens();
+			uiSys->addScreen("mainMenu");
+			uiSys->resetSelection();
 			break;
 
 			// we are resuming gameplay
@@ -467,14 +529,25 @@ void Game::update() {
 			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
 			if (secondsLeft <= 3.0 && secondsLeft != lastPrintedSecond) { // prevents output console spam
 				lastPrintedSecond = secondsLeft;
+				uiSys->updateCountdown(std::to_string(secondsLeft), frameTime);
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
 			}
 			if (raceCountdown.completedTimer()) {
 				raceCountdown.resetTimer();
+				uiSys->updateCountdown("GO!", frameTime);
+				uiSys->goTimer.timerDuration = 2.0;
+				uiSys->goTimer.start();
 				std::cout << "GO!\n";
 			}
 		}
 		else {
+			if (uiSys->goTimer.activeTimer()) {
+				uiSys->goTimer.update(frameTime);
+			}
+			else if (uiSys->go) {
+				uiSys->popScreen();
+				uiSys->go = false;
+			}
 			// countdown finished — race is live
 			aiControllerSys->update(gameState);
 			// after physics update
@@ -482,6 +555,8 @@ void Game::update() {
 			uiSys->updateLapCounter(coordinator->getComponent<LapCounter>(player).currentLap);
 			respawnSys->update(gameState);
 			leaderboardSys->update(gameState);
+			uiSys->updatePlaceCounter(player);
+			uiSys->updateBackwardsDisplay(frameTime);
 		}
 	}
 

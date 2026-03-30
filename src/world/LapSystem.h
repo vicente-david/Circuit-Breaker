@@ -25,9 +25,7 @@ struct LapCounter {
 	int lastCheckpointIdx = 0; // curve index of the position of the last checkpoint
 	bool isPlayer = false;
 	float distToCheckpoint = 0.0f; // used by the leaderboard system to decide who's closest to the next checkpoint
-	
 };
-
 
 
 class LapSystem : public System {
@@ -36,12 +34,17 @@ public:
 	void generateCheckpoints(const std::vector<TrackCurve> paths); // stores the checkpoints internally
 	void update(GameState& game); // does the logic, i feel like it doesn't have to be every frame
 
-	
+
+
 private:
 	int nearestCheckpoints(LapCounter& lapProg); // find the next checkpoints to test for
 
 	void updateCheckpoints(LapCounter& lapProg, Transform& eTransform, int nextCheckpoints, GameState& game, const Entity& entity); // update the checkpoint for the entity
 	void updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity); // update the checkpoint for the entity
+
+	void determineBackwards(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity);
+	
+	float playerDelta = 0.0;
 	
 	std::vector<int> checkpointIdx;
 	int checkpointPlacement = 10; // every x amount of points along the track, place 1 checkpoint
