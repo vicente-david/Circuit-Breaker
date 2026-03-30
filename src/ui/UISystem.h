@@ -42,6 +42,7 @@
 #include <algorithm>
 #include "../world/LeaderboardSystem.h"
 #include "../vehicles/SparkComponents.h"
+#include "../world/Clock.cpp"
 
 
 // positions of the triangle to render the quad
@@ -127,6 +128,10 @@ public:
 	void updateLapCounter(int lapcount);
 	void createPlaceCounter();
 	void updatePlaceCounter(Entity& player);
+	void createCountdown();
+	void updateCountdown(std::string second, float time);
+	Clock goTimer;
+	bool go = true; // bool to toggle the "go" visibility
 	
 	void selectedEntities(); // mainly used for iterating through all visible screens and toggling the highlight flag
 

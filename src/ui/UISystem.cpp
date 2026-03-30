@@ -70,7 +70,7 @@ void UISystem::updateUIElement(Entity& e) {
 	if (!u1.text.empty()) {
 		textProg->use();
 		textPositions p1 = calculateTextContainer(u1);
-		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, u1.textScale, u1.textColor, textFont);
 	}
 
 }
@@ -148,7 +148,7 @@ void UISystem::updateButtonUIElement(Entity& e) {
 	if (!u1.text.empty()) {
 		textProg->use();
 		textPositions p1 = calculateTextContainer(u1);
-		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, 1.0f, u1.textColor, textFont);
+		RenderText(textProg->id, textVAO, textVBO, u1.text, p1, u1.textScale, u1.textColor, textFont);
 	}
 
 }
@@ -405,6 +405,7 @@ void UISystem::screenInitialization() {
 	createRacingHUD();
 	createLapCounter();
 	createPlaceCounter();
+	createCountdown();
 }
 
 // Recall UIElement has the following fields
@@ -831,4 +832,32 @@ void UISystem::updateLapCounter(int lapCount) {
 	Entity& e1 = nameToScreen["lapCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
 	u1.text = "Lap: " + std::to_string(lapCount);
+}
+
+void UISystem::createCountdown() {
+	UIElement counter1;
+	counter1.text = "4";
+	counter1.textScale = 5.0f;
+	// default anchors are whole screen (0,0,1,1)
+	counter1.textColor = glm::vec3(1.0f);
+	counter1.textAlignmentX = CENTER;
+	counter1.textAlignmentY = CENTER;
+
+	counter1.hasBackgroundColor = false;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, counter1);
+
+	UIScreen countDown;
+	countDown.name = "countDown";
+	countDown.UIElements.push_back(e1);
+
+	nameToScreen["countDown"] = countDown;
+}
+
+void UISystem::updateCountdown(std::string second, float time) {
+	// can assume it's only the first thing (we hard coded it above)
+	Entity& e1 = nameToScreen["countDown"].UIElements[0];
+	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
+	u1.text = second;
 }

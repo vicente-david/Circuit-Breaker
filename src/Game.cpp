@@ -337,6 +337,7 @@ void Game::stateTransition() {
 			initializeRace();
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
+			uiSys->addScreen("countDown");
 			break;
 
 			// our likely next state is paused or game ended
@@ -434,14 +435,25 @@ void Game::update() {
 			int secondsLeft = (int)std::ceil(raceCountdown.remaining); // round up to nearest second for displayed countdown
 			if (secondsLeft != lastPrintedSecond) { // prevents output console spam
 				lastPrintedSecond = secondsLeft;
+				uiSys->updateCountdown(std::to_string(secondsLeft), frameTime);
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
 			}
 			if (raceCountdown.completedTimer()) {
 				raceCountdown.resetTimer();
+				uiSys->updateCountdown("GO!", frameTime);
+				uiSys->goTimer.timerDuration = 2.0;
+				uiSys->goTimer.start();
 				std::cout << "GO!\n";
 			}
 		}
 		else {
+			if (uiSys->goTimer.activeTimer()) {
+				uiSys->goTimer.update(frameTime);
+			}
+			else if (uiSys->go) {
+				uiSys->popScreen();
+				uiSys->go = false;
+			}
 			// countdown finished — race is live
 			aiControllerSys->update(gameState);
 			// after physics update
