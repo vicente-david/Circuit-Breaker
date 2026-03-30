@@ -51,6 +51,11 @@ void AIControllerSys::update(GameState& game) {
 			ai.checkProgTimer.start(); //restart timer
 		}
 
+		// If active, update attack cooldown timer
+		if (ai.attackCooldown.activeTimer()) {
+			ai.attackCooldown.update(*game.frameTime);
+		}
+
 
 		// Adjust lookahead target based on speed
 		if (ai.respawnRecoverTimer > 0.0f) {

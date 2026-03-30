@@ -40,5 +40,6 @@ struct AIController {
 	int lastPosIdx = 0;
 	
 	Clock checkProgTimer{10.0, 10.0}; // counts while ai is not moving
+	Clock attackCooldown{ 5.0, 5.0 };
 };
 

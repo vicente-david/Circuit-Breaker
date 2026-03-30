@@ -68,17 +68,20 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 * overtake other players: prioritize speed and attacking others
 */
 void OvertakeState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 1, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
+	dbug::log("AI", 0, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
 	// give ai the proper path
 	checkRoute(ctx.ai, ctx.spark);
 
-	std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
-	if (sweepResult.first != NONE) {
-		auto next = std::make_unique<S_Attacking>();
-		next->sweepResult = sweepResult;
-		currentState = std::move(next);
+	if (ctx.ai.attackCooldown.completedTimer()) {
+		std::pair<Direction, glm::vec3> sweepResult = OvertakeState::detect(ctx); // Line of sight sweep
+		if (sweepResult.first != NONE) {
+			auto next = std::make_unique<S_Attacking>();
+			next->sweepResult = sweepResult;
+			currentState = std::move(next);
+		}
 	}
+	else dbug::log("AI", 1, "[%s] in attack cooldown", ctx.spark.mVehicleName.c_str());
 
 	// run state update function
 	auto next = currentState->update(ctx);
@@ -142,7 +145,7 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
 void MaintainState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 1, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
+	dbug::log("AI", 0, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
 	checkRoute(ctx.ai, ctx.spark);
 

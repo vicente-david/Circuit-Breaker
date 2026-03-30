@@ -220,6 +220,7 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 			controls.boost = false;
 			ai.boostAtkTimer = 0.0f;
 			ai.state = DRIVING; // out of boost: exit attack
+			ai.attackCooldown.start(3.0);
 			return std::make_unique<S_Driving>();
 		}
 	}
@@ -239,6 +240,7 @@ std::unique_ptr<IDriveState> S_Attacking::update(AIDriveContext& ctx) {
 		ai.boostAtkTimer = 0.0f;
 		controls.shimmyR = false;
 		controls.shimmyL = false;
+		ai.attackCooldown.start(3.0);
 		return std::make_unique<S_Driving>();
 	}
 
