@@ -156,7 +156,7 @@ std::unique_ptr<IDriveState> S_Drifting::update(AIDriveContext& ctx) {
 			controls.boost = true;
 		}
 		else if (ctx.healthBoostMin < 100.f) { // allowed to use health to boost
-			controls.boost = true;
+			controls.boost = false;
 			controls.boostWithHealth = true;
 		}
 
