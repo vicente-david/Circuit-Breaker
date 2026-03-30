@@ -26,6 +26,7 @@ void RespawnSystem::update(GameState& game) {
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		SparkControls& sControls = game.coordinator->getComponent<SparkControls>(entity);
+		SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
 
 		if (eTransform.pos.y > yDeadzone && !sControls.reset) // entity hasn't fallen below the deadzone, skip
 			continue;
@@ -36,12 +37,12 @@ void RespawnSystem::update(GameState& game) {
 		// compute the respawn position: last checkpoint + deltaY above it
 		glm::vec3 respawnPos = lapProg.lastCheckpointPos;
 		respawnPos.y += deltaY;
+		spark.isOffroad = false;
 
 		// if the entity has an ai controller component, reset its understanding of where it is on the track
 		if (game.coordinator->hasComponent<AIController>(entity)) {
 			AIController& ai = game.coordinator->getComponent<AIController>(entity);
-			SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
-			
+		
 			ai.respawnRecoverTimer = 10.0f; // sets the lookahead value low for this recovery time
 			ai.lookAheadSteps = 1;
 			ai.currentPosIdx = lapProg.lastCheckpointIdx;

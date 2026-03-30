@@ -265,7 +265,7 @@ void LapSystem::update(GameState& game) {
 		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
 
 		// Use to check what path we're on only if not in the air (falling)
-		if (spark.isGrounded) {
+		if (spark.isGrounded && !spark.isOffroad) {
 			float distToC1 = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos); //main path
 			float distToC2 = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos); //healing path
 
@@ -283,7 +283,7 @@ void LapSystem::update(GameState& game) {
 		}
 		glm::vec3 dir;
 
-		if (spark.path = pFAST) {
+		if (spark.path == pFAST) {
 			// on main path
 			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].first;
 			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos);

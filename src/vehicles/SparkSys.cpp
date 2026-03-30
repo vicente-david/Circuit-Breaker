@@ -386,6 +386,7 @@ void SparkSys::wallCollision(GameState &game) {
 	for (auto const& entity : game.physics->callbacks->killSparks) {
 		auto& sData =game.coordinator->getComponent<SparkData>(entity);
 		sData.health = 0;
+		sData.isOffroad = true;
 
 	}
 	for (auto const& colData : game.physics->callbacks->sparkWallCol) {

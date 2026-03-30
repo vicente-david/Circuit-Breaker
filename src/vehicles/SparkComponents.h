@@ -69,6 +69,7 @@ struct SparkData {
 	bool isBoosting = false;
 	bool isDead = false;
 	bool isGrounded = false;
+	bool isOffroad = false;
 
 	PathID path = pFAST;
 
