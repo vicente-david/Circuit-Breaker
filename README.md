@@ -49,7 +49,7 @@ Release builds for windows can be downloaded from [this drive link](https://driv
 - In order to win the race, a player must complete 3 full laps around the race track.
 - Each player begins with maximum health points (HP), and zero boost.
     - The amount of boost that a player has is inversely proportional to the amount of health that they have.
-    - To regain boost, a player must drift. Using the handbrake can help accomplish this.
+    - A player can drift to regain their boost.
 - If a player loses all their health, they are destroyed and are forfeited from the race.
       - A player can deplete another players' health by driving or ramming into them. This can also be done by shimmying into another player.  
 
@@ -58,29 +58,27 @@ Release builds for windows can be downloaded from [this drive link](https://driv
 ### Controller:
     - L-Stick: Turn 
     - R-Stick: Rotate Camera 
-    - R-Trigger: accelerate
+    - R-Trigger: Accelerate
     - LB/L1: Shimmy left
     - RB/R1: Shimmy right
-    - L-Trigger: Brake
-    - LT + RT: Reverse
+    - L-Trigger: Brake/Reverse
     - B/◯: Boost
-    - Y/△: Reset
-    - A/X: Handbrake
+    - Y/△: Look Backwards
+    - A/X: Drift
 
 ### Keyboard:
     - A/D: Turn
     - Q/E: Rotate Camera
     - W: Accelerate
-    - S: Brake
-    - S + W: Reverse
+    - S: Brake/Reverse
     - J: Shimmy left
     - L: Shimmy right
     - Space: Boost
     - Back Space: Reset
-    - C: Camera Reset Toggle
-    - K: Handbrake
+    - X: Look Backwards
+    - K: Drift
 
-- Reversing happens when the brake and throttle are both active when the car is stationary.
+- Reversing happens when the brake is presed when the car is stationary.
 
 ---
 ## Members:

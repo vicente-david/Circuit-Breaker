@@ -7,10 +7,17 @@
 // gamestate, and turns them into the commands to control the player car.
 // this is pretty basic, but you it can be copied to use AI instead of player
 // input, and the ecs should just make everything work
+//
+// also handles UI menu navigation (up/down/confirm/back)
+// since it already processes input -> action mapping
 class ControllerSys : public System {
-  public:
-	void update(GameState &game);
+public:
+	void update(GameState& game);
 
 	static std::shared_ptr<ControllerSys>
-	registerSystem(std::shared_ptr<Coordinator> &coord);
+		registerSystem(std::shared_ptr<Coordinator>& coord);
+
+private:
+	// helper function which handles menu navigation input: up/down selection, confirm, go back. called by update()
+	void handleUINavigation(GameState& game);
 };

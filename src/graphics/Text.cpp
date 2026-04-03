@@ -62,13 +62,57 @@ std::map<char, Character> initFont(const char* font) {
     return Characters;
 }
 
-void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text, float x, float y, float scale, glm::vec3 color, std::map<char, Character> Characters)
+// top left are default, so only change those that are different
+// totalwidth is width of text
+// totalheight is height of text
+void calcPositions(textPositions& positions, float& x, float& y, int totalWidth, int totalHeight) {
+    float containerWidth = positions.rightPx - positions.leftPx;
+    float containerHeight = positions.bottomPx - positions.topPx;
+
+    switch (positions.textAlignX) {
+    case(CENTER):
+        x = positions.leftPx + 0.5f * containerWidth - 0.5f*totalWidth;
+        break;
+    case(RIGHT):
+        x = positions.rightPx - totalWidth;
+        break;
+    }
+
+    switch (positions.textAlignY) {
+    case(CENTER):
+        y = positions.topPx + containerHeight * 0.5f - 0.5f*totalHeight;
+        break;
+    case(BOTTOM):
+        y = positions.bottomPx - totalHeight;
+        break;
+    }
+}
+
+void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text, textPositions positions, float scale, glm::vec3 color, std::map<char, Character> Characters)
 {
+    float x = positions.leftPx;
+    float y = positions.topPx;
     // activate corresponding render state	
     //s.use();
     glUniform3f(glGetUniformLocation(sID, "textColor"), color.x, color.y, color.z);
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
+
+    // calc width and height of string
+    // only necessary for right align and center align
+    std::string::const_iterator c1;
+    int totalWidth = 0;
+    int maxHeight = 0;
+    int maxBearing = 0;
+    for (c1 = text.begin(); c1 != text.end(); c1++) {
+        Character ch = Characters[*c1];
+        totalWidth += (ch.Advance >> 6)*scale;
+        maxHeight = glm::max(maxHeight, ch.size.y);
+        maxBearing = glm::max(maxBearing, ch.bearing.y);
+    }
+    
+    calcPositions(positions, x, y, totalWidth, maxHeight*scale);
+    
 
     // iterate through all characters
     std::string::const_iterator c;
@@ -77,19 +121,19 @@ void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text
         Character ch = Characters[*c];
 
         float xpos = x + ch.bearing.x * scale;
-        float ypos = y - (ch.size.y - ch.bearing.y) * scale;
+        float ypos = y + (maxBearing - ch.bearing.y) * scale;
 
         float w = ch.size.x * scale;
         float h = ch.size.y * scale;
         // update VBO for each character
         float vertices[6][4] = {
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos,     ypos,       0.0f, 1.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
+            { xpos,     ypos + h,   0.0f, 1.0f },
+            { xpos,     ypos,       0.0f, 0.0f },
+            { xpos + w, ypos,       1.0f, 0.0f },
 
-            { xpos,     ypos + h,   0.0f, 0.0f },
-            { xpos + w, ypos,       1.0f, 1.0f },
-            { xpos + w, ypos + h,   1.0f, 0.0f }
+            { xpos,     ypos + h,   0.0f, 1.0f },
+            { xpos + w, ypos,       1.0f, 0.0f },
+            { xpos + w, ypos + h,   1.0f, 1.0f }
         };
         // render glyph texture over quad
         glBindTexture(GL_TEXTURE_2D, ch.textID);

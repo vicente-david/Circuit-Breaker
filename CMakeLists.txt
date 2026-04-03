@@ -2,13 +2,17 @@ cmake_minimum_required(VERSION 3.15)
 set(CMAKE_CXX_STANDARD 17)
 project(circuit-breaker)
 
+if(MSVC)
+    add_compile_options(/EHsc)
+endif()
+
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
 # run this if using debug version
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # run this if using release
-#set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 file(GLOB_RECURSE SOURCES "src/*")
 file(GLOB_RECURSE SNIPPETS "snippets/*")
 
@@ -30,10 +34,10 @@ set(PHYSX_DIR ${PROJECT_SOURCE_DIR}/dependencies/physx)
 # add folder 'rapidjson' into 'physx/include' project directory. Download from: https://drive.google.com/file/d/1-qeJBIDXejTcsveHHSgDjzXxQQXB2zJs/view?usp=sharing
 
 # run this if using debug version
-set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
+#set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/debug)
 
 # run this if using release
-#set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
+set(PHYSX_LIB ${PROJECT_SOURCE_DIR}/dependencies/physx/release)
 
 # copy assets
 file (COPY ${PROJECT_SOURCE_DIR}/assets DESTINATION ${CMAKE_BINARY_DIR})
@@ -112,16 +116,6 @@ if (WIN32)
     ${PHYSX_LIB}/libPhysXCommon_static_64.a
     ${PHYSX_LIB}/libPhysXFoundation_static_64.a
     ${LIBRARIES}
-    # target_link_libraries(${PROJECT_NAME} PRIVATE 
-    # # physx
-    # ${PHYSX_LIB}/libPhysXExtensions_static_64.a
-    # ${PHYSX_LIB}/libPhysX_static_64.a
-    # ${PHYSX_LIB}/libPhysXPvdSDK_static_64.a
-    # ${PHYSX_LIB}/libPhysXCommon_static_64.a
-    # ${PHYSX_LIB}/libPhysXFoundation_static_64.a
-    # ${PHYSX_LIB}/libPhysXCooking_static_64.a
-    # ${PHYSX_LIB}/libPhysXVehicle2_static_64.a
-    # ${LIBRARIES}
   )
 
 

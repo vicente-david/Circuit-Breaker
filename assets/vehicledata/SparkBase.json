@@ -42,7 +42,7 @@
         ]
     },
     "SteerCommandResponseParams": {
-        "MaxResponse": 0.5235990285873413,
+        "MaxResponse": 0.785398163,
         "WheelResponseMultipliers": [
             1.0,
             1.0,
@@ -200,7 +200,7 @@
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
-                [ 1.0, -0.1 ]
+                [ 1.0, -0.2 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -225,7 +225,7 @@
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
-                [ 1.0, 0.1 ]
+                [ 1.0, 0.2 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -248,7 +248,7 @@
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
-                [ 1.0, -0.1 ]
+                [ 1.0, -0.2 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -271,7 +271,7 @@
             ],
             "WheelCamberAngle": [
                 [ 0.0, 0.0 ],
-                [ 1.0, 0.1 ]
+                [ 1.0, 0.2 ]
             ],
             "SuspForceAppPoint": [
                 [
@@ -318,7 +318,7 @@
             "WheelId": 0,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 136505,
+            "LateralStiffnessY": 116505,
             "CamberStiffness": 0.5,
             "RestLoad": 5600,
             "FrictionVsSlip": [
@@ -341,7 +341,7 @@
             "WheelId": 1,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 136505,
+            "LateralStiffnessY": 116505,
             "CamberStiffness": 0.5,
             "RestLoad": 5600,
             "FrictionVsSlip": [
@@ -364,7 +364,7 @@
             "WheelId": 2,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 165600,
+            "LateralStiffnessY": 145600,
             "CamberStiffness": 0.5,
             "RestLoad": 4600,
             "FrictionVsSlip": [
@@ -387,7 +387,7 @@
             "WheelId": 3,
             "LongitudinalStiffness": 30656.0,
             "LateralStiffnessX": 3,
-            "LateralStiffnessY": 165600,
+            "LateralStiffnessY": 145600,
             "CamberStiffness": 0.5,
             "RestLoad": 4600,
             "FrictionVsSlip": [
@@ -410,34 +410,34 @@
     "WheelParams": [
         {
             "WheelId": 0,
-            "HalfWidth": 0.15,
+            "HalfWidth": 0.1,
             "Radius": 0.35,
             "Mass": 2.0,
-            "MOI": 1,
+            "MOI": 10,
             "DampingRate": 0.25
         },
         {
             "WheelId": 1,
-            "HalfWidth": 0.15,
+            "HalfWidth": 0.1,
             "Radius": 0.35,
             "Mass": 2.0,
-            "MOI": 1,
+            "MOI": 10,
             "DampingRate": 0.25
         },
         {
             "WheelId": 2,
-            "HalfWidth": 0.15,
+            "HalfWidth": 0.1,
             "Radius": 0.35,
             "Mass": 2.0,
-            "MOI": 1,
+            "MOI": 10,
             "DampingRate": 0.25
         },
         {
             "WheelId": 3,
-            "HalfWidth": 0.15,
+            "HalfWidth": 0.1,
             "Radius": 0.35,
             "Mass": 2.0,
-            "MOI": 1,
+            "MOI": 10,
             "DampingRate": 0.25
         }
     ]

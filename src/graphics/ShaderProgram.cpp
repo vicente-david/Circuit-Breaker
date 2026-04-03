@@ -24,6 +24,29 @@ ShaderProgram::ShaderProgram(const std::string& vertexPath, const std::string& f
 	
 }
 
+ShaderProgram::ShaderProgram(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geomPath)
+	: vertex(GL_VERTEX_SHADER, vertexPath), fragment(GL_FRAGMENT_SHADER, fragmentPath), geometry(GL_GEOMETRY_SHADER, geomPath) {
+
+	id = glCreateProgram();
+
+	// Link program
+	attachShader(*this, vertex);
+	attachShader(*this, fragment);
+	attachShader(*this, geometry);
+	glLinkProgram(id);
+
+	// Delete shaders after linking
+	shaderCleanup(vertex, fragment);
+
+
+	// Error check
+	if (!checkLink()) {
+		throw std::runtime_error("Shader program linking failure");
+		glDeleteProgram(id);
+	}
+
+}
+
 void attachShader(ShaderProgram& prog, Shader& shad) {
 	glAttachShader(prog.id, shad.id);
 }
@@ -32,6 +55,12 @@ void shaderCleanup(Shader& vert, Shader& frag) {
 
 	glDeleteShader(vert.id);
 	glDeleteShader(frag.id);
+}
+void shaderCleanup(Shader& vert, Shader& frag, Shader& geom) {
+
+	glDeleteShader(vert.id);
+	glDeleteShader(frag.id);
+	glDeleteShader(geom.id);
 }
 
 bool ShaderProgram::checkLink() {

@@ -18,6 +18,7 @@
 // the above seems like a pain, we could just use thresholds, if your jump along the spline is a valid threshhold, then you're ok
 #pragma once
 #include "LapSystem.h"
+#include <cstdio>
 #include <iostream>
 #include "CurveLoader.h"
 #include <glm/gtc/integer.hpp>
@@ -100,32 +101,37 @@ std::shared_ptr<LapSystem> LapSystem::registerSystem(std::shared_ptr<Coordinator
 }
 
 // generate checkpoints
-void LapSystem::generateCheckpoints(const std::string path) {
-	// load track curve (could be multiple, as of right now only one)
-	// will need to be more sophisticated later when we add branches
-	trackPoints = CurveLoader::loadCurve(path);
-	
+void LapSystem::generateCheckpoints(const std::vector<TrackCurve> paths) {
+	trackPoints = paths;
 	trackDistances.push_back(0.0f); // cumulative distancce along track of the start line
 
-	// for every point
+	// for every point (both curves have the same number of points)
 	for (int i = 0; i < trackPoints[0].curvePoints.size()-1; i++) {
 		// say every 10 paces is a checkpoint
 		if (i % checkpointPlacement == 0) {
 			// add those to our track checkpoints
-			checkPoints.push_back(trackPoints[0].curvePoints[i]);
+			std::pair<glm::vec3, glm::vec3> checkpoint;
+			checkpoint.first = trackPoints[0].curvePoints[i]; // add checkpoint on main path
+			checkpoint.second = trackPoints[1].curvePoints[i]; // add checkpoint on healing path
+			checkPoints.push_back(checkpoint);
+			checkpointIdx.push_back(i); // curve position index this checkpoint was placed at
 		}
 		// for every line segment, add that to our track distance
 		trackDistance += glm::length(trackPoints[0].curvePoints[i] - trackPoints[0].curvePoints[i+1]);
 		trackDistances.push_back(trackDistance);
 	}
+	dbug::log("LAP", 1, "Number of generated checkpoints: %d", checkPoints.size());
 
 	// start calculating the track distance (start-end) segment should be added (will not be added in the loop)
 	trackDistance += glm::length(trackPoints[0].curvePoints.back() - trackPoints[0].curvePoints.front()); // end - start length
 	std::cout << trackDistances.size() << std::endl;
 	std::cout << trackPoints[0].curvePoints.size() << std::endl;
 	for (int i = 0; i < trackPoints[0].curvePoints.size(); i++) {
-		std::cout << trackPoints[0].curvePoints[i].x << " " << trackPoints[0].curvePoints[i].y << " "
-			<< trackPoints[0].curvePoints[i].z << " with distance along track: " << trackDistances[i] << std::endl;
+		dbug::log("TRACK", 1,"point [%.2f, %.2f, %.2f] distance along track %f",
+				trackPoints[0].curvePoints[i].x , 
+				trackPoints[0].curvePoints[i].y , 
+				trackPoints[0].curvePoints[i].z , 
+				trackDistances[i]);
 	}
 
 }
@@ -147,19 +153,19 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 		}
 
 		// check if vehicle is inside the next checkpoint
-		if (sphereSDF(checkPoints[indexI] - eTransform.pos, 15.0f) < 0.0f) {
+		if (sphereSDF(checkPoints[indexI].first - eTransform.pos, 15.0f) < 0.0f || sphereSDF(checkPoints[indexI].second - eTransform.pos, 15.0f) < 0.0f) {
 			// if they are check if their target isn't the start/finish line
 			// the > 0 check is to make sure they don't immediately increment lap on race start
 			if (lapProg.lastCheckpointID > 0 && indexI == 0) {
 				lapProg.currentLap++;
 				lapProg.progress = 0.0f;
 				lapProg.closestTrackPoint = 0;
-				if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
-				std::cout << "on lap: " << lapProg.currentLap << std::endl;
+				//if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
+				dbug::log("LAP", 1, "on lap: %d", lapProg.currentLap);
 				if (lapProg.currentLap >= 4 && !game.gameEnded) game.endGame(entity);
 			}
 
-			//std::cout << "checkpoint: " << indexI << std::endl;
+			dbug::log("LAP", 0, "checkpoint %d reached", indexI);
 			// update the vehicle checkpoint
 			lapProg.lastCheckpointID = indexI;
 			break;
@@ -192,14 +198,18 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 
 	for (int i = startIndex; i < endIndex-1; i++) {
 		std::pair<glm::vec3, float> result = closestPoint(trackPoints[0].curvePoints[i], trackPoints[0].curvePoints[(i+1) % trackSize], eTransform.pos);
-		if (result.second < 0.0 || result.second > 1.0) continue; // just means the player position is not closest to this segment
+		
+		// clamp t to [0,1] so we always find the nearest point on the segment (including endpoints)
+		// without this, junctions between segments can cause closestTrackPoint to get stuck
+		float t = glm::clamp(result.second, 0.0f, 1.0f);
+		glm::vec3 pointOnSegment = trackPoints[0].curvePoints[i] + t * (trackPoints[0].curvePoints[(i + 1) % trackSize] - trackPoints[0].curvePoints[i]);
 
 		// if the player position is closest to this segment, then update both progress and closest segment
-		float newDistSquared = glm::dot(result.first-eTransform.pos, result.first - eTransform.pos);// player distance to projected point
+		float newDistSquared = glm::dot(pointOnSegment - eTransform.pos, pointOnSegment - eTransform.pos);// player distance to projected point
 
 		if (newDistSquared < closestDistSquared) {
 			newClosestIndex = i;
-			newProg = trackDistances[i] + result.second * (trackDistances[(i + 1) % trackSize] - trackDistances[i]);
+			newProg = trackDistances[i] + t * (trackDistances[(i + 1) % trackSize] - trackDistances[i]);
 			closestDistSquared = newDistSquared;
 		}
 
@@ -222,13 +232,11 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 
 	}
 
-	/*
-	float deltaDist = newProg - lapProg.progress; // detect forward or backward
-
-	if (deltaDist < 0.0) {
-		//std::cout << "backwards oml" << std::endl;
+	
+	if (entity == *game.player) {
+		playerDelta = newProg - lapProg.progress; // detect forward or backward
 	}
-	*/
+	
 	
 	// upper limit
 	if (newProg > trackDistances[lastSegment]) newProg = trackDistances[lastSegment];
@@ -242,7 +250,7 @@ void LapSystem::updateCheckpointsWithProgress(LapCounter& lapProg, Transform& eT
 	// updateCheckpoints
 	LapSystem::updateCheckpoints(lapProg, eTransform, nextCheckpoints, game, entity);
 
-//	std::cout << (lapProg.progress / trackDistance)*100 << "% complete" << std::endl;
+	dbug::log("LAP", -1, "Lap %.3f %% complete", (lapProg.progress / trackDistance) * 100);
 
 
 }
@@ -254,22 +262,71 @@ void LapSystem::update(GameState& game) {
 	for (auto& entity : entities) {
 		LapCounter& lapProg = game.coordinator->getComponent<LapCounter>(entity);
 		Transform& eTransform = game.coordinator->getComponent<Transform>(entity);
+		SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
 
 		updateCheckpointsWithProgress(lapProg, eTransform, game, entity);
-		lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID];
 
-		// compute the track forward direction at this checkpoint used for respawning
+		// Use to check what path we're on only if not in the air (falling)
+		if (spark.isGrounded && !spark.isOffroad) {
+			float distToC1 = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos); //main path
+			float distToC2 = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos); //healing path
+
+			if (distToC1 <= distToC2) {
+				spark.path = pFAST;
+			}
+			else spark.path = pHEAL;
+		}
+		
+		// use to compute the track forward direction at this checkpoint used for respawning
 			// use the vector from this checkpoint to the next one
 		int followingCheckpoint = lapProg.lastCheckpointID + 1;
 		if (followingCheckpoint >= checkPoints.size()) {
 			followingCheckpoint = 0; // wrap around for the last checkpoint
 		}
-		glm::vec3 dir = checkPoints[followingCheckpoint] - checkPoints[lapProg.lastCheckpointID];
+		glm::vec3 dir;
+
+		if (spark.path == pFAST) {
+			// on main path
+			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].first;
+			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos);
+			dir = checkPoints[followingCheckpoint].first - checkPoints[lapProg.lastCheckpointID].first;
+			
+		}
+		else {
+			// on heal path
+			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].second;
+			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos);
+			dir = checkPoints[followingCheckpoint].second - checkPoints[lapProg.lastCheckpointID].second;
+		}
+		lapProg.lastCheckpointIdx = checkpointIdx[lapProg.lastCheckpointID]; //curve index of last checkpoint
+
 		dir.y = 0.0f; // project onto XZ plane so the vehicle stays upright
 		if (glm::length(dir) > 0.001f) {
 			lapProg.lastCheckpointDir = glm::normalize(dir);
 		}
 		
+		// check if backwards
+		if (entity == *game.player) {
+			determineBackwards(lapProg, eTransform, game, entity);
+		}
 
+	}
+}
+
+void LapSystem::determineBackwards(LapCounter& lapProg, Transform& eTransform, GameState& game, const Entity& entity) {
+	int i = lapProg.closestTrackPoint;
+	int trackSize = trackPoints[0].curvePoints.size();
+
+	// nextSeg - closest = from closest to next
+	glm::vec3 nextSeg = trackPoints[0].curvePoints[(i + 1)%trackSize] - trackPoints[0].curvePoints[i];
+
+	float orientation = glm::dot(nextSeg, eTransform.forwardD);
+
+	
+	if (playerDelta < 0.0 && orientation < 0.0f) {
+		game.playerBackwards = true;
+	}
+	else if (orientation >= 0.0f){
+		game.playerBackwards = false;
 	}
 }

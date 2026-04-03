@@ -3,29 +3,61 @@
 in vec2 texCoord;
 in vec3 Normal;
 in vec3 FragPos;
-in vec4 FragPosLightSpace;
+//in vec4 FragPosLightSpace;
 
 uniform sampler2D inTex;
-uniform sampler2D shadowMap;
+uniform sampler2DArray shadowMap;
 uniform bool hasTex; // if no texture bound, render with default color
+uniform float farPlane;
+uniform mat4 view;
+layout (std140) uniform LightSpaceMatrices
+{
+    mat4 lightSpaceMatrices[16];
+};
+uniform float cascadePlaneDistances[16];
+uniform int cascadeCount;   // number of frusta - 1
 
 out vec4 color;
 
-float shadowCalc(vec4 fragPosLightSpace, float bias) {
-	
+float shadowCalc(vec3 fragPosWorld, float bias) {
+
+	// cascade layer
+	vec4 fragPosView = view * vec4(fragPosWorld, 1.0);
+	float depthVal = abs(fragPosView.z);
+
+	int layer = -1;
+	for (int i=0; i < cascadeCount; ++i){
+		if (depthVal < cascadePlaneDistances[i]) {
+			layer = i;
+			break;
+		}
+	}
+	if (layer == -1) {
+		layer = cascadeCount;
+	}
+
+	vec4 fragPosLightSpace = lightSpaceMatrices[layer] * vec4(fragPosWorld, 1.0);
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w; // Perspective divide
 	
 	projCoords = projCoords * 0.5 + 0.5; // transform to range [0,1]
 
-	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
 	
+	// bias
+	const float biasMod = 0.5f;
+	if (layer == cascadeCount) {
+		bias *= 1 / (farPlane * biasMod);
+	}
+	else {
+		bias *= 1 / (cascadePlaneDistances[layer] * biasMod);
+	}
+
 	// PCF
 	float shadow = 0.0;
-	vec2 texelSize = 1.0 / textureSize(shadowMap, 0); // size of a single texel of the texture map
+	vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0)); // size of a single texel of the texture map
 	for (int x = -1; x <= 1; ++x){
 		for (int y = -1; y <= 1; ++y){
-			float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r; // use the texel as offset to sample at different depth values
+			float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r; // use the texel as offset to sample at different depth values
 			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0; // check if fragment in shadow
 		}
 	}
@@ -57,7 +89,7 @@ void main() {
 		objCol = vec4(0.5, 0.5, 0.5, 1.0);
 
 	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005); // For reducing shadow acne
-
-	float shadow = shadowCalc(FragPosLightSpace, bias);
+	
+	float shadow = shadowCalc(FragPos, bias);
 	color = vec4(ambient + (1.0 - shadow) * diffuse, 1.0) * objCol;
 }

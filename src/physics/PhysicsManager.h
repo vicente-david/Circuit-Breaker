@@ -41,7 +41,9 @@ class PhysicsManager {
 	void initMaterialFrictionTable();
 
 	PxTriangleMesh *cookTriangleMesh(Mesh mesh);
-	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform);
+	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform, PxMaterial *material, PxFilterData fitler, bool tireCollision = true);
+	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform, bool tireCollision = true);
+	PxRigidStatic* initHealZones(Mesh mesh, Transform transform);
 
 	void updatePhysics(double dt);
 

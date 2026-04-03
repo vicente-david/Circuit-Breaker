@@ -1,3 +1,4 @@
+#pragma once
 #include "RenderingSystem.h"
 #include "CameraSystem.h"
 #include "GameState.h"
@@ -11,7 +12,7 @@
 #include <iostream>
 #include <memory>
 
-RenderingSystem::RenderingSystem() : textVBO(1), textVAO(1) {
+RenderingSystem::RenderingSystem(){
 	// Instantiate GLFW window
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -43,39 +44,10 @@ void RenderingSystem::initializeShaders() {
 	basicShader = std::make_unique<ShaderProgram>("shaders/basic.vert",
 												  "shaders/basic.frag");
 	shadowShader = std::make_unique<ShaderProgram>("shaders/shadow.vert",
-												"shaders/shadow.frag");
-	textProg = std::make_unique<ShaderProgram>("shaders/testText.vert",
-											   "shaders/testText.frag");
+												"shaders/shadow.frag",
+												"shaders/shadow.geom");
 	solidColour = std::make_unique<ShaderProgram>("shaders/lines.vert",
 												  "shaders/lines.frag");
-	
-	// ui initialization
-	uiShader = std::make_unique <ShaderProgram>("shaders/ui.vert", "shaders/ui.frag"); // upd ui shader ptr
-	
-	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
-	uiShader->use(); // use it first
-	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
-
-	glGenVertexArrays(1, &uiVAO);
-	glBindVertexArray(uiVAO);
-
-	glGenBuffers(1, &uiVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 5 * 6, NULL, GL_DYNAMIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2*sizeof(float)));
-	
-	glEnableVertexAttribArray(0);
-	glEnableVertexAttribArray(1);
-
-
-	textFont = initFont("assets/miamanueva.ttf");
-	textMat = glm::ortho(0.0f, static_cast<float>(1440), 0.0f,
-						 static_cast<float>(1440));
-	textProg->use();
-	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
-					   GL_FALSE, glm::value_ptr(textMat));
 
 	initShadowMap();
 }
@@ -86,38 +58,32 @@ void RenderingSystem::initShadowMap() {
 
 	// 2D texture for depth buffer
 	glGenTextures(1, &depthMap);
-	glBindTexture(GL_TEXTURE_2D, depthMap);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
-		SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, depthMap);
+	glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F,
+		SHADOW_WIDTH, SHADOW_HEIGHT, int(shadowCascadeLevels.size() + 1), 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
 	float borderCol[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderCol);
+	glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderCol);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
 	glDrawBuffer(GL_NONE); // no colour data to render
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	// UBO
+	glGenBuffers(1, &matricesUBO);
+	glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+	glBufferData(GL_UNIFORM_BUFFER, sizeof(glm::mat4x4) * 16, nullptr, GL_STATIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 }
 
-void RenderingSystem::initializeText() {
-	// Initialize and bind VAO
-	glGenVertexArrays(1, &textVAO);
-	glBindVertexArray(textVAO);
-	// Generate VBO
-	glGenBuffers(1, &textVBO);
-	// bind VBO
-	glBindBuffer(GL_ARRAY_BUFFER, textVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-	glEnableVertexAttribArray(0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+void RenderingSystem::initializeLines() {
 
 	// lines debug VAO/VBO setup
 	glGenVertexArrays(1, &linesVAO);
@@ -132,74 +98,35 @@ void RenderingSystem::initializeText() {
 	glBindVertexArray(0);
 }
 
-/* keep for reference for now
-void RenderingSystem::renderUI(GameState& game) {
-	uiShader->use();
-	// recalc based on screen size (probably not necessary every frame, only on screen resize)
-	uiMat = glm::ortho(0.0f, static_cast<float>(SCR_WIDTH), 0.0f, static_cast<float>(SCR_HEIGHT)); // create iniital ortho projection
-	glUniformMatrix4fv(glGetUniformLocation(uiShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+// TODO: split the rendering passes
+void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shared_ptr<CameraSystem> camSystem) {
+	
+	auto c1 = camSystem->cameras[0];
+	glm::mat4 view = glm::mat4(1.0f);
+	view = c1->GetViewMatrix();
+	glm::mat4 proj;
+	proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
 
-	RectUI r1 = game.activeUIRect;
-	// rendering only rect rn
-	// r1.pos is center of rectangle
-	glm::vec2 verts[6] = {
-	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
-	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y - r1.height / 2),
-	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
-	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y - r1.height / 2),
-	glm::vec2(r1.pos.x + r1.width / 2, r1.pos.y + r1.height / 2),
-	glm::vec2(r1.pos.x - r1.width / 2, r1.pos.y + r1.height / 2),
-	};
-
-	std::vector<float> rectData;
-
-	// 6 vertices
-	for (int i = 0; i < 6; i++) {
-		rectData.push_back(verts[i].x);
-		rectData.push_back(verts[i].y);
-		rectData.push_back(r1.col.x);
-		rectData.push_back(r1.col.y);
-		rectData.push_back(r1.col.z);
+	// setup uniform buffer object
+	const auto lightMatrices = getLightSpaceMatrices(view);
+	glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
+	for (size_t i = 0; i < lightMatrices.size(); ++i)
+	{
+		glBufferSubData(GL_UNIFORM_BUFFER, i * sizeof(glm::mat4x4), sizeof(glm::mat4x4), &lightMatrices[i]);
 	}
+	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-	glBindVertexArray(uiVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, uiVBO);
-
-	glBufferData(GL_ARRAY_BUFFER, rectData.size() * sizeof(float), rectData.data(), GL_DYNAMIC_DRAW);
-
-	glDrawArrays(GL_TRIANGLES, 0, 6);
-
-}
-*/
-
-void RenderingSystem::renderUI(GameState& game) {
-	// pretend this is the ui shader we're using
-	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, game.uiText.textContent, game.uiText.xPos, game.uiText.yPos, game.uiText.scale, game.uiText.col, textFont);
-}
-
-void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
-	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
 	// Render pass 1: depth to texture
-	float near_plane = -70.f, far_plane = 25.0f;
-	glm::mat4 lightProj = glm::ortho(bounds.first.x - 50, bounds.second.x + 50.f, bounds.first.z - 50.f, bounds.second.z + 50.f, near_plane, far_plane);
-	
-	glm::mat4 lightView = glm::lookAt(glm::vec3(0.0f, 1.0f, 0.1f), glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 lightSpaceMat = lightProj * lightView;
-	
 	shadowShader->use();
-	unsigned int lightSpaceLoc = glGetUniformLocation(shadowShader->id, "lightSpaceMat");
-	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
 
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthMap, 0);
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	renderScene(game, shadowShader->id);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
 	// Render pass 2: render scene as normal
 
@@ -207,40 +134,148 @@ void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<C
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	basicShader->use();
-	auto c1 = camSystem->cameras[0];
-
-	glm::mat4 view = glm::mat4(1.0f);
-	view = c1->GetViewMatrix();
-	glm::mat4 proj;
-	proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 200.0f);
+	
 
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
-	lightSpaceLoc = glGetUniformLocation(basicShader->id, "lightSpaceMat");
-	glUniformMatrix4fv(lightSpaceLoc, 1, GL_FALSE, glm::value_ptr(lightSpaceMat));
+
+	glUniform1f(glGetUniformLocation(basicShader->id, "farPlane"), farPlane);
+	glUniform1i(glGetUniformLocation(basicShader->id, "cascadeCount"), shadowCascadeLevels.size());
+	for (size_t i = 0; i < shadowCascadeLevels.size(); ++i)
+	{
+		glUniform1f(glGetUniformLocation(basicShader->id, std::string("cascadePlaneDistances[" + std::to_string(i) + "]").c_str()), shadowCascadeLevels[i]);
+	}
+
 	glUniform1i(glGetUniformLocation(basicShader->id, "shadowMap"), 1);
+	
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, depthMap);
 
 	renderScene(game, basicShader->id);
-
-	// render text
-	textProg->use();
-	RenderText(textProg->id, textVAO, textVBO, "FPS: " + fps, 10.f, 1380.f,
-			   1.0f, glm::vec3(1.0f), textFont);
-
-	// render ui
-	renderUI(game);
 
 	if (dbugPanel::tuning::physicsShapes) {
 		drawPhysxDebug(game, view, proj);
 	}
 
-	glfwPollEvents();
+}
+
+glm::mat4 RenderingSystem::lightViewProjMat(const float nearPlane, const float farPlane, glm::mat4 view) {
+	// View matrix: 
+	// The direction of the light is known, we can pick a point in world space that it is looking at: the center of the frustum.
+	glm::vec3 center = glm::vec3(0.0f);
+	glm::vec3 lightDir = glm::vec3(0.0f, 1.0f, 0.1f);
+	glm::mat4 proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
+
+	// frustum corners in world space
+	std::vector<glm::vec4> corners = getFrustumCorners(proj, view);
+
+	for (const auto& c : corners) {
+		// View: average the corners' coordinates
+		center += glm::vec3(c);
+	}
+	center /= corners.size();
+	const glm::mat4 lightView = glm::lookAt(center + lightDir, center, glm::vec3(0.0f, 1.0f, 0.0f));
+
+	// Projection matrix:
+	// transform the frustum corner points in the light view space and find min/max coords
+	float minX = std::numeric_limits<float>::max();
+	float maxX = std::numeric_limits<float>::lowest();
+	float minY = minX;
+	float maxY = maxX;
+	float minZ = minX;
+	float maxZ = maxX;
+
+	for (const auto& c : corners) {
+
+		// Proj: transform corner pts
+		const auto trf = lightView * c;
+		// find min/max
+		minX = std::min(minX, trf.x);
+		maxX = std::max(maxX, trf.x);
+		minY = std::min(minY, trf.y);
+		maxY = std::max(maxY, trf.y);
+		minZ = std::min(minZ, trf.z);
+		maxZ = std::max(maxZ, trf.z);
+	}
+	// increase space covered by near and far plane since geometry behind and in front of the frustum can cast shadows
+	// on stuff in the frustum
+	constexpr float zMult = 10.0f; // tune
+	if (minZ < 0) minZ *= zMult;
+	else minZ /= zMult;
+
+	if (maxZ < 0) maxZ /= zMult;
+	else maxZ *= zMult;
+
+	const glm::mat4 lightProj = glm::ortho(minX, maxX, minY, maxY, minZ, maxZ);
+
+	return lightProj * lightView;
+}
+
+std::vector<glm::vec4> RenderingSystem::getFrustumCorners(const glm::mat4& proj, const glm::mat4& view) {
+	// use inverse on corner points of the normalized device coord cube to get frustum corners in world space
+	const glm::mat4 inv = glm::inverse(proj * view);
+
+	std::vector<glm::vec4> frustumCorners;
+	for (unsigned int x = 0; x < 2; ++x) {
+		for (unsigned int y = 0; y < 2; ++y) {
+			for (unsigned int z = 0; z < 2; ++z)
+			{
+				const glm::vec4 pt =
+					inv * glm::vec4(
+						2.0f * x - 1.0f,
+						2.0f * y - 1.0f,
+						2.0f * z - 1.0f,
+						1.0f);
+				frustumCorners.push_back(pt / pt.w);
+			}
+		}
+	}
+
+	return frustumCorners;
+}
+
+std::vector<glm::mat4> RenderingSystem::getLightSpaceMatrices(glm::mat4 view) {
+	std::vector<glm::mat4> ret;
+	for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i)
+	{
+		if (i == 0)
+		{
+			ret.push_back(lightViewProjMat(nearPlane, shadowCascadeLevels[i], view));
+		}
+		else if (i < shadowCascadeLevels.size())
+		{
+			ret.push_back(lightViewProjMat(shadowCascadeLevels[i - 1], shadowCascadeLevels[i], view));
+		}
+		else
+		{
+			ret.push_back(lightViewProjMat(shadowCascadeLevels[i - 1], farPlane, view));
+		}
+	}
+	return ret;
+	
+}
+
+void RenderingSystem::update(GameState &game, std::string fps, std::shared_ptr<CameraSystem> camSystem) {
+	glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+	
+	// render shadows + scene
+	//renderShadows(game, fps ,camSystem);
+	
+
+	for (auto renderPass : renderPasses) {
+		(this->*renderPass)(game, fps, camSystem);
+	}
+
+	
+	// ui is rendered next, just in the upper level
+	
 	dbugPanel::render();
-	glfwSwapBuffers(window);
+
 }
 
 void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {

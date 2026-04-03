@@ -88,6 +88,11 @@ public:
 	}
 
 	template<typename T>
+	bool hasComponent(Entity entity) {
+		return componentManager->hasComponent<T>(entity);
+	}
+
+	template<typename T>
 	ComponentType getComponentType() {
 		return componentManager->getComponentType<T>();
 	}
