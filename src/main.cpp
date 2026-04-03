@@ -15,17 +15,17 @@ int main() {
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
 	dbug::minLogSeverity = 0;
-	dbug::logIgnore("INPUT");
-	dbug::logIgnore("GAME");
+	// dbug::logIgnore("INPUT");
+	// dbug::logIgnore("GAME");
 	//dbug::logIgnore("AI");
-	dbug::logIgnore("PHYS");
-	dbug::logIgnore("LEADERBOARD");
-	// dbug::logListType = dbug::WHITE_LIST;
-	dbug::logIgnore("ECS");
-	dbug::logIgnore("GEN");
+	// dbug::logIgnore("PHYS");
+	// dbug::logIgnore("LEADERBOARD");
+	dbug::logListType = dbug::WHITE_LIST;
+	// dbug::logIgnore("ECS");
+	// dbug::logIgnore("GEN");
 	dbug::logIgnore("AUDIO");
-	dbug::logIgnore("REND");
-	dbug::logIgnore("LAP");
+	// dbug::logIgnore("REND");
+	// dbug::logIgnore("LAP");
 	//dbug::logIgnore("AIPATH");
 	dbug::loggerInit();
 	

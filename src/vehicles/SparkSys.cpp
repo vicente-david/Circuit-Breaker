@@ -24,11 +24,12 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		// state checks
 		bool playDeathSound = !sData.isDead; // only play sound the 1st time
 		checkDeath(sData, dt);
+
 		if(playDeathSound && sData.isDead){
 			auto s = game.audio->createSound("death");
 			s->updateFromRbody(sData.rBody);
-			s->start();
-		
+			s->volume(2);
+			s->start(*game.audio);
 		}
 		checkAngResistace(sData, dt);
 		checkAirborne(sData, dt);
@@ -376,7 +377,7 @@ void SparkSys::sparkCollision(GameState& game) {
 
 		auto sound = game.audio->createSound("crash");
 		sound->position = (trans1.pos+trans2.pos)/2.f;
-		sound->start();
+		sound->start(*game.audio);
 		//dbug::log("GAME", 0, "i1:%d i2:%d Hit a car!", colData.spark1Id, colData.spark2Id);
 	}
 }
@@ -399,7 +400,7 @@ void SparkSys::wallCollision(GameState &game) {
 
 		auto sound = game.audio->createSound("crash");
 		sound->position = trans.pos;
-		sound->start();
+		sound->start(*game.audio);
 		//dbug::log("GAME", 0, "Hit a wall!");
 	}
 }

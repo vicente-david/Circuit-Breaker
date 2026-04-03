@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <string>
 
+class AudioEngine;
+
 class Sound {
   public:
 	Sound() {
@@ -25,11 +27,12 @@ class Sound {
 	void stop();
 	void pause();
 	void start();
+	void start(AudioEngine &audio);
 	void volume(float gain);
 	void pitchMulti(float pitch);
 
 	void setLooping(bool looping);
-	void updateFromRbody(physx::PxRigidBody* rbody);
+	void updateFromRbody(physx::PxRigidBody *rbody);
 	// void updatePosition(float x, float y, float z);
 	// void updateVelocity(float x, float y, float z);
 };
