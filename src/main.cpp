@@ -14,7 +14,7 @@ int main() {
 
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
-	dbug::minLogSeverity = 0;
+	dbug::minLogSeverity = -1;
 	// dbug::logIgnore("INPUT");
 	// dbug::logIgnore("GAME");
 	//dbug::logIgnore("AI");
