@@ -71,7 +71,7 @@ void Mesh::Draw(GLuint& shaderID) {
 std::pair<glm::vec3, glm::vec3> Mesh::GetBounds() {
 	glm::vec3 trackMax(0.0, 0.0, 0.0);
 	glm::vec3 trackMin(0.0, 0.0, 0.0);
-	for (Vertex vert : vertices)
+	for (Vertex& vert : vertices)
 	{
 		glm::vec3 pos = vert.pos;
 		trackMax.x = glm::max(pos.x, trackMax.x);

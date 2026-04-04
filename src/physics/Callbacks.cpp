@@ -21,7 +21,7 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	// get collision data from each colliding actor
 	CollisionData *d1 = (CollisionData *)pairHeader.actors[0]->userData;
 	CollisionData *d2 = (CollisionData *)pairHeader.actors[1]->userData;
-
+	
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
 
@@ -44,6 +44,10 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		// send data to spark system
 		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
+		// point of contact
+		auto pt = (PxContact*)pairs->contactPoints;
+		auto cpt = pt->contact;
+
 	// death plane
 	}else if (d1->type == SPARK && d2->type == KILL) {
 		killSparks.push_back(d1->entity);
