@@ -477,7 +477,7 @@ void SparkSys::reverse(SparkData& sData, SparkControls& sControls) {
 
 // FEATURES
 void SparkSys::updateMaxBoost(SparkData& sData) {
-	sData.maxBoost = sData.maxHealth - sData.health;
+
 	if (sData.boost > sData.maxBoost)
 		sData.boost = sData.maxBoost;
 }

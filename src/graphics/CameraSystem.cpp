@@ -1,12 +1,19 @@
 
 #include "CameraSystem.h"
 #include "GameState.h"
+#include "PxQueryFiltering.h"
+#include "PxQueryReport.h"
 #include "PxRigidBody.h"
 #include "debugUtils/Logger.h"
+#include "foundation/PxVec3.h"
+#include "geometry/PxGeometryHit.h"
+#include "geometry/PxGeometryQuery.h"
 #include "graphics/CameraComp.h"
 #include "vehicles/SparkComponents.h"
 #include <cstdio>
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 
 std::shared_ptr<CameraSystem>
@@ -93,7 +100,7 @@ void CameraSystem::update(GameState &game, float dt) {
 		if (sData.isBoosting) {
 			targetfov += 10;
 			camData.posEasing = POS_EASIING_BOOST;
-		}else{
+		} else {
 			camData.posEasing = POS_EASIING;
 		}
 
@@ -105,10 +112,38 @@ void CameraSystem::update(GameState &game, float dt) {
 		// of the fov changes
 		camData.targetDist = 5.0 - (glm::length(camVel) * 0.03f);
 		camData.targetDist = std::max(0.f, camData.targetDist);
-		printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
+		// printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
+
+		camCollision(game, camData,
+					 glm::length(camData.position - camData.lookPos));
 
 		// update the audio listner's frame and velocity for 3d audio
 		game.audio->updateListenerVel(camVel.x, camVel.y, camVel.z);
 		game.audio->updateListenerFrame(camData.GetViewMatrix());
+	}
+}
+void CameraSystem::camCollision(GameState &game, CameraComp &camdata,
+								float dist) {
+	const PxVec3 origin(camdata.position.x, camdata.position.y,
+						camdata.position.z);
+	glm::vec3 glmDir = camdata.lookPos - camdata.position;
+	const PxVec3 dir(glmDir.x, glmDir.y, glmDir.z);
+
+			// printf("or:[%f,%f,%f]\n", origin.x, hit.block.normal.y,
+			// 	   origin.z);
+	PxRaycastBuffer hit;
+	PxQueryFilterData filter(PxQueryFlag::eANY_HIT);
+	if (game.physics->gScene->raycast(origin, dir, dist, hit )) {
+		printf("blocking camera!!\n");
+		if (hit.hasBlock) {
+			printf("d:%f/%f\n", hit.block.distance, dist);
+			printf("pos:[%f,%f,%f]\n", hit.block.position.x, hit.block.position.y,
+				   hit.block.position.z);
+			printf("norm:[%f,%f,%f]\n", hit.block.normal.x, hit.block.normal.y,
+				   hit.block.normal.z);
+			printf("n:%d\n", hit.nbTouches);
+			printf("t:%s\n", hit.block.shape->getConcreteTypeName());
+		}
+		// camdata.position += glmDir * hit.block.distance*0.2f;
 	}
 }
