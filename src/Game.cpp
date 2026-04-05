@@ -8,6 +8,7 @@
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
 	audio = std::make_shared<AudioEngine>();
+	pHelper = std::make_shared<ParticleHelper>();
 	gameState = GameState();
 }
 
@@ -223,8 +224,7 @@ void Game::initializeTrack() {
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f), "P7");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f), "P8");
 	
-	Particle p = { pathStartPt + glm::vec3(-4.0f, 2.0f, -18.0f), glm::vec4(0.9f, 0.9f, 0.9f, 0.8f), 1.f, 20.f };
-	particleSys->addParticleBurst(p, 5);
+	p = { pathStartPt + glm::vec3(-4.0f, 2.0f, -18.0f), glm::vec4(0.9f, 0.9f, 0.9f, 0.8f), 0.01f, 5.f, glm::vec3(0.0f) };
 
 
 	// Start countdown
@@ -354,6 +354,9 @@ void Game::initializeUI() {
 void Game::initializeParticles() {
 	particleSys->init();
 	particleSys->proj = &renderer->projection;
+
+	pHelper->connectSys(particleSys);
+	sparkSys->pHelper = pHelper;
 }
 
 void Game::handleMenuControl() {
@@ -473,6 +476,7 @@ void Game::stateTransition() {
 			// we are resuming gameplay
 		case (GAMEPLAY):
 			//uiSys->addScreen("racingHUD");
+			
 			break;
 			// we will be in a pause menu
 		case (PAUSED):
@@ -641,7 +645,7 @@ void Game::updateRendering() {
 	
 	// update UI
 	uiSys->update();
-	particleSys->update(gameState);
+	particleSys->update(gameState, dt);
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);

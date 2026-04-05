@@ -2,6 +2,7 @@
 
 #include "GameState.h"
 #include "SparkComponents.h"
+#include "graphics/ParticleHelper.h"
 
 // this updates the sparks and turns the controls to actual movements and
 // gameplay.
@@ -10,6 +11,8 @@ class SparkSys : public System {
   public:
 	static std::shared_ptr<SparkSys>
 	registerSystem(std::shared_ptr<Coordinator> &coord);
+
+	std::shared_ptr<ParticleHelper> pHelper; // needed for communicating with particle system
 
 	// updates all the sparks in the game
 	void updateSparks(double dt, GameState &gameState);

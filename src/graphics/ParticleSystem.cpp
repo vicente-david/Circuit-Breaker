@@ -23,7 +23,7 @@ void ParticleSystem::init() {
 	//emitterList.push_back(atkDmgEmitter);
 }
 
-void ParticleSystem::update(GameState& game) {
+void ParticleSystem::update(GameState& game, const double dt) {
 	for (auto& entity : entities) {
 		auto& camera = game.coordinator->getComponent<CameraComp>(entity);
 		glm::mat4 view = camera.GetViewMatrix();
@@ -36,7 +36,7 @@ void ParticleSystem::update(GameState& game) {
 		glUniform3f(glGetUniformLocation(shader->id, "cameraUp"), camUp.x, camUp.y, camUp.z);
 		glUniform3f(glGetUniformLocation(shader->id, "cameraRight"), camRight.x, camRight.y, camRight.z);
 		glUniformMatrix4fv(glGetUniformLocation(shader->id, "VP"), 1, GL_FALSE, glm::value_ptr(VPMatrix));
-		atkDmgEmitter->update();
+		atkDmgEmitter->update(dt);
 		atkDmgEmitter->Draw(*shader);
 	}
 	
@@ -46,7 +46,7 @@ void ParticleSystem::update(GameState& game) {
 // this is not a great way of doing this but its simple I guess
 // This function is called when there is damage dealt by a spark to another spark and adds particles to render
 // using the atkDmgEmitter
-void ParticleSystem::addParticleBurst(Particle& particle, unsigned int spawnNum) {
+void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) {
 	
 	// Add specified number of the given particle to the particle list of the emitter
 	for (int i = 0; i < spawnNum; i++) {

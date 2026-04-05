@@ -12,6 +12,8 @@ struct Particle {
 	glm::vec4 colour;
 	float size;
 	float life;
+
+	glm::vec3 velocity;
 };
 
 // A singular particle emitter: point that particles come out of
@@ -20,7 +22,7 @@ public:
 
 	ParticleEmitter(unsigned int maxNumParticles);
 
-	void update();
+	void update(const double dt);
 	void Draw(const ShaderProgram& shader);
 
 	std::vector<Particle> particles; // container of particles

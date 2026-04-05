@@ -12,11 +12,11 @@ class ParticleSystem : public System {
 public:
 
 	void init();
-	void update(GameState& game);
+	void update(GameState& game, const double dt);
 
 	static std::shared_ptr<ParticleSystem> registerSystem(std::shared_ptr<Coordinator>& coord);
 
-	void addParticleBurst(Particle& particle, unsigned int spawnNum);
+	void addParticleBurst(Particle particle, unsigned int spawnNum);
 
 	glm::mat4* proj; //projection from rendering system
 

@@ -5,7 +5,6 @@
 #include "ecs/EntityManager.h"
 #include "physics/PhysicsManager.h"
 
-
 #include <memory>
 #include <functional>
 

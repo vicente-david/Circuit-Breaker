@@ -42,7 +42,7 @@ void ParticleEmitter::init() {
 /*
 * Update particles in this system
 */
-void ParticleEmitter::update() {
+void ParticleEmitter::update(const double dt) {
 	int particleCount = 0;
 
 	if (particles.empty()) {
@@ -56,6 +56,12 @@ void ParticleEmitter::update() {
 		Particle& p = particles[i];
 
 		if (p.life > 0.0f) {
+
+			// just gravity for now
+			p.velocity += glm::vec3(0.1f * i, -9.81f, 0.0f) * (float)dt * 0.5f;
+			p.position += p.velocity * (float)dt;
+
+			// fill GPU buffer
 			positionData[4 * particleCount + 0] = p.position.x;
 			positionData[4 * particleCount + 1] = p.position.y;
 			positionData[4 * particleCount + 2] = p.position.z;
@@ -66,7 +72,7 @@ void ParticleEmitter::update() {
 			colourData[4 * particleCount + 2] = p.colour.z;
 			colourData[4 * particleCount + 3] = p.colour.w;
 
-			p.life -= .1f; //TODO: change to dt!
+			p.life -= dt;
 			particleCount++;
 		}
 		else {

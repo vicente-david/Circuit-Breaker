@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 #include "world/Clock.cpp"
+#include "graphics/ParticleHelper.h"
 
 class Game{
 
@@ -28,6 +29,7 @@ public:
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
 	std::shared_ptr<AudioEngine> audio;
+	std::shared_ptr<ParticleHelper> pHelper;
 	
 
 	// currently these are pretty disconnected
@@ -90,6 +92,8 @@ public:
 
 	bool isInitialized;
 
+	//TODO: DELETE
+	Particle p;
 
 	// time stuff
 	double t = 0.0;
