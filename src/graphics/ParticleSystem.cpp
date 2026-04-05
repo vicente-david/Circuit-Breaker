@@ -51,13 +51,16 @@ void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum, 
 	
 	// Add specified number of the given particle to the particle list of the emitter
 	for (int i = 0; i < spawnNum; i++) {
+		
 		// check to ensure that we don't use too many particles at once
-		// for this emitter this shouldn't really be reached
+		// for this emitter this shouldn't really be reached (this is more important for emitters that will constantly emit particles as 
+		// particles will re-use the same memory over and over)
 		if (atkDmgEmitter->particles.size() < atkDmgEmitter->maxNumParticles) {
-			glm::vec3 noise = glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f));
-			//particle.velocity = glm::normalize(particle.velocity + noise);
+
+			// Vector perturbation
+			glm::vec3 noise = glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f)); // random vector within the unit sphere
 			particle.velocity += noise;
-			particle.velocity += fwd;
+			particle.velocity += fwd * 2.f;
 			atkDmgEmitter->particles.push_back(particle);
 		}
 		else {

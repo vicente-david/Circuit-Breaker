@@ -17,6 +17,9 @@ ParticleEmitter::ParticleEmitter(unsigned int maxNumParticles)
 	}
 
 void ParticleEmitter::init() {
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
 	// Buffer creation
 	GLuint VBO, positionVBO, colourVBO;
 
@@ -81,6 +84,7 @@ void ParticleEmitter::update(const double dt) {
 		}
 	}
 	// update buffers
+	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glBufferData(GL_ARRAY_BUFFER, maxNumParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // buffer orphaning
 	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCount * sizeof(GLfloat) * 4, positionData.data());
@@ -93,6 +97,7 @@ void ParticleEmitter::update(const double dt) {
 
 void ParticleEmitter::Draw(const ShaderProgram& shader) {
 	shader.use();
+	glBindVertexArray(VAO);
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
@@ -110,6 +115,10 @@ void ParticleEmitter::Draw(const ShaderProgram& shader) {
 	glVertexAttribDivisor(2, 1); // color : one per quad -> 1
 
 	glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, particles.size());
+
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
+	glDisableVertexAttribArray(2);
 }
 
 /*

@@ -38,5 +38,6 @@ private:
 	std::vector<GLfloat> positionData;
 	std::vector<GLfloat> colourData;
 	GLuint VBO, positionVBO, colourVBO;
+	GLuint VAO;
 
 };
