@@ -16,7 +16,7 @@ public:
 
 	static std::shared_ptr<ParticleSystem> registerSystem(std::shared_ptr<Coordinator>& coord);
 
-	void addParticleBurst(Particle particle, unsigned int spawnNum);
+	void addParticleBurst(Particle particle, unsigned int spawnNum, glm::vec3 fwd);
 
 	glm::mat4* proj; //projection from rendering system
 

@@ -368,9 +368,9 @@ void SparkSys::sparkCollision(GameState& game) {
 			sData1.health -= colData.magnitude;
 			auto& pt = colData.contactPt;
 			glm::vec3 vel(colData.velocity.x, colData.velocity.y, colData.velocity.z);
-			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 3.f, vel };
+			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 1.0f, vel };
 			
-			pHelper->notify(p, 13);
+			pHelper->notify(p, 10, trans1.forwardD);
 		}
 		
 
@@ -385,7 +385,7 @@ void SparkSys::sparkCollision(GameState& game) {
 
 			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 3.f, vel };
 			
-			pHelper->notify(p, 13);
+			pHelper->notify(p, 10, trans2.forwardD);
 		}
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);

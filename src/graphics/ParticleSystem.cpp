@@ -47,7 +47,7 @@ void ParticleSystem::update(GameState& game, const double dt) {
 // this is not a great way of doing this but its simple I guess
 // This function is called when there is damage dealt by a spark to another spark and adds particles to render
 // using the atkDmgEmitter
-void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) {
+void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum, glm::vec3 fwd) {
 	
 	// Add specified number of the given particle to the particle list of the emitter
 	for (int i = 0; i < spawnNum; i++) {
@@ -57,6 +57,7 @@ void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) 
 			glm::vec3 noise = glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f));
 			//particle.velocity = glm::normalize(particle.velocity + noise);
 			particle.velocity += noise;
+			particle.velocity += fwd;
 			atkDmgEmitter->particles.push_back(particle);
 		}
 		else {
