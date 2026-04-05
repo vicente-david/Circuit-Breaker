@@ -127,23 +127,18 @@ void CameraSystem::camCollision(GameState &game, CameraComp &camdata,
 	const PxVec3 origin(camdata.position.x, camdata.position.y,
 						camdata.position.z);
 	glm::vec3 glmDir = camdata.lookPos - camdata.position;
-	const PxVec3 dir(glmDir.x, glmDir.y, glmDir.z);
+	glmDir = glm::normalize(glmDir);
 
-			// printf("or:[%f,%f,%f]\n", origin.x, hit.block.normal.y,
-			// 	   origin.z);
+	const PxVec3 dir(glmDir.x, glmDir.y, glmDir.z);
 	PxRaycastBuffer hit;
-	PxQueryFilterData filter(PxQueryFlag::eANY_HIT);
-	if (game.physics->gScene->raycast(origin, dir, dist, hit )) {
+	PxQueryFilterData filter(PxQueryFlag::eSTATIC);
+	if (game.physics->gScene->raycast(origin, dir, dist, hit, PxHitFlag::eMTD,
+									  filter)) {
 		printf("blocking camera!!\n");
-		if (hit.hasBlock) {
-			printf("d:%f/%f\n", hit.block.distance, dist);
-			printf("pos:[%f,%f,%f]\n", hit.block.position.x, hit.block.position.y,
-				   hit.block.position.z);
-			printf("norm:[%f,%f,%f]\n", hit.block.normal.x, hit.block.normal.y,
-				   hit.block.normal.z);
-			printf("n:%d\n", hit.nbTouches);
-			printf("t:%s\n", hit.block.shape->getConcreteTypeName());
-		}
+		printf("d:%f/%f\n", hit.block.distance, dist);
+		printf("rom:[%f,%f,%f]\n", hit.block.normal.x, hit.block.normal.y,
+			   hit.block.normal.z);
+		printf("n:%d\n", hit.nbTouches);
 		// camdata.position += glmDir * hit.block.distance*0.2f;
 	}
 }
