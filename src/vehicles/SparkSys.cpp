@@ -367,7 +367,9 @@ void SparkSys::sparkCollision(GameState& game) {
 		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting) {
 			sData1.health -= colData.magnitude;
 			auto& pt = colData.contactPt;
-			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.9f, 0.8f, 0.9f, 0.6f), 0.1f, 3.f, glm::vec3(0.f) };
+			glm::vec3 vel(colData.velocity.x, colData.velocity.y, colData.velocity.z);
+			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 3.f, vel };
+			
 			pHelper->notify(p, 13);
 		}
 		
@@ -379,7 +381,10 @@ void SparkSys::sparkCollision(GameState& game) {
 		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting) {
 			sData2.health -= colData.magnitude;
 			auto& pt = colData.contactPt;
-			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.9f, 0.8f, 0.9f, 0.6f), 0.1f, 3.f, glm::vec3(0.f) };
+			glm::vec3 vel(colData.velocity.x, colData.velocity.y, colData.velocity.z);
+
+			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 3.f, vel };
+			
 			pHelper->notify(p, 13);
 		}
 		//else

@@ -46,7 +46,7 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 		auto pt = (PxContact*)pairs->contactPoints;
 		PxVec3 contact = pt->contact;
 		// send data to spark system
-		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp, contact});
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp, contact, vel});
 		
 
 	// death plane

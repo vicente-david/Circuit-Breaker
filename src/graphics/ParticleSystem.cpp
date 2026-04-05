@@ -1,6 +1,7 @@
 #include "ParticleSystem.h"
 #include "CameraComp.h"
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/random.hpp>
 
 
 std::shared_ptr<ParticleSystem>ParticleSystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
@@ -53,6 +54,9 @@ void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) 
 		// check to ensure that we don't use too many particles at once
 		// for this emitter this shouldn't really be reached
 		if (atkDmgEmitter->particles.size() < atkDmgEmitter->maxNumParticles) {
+			glm::vec3 noise = glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f));
+			//particle.velocity = glm::normalize(particle.velocity + noise);
+			particle.velocity += noise;
 			atkDmgEmitter->particles.push_back(particle);
 		}
 		else {
