@@ -18,11 +18,13 @@ public:
 
 	void addParticleBurst(Particle& particle, unsigned int spawnNum);
 
-	std::unique_ptr<ShaderProgram> shader;
-	
+	glm::mat4* proj; //projection from rendering system
+
+
 private:
 	std::unique_ptr<ParticleEmitter> atkDmgEmitter;
 	std::vector<std::unique_ptr<ParticleEmitter>> emitterList;
+	std::unique_ptr<ShaderProgram> shader;
 	
 
 };

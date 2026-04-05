@@ -1,5 +1,6 @@
 #include "ParticleSystem.h"
 #include "CameraComp.h"
+#include <glm/gtc/type_ptr.hpp>
 
 
 std::shared_ptr<ParticleSystem>ParticleSystem::registerSystem(std::shared_ptr<Coordinator>& coord) {
@@ -29,11 +30,12 @@ void ParticleSystem::update(GameState& game) {
 		// camera's up and right vectors in world space 
 		glm::vec3 camUp = { view[0][1], view[1][1], view[2][1] };
 		glm::vec3 camRight = { view[0][0], view[1][0], view[2][0] };
+		glm::mat4 VPMatrix = *proj * view;
 
 		shader->use();
 		glUniform3f(glGetUniformLocation(shader->id, "cameraUp"), camUp.x, camUp.y, camUp.z);
 		glUniform3f(glGetUniformLocation(shader->id, "cameraRight"), camRight.x, camRight.y, camRight.z);
-
+		glUniformMatrix4fv(glGetUniformLocation(shader->id, "VP"), 1, GL_FALSE, glm::value_ptr(VPMatrix));
 		atkDmgEmitter->update();
 		atkDmgEmitter->Draw(*shader);
 	}

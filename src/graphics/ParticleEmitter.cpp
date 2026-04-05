@@ -11,6 +11,8 @@ static const GLfloat vertexBufData[] = {
 ParticleEmitter::ParticleEmitter(unsigned int maxNumParticles)
  {
 	 this->maxNumParticles = maxNumParticles;
+	 //particles.resize(maxNumParticles);
+	 lastUsedParticle = 0;
 	 init();
 	}
 
@@ -31,7 +33,7 @@ void ParticleEmitter::init() {
 	glGenBuffers(1, &colourVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, colourVBO);
 	glBufferData(GL_ARRAY_BUFFER, maxNumParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW);
-
+	
 	this->VBO = VBO;
 	this->positionVBO = positionVBO;
 	this->colourVBO = colourVBO;
@@ -47,6 +49,8 @@ void ParticleEmitter::update() {
 		// no alive particles, nothing to do
 		return;
 	}
+	positionData.resize(maxNumParticles * 4 * sizeof(GLfloat));
+	colourData.resize(maxNumParticles * 4 * sizeof(GLfloat));
 
 	for (int i = 0; i < particles.size(); i++) {
 		Particle& p = particles[i];
@@ -73,11 +77,11 @@ void ParticleEmitter::update() {
 	// update buffers
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
 	glBufferData(GL_ARRAY_BUFFER, maxNumParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // buffer orphaning
-	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCount * sizeof(GLfloat) * 4, positionData);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCount * sizeof(GLfloat) * 4, positionData.data());
 
 	glBindBuffer(GL_ARRAY_BUFFER, colourVBO);
 	glBufferData(GL_ARRAY_BUFFER, maxNumParticles * 4 * sizeof(GLfloat), NULL, GL_STREAM_DRAW); // buffer orphaning
-	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCount * sizeof(GLfloat) * 4, colourData);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCount * sizeof(GLfloat) * 4, colourData.data());
 
 }
 

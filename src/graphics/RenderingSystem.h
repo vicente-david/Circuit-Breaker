@@ -39,6 +39,7 @@ public:
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
 	unsigned int SHADOW_WIDTH = SCR_WIDTH, SHADOW_HEIGHT = SCR_HEIGHT;
+	glm::mat4 projection;
 
 	unsigned int linesVBO, linesVAO;
 	unsigned int depthFBO, depthMap;

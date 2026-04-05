@@ -34,9 +34,10 @@ void Game::initializeGame() {
 	inputSystem.attachWindow(renderer->window);
 
 	initializeUI();
-	particleSys->init();
+	initializeParticles();
+	
 	gameActions = inputSystem.getActions();
-
+	
 }
 
 void Game::initializeECS() {
@@ -222,6 +223,8 @@ void Game::initializeTrack() {
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f), "P7");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f), "P8");
 	
+	Particle p = { pathStartPt + glm::vec3(-4.0f, 2.0f, -18.0f), glm::vec4(0.9f, 0.9f, 0.9f, 0.8f), 1.f, 20.f };
+	particleSys->addParticleBurst(p, 5);
 
 
 	// Start countdown
@@ -346,6 +349,11 @@ void Game::initializeUI() {
 
 	// give gameState access to uiSystem for controller-driven UI navigation
 	gameState.uiSystem = uiSys;
+}
+
+void Game::initializeParticles() {
+	particleSys->init();
+	particleSys->proj = &renderer->projection;
 }
 
 void Game::handleMenuControl() {

@@ -33,8 +33,10 @@ private:
 	unsigned int spawnNumPerFrame = 5; // how many particles to spawn in a frame
 	unsigned int lastUsedParticle = 0; // last used particle in the particle container
 
-	GLfloat* positionData;
-	GLfloat* colourData;
+	//GLfloat* positionData;
+	//GLfloat* colourData;
+	std::vector<GLfloat> positionData;
+	std::vector<GLfloat> colourData;
 	GLuint VBO, positionVBO, colourVBO;
 
 };
