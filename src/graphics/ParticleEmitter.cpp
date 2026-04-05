@@ -57,9 +57,8 @@ void ParticleEmitter::update(const double dt) {
 
 		if (p.life > 0.0f) {
 
-			// just gravity for now
-			/*p.velocity += glm::vec3(0.1f * i, -9.81f, 0.0f) * (float)dt * 0.5f;
-			p.position += p.velocity * (float)dt;*/
+			// update particle position based on collision velocity
+			// TODO: make it behave better
 			p.position += p.velocity * (float)dt;
 
 			// fill GPU buffer

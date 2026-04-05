@@ -355,8 +355,8 @@ void Game::initializeParticles() {
 	particleSys->init();
 	particleSys->proj = &renderer->projection;
 
-	pHelper->connectSys(particleSys);
-	sparkSys->pHelper = pHelper;
+	pHelper->connectSys(particleSys); // connect the particle system to the helper (gives a shared pointer to the helper)
+	sparkSys->pHelper = pHelper; // give a pointer to the helper to systems that want to communicate with the particle system
 }
 
 void Game::handleMenuControl() {
