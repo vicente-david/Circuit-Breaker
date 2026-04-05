@@ -18,6 +18,7 @@ struct SparkSparkColData {
 	Entity spark1Id;
 	Entity spark2Id;
 	float magnitude;
+	PxVec3 contactPt;
 };
 
 // this is probably way to abstracted, but i couldn't think of a better way to

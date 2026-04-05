@@ -42,11 +42,12 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 				   ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		// get strength related to the angle of collision
 		auto imp = getCollStrength(pairs, nbPairs, vel);
-		// send data to spark system
-		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
 		// point of contact
 		auto pt = (PxContact*)pairs->contactPoints;
-		auto cpt = pt->contact;
+		PxVec3 contact = pt->contact;
+		// send data to spark system
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp, contact});
+		
 
 	// death plane
 	}else if (d1->type == SPARK && d2->type == KILL) {

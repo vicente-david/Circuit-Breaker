@@ -26,9 +26,7 @@ void Game::initializeGame() {
 	gameState.coordinator = coordinator;
 	gameState.audio = audio;
 
-
 	initializeAudio();
-
 	renderer->initializeShaders(); // Create shader programs
 	renderer->initializeLines();
 	
@@ -36,7 +34,7 @@ void Game::initializeGame() {
 	inputSystem.attachWindow(renderer->window);
 
 	initializeUI();
-
+	particleSys->init();
 	gameActions = inputSystem.getActions();
 
 }
@@ -75,6 +73,7 @@ void Game::initializeECS() {
 	leaderboardSys = LeaderboardSystem::registerSystem(coordinator);
 	lapSys = LapSystem::registerSystem(coordinator);
 	uiSys = UISystem::registerSystem(coordinator);
+	particleSys = ParticleSystem::registerSystem(coordinator);
 
 }
 
@@ -631,9 +630,10 @@ void Game::updateFPS() {
 void Game::updateRendering() {
 	// rendering
 	renderer->update(gameState, fps, cameraSys);
-
+	
 	// update UI
 	uiSys->update();
+	particleSys->update(gameState);
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);

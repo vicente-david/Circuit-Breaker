@@ -5,7 +5,9 @@
 #include "ecs/EntityManager.h"
 #include "physics/PhysicsManager.h"
 
+
 #include <memory>
+#include <functional>
 
 class UISystem; // forward declaration (UISystem.h includes GameState.h, so we can't include it here)
 
@@ -71,4 +73,5 @@ public:
 	std::shared_ptr<UISystem> uiSystem;
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<AudioEngine> audio;
+
 };

@@ -28,6 +28,7 @@ public:
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
 	std::shared_ptr<AudioEngine> audio;
+	
 
 	// currently these are pretty disconnected
 	// so make it so we can call initializeGame()
@@ -78,6 +79,7 @@ public:
 	std::shared_ptr<LeaderboardSystem> leaderboardSys;
 	std::shared_ptr<LapSystem> lapSys;
 	std::shared_ptr<UISystem> uiSys;
+	std::shared_ptr<ParticleSystem> particleSys;
 
 	InputSystem inputSystem;
 	GameState gameState;

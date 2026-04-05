@@ -5,6 +5,7 @@
 #include "graphics/Model.h"
 #include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
+#include "graphics/ParticleSystem.h"
 #include <cstdio>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
@@ -360,17 +361,21 @@ void SparkSys::sparkCollision(GameState& game) {
 		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
 		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
 		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
-
+		glm::vec3 contactPt = { colData.contactPt.x, colData.contactPt.y, colData.contactPt.z };
 		// don't do damage from hitting each other if sliding or boosting
 		// Spark 1 logic
-		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting)
+		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting) {
 			sData1.health -= colData.magnitude;
+		}
+		
+
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
 
 		// Spark 2 logic
-		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting)
+		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting) {
 			sData2.health -= colData.magnitude;
+		}
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
 
