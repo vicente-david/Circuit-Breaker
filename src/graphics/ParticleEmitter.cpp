@@ -63,8 +63,7 @@ void ParticleEmitter::update(const double dt, glm::vec3 cameraPos) {
 
 			// update particle position based on collision 'direction'
 			p.position += p.dir * ((float)dt);
-			//p.colour = glm::vec4(p.colour.x + 0.005f, p.colour.y + 0.005f, p.colour.z + 0.005f, p.colour.w - 0.001f);
-			p.size *= 0.95f;
+			p.size *= 0.94f;
 			p.cameraDist = glm::length(p.position - cameraPos);
 
 			// fill GPU buffer

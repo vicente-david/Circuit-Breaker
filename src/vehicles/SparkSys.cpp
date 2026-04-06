@@ -397,9 +397,9 @@ void SparkSys::sparkCollision(GameState& game) {
 				
 				auto& pt = colData.contactPt;
 				
-				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData1.colour[0]/255.f, sData1.colour[1]/255.f, sData1.colour[2]/255.f, 0.8f), 0.05f, 0.25f, vel};
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData1.colour[0]/255.f, sData1.colour[1]/255.f, sData1.colour[2]/255.f, 0.8f), 0.08f, 0.25f, vel};
 
-				pHelper->notifyDMG(p, 10);
+				pHelper->notifyDMG(p, 15);
 			}
 			
 		}
@@ -416,9 +416,9 @@ void SparkSys::sparkCollision(GameState& game) {
 
 				auto& pt = colData.contactPt;
 				
-				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData2.colour[0] / 255.f, sData2.colour[1] / 255.f, sData2.colour[2] / 255.f, 0.8f), 0.05f, 0.25f, vel };
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData2.colour[0] / 255.f, sData2.colour[1] / 255.f, sData2.colour[2] / 255.f, 0.8f), 0.08f, 0.25f, vel };
 
-				pHelper->notifyDMG(p, 10);
+				pHelper->notifyDMG(p, 15);
 			}
 			
 			
@@ -559,10 +559,13 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, glm::vec3& pos, doub
 	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
 	PxVec3 fwd = sData.rBody->getLinearVelocity();
 	glm::vec3 pDir(fwd.x, fwd.y, fwd.z);
-	pPos = pos + (-pPos / 2.9f);
+	pPos = pos + (-pPos / 2.6f);
 	pPos.y += 0.05f;
-	Particle p = {pPos, glm::vec4(1.f, 0.663f, 0.071f, 0.2f), 0.1f, 0.3f, pDir};
-	pHelper->notifyBST(p, 20);
+	std::vector<unsigned char>& c = sData.colour;
+	Particle p = {pPos, glm::vec4(c[0]/255.f, c[1]/255.f, c[2]/255.f, 0.05f), 0.15f, 0.5f, pDir};
+	pHelper->notifyBST(p, 40);
+
+	//glm::vec4(1.f, 0.663f, 0.071f, 0.2f)
 }
 
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTransform, double dt) {

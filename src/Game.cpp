@@ -263,11 +263,11 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
-	//coordinator->addComponent(testSpark2, AIController{
-	//	AIDriveState::IDLE, // start AI in idle state
-	//	trackPaths.at(0).curvePoints, // planned route
-	//	trackPaths.at(0).curvatures, // angles at each point in route
-	//	});
+	coordinator->addComponent(testSpark2, AIController{
+		AIDriveState::IDLE, // start AI in idle state
+		trackPaths.at(0).curvePoints, // planned route
+		trackPaths.at(0).curvatures, // angles at each point in route
+		});
 }
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {

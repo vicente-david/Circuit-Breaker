@@ -83,14 +83,13 @@ void ParticleSystem::addParticles(Particle particle, unsigned int spawnNum) {
 		// particles will re-use the same memory over and over)
 		if (boostEmitter->particles.size() < boostEmitter->maxNumParticles) {
 
-			// Vector perturbation
-			glm::vec3 noise = glm::linearRand(glm::vec3(-.02f, -0.01f, -0.02f), glm::vec3(.02f, 0.01f, 0.02f)); 
+			// Vector perturbation on the spawn position of the particle
+			glm::vec3 noise = glm::linearRand(glm::vec3(-.01f, -0.005f, -0.01f), glm::vec3(.01f, 0.005f, 0.01f)); 
 			particle.position += noise;
-			//particle.dir += noise;
 			boostEmitter->particles.push_back(particle);
 		}
 		else {
-			dbug::log("PARTICLES", 2, "Adding atkDmgEmitter particles failed, exceeded max particles in list");
+			dbug::log("PARTICLES", 2, "Adding particles failed, exceeded max particles in list");
 		}
 	}
 }
