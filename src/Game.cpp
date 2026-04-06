@@ -353,31 +353,34 @@ void Game::initializeUI() {
 void Game::handleMenuControl() {
 	UIActions& ui = gameState.uiActions;
 
+	// if we're transitioning to a new state
 	if (gameState.nextState != gameState.currentState) {
 		ui.menuControl = 0;
 		return;
 	}
 
+	// process transition requests
 	if (ui.intializeGame) {
 		ui.intializeGame = false;
-		ui.menuControl = 1; // transition to gameplay
 		uiSys->resetSelection();
 		gameState.nextState = GAMEPLAY;
 	}
-
-	if (ui.menuControl == -1) {
+	else if (ui.menuControl == -1) {
 		gameState.nextState = MAINMENU;
 	}
-
 	else if (ui.menuControl == 2) {
 		gameState.nextState = PAUSED;
 	}
-
 	else if (ui.menuControl == 1) {
 		gameState.nextState = GAMEPLAY;
 	}
 
-
+	// cleaner way to switch between InputSystem states.. allowing UI nav -> menuControl != 1, allowing pausing -> menuControl = 1
+	switch (gameState.nextState) {
+		case GAMEPLAY: ui.menuControl = 1; break;
+		case PAUSED:   ui.menuControl = 2; break;
+		default:       ui.menuControl = 0; break;
+	}
 }
 
 void Game::cleanupGame() {
@@ -497,7 +500,6 @@ void Game::stateTransition() {
 			uiSys->clearAllScreens();
 			uiSys->createStandingsScreen(coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
-			//gameState.uiActions.menuControl = 0;
 			break;
 		}
 
