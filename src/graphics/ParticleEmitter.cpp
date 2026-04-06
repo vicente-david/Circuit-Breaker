@@ -62,6 +62,7 @@ void ParticleEmitter::update(const double dt) {
 
 			// update particle position based on collision 'direction'
 			p.position += p.dir * ((float)dt);
+			p.colour = glm::vec4(p.colour.x + 0.01f, p.colour.y + 0.01f, p.colour.z + 0.01f, p.colour.w - 0.01f);
 			
 			// fill GPU buffer
 			positionData[4 * particleCount + 0] = p.position.x;
@@ -95,6 +96,8 @@ void ParticleEmitter::update(const double dt) {
 }
 
 void ParticleEmitter::Draw(const ShaderProgram& shader) {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	shader.use();
 	glBindVertexArray(VAO);
 	glEnableVertexAttribArray(0);
@@ -118,6 +121,7 @@ void ParticleEmitter::Draw(const ShaderProgram& shader) {
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 	glDisableVertexAttribArray(2);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 /*

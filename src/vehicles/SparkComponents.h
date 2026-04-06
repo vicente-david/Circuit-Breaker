@@ -72,6 +72,7 @@ struct SparkData {
 	bool isOffroad = false;
 
 	PathID path = pFAST;
+	std::vector<unsigned char> colour;
 
 	// this is stuff for physx magic
 	std::shared_ptr<EngineDriveVehicle> mVehicle;

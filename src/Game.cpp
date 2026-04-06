@@ -217,12 +217,12 @@ void Game::initializeTrack() {
 	// initialize players
 	initializePlayerSpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 1.0f, -18.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f), "P2");
-	/*initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f), "P3");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f), "P3");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -9.0f), "P4");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 1.0f, -12.0f), "P5");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -9.0f), "P6");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f), "P7");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f), "P8");*/
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f), "P8");
 	
 	p = { pathStartPt + glm::vec3(-4.0f, 2.0f, -18.0f), glm::vec4(0.9f, 0.9f, 0.9f, 0.8f), 0.01f, 5.f, glm::vec3(0.0f) };
 
@@ -263,11 +263,11 @@ void Game::initializeAISpark(std::vector<TrackCurve>& trackPaths, glm::vec3 path
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
-	coordinator->addComponent(testSpark2, AIController{
-		AIDriveState::IDLE, // start AI in idle state
-		trackPaths.at(0).curvePoints, // planned route
-		trackPaths.at(0).curvatures, // angles at each point in route
-		});
+	//coordinator->addComponent(testSpark2, AIController{
+	//	AIDriveState::IDLE, // start AI in idle state
+	//	trackPaths.at(0).curvePoints, // planned route
+	//	trackPaths.at(0).curvatures, // angles at each point in route
+	//	});
 }
 
 void Game::initializeAISpark2(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt) {

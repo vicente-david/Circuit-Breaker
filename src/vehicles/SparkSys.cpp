@@ -228,24 +228,36 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 
 	if (sData.mVehicleName == "P2") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
+		sData.colour = { 27, 209, 249 };
 	}
 	else if (sData.mVehicleName == "P3") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark3.obj"));
+		sData.colour = {184, 249, 9};
 	}
 	else if (sData.mVehicleName == "P4") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark4.obj"));
+		sData.colour = {215,81,254};
 	}
-	else if (sData.mVehicleName == "P5")
+	else if (sData.mVehicleName == "P5") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark5.obj"));
-	else if (sData.mVehicleName == "P6")
+		sData.colour = {53,71,255};
+	}
+	else if (sData.mVehicleName == "P6") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark6.obj"));
-	else if (sData.mVehicleName == "P7")
+		sData.colour = {255, 73,114};
+	}
+	else if (sData.mVehicleName == "P7") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark7.obj"));
-	else if (sData.mVehicleName == "P8")
+		sData.colour = {118,192,217};
+	}
+	else if (sData.mVehicleName == "P8") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark8.obj"));
-	else
+		sData.colour = {254,112,30};
+	}
+	else {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
-
+		sData.colour = {250,164,27};
+	}
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
 	return sparkEntity;
@@ -361,7 +373,6 @@ void SparkSys::sparkCollision(GameState& game) {
 		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
 		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
 		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
-		auto& m = game.coordinator->getComponent<Mesh>(colData.spark1Id);
 
 		// convert contact pt from Px to glm
 		glm::vec3 contactPt = { colData.contactPt.x, colData.contactPt.y, colData.contactPt.z };
@@ -384,8 +395,8 @@ void SparkSys::sparkCollision(GameState& game) {
 				dbug::log("ATK", 0, "%s took damage from attack (ID1) \nKnockback:{%.2f, %.2f, %.2f} ", sData1.mVehicleName.c_str(), knockback.x, knockback.y, knockback.z);
 				
 				auto& pt = colData.contactPt;
-				auto t = m.textures[0]
-				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.05f, 0.25f, vel};
+				
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData1.colour[0]/255.f, sData1.colour[1]/255.f, sData1.colour[2]/255.f, 0.8f), 0.05f, 0.25f, vel};
 
 				pHelper->notify(p, 10);
 			}
@@ -404,7 +415,7 @@ void SparkSys::sparkCollision(GameState& game) {
 
 				auto& pt = colData.contactPt;
 				
-				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.05f, 0.25f, vel };
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData2.colour[0] / 255.f, sData2.colour[1] / 255.f, sData2.colour[2] / 255.f, 0.8f), 0.05f, 0.25f, vel };
 
 				pHelper->notify(p, 10);
 			}
