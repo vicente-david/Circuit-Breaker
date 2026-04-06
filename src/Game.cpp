@@ -85,6 +85,7 @@ void Game::initializeRace() {
 	renderer->renderPasses.push_back(&RenderingSystem::renderShadows); // start rendering it lol
 	raceCountdown.start();
 	lastPrintedSecond = -1;
+	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state 
 }
 
 void Game::initializeTrack() {
@@ -352,7 +353,10 @@ void Game::initializeUI() {
 void Game::handleMenuControl() {
 	UIActions& ui = gameState.uiActions;
 
-	if (gameState.nextState == END) return;
+	if (gameState.nextState != gameState.currentState) {
+		ui.menuControl = 0;
+		return;
+	}
 
 	if (ui.intializeGame) {
 		ui.intializeGame = false;
@@ -398,6 +402,7 @@ void Game::cleanupGame() {
 	}
 
 	renderer->renderPasses.clear();
+	uiSys->go = true; // re-initialize countdown UI
 	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
 	gameState.resetGameState();
 }
@@ -446,8 +451,20 @@ void Game::stateTransition() {
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
-			// we're likely restarting the game
+			// leaving the standings screen
 		case (END):
+			uiSys->clearAllScreens();
+			cleanupGame();
+			// only set up a new race if we're restarting the game
+			if (gameState.nextState == GAMEPLAY) {
+				initializeRace();
+				uiSys->addScreen("lapCounter");
+				uiSys->addScreen("placeCounter");
+				uiSys->addScreen("backwardsDisplay");
+				uiSys->addScreen("myHealthIsDeclining");
+				uiSys->addScreen("boostMeOffABridge");
+				uiSys->addScreen("countDown");
+			}
 			break;
 		}
 
@@ -480,6 +497,7 @@ void Game::stateTransition() {
 			uiSys->clearAllScreens();
 			uiSys->createStandingsScreen(coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
+			//gameState.uiActions.menuControl = 0;
 			break;
 		}
 

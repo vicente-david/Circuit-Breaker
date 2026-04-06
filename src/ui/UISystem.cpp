@@ -452,8 +452,14 @@ int UISystem::getButtonCount() {
 	if (screenStack.empty()) 
 		return 0;
 	// the top screen's first element (index 0) is always the background, rest are buttons
-	int totalElements = (int)screenStack.back().UIElements.size();
-	return std::max(0, totalElements - 1); // subtract background
+	int animatableElements = 0;
+	for (Entity& entity : screenStack.back().UIElements) {
+		if (coordinator->hasComponent<Animatable>(entity))
+			animatableElements++;
+	}
+	return animatableElements;
+	//int totalElements = (int)screenStack.back().UIElements.size();
+	//return std::max(0, totalElements - 1); // subtract background
 }
 
 std::string UISystem::getTopScreenName() {
@@ -853,9 +859,11 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 
 	Entity e10 = coordinator->createEntity();
 	coordinator->addComponent(e10, menuButton);
+	coordinator->addComponent(e10, Animatable());
 
 	Entity e11 = coordinator->createEntity();
 	coordinator->addComponent(e11, restartButton);
+	coordinator->addComponent(e11, Animatable());
 
 	
 	standingsScreen.UIElements.push_back(e10);
