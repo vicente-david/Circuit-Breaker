@@ -43,7 +43,7 @@ class SparkSys : public System {
 
 	// Features
 	void updateMaxBoost(SparkData &sData);
-	void applyBoost(SparkData &sData, bool useHealth, double dt);
+	void applyBoost(SparkData &sData, bool useHealth,bool boostStart, double dt);
 	void boost(SparkData &sData, SparkControls &sControls, double dt);
 	void regenBoost(SparkData& sData, double dt);
 	
