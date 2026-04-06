@@ -13,9 +13,12 @@ public:
 		particleSys = p;
 	}
 
-	void notify(Particle& particle, unsigned int spawnNum) {
-		std::cout << "Notified!" << std::endl;
+	void notifyDMG(Particle& particle, unsigned int spawnNum) {
 		particleSys->addParticleBurst(particle, spawnNum);
+	}
+
+	void notifyBST(Particle& particle, unsigned int spawnNum) {
+		particleSys->addParticles(particle, spawnNum);
 	}
 	
 

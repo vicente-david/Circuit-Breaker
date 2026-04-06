@@ -18,16 +18,17 @@ std::shared_ptr<ParticleSystem>ParticleSystem::registerSystem(std::shared_ptr<Co
 void ParticleSystem::init() {
 	// init particle shader program
 	shader = std::make_unique<ShaderProgram>("shaders/particle.vert", "shaders/particle.frag");
-
+	
 	// init particle emitters
 	atkDmgEmitter = std::make_unique<ParticleEmitter>(100);
-	//emitterList.push_back(atkDmgEmitter);
+	boostEmitter = std::make_unique<ParticleEmitter>(10000);
 }
 
 void ParticleSystem::update(GameState& game, const double dt) {
 	for (auto& entity : entities) {
 		auto& camera = game.coordinator->getComponent<CameraComp>(entity);
 		glm::mat4 view = camera.GetViewMatrix();
+		glm::vec3 cameraPos(glm::inverse(view)[3]);
 		// camera's up and right vectors in world space 
 		glm::vec3 camUp = { view[0][1], view[1][1], view[2][1] };
 		glm::vec3 camRight = { view[0][0], view[1][0], view[2][0] };
@@ -37,8 +38,12 @@ void ParticleSystem::update(GameState& game, const double dt) {
 		glUniform3f(glGetUniformLocation(shader->id, "cameraUp"), camUp.x, camUp.y, camUp.z);
 		glUniform3f(glGetUniformLocation(shader->id, "cameraRight"), camRight.x, camRight.y, camRight.z);
 		glUniformMatrix4fv(glGetUniformLocation(shader->id, "VP"), 1, GL_FALSE, glm::value_ptr(VPMatrix));
-		atkDmgEmitter->update(dt);
+
+		atkDmgEmitter->update(dt, cameraPos);
 		atkDmgEmitter->Draw(*shader);
+		boostEmitter->update(dt, cameraPos);
+		boostEmitter->Draw(*shader);
+		
 	}
 	
 
@@ -61,6 +66,28 @@ void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) 
 			glm::vec3 noise = glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f)); // random vector within the unit sphere
 			particle.dir += noise;
 			atkDmgEmitter->particles.push_back(particle);
+		}
+		else {
+			dbug::log("PARTICLES", 2, "Adding atkDmgEmitter particles failed, exceeded max particles in list");
+		}
+	}
+}
+
+void ParticleSystem::addParticles(Particle particle, unsigned int spawnNum) {
+
+	// Add specified number of the given particle to the particle list of the emitter
+	for (int i = 0; i < spawnNum; i++) {
+
+		// check to ensure that we don't use too many particles at once
+		// for this emitter this shouldn't really be reached (this is more important for emitters that will constantly emit particles as 
+		// particles will re-use the same memory over and over)
+		if (boostEmitter->particles.size() < boostEmitter->maxNumParticles) {
+
+			// Vector perturbation
+			glm::vec3 noise = glm::linearRand(glm::vec3(-.02f, -0.01f, -0.02f), glm::vec3(.02f, 0.01f, 0.02f)); 
+			particle.position += noise;
+			//particle.dir += noise;
+			boostEmitter->particles.push_back(particle);
 		}
 		else {
 			dbug::log("PARTICLES", 2, "Adding atkDmgEmitter particles failed, exceeded max particles in list");

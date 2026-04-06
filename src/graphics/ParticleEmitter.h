@@ -14,6 +14,13 @@ struct Particle {
 	float life;
 
 	glm::vec3 dir;
+	float cameraDist; // squared distance to camera (needed for sorting translucent particles)
+
+	bool operator<(const Particle& that) const {
+		// reverse order
+		return this->cameraDist > that.cameraDist;
+	}
+
 };
 
 // A singular particle emitter: point that particles come out of
@@ -22,7 +29,7 @@ public:
 
 	ParticleEmitter(unsigned int maxNumParticles);
 
-	void update(const double dt);
+	void update(const double dt, glm::vec3 cameraPos);
 	void Draw(const ShaderProgram& shader);
 
 	std::vector<Particle> particles; // container of particles
@@ -31,6 +38,7 @@ public:
 private:
 	int FirstUnusedParticle(); // finds the index of last dead (first unused) particle
 	void init();
+	void SortParticles();
 
 	unsigned int spawnNumPerFrame = 5; // how many particles to spawn in a frame
 	unsigned int lastUsedParticle = 0; // last used particle in the particle container

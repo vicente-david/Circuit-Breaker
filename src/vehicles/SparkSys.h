@@ -40,14 +40,14 @@ class SparkSys : public System {
 	void healZoneCheck(GameState& game, double dt);
 
 	// Commands
-	void sparkInputs(SparkData& sData, SparkControls& sControls, double dt);
+	void sparkInputs(SparkData& sData, SparkControls& sControls, Transform& sTransform, double dt);
 	void brake(SparkData& sData, SparkControls& sControls);
 	void reverse(SparkData& sData, SparkControls& sControls);
 
 	// Features
 	void updateMaxBoost(SparkData &sData);
-	void applyBoost(SparkData &sData, bool useHealth, double dt);
-	void boost(SparkData &sData, SparkControls &sControls, double dt);
+	void applyBoost(SparkData &sData, bool useHealth, glm::vec3& pos, double dt);
+	void boost(SparkData &sData, SparkControls &sControls, Transform& sTransform, double dt);
 	void regenBoost(SparkData& sData, double dt);
 	
 	void applyShimmy(SparkData& sData, bool dir);

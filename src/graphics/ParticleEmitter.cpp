@@ -1,4 +1,5 @@
 #include "ParticleEmitter.h"
+#include <algorithm>
 
 // vertices of the particles (instanced, so the particles in this system all share them)
 static const GLfloat vertexBufData[] = {
@@ -45,7 +46,7 @@ void ParticleEmitter::init() {
 /*
 * Update particles in this system
 */
-void ParticleEmitter::update(const double dt) {
+void ParticleEmitter::update(const double dt, glm::vec3 cameraPos) {
 	int particleCount = 0;
 
 	if (particles.empty()) {
@@ -62,8 +63,10 @@ void ParticleEmitter::update(const double dt) {
 
 			// update particle position based on collision 'direction'
 			p.position += p.dir * ((float)dt);
-			p.colour = glm::vec4(p.colour.x + 0.01f, p.colour.y + 0.01f, p.colour.z + 0.01f, p.colour.w - 0.01f);
-			
+			//p.colour = glm::vec4(p.colour.x + 0.005f, p.colour.y + 0.005f, p.colour.z + 0.005f, p.colour.w - 0.001f);
+			p.size *= 0.95f;
+			p.cameraDist = glm::length(p.position - cameraPos);
+
 			// fill GPU buffer
 			positionData[4 * particleCount + 0] = p.position.x;
 			positionData[4 * particleCount + 1] = p.position.y;
@@ -83,6 +86,7 @@ void ParticleEmitter::update(const double dt) {
 			i--;
 		}
 	}
+	SortParticles();
 	// update buffers
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
@@ -124,6 +128,11 @@ void ParticleEmitter::Draw(const ShaderProgram& shader) {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
+void ParticleEmitter::SortParticles() {
+	// Sort particles so that particles that are further away from the camera get drawn first
+	// important for translucent particles (otherwise they look wack)
+	std::sort(particles.begin(), particles.end());
+}
 /*
 * Find the first particle in the container that is not in use (life < 0)
 */

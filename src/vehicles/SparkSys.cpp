@@ -18,6 +18,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	for (const Entity &entity : entities) {
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
 		SparkControls &sControls = game.coordinator->getComponent<SparkControls>(entity);
+		Transform& sTransform = game.coordinator->getComponent<Transform>(entity);
 
 		sData.speed = sData.rBody->getLinearVelocity().magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
@@ -35,7 +36,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		checkAirborne(sData, dt);
 
 		if (!sData.isDead) // cant do anything if your dead lol
-			sparkInputs(sData, sControls, dt);
+			sparkInputs(sData, sControls, sTransform, dt);
 
 		// Respawn
 		respawn(sData, sControls, dt);
@@ -373,7 +374,7 @@ void SparkSys::sparkCollision(GameState& game) {
 		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
 		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
 		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
-
+		
 		// convert contact pt from Px to glm
 		glm::vec3 contactPt = { colData.contactPt.x, colData.contactPt.y, colData.contactPt.z };
 		
@@ -398,7 +399,7 @@ void SparkSys::sparkCollision(GameState& game) {
 				
 				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData1.colour[0]/255.f, sData1.colour[1]/255.f, sData1.colour[2]/255.f, 0.8f), 0.05f, 0.25f, vel};
 
-				pHelper->notify(p, 10);
+				pHelper->notifyDMG(p, 10);
 			}
 			
 		}
@@ -417,7 +418,7 @@ void SparkSys::sparkCollision(GameState& game) {
 				
 				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData2.colour[0] / 255.f, sData2.colour[1] / 255.f, sData2.colour[2] / 255.f, 0.8f), 0.05f, 0.25f, vel };
 
-				pHelper->notify(p, 10);
+				pHelper->notifyDMG(p, 10);
 			}
 			
 			
@@ -470,14 +471,14 @@ void SparkSys::healZoneCheck(GameState& game, double dt) {
 }
 
 // COMMANDS
-void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, double dt) {
+void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, Transform& sTransform, double dt) {
 
 	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
 	sData.mVehicle->mCommandState.nbBrakes = 1;
 	sData.mVehicle->mCommandState.throttle = sControls.throttle;
 	sData.mVehicle->mCommandState.steer = sControls.steering;
 
-	boost(sData, sControls, dt);
+	boost(sData, sControls, sTransform, dt);
 	shimmy(sData, sControls, dt);
 
 	brake(sData, sControls); // stronger braking
@@ -532,7 +533,7 @@ void SparkSys::updateMaxBoost(SparkData& sData) {
 		sData.boost = sData.maxBoost;
 }
 
-void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
+void SparkSys::applyBoost(SparkData& sData, bool useHealth, glm::vec3& pos, double dt) {
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	// use boost meter
@@ -554,9 +555,17 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, double dt) {
 		sData.boost = 0;
 	
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
+
+	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
+	PxVec3 fwd = sData.rBody->getLinearVelocity();
+	glm::vec3 pDir(fwd.x, fwd.y, fwd.z);
+	pPos = pos + (-pPos / 2.9f);
+	pPos.y += 0.05f;
+	Particle p = {pPos, glm::vec4(1.f, 0.663f, 0.071f, 0.2f), 0.1f, 0.3f, pDir};
+	pHelper->notifyBST(p, 20);
 }
 
-void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
+void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTransform, double dt) {
 	updateMaxBoost(sData);
 
 	sData.isBoosting = false;
@@ -568,7 +577,7 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, double dt) {
 
 	if (sControls.boost) {
 		//dbug::log("GAME", -1, "boosting!");
-		applyBoost(sData, sControls.boostWithHealth, dt);
+		applyBoost(sData, sControls.boostWithHealth, sTransform.pos, dt);
 		sData.isBoosting = true;
 	}
 }

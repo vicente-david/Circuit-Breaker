@@ -17,12 +17,14 @@ public:
 	static std::shared_ptr<ParticleSystem> registerSystem(std::shared_ptr<Coordinator>& coord);
 
 	void addParticleBurst(Particle particle, unsigned int spawnNum);
+	void addParticles(Particle particle, unsigned int spawnNum);
 
 	glm::mat4* proj; //projection from rendering system
 
 
 private:
 	std::unique_ptr<ParticleEmitter> atkDmgEmitter;
+	std::unique_ptr<ParticleEmitter> boostEmitter;
 	std::vector<std::unique_ptr<ParticleEmitter>> emitterList;
 	std::unique_ptr<ShaderProgram> shader;
 	
