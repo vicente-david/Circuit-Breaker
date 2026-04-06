@@ -361,31 +361,55 @@ void SparkSys::sparkCollision(GameState& game) {
 		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
 		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
 		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
+		auto& m = game.coordinator->getComponent<Mesh>(colData.spark1Id);
+
+		// convert contact pt from Px to glm
 		glm::vec3 contactPt = { colData.contactPt.x, colData.contactPt.y, colData.contactPt.z };
+		
+		// calculate knockback for spark that takes damage
+		PxVec3 knockback = colData.contactNorm * colData.magnitude * 2.f;
+		knockback.y = 0.0f; // zero out verticle component
+		
+		PxVec3 linVel1(sData1.rBody->getLinearVelocity());
+		PxVec3 linVel2(sData2.rBody->getLinearVelocity());
+		glm::vec3 vel(linVel1.x + linVel2.x, linVel1.y + linVel2.y, linVel1.z + linVel2.z);
 		// don't do damage from hitting each other if sliding or boosting
+		
 		// Spark 1 logic
 		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting) {
-			sData1.health -= colData.magnitude;
-			auto& pt = colData.contactPt;
-			glm::vec3 vel(colData.velocity.x, colData.velocity.y, colData.velocity.z);
-			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 1.0f, vel };
+
+			if (sData2.shimmyTimer >= sData2.shimmyInvincible || sData2.isBoosting) { // do damage if other spark is attacking
+				sData1.health -= colData.magnitude;
+				sData1.rBody->addForce(knockback, PxForceMode::eIMPULSE);
+				dbug::log("ATK", 0, "%s took damage from attack (ID1) \nKnockback:{%.2f, %.2f, %.2f} ", sData1.mVehicleName.c_str(), knockback.x, knockback.y, knockback.z);
+				
+				auto& pt = colData.contactPt;
+				auto t = m.textures[0]
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.05f, 0.25f, vel};
+
+				pHelper->notify(p, 10);
+			}
 			
-			pHelper->notify(p, 10, trans1.forwardD);
 		}
 		
-
-		//else
-		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark1Id);
-
 		// Spark 2 logic
 		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting) {
-			sData2.health -= colData.magnitude;
-			auto& pt = colData.contactPt;
-			glm::vec3 vel(colData.velocity.x, colData.velocity.y, colData.velocity.z);
 
-			Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.1f, 3.f, vel };
+			if (sData1.shimmyTimer >= sData1.shimmyInvincible || sData1.isBoosting) {
+				sData2.health -= colData.magnitude;
+
+				knockback = -knockback; // normal is in the direction the first entity needs to go to resolve the collision, so we negate
+				sData2.rBody->addForce(knockback, PxForceMode::eIMPULSE);
+				dbug::log("ATK", 0, "%s took damage from attack (ID2) \nKnockback:{%.2f, %.2f, %.2f} ", sData2.mVehicleName.c_str(), knockback.x, knockback.y, knockback.z);
+
+				auto& pt = colData.contactPt;
+				
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(0.988f, 0.945f, 0.741f, 0.8f), 0.05f, 0.25f, vel };
+
+				pHelper->notify(p, 10);
+			}
 			
-			pHelper->notify(p, 10, trans2.forwardD);
+			
 		}
 		//else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);

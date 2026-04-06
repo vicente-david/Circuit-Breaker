@@ -20,6 +20,7 @@ struct SparkSparkColData {
 	float magnitude;
 	PxVec3 contactPt;
 	PxVec3 velocity;
+	PxVec3 contactNorm;
 };
 
 // this is probably way to abstracted, but i couldn't think of a better way to

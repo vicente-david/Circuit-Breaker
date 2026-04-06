@@ -13,7 +13,7 @@ struct Particle {
 	float size;
 	float life;
 
-	glm::vec3 velocity;
+	glm::vec3 dir;
 };
 
 // A singular particle emitter: point that particles come out of

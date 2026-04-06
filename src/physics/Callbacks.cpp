@@ -11,6 +11,7 @@
 #include "physics/CollisionData.h"
 #include <cstdio>
 #include <set>
+#include <geomutils/PxContactPoint.h>
 
 void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 								const PxContactPair *pairs, PxU32 nbPairs) {
@@ -44,9 +45,12 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 		auto imp = getCollStrength(pairs, nbPairs, vel);
 		// point of contact
 		auto pt = (PxContact*)pairs->contactPoints;
+		auto pp = (PxContactPoint*)pairs->contactPoints;
 		PxVec3 contact = pt->contact;
+		PxVec3 cNormal = pp->normal;
+		
 		// send data to spark system
-		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp, contact, vel});
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp, contact, vel, cNormal});
 		
 
 	// death plane

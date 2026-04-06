@@ -13,9 +13,9 @@ public:
 		particleSys = p;
 	}
 
-	void notify(Particle& particle, unsigned int spawnNum, glm::vec3 fwd) {
+	void notify(Particle& particle, unsigned int spawnNum) {
 		std::cout << "Notified!" << std::endl;
-		particleSys->addParticleBurst(particle, spawnNum, fwd);
+		particleSys->addParticleBurst(particle, spawnNum);
 	}
 	
 

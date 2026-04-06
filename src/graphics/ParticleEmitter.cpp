@@ -60,10 +60,9 @@ void ParticleEmitter::update(const double dt) {
 
 		if (p.life > 0.0f) {
 
-			// update particle position based on collision velocity
-			// TODO: make it behave better
-			p.position += p.velocity * ((float)dt * 2.f);
-
+			// update particle position based on collision 'direction'
+			p.position += p.dir * ((float)dt);
+			
 			// fill GPU buffer
 			positionData[4 * particleCount + 0] = p.position.x;
 			positionData[4 * particleCount + 1] = p.position.y;
