@@ -24,10 +24,11 @@ ControllerSys::registerSystem(std::shared_ptr<Coordinator>& coord) {
 void ControllerSys::update(GameState& game) {
 
 	// only handle UI input if we're in the main menu or paused states, settings menu is only accessible from these states
-	if (game.currentState == MAINMENU || game.currentState == PAUSED)
+	if (game.currentState == MAINMENU || game.currentState == PAUSED || game.currentState == END)
 		handleUINavigation(game);
 
-	// --- Vehicle controls (only runs when player entities are spawned) ---
+	// --- Vehicle controls (skipped during countdown so the player can't move early) ---
+	if (game.countdownActive) return;
 	for (auto const& entity : entities) {
 		Actions& input = game.inputActions;
 		SparkControls& sControl =
@@ -90,7 +91,7 @@ void ControllerSys::handleUINavigation(GameState& game) {
 		}
 	}
 
-	// --- Handle backspace/B — go back from current menu ---
+	// --- Handle backspace/B ï¿½ go back from current menu ---
 	if (ui.goBack) {
 		ui.goBack = false;
 		std::string topScreen = uiSys->getTopScreenName();
@@ -107,7 +108,7 @@ void ControllerSys::handleUINavigation(GameState& game) {
 		// mainMenu: back does nothing (nowhere to go back to)
 	}
 
-	// --- Handle confirm — map (screen, button) to an action ---
+	// --- Handle confirm ï¿½ map (screen, button) to an action ---
 	if (ui.confirm) {
 		ui.confirm = false;
 		std::string topScreen = uiSys->getTopScreenName();
@@ -174,6 +175,17 @@ void ControllerSys::handleUINavigation(GameState& game) {
 				std::cout << "[UI] Back to previous menu" << std::endl;
 				uiSys->popScreen();
 				uiSys->resetSelection();
+			}
+		}
+		else if (topScreen == "standingsScreen") {
+			// buttons: 0=quit to menu, 1=restart game
+			if (btn == 0) {
+				std::cout << "[UI] Quit to menu" << std::endl;
+				ui.menuControl = -1;
+			}
+			else if (btn == 1) {
+				std::cout << "[UI] Restarting game" << std::endl;
+				ui.intializeGame = true;
 			}
 		}
 	}

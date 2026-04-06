@@ -51,6 +51,7 @@ public:
 	// Flags
 	bool gameEnded = false;
 	bool raceStart = true;
+	bool countdownActive = false;
 
 	// Game Parameters
 	int numPlayers = 1;
