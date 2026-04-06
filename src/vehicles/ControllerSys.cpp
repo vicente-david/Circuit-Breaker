@@ -27,7 +27,8 @@ void ControllerSys::update(GameState& game) {
 	if (game.currentState == MAINMENU || game.currentState == PAUSED || game.currentState == END)
 		handleUINavigation(game);
 
-	// --- Vehicle controls (only runs when player entities are spawned) ---
+	// --- Vehicle controls (skipped during countdown so the player can't move early) ---
+	if (game.countdownActive) return;
 	for (auto const& entity : entities) {
 		Actions& input = game.inputActions;
 		SparkControls& sControl =

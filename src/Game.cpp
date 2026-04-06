@@ -353,7 +353,7 @@ void Game::initializeUI() {
 void Game::handleMenuControl() {
 	UIActions& ui = gameState.uiActions;
 
-	// if we're transitioning to a new state
+	// this guard is basically what lets us control stuff in the end game menu.. because this screen is triggered by game logic and not player input
 	if (gameState.nextState != gameState.currentState) {
 		ui.menuControl = 0;
 		return;
@@ -451,6 +451,10 @@ void Game::stateTransition() {
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
+			// re add countdown if it's still active (case when we pause during countdown)
+			if (raceCountdown.activeTimer() || uiSys->go) {
+				uiSys->addScreen("countDown");
+			}
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
@@ -520,9 +524,10 @@ void Game::update() {
 
 	// controllerSys handles both vehicle controls AND UI navigation
 	// UI navigation modifies game.uiActions directly (confirm, goBack, menuControl, etc.)
-	// skip vehicle controls during countdown so the player can't move early
-	if (!raceCountdown.activeTimer())
-		controllerSys->update(gameState);
+	// always call update so UI navigation works even during countdown;
+	// vehicle controls are skipped during countdown so the player can't move early <-- now handled inside controllersys.cpp
+	gameState.countdownActive = raceCountdown.activeTimer();
+	controllerSys->update(gameState);
 
 	// --- State transition from menuControl ---
 	// Read back uiActions after controllerSys may have modified them
