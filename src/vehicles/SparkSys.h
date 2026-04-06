@@ -28,6 +28,7 @@ class SparkSys : public System {
 	void checkDeath(SparkData& sData, double dt);
 	void checkAirborne(SparkData& sData, double dt);
 
+	void correctRotation(SparkData &sData, float strength ,double dt);
 	void angularResistance(SparkData& sData, PxReal val = 0.05f, double duration = 0);
 	void checkAngResistace(SparkData& sData, double dt);
 

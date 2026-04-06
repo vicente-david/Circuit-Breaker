@@ -34,6 +34,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		}
 		checkAngResistace(sData, dt);
 		checkAirborne(sData, dt);
+		correctRotation(sData, 200, dt);
 
 		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, dt);
@@ -353,6 +354,19 @@ void SparkSys::checkAirborne(SparkData &sData, double dt) {
 	sData.isGrounded = grounded;
 }
 
+// this function will apply a torque straightening the car to face upwards
+// the close the angle is to 90 degrees the stronger the torque
+void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
+	// upwards direction of the car
+	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
+	// cross product with up axis gives vector to rotate along
+	auto torque = up.cross(PxVec3(0, 1, 0));
+	// square the size so that small angles aren't as effected
+	torque = torque * torque.magnitude();
+	// apply the torque. this always needs to be really big, so i just multiply
+	// by 1000
+	sData.rBody->addTorque(torque * strength * 1000 * dt);
+}
 void SparkSys::angularResistance(SparkData &sData, PxReal val,
 								 double duration) {
 	sData.rBody->setAngularDamping(val);

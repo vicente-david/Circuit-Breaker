@@ -114,14 +114,15 @@ void CameraSystem::update(GameState &game, float dt) {
 		camData.targetDist = std::max(0.f, camData.targetDist);
 		// printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
 
-		camCollision(game, camData,
-					 glm::length(camData.position - camData.lookPos));
+		// camCollision(game, camData,
+		// 			 glm::length(camData.position - camData.lookPos));
 
 		// update the audio listner's frame and velocity for 3d audio
 		game.audio->updateListenerVel(camVel.x, camVel.y, camVel.z);
 		game.audio->updateListenerFrame(camData.GetViewMatrix());
 	}
 }
+// this doesnt work for no good reason
 void CameraSystem::camCollision(GameState &game, CameraComp &camdata,
 								float dist) {
 	const PxVec3 origin(camdata.position.x, camdata.position.y,
