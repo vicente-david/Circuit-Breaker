@@ -505,12 +505,13 @@ void SparkSys::reverse(SparkData &sData, SparkControls &sControls) {
 
 // FEATURES
 void SparkSys::updateMaxBoost(SparkData &sData) {
-
+	sData.maxBoost = sData.maxHealth - sData.health;
 	if (sData.boost > sData.maxBoost)
 		sData.boost = sData.maxBoost;
 }
 
-void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart, double dt) {
+void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart,
+						  double dt) {
 	const PxVec3 forwardVector =
 		sData.rBody->getGlobalPose().q.getBasisVector2();
 
@@ -533,7 +534,7 @@ void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart, dou
 		sData.boost = 0;
 
 	// apply an extra impulse if they just started boosting
-	if (boostStart){
+	if (boostStart) {
 		sData.rBody->addForce(forwardVector * sData.boostImpulse,
 							  PxForceMode::eIMPULSE);
 	}
