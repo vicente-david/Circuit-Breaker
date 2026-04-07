@@ -438,8 +438,104 @@ textPositions UISystem::calculateTextContainer(UIElement u1) {
 	tp1.topPx = u1.anchors.y * (*SCR_HEIGHT) + u1.anchorOffsets.y;
 	tp1.rightPx = u1.anchors.z * (*SCR_WIDTH) + u1.anchorOffsets.z;
 	tp1.bottomPx = u1.anchors.w * (*SCR_HEIGHT) + u1.anchorOffsets.w;
+
 	tp1.textAlignX = u1.textAlignmentX;
 	tp1.textAlignY = u1.textAlignmentY;
+
+	// if it doesn't have an aspect ratio scale return
+	if (u1.aspectRatio <= 0.0) {
+		return tp1;
+	}
+
+
+	// otherwise do aspect ratio calculations
+
+	// note tp1 is in screen space
+
+	// calculate center 
+	glm::vec2 center = glm::vec2(0.5f * (tp1.rightPx + tp1.leftPx), 0.5f * (tp1.bottomPx + tp1.topPx));
+	float boxWidth, boxHeight;
+	// calculate height and width of box
+	boxWidth = tp1.rightPx - tp1.leftPx;
+	boxHeight = tp1.bottomPx - tp1.topPx; // our y is flipped so this becomes bottom-top
+
+	float currentRatio = boxWidth / boxHeight; // current aspect ratio of the box
+
+	float newWidth = boxWidth; // new height of the box
+	float newHeight = boxHeight; // new width of the box
+
+	// if the ratio is bigger, then shrink the dimensions
+	if (currentRatio > u1.aspectRatio) {
+		// shrink width
+		// if the ratio is bigger that means the height is too small
+		// or consequently the width is too big
+		// targetW/targetH = x/currentHeight -> new width = aspectRatio*currentHeight;
+		newWidth = u1.aspectRatio * boxHeight;
+
+	}
+	else {
+		// shrink height
+		// if the ratio is smaller, than that means the width is too small (the height is the denominator and it dominates)
+		// or consequently the height is too big
+
+		// targetW/targetH = currentWidth/x -> currentWidth*(targetH/targetW) = new Height
+		newHeight = boxWidth / u1.aspectRatio;
+
+
+	}
+
+	// where the edge of the container resides
+	// edge just means like for ex leftEdge = 3, means that
+	// x=3, vertical line at x=3 (left edge means that x=3 is where the left edge is)
+	float leftEdge, rightEdge, topEdge, bottomEdge;
+
+
+	// if the aspect ratio is off, then when shrinking the box to fit the aspect ratio
+	// align center on horizontal
+	if (u1.aRatioAlignX == CENTER) {
+		// center align left/right
+		leftEdge = center.x - 0.5f * newWidth;
+		rightEdge = center.x + 0.5f * newWidth;
+	}
+	else if (u1.aRatioAlignX == LEFT) {
+		// left align
+		leftEdge = tp1.leftPx;
+		rightEdge = leftEdge + newWidth;
+
+	}
+	else {
+		//right align
+		rightEdge = tp1.rightPx;
+		leftEdge = rightEdge - newWidth;
+
+	}
+
+	// also align y if that is the case
+	if (u1.aRatioAlignY == CENTER) {
+		//center align top/bottom
+		topEdge = center.y - 0.5f * newHeight;
+		bottomEdge = center.y + 0.5f * newHeight;
+
+	}
+	else if (u1.aRatioAlignY == TOP) {
+		// top align
+		topEdge = tp1.topPx;
+		bottomEdge = topEdge + newHeight;
+	}
+	else {
+		// bottom align
+		bottomEdge = tp1.bottomPx;
+		topEdge = bottomEdge - newHeight;
+
+	}
+
+	tp1.leftPx = leftEdge;
+	tp1.topPx = topEdge;
+	tp1.rightPx = rightEdge;
+	tp1.bottomPx = bottomEdge;
+
+
+
 	return tp1;
 }
 
