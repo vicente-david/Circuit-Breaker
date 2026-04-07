@@ -1283,7 +1283,7 @@ void UISystem::createSpeedometer() {
 	UIElement speedometer;
 	// default anchors are whole screen (0,0,1,1)
 	speedometer.anchors = glm::vec4(0.75, 0.5, 1.0, 1.0);
-	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -0.0);
+	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -32.0);
 	speedometer.hasBackgroundColor = false;
 	speedometer.text = "0";
 	speedometer.textScale = 1.0f;
@@ -1293,6 +1293,7 @@ void UISystem::createSpeedometer() {
 
 	speedometer.aspectRatio = 1.0f;
 	speedometer.aRatioAlignX = RIGHT;
+	speedometer.aRatioAlignY = BOTTOM;
 	
 
 	Entity e1 = coordinator->createEntity();
