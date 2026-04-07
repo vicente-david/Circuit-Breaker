@@ -101,7 +101,8 @@ public:
 	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
 	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
 	void updateResBars(Entity& e, bool isHealth); 
-
+	void updateSpeedometer(Entity& e);
+		
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
 	textPositions calculateTextContainer(UIElement u1); // exclusively used for defining a text container anchor
@@ -130,6 +131,7 @@ public:
 
 	void createHealthBar();
 	void createBoostBar();
+	void createSpeedometer();
 
 	// persistent ui elements (elements that change every frame)
 	void createFPSCounter(); // create an fps counter
@@ -177,6 +179,13 @@ public:
 	std::unique_ptr<ShaderProgram> resShader;
 	unsigned int resVAO, resVBO;
 	std::vector<UIResVertex> resData;
+
+	// speedometer (we'll reuse the resVAO and VBO, and resData)
+	std::unique_ptr<ShaderProgram> speedShader;
+	float* playerSpeed;
+
+	float currentAngle = 0.0;
+	float dTime;
 
 	//
 	bool* playerBackwards;
