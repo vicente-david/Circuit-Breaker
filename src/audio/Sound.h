@@ -19,6 +19,7 @@ class Sound {
 	ALuint source;
 	bool freed = false;
 	bool playing = false;
+	bool stopped = false;
 	bool do3D = true;
 
 	glm::vec3 position = glm::vec3(0, 0, 0);

@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 #include "world/Clock.cpp"
+#include "audio/MusicSys.h"
 
 class Game{
 
@@ -28,6 +29,7 @@ public:
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
 	std::shared_ptr<AudioEngine> audio;
+	MusicSys music;
 
 	// currently these are pretty disconnected
 	// so make it so we can call initializeGame()
@@ -100,8 +102,6 @@ public:
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-	// sound
-	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
 	std::vector<Entity> raceEntities; // contains ALL entities that are created during initializeRace()

@@ -39,6 +39,7 @@ void Sound::pause() {
 }
 
 void Sound::stop() {
+	stopped = true;
 	if (freed) {
 		return;
 	}
