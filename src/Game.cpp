@@ -8,6 +8,7 @@
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
 	audio = std::make_shared<AudioEngine>();
+	pHelper = std::make_shared<ParticleHelper>();
 	gameState = GameState();
 }
 
@@ -27,15 +28,16 @@ void Game::initializeGame() {
 	gameState.audio = audio;
 
 	initializeAudio();
-
 	renderer->initializeShaders(); // Create shader programs
 	renderer->initializeLines();
 
 	inputSystem.attachWindow(renderer->window);
 
 	initializeUI();
-
+	initializeParticles();
+	
 	gameActions = inputSystem.getActions();
+	
 }
 
 void Game::initializeECS() {
@@ -72,6 +74,8 @@ void Game::initializeECS() {
 	leaderboardSys = LeaderboardSystem::registerSystem(coordinator);
 	lapSys = LapSystem::registerSystem(coordinator);
 	uiSys = UISystem::registerSystem(coordinator);
+	particleSys = ParticleSystem::registerSystem(coordinator);
+
 }
 
 void Game::initializeRace() {
@@ -375,6 +379,14 @@ void Game::initializeUI() {
 	gameState.uiSystem = uiSys;
 }
 
+void Game::initializeParticles() {
+	particleSys->init();
+	particleSys->proj = &renderer->projection;
+
+	pHelper->connectSys(particleSys); // connect the particle system to the helper (gives a shared pointer to the helper)
+	sparkSys->pHelper = pHelper; // give a pointer to the helper to systems that want to communicate with the particle system
+}
+
 void Game::handleMenuControl() {
 	UIActions &ui = gameState.uiActions;
 
@@ -664,9 +676,10 @@ void Game::updateFPS() {
 void Game::updateRendering() {
 	// rendering
 	renderer->update(gameState, fps, cameraSys);
-
+	
 	// update UI
 	uiSys->update();
+	particleSys->update(gameState, dt);
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);

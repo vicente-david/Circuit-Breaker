@@ -16,6 +16,7 @@
 #include <memory>
 #include <vector>
 #include "world/Clock.cpp"
+#include "graphics/ParticleHelper.h"
 #include "audio/MusicSys.h"
 
 class Game{
@@ -29,6 +30,7 @@ public:
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
 	std::shared_ptr<AudioEngine> audio;
+	std::shared_ptr<ParticleHelper> pHelper;
 	MusicSys music;
 
 	// currently these are pretty disconnected
@@ -45,6 +47,7 @@ public:
 	void initializeFinishLine(); // ???
 	void initializeAudio();
 	void initializeUI();
+	void initializeParticles();
 
 	//void initializePlayers();
 	void initializePlayerSpark(std::vector<TrackCurve>& trackPaths, glm::vec3 pathStartPt); // initializes player spark
@@ -80,6 +83,7 @@ public:
 	std::shared_ptr<LeaderboardSystem> leaderboardSys;
 	std::shared_ptr<LapSystem> lapSys;
 	std::shared_ptr<UISystem> uiSys;
+	std::shared_ptr<ParticleSystem> particleSys;
 
 	InputSystem inputSystem;
 	GameState gameState;
@@ -107,7 +111,7 @@ public:
 	std::vector<Entity> raceEntities; // contains ALL entities that are created during initializeRace()
 
 	// race countdown
-	Clock raceCountdown{ 2.0 };
+	Clock raceCountdown{ 8.0 };
 	int lastPrintedSecond = -1;
 	//Track activeTrack;
 };
