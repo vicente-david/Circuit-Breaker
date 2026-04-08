@@ -20,8 +20,10 @@
 // https://ffainelli.github.io/openal-example/
 //
 
-AudioEngine::AudioEngine() {
+float AudioEngine::masterVol{0.5f};
+float AudioEngine::setVol{1.f};
 
+AudioEngine::AudioEngine() {
 	dbug::log("AUDIO", 0, "intializing audio");
 	// use the deafult audio device
 	device = alcOpenDevice(NULL);
@@ -98,8 +100,8 @@ void AudioEngine::update(double dt) {
 	dbug::log("AUDIO", -1, "%s]", str.c_str());
 
 	// volume control
-	if (dbugPanel::debug::updateVol) {
-		alListenerf(AL_GAIN, dbugPanel::debug::volume);
+	if (setVol != masterVol) {
+		alListenerf(AL_GAIN, masterVol);
 	}
 }
 

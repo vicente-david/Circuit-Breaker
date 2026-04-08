@@ -27,6 +27,8 @@ class AudioEngine {
 	void updateSoundVel(Sound sound, float x, float y, float z);
 
 	static bool checkALErrors(std::string location);
+	static float setVol;
+	static float masterVol;
 
   private:
 	ALCdevice *device;

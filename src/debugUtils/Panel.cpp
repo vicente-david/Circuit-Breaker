@@ -1,5 +1,6 @@
 
 #include "debugUtils/Panel.h"
+#include "audio/AudioEngine.h"
 #include "debugUtils/Logger.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -56,11 +57,7 @@ void createPanel(GLFWwindow *window) {
 void debugPanel() {
 	ImGui::Begin("Debug");
 
-	float startV = debug::volume;
-	ImGui::SliderFloat("Volume", &debug::volume, 0, 1);
-	if (startV != debug::volume) {
-		debug::updateVol = true;
-	}
+	ImGui::SliderFloat("Volume", &AudioEngine::masterVol, 0, 1);
 	ImGui::InputInt("Log level", &dbug::minLogSeverity);
 	ImGui::Checkbox("Log whiteList", (bool *)&dbug::logListType);
 	std::string tags = "Logging tags [";
