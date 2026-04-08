@@ -29,6 +29,7 @@ struct textPositions {
 	float bottomPx; // where is the bottom part of text (typically ignored if using top align)
 	textAlign textAlignX = LEFT; // horizontal alignment enum
 	textAlign textAlignY = TOP; // vertical alignment enum
+	float aspectRatio = 0.0; // aspectRatio overrides textscale if the text overflows
 };
 
 // assume it's a quad
@@ -38,6 +39,9 @@ struct UIElement {
 	float textScale; // scale of the text 
 	glm::vec4 anchors = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); //left, top, right, bottom (default whole screen 0,0,1,1)
 	glm::vec4 anchorOffsets = glm::vec4(0.0f); // left, top, right, bottom 
+	float aspectRatio = 0.0f; // 0.0 denotes ignore aspect ratio calcs, anything else >0 is valid
+	textAlign aRatioAlignX = CENTER;
+	textAlign aRatioAlignY = CENTER;
 
 	glm::vec3 textColor;
 	textAlign textAlignmentY;

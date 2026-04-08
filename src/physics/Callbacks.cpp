@@ -11,6 +11,7 @@
 #include "physics/CollisionData.h"
 #include <cstdio>
 #include <set>
+#include <geomutils/PxContactPoint.h>
 
 void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 								const PxContactPair *pairs, PxU32 nbPairs) {
@@ -21,7 +22,7 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	// get collision data from each colliding actor
 	CollisionData *d1 = (CollisionData *)pairHeader.actors[0]->userData;
 	CollisionData *d2 = (CollisionData *)pairHeader.actors[1]->userData;
-
+	
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
 
@@ -42,8 +43,16 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 				   ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		// get strength related to the angle of collision
 		auto imp = getCollStrength(pairs, nbPairs, vel);
+		// point of contact
+		auto pt = (PxContact*)pairs->contactPoints;
+		auto pp = (PxContactPoint*)pairs->contactPoints;
+		PxVec3 contact = pt->contact;
+		PxVec3 cNormal = pp->normal;
+		
 		// send data to spark system
-		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp});
+		sparkSparkCol.push_back(SparkSparkColData{d1->entity, d2->entity, imp, contact, vel, cNormal});
+		
+
 	// death plane
 	}else if (d1->type == SPARK && d2->type == KILL) {
 		killSparks.push_back(d1->entity);

@@ -25,6 +25,8 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(hlightShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	resShader->use();
 	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
+	speedShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(speedShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 }
 
 
@@ -194,6 +196,50 @@ void UISystem::updateResBars(Entity& e, bool isHealth) {
 
 }
 
+void UISystem::updateSpeedometer(Entity& e) {
+	// quick and dirty way
+	speedShader->use();
+
+	glm::vec3 col = glm::vec3(0.0);
+	// update uniforms 
+	
+	// reuse res variables
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	glBindVertexArray(resVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+	resData.clear();
+
+	// current angle update
+
+	currentAngle += *playerSpeed/5.0f * dTime;
+	currentAngle = fmod(currentAngle, glm::two_pi<float>()); // keep the angle between 0 and two pi 
+	glUniform1fv(glGetUniformLocation(speedShader->id, "currentAngle"), 1, &currentAngle);
+
+
+
+	// god awful for readibility, but we encode the texture coords as the xy comp of UIelement color
+	// only reason we can do this is because it's hard coded that way
+	// see how the screen creation for each of these
+	UIPositions positions = calculateAnchorPositions(u1);
+	// 6 points in a triangle based quad
+	for (int i = 0; i < 6; i++) {
+		UIResVertex v1;
+		v1.position = positions.points[i];
+		v1.uvCoord = glm::vec2(u1.colors[i].x, u1.colors[i].y);
+		v1.resourceColor = glm::vec3(1.0f); // unused so doesn't matter
+		resData.push_back(v1);
+	}
+	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_TRIANGLES, 0, resData.size());
+
+	
+	textProg->use();
+	textPositions p1 = calculateTextContainer(u1);
+	RenderText(textProg->id, textVAO, textVBO, std::to_string((int)*playerSpeed)+" Hz", p1, u1.textScale, u1.textColor, textFont);
+	
+}
+
+
 // assume everything is updated already
 void UISystem::updateAnimatedUIElement(Entity& e) {
 	Animatable& animComp = coordinator->getComponent<Animatable>(e);
@@ -210,6 +256,7 @@ void UISystem::updateAnimatedUIElement(Entity& e) {
 		updateResBars(e, animComp.isHealth);
 		break;
 	case(ANIM_SPEEDOMETER):
+		updateSpeedometer(e);
 		break;
 	}
 }
@@ -289,7 +336,100 @@ UIPositions UISystem::calculateAnchorPositions(UIElement u1) {
 	uF.points.push_back(glm::vec3(right * width + rightO, top * height + topO, 0.0f)); // (right, top, 0.0)
 	uF.points.push_back(glm::vec3(left * width + leftO, top * height + topO, 0.0f)); // (left, top, 0.0)
 
+	if (u1.aspectRatio <= 0.0) {
+		return uF;
+	}
+	
+	// otherwise do aspect ratio calculations
+
+	// calculate center 
+	glm::vec2 center = glm::vec2(0.5f*(uF.points[1].x + uF.points[0].x), 0.5f * (uF.points[2].y + uF.points[1].y));
+	float boxWidth, boxHeight;
+	// calculate height and width of box
+	boxWidth = uF.points[1].x - uF.points[0].x;
+	boxHeight = uF.points[1].y - uF.points[2].y; // our y is flipped so this becomes bottom-top
+
+	float currentRatio = boxWidth / boxHeight; // current aspect ratio of the box
+
+	float newWidth = boxWidth; // new height of the box
+	float newHeight = boxHeight; // new width of the box
+
+	// if the ratio is bigger, then shrink the dimensions
+	if (currentRatio > u1.aspectRatio) {
+		// shrink width
+		// if the ratio is bigger that means the height is too small
+		// or consequently the width is too big
+		// targetW/targetH = x/currentHeight -> new width = aspectRatio*currentHeight;
+		newWidth = u1.aspectRatio * boxHeight;
+
+	}
+	else {
+		// shrink height
+		// if the ratio is smaller, than that means the width is too small (the height is the denominator and it dominates)
+		// or consequently the height is too big
+
+		// targetW/targetH = currentWidth/x -> currentWidth*(targetH/targetW) = new Height
+		newHeight = boxWidth / u1.aspectRatio;
+
+
+	}
+
+	// where the edge of the container resides
+	// edge just means like for ex leftEdge = 3, means that
+	// x=3, vertical line at x=3 (left edge means that x=3 is where the left edge is)
+	float leftEdge, rightEdge, topEdge, bottomEdge; 
+	
+
+	// if the aspect ratio is off, then when shrinking the box to fit the aspect ratio
+	// align center on horizontal
+	if (u1.aRatioAlignX == CENTER) {
+		// center align left/right
+		leftEdge = center.x - 0.5f * newWidth;
+		rightEdge = center.x + 0.5f * newWidth;
+	}
+	else if (u1.aRatioAlignX == LEFT) {
+		// left align
+		leftEdge = uF.points[0].x;
+		rightEdge = leftEdge + newWidth;
+
+	}
+	else {
+		//right align
+		rightEdge = uF.points[1].x;
+		leftEdge = rightEdge - newWidth;
+			
+	}
+
+	// also align y if that is the case
+	if (u1.aRatioAlignY == CENTER) {
+		//center align top/bottom
+		topEdge = center.y - 0.5f * newHeight;
+		bottomEdge = center.y + 0.5f * newHeight;
+
+	}
+	else if (u1.aRatioAlignY == TOP) {
+		// top align
+		topEdge = uF.points[2].y;
+		bottomEdge = topEdge + newHeight;
+	}
+	else {
+		// bottom align
+		bottomEdge = uF.points[0].y;
+		topEdge = bottomEdge - newHeight;
+
+	}
+
+	uF.points.clear();
+
+	uF.points.push_back(glm::vec3(leftEdge, bottomEdge, 0.0f));
+	uF.points.push_back(glm::vec3(rightEdge, bottomEdge, 0.0f));
+	uF.points.push_back(glm::vec3(rightEdge, topEdge, 0.0f));
+	uF.points.push_back(glm::vec3(leftEdge, bottomEdge, 0.0f));
+	uF.points.push_back(glm::vec3(rightEdge, topEdge, 0.0f));
+	uF.points.push_back(glm::vec3(leftEdge, topEdge, 0.0f));
+
 	return uF;
+
 }
 
 textPositions UISystem::calculateTextContainer(UIElement u1) {
@@ -298,8 +438,104 @@ textPositions UISystem::calculateTextContainer(UIElement u1) {
 	tp1.topPx = u1.anchors.y * (*SCR_HEIGHT) + u1.anchorOffsets.y;
 	tp1.rightPx = u1.anchors.z * (*SCR_WIDTH) + u1.anchorOffsets.z;
 	tp1.bottomPx = u1.anchors.w * (*SCR_HEIGHT) + u1.anchorOffsets.w;
+
 	tp1.textAlignX = u1.textAlignmentX;
 	tp1.textAlignY = u1.textAlignmentY;
+
+	// if it doesn't have an aspect ratio scale return
+	if (u1.aspectRatio <= 0.0) {
+		return tp1;
+	}
+
+
+	// otherwise do aspect ratio calculations
+
+	// note tp1 is in screen space
+
+	// calculate center 
+	glm::vec2 center = glm::vec2(0.5f * (tp1.rightPx + tp1.leftPx), 0.5f * (tp1.bottomPx + tp1.topPx));
+	float boxWidth, boxHeight;
+	// calculate height and width of box
+	boxWidth = tp1.rightPx - tp1.leftPx;
+	boxHeight = tp1.bottomPx - tp1.topPx; // our y is flipped so this becomes bottom-top
+
+	float currentRatio = boxWidth / boxHeight; // current aspect ratio of the box
+
+	float newWidth = boxWidth; // new height of the box
+	float newHeight = boxHeight; // new width of the box
+
+	// if the ratio is bigger, then shrink the dimensions
+	if (currentRatio > u1.aspectRatio) {
+		// shrink width
+		// if the ratio is bigger that means the height is too small
+		// or consequently the width is too big
+		// targetW/targetH = x/currentHeight -> new width = aspectRatio*currentHeight;
+		newWidth = u1.aspectRatio * boxHeight;
+
+	}
+	else {
+		// shrink height
+		// if the ratio is smaller, than that means the width is too small (the height is the denominator and it dominates)
+		// or consequently the height is too big
+
+		// targetW/targetH = currentWidth/x -> currentWidth*(targetH/targetW) = new Height
+		newHeight = boxWidth / u1.aspectRatio;
+
+
+	}
+
+	// where the edge of the container resides
+	// edge just means like for ex leftEdge = 3, means that
+	// x=3, vertical line at x=3 (left edge means that x=3 is where the left edge is)
+	float leftEdge, rightEdge, topEdge, bottomEdge;
+
+
+	// if the aspect ratio is off, then when shrinking the box to fit the aspect ratio
+	// align center on horizontal
+	if (u1.aRatioAlignX == CENTER) {
+		// center align left/right
+		leftEdge = center.x - 0.5f * newWidth;
+		rightEdge = center.x + 0.5f * newWidth;
+	}
+	else if (u1.aRatioAlignX == LEFT) {
+		// left align
+		leftEdge = tp1.leftPx;
+		rightEdge = leftEdge + newWidth;
+
+	}
+	else {
+		//right align
+		rightEdge = tp1.rightPx;
+		leftEdge = rightEdge - newWidth;
+
+	}
+
+	// also align y if that is the case
+	if (u1.aRatioAlignY == CENTER) {
+		//center align top/bottom
+		topEdge = center.y - 0.5f * newHeight;
+		bottomEdge = center.y + 0.5f * newHeight;
+
+	}
+	else if (u1.aRatioAlignY == TOP) {
+		// top align
+		topEdge = tp1.topPx;
+		bottomEdge = topEdge + newHeight;
+	}
+	else {
+		// bottom align
+		bottomEdge = tp1.bottomPx;
+		topEdge = bottomEdge - newHeight;
+
+	}
+
+	tp1.leftPx = leftEdge;
+	tp1.topPx = topEdge;
+	tp1.rightPx = rightEdge;
+	tp1.bottomPx = bottomEdge;
+
+
+
 	return tp1;
 }
 
@@ -426,6 +662,12 @@ void UISystem::initializeRenderingParams() {
 
 	// layout, vec3, vec2, vec3
 
+	// we will reuse res vao and vbo for speed
+	speedShader = std::make_unique<ShaderProgram>("shaders/speeeeeed.vert", "shaders/speeeeeed.frag");
+
+	speedShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(speedShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
 }
 
@@ -486,6 +728,7 @@ void UISystem::screenInitialization() {
 	createBackwardsDisplay();
 	createBoostBar();
 	createHealthBar();
+	createSpeedometer();
 }
 
 // Recall UIElement has the following fields
@@ -1011,6 +1254,9 @@ void UISystem::createHealthBar() {
 	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 50.0);
 	hBar.hasBackgroundColor = false;
 
+	hBar.aspectRatio = 10.0f / 1.0f; // for every 10 width, 1 height
+	hBar.aRatioAlignX = LEFT; // left align it 
+
 	Entity e1 = coordinator->createEntity();
 
 	Animatable a = { true, false, true, ANIM_HEALTHBAR };
@@ -1031,6 +1277,9 @@ void UISystem::createBoostBar(){
 	bBar.anchorOffsets = glm::vec4(10.0, 65.0, 0.0, 105.0);
 	bBar.hasBackgroundColor = false;
 
+	bBar.aspectRatio = 10.0f / 1.0f;  //for every 10 width, 1 height
+	bBar.aRatioAlignX = LEFT; // left align
+
 	Entity e1 = coordinator->createEntity();
 
 	Animatable a = { true, false, false, ANIM_HEALTHBAR };
@@ -1042,4 +1291,35 @@ void UISystem::createBoostBar(){
 	boostMeOffABridge.UIElements.push_back(e1);
 
 	nameToScreen["boostMeOffABridge"] = boostMeOffABridge;
+}
+
+void UISystem::createSpeedometer() {
+	UIElement speedometer;
+	// default anchors are whole screen (0,0,1,1)
+	speedometer.anchors = glm::vec4(0.75, 0.5, 1.0, 1.0);
+	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -32.0);
+	speedometer.hasBackgroundColor = false;
+	speedometer.text = "0";
+	speedometer.textScale = 1.0f;
+	speedometer.textColor = glm::vec3(1.0f);
+	speedometer.textAlignmentY = CENTER;
+	speedometer.textAlignmentX = CENTER;
+
+	speedometer.aspectRatio = 1.0f;
+	speedometer.aRatioAlignX = RIGHT;
+	speedometer.aRatioAlignY = BOTTOM;
+	
+
+	Entity e1 = coordinator->createEntity();
+
+	Animatable a = { true, false, false, ANIM_SPEEDOMETER };
+	coordinator->addComponent(e1, speedometer);
+	coordinator->addComponent(e1, a);
+
+	UIScreen speeeeeed;
+	speeeeeed.name = "speeeeeed";
+	speeeeeed.UIElements.push_back(e1);
+
+
+	nameToScreen["speeeeeed"] = speeeeeed;
 }

@@ -12,3 +12,4 @@
 #include "ai/AISparkComponents.h"
 #include "audio/Sound.h"
 #include "ui/UISystemComponents.h"
+#include "graphics/ParticleSystem.h"
