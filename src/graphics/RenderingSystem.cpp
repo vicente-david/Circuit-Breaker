@@ -104,8 +104,8 @@ void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shar
 	auto c1 = camSystem->cameras[0];
 	glm::mat4 view = glm::mat4(1.0f);
 	view = c1->GetViewMatrix();
-	glm::mat4 proj;
-	proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
+	//glm::mat4 proj;
+	projection = glm::perspective(glm::radians(c1->fov), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
 
 	// setup uniform buffer object
 	const auto lightMatrices = getLightSpaceMatrices(view);
@@ -139,7 +139,7 @@ void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shar
 	unsigned int viewLoc = glGetUniformLocation(basicShader->id, "view");
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
 	unsigned int projLoc = glGetUniformLocation(basicShader->id, "projection");
-	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(proj));
+	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
 	glUniform1f(glGetUniformLocation(basicShader->id, "farPlane"), farPlane);
 	glUniform1i(glGetUniformLocation(basicShader->id, "cascadeCount"), shadowCascadeLevels.size());
@@ -156,7 +156,7 @@ void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shar
 	renderScene(game, basicShader->id);
 
 	if (dbugPanel::tuning::physicsShapes) {
-		drawPhysxDebug(game, view, proj);
+		drawPhysxDebug(game, view, projection);
 	}
 
 }
