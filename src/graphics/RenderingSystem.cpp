@@ -166,10 +166,8 @@ glm::mat4 RenderingSystem::lightViewProjMat(const float nearPlane, const float f
 	// The direction of the light is known, we can pick a point in world space that it is looking at: the center of the frustum.
 	glm::vec3 center = glm::vec3(0.0f);
 	glm::vec3 lightDir = glm::vec3(0.0f, 1.0f, 0.1f);
-	glm::mat4 proj = glm::perspective(glm::radians(50.0f), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
-
 	// frustum corners in world space
-	std::vector<glm::vec4> corners = getFrustumCorners(proj, view);
+	std::vector<glm::vec4> corners = getFrustumCorners(projection, view);
 
 	for (const auto& c : corners) {
 		// View: average the corners' coordinates
