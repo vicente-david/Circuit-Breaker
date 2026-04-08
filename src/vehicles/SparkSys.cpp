@@ -397,9 +397,9 @@ void SparkSys::sparkCollision(GameState& game) {
 				
 				auto& pt = colData.contactPt;
 				
-				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData1.colour[0]/255.f, sData1.colour[1]/255.f, sData1.colour[2]/255.f, 0.8f), 0.08f, 0.25f, vel};
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData1.colour[0]/255.f, sData1.colour[1]/255.f, sData1.colour[2]/255.f, 0.8f), 0.09f, 0.30f, vel};
 
-				pHelper->notifyDMG(p, 15);
+				pHelper->notifyDMG(p, 30);
 			}
 			
 		}
@@ -416,9 +416,9 @@ void SparkSys::sparkCollision(GameState& game) {
 
 				auto& pt = colData.contactPt;
 				
-				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData2.colour[0] / 255.f, sData2.colour[1] / 255.f, sData2.colour[2] / 255.f, 0.8f), 0.08f, 0.25f, vel };
+				Particle p = { glm::vec3(pt.x, pt.y, pt.z), glm::vec4(sData2.colour[0] / 255.f, sData2.colour[1] / 255.f, sData2.colour[2] / 255.f, 0.8f), 0.09f, 0.30f, vel };
 
-				pHelper->notifyDMG(p, 15);
+				pHelper->notifyDMG(p, 30);
 			}
 			
 			

@@ -16,6 +16,6 @@ void main() {
 	vec3 vertWorldPos = particleCenter + cameraRight * vertex.x * position.w + cameraUp * vertex.y * position.w;
 	
 	gl_Position = VP * vec4(vertWorldPos, 1.0);
-	vec3 blendCol = mix(colour.xyz, vec3(1, 1, 1), 0.25);
+	vec3 blendCol = mix(colour.xyz, vec3(1, 1, 1), 0.10);
 	particleColour = vec4(blendCol, colour.w);
 }

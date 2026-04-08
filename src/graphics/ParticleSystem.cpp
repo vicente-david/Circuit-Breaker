@@ -20,7 +20,7 @@ void ParticleSystem::init() {
 	shader = std::make_unique<ShaderProgram>("shaders/particle.vert", "shaders/particle.frag");
 	
 	// init particle emitters
-	atkDmgEmitter = std::make_unique<ParticleEmitter>(100);
+	atkDmgEmitter = std::make_unique<ParticleEmitter>(1000);
 	boostEmitter = std::make_unique<ParticleEmitter>(10000);
 }
 
