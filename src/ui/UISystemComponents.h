@@ -29,6 +29,7 @@ struct textPositions {
 	float bottomPx; // where is the bottom part of text (typically ignored if using top align)
 	textAlign textAlignX = LEFT; // horizontal alignment enum
 	textAlign textAlignY = TOP; // vertical alignment enum
+	float aspectRatio = 0.0; // aspectRatio overrides textscale if the text overflows
 };
 
 // assume it's a quad
