@@ -368,6 +368,7 @@ void Game::initializeUI() {
 	uiSys->coordinator = coordinator;
 	uiSys->fps = &fps;
 	uiSys->playerBackwards = &gameState.playerBackwards;
+	uiSys->playerSpeed = &coordinator->getComponent<SparkData>(player).speed;
 
 	uiSys->screenInitialization();
 
@@ -464,6 +465,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
+			uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
 			break;
 
@@ -483,6 +485,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
+			uiSys->addScreen("speeeeeed");
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
@@ -671,6 +674,7 @@ void Game::updateFPS() {
 	}
 
 	uiSys->updateFPSCounter();
+	uiSys->dTime = frameTime;
 }
 
 void Game::updateRendering() {
