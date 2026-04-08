@@ -1246,6 +1246,9 @@ void UISystem::createHealthBar() {
 	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 50.0);
 	hBar.hasBackgroundColor = false;
 
+	hBar.aspectRatio = 10.0f / 1.0f; // for every 10 width, 1 height
+	hBar.aRatioAlignX = LEFT; // left align it 
+
 	Entity e1 = coordinator->createEntity();
 
 	Animatable a = { true, false, true, ANIM_HEALTHBAR };
@@ -1265,6 +1268,9 @@ void UISystem::createBoostBar(){
 	bBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
 	bBar.anchorOffsets = glm::vec4(10.0, 65.0, 0.0, 105.0);
 	bBar.hasBackgroundColor = false;
+
+	bBar.aspectRatio = 10.0f / 1.0f;  //for every 10 width, 1 height
+	bBar.aRatioAlignX = LEFT; // left align
 
 	Entity e1 = coordinator->createEntity();
 
