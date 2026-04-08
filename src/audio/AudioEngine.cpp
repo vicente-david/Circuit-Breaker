@@ -78,7 +78,6 @@ void AudioEngine::update(double dt) {
 			if (sound->stopped || state == AL_STOPPED) {
 				alDeleteSources(1, &sound->source);
 				sound->freed = true;
-				printf("free\n");
 				return true;
 			}
 
