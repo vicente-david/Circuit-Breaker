@@ -110,7 +110,42 @@ void RenderText(GLuint sID, unsigned int VAO, unsigned int VBO, std::string text
         maxHeight = glm::max(maxHeight, ch.size.y);
         maxBearing = glm::max(maxBearing, ch.bearing.y);
     }
-    
+
+    // if either totalWidth or maxHeight overflows, then we need to scale the font down
+    float containerWidth = positions.rightPx - positions.leftPx;
+    float containerHeight = positions.bottomPx - positions.topPx;
+
+    float xScale = 1.0f; // new scale (will change scale based on the min of x and y scale) 
+    float yScale = 1.0f; // new scale in y direction (will change scale based on the minimum of these two)
+
+    //
+    if (totalWidth > containerWidth) {
+        // scale down
+        xScale = containerWidth / totalWidth; // if container width is smaller, than naturally you gotta change the scale
+    }
+
+    if (maxHeight*scale > containerHeight) {
+        // scale down
+        yScale = containerHeight / (maxHeight * scale); // if container height is smaller, then change scale
+    }
+
+    //xScale gives you the ratio of totalwidth:containerwidth
+    // now if we assume scale is 1.0, then 1.0 is overflowing, we gotta scale the "scale" down
+    // by some fraction
+    // what fraction? well the ratio (xScale), 
+    // if the containerwidth/totalwidth = 1.0, then don't change the scale
+
+    // we take the minimum because the minimum is the minimum fit to not cause the overflow
+    scale = scale * glm::min(xScale, yScale); 
+
+    // we have to recalculate the width after scale changes
+    std::string::const_iterator c2;
+    totalWidth = 0;
+    for (c2 = text.begin(); c2 != text.end(); c2++) {
+        Character ch = Characters[*c2];
+        totalWidth += (ch.Advance >> 6) * scale;
+    }
+     
     calcPositions(positions, x, y, totalWidth, maxHeight*scale);
     
 

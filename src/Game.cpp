@@ -87,6 +87,7 @@ void Game::initializeRace() {
 		&RenderingSystem::renderShadows); // start rendering it lol
 	raceCountdown.start();
 	lastPrintedSecond = -1;
+	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state 
 }
 
 void Game::initializeTrack() {
@@ -391,26 +392,33 @@ void Game::initializeParticles() {
 void Game::handleMenuControl() {
 	UIActions &ui = gameState.uiActions;
 
-	if (gameState.nextState == END)
+	// this guard is basically what lets us control stuff in the end game menu.. because this screen is triggered by game logic and not player input
+	if (gameState.nextState != gameState.currentState) {
+		ui.menuControl = 0;
 		return;
+	}
 
+	// process transition requests
 	if (ui.intializeGame) {
 		ui.intializeGame = false;
-		ui.menuControl = 1; // transition to gameplay
 		uiSys->resetSelection();
 		gameState.nextState = GAMEPLAY;
 	}
-
-	if (ui.menuControl == -1) {
+	else if (ui.menuControl == -1) {
 		gameState.nextState = MAINMENU;
 	}
-
 	else if (ui.menuControl == 2) {
 		gameState.nextState = PAUSED;
 	}
-
 	else if (ui.menuControl == 1) {
 		gameState.nextState = GAMEPLAY;
+	}
+
+	// cleaner way to switch between InputSystem states.. allowing UI nav -> menuControl != 1, allowing pausing -> menuControl = 1
+	switch (gameState.nextState) {
+		case GAMEPLAY: ui.menuControl = 1; break;
+		case PAUSED:   ui.menuControl = 2; break;
+		default:       ui.menuControl = 0; break;
 	}
 }
 
@@ -438,8 +446,8 @@ void Game::cleanupGame() {
 	}
 
 	renderer->renderPasses.clear();
-	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I
-								 // ASSUME
+	uiSys->go = true; // re-initialize countdown UI
+	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
 	gameState.resetGameState();
 }
 
@@ -485,12 +493,27 @@ void Game::stateTransition() {
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
-			uiSys->addScreen("speeeeeed");
+			// re add countdown if it's still active (case when we pause during countdown)
+			if (raceCountdown.activeTimer() || uiSys->go) {
+				uiSys->addScreen("countDown");
+			}
 			renderer->renderPasses.push_back(&RenderingSystem::renderShadows);
 			break;
 
-			// we're likely restarting the game
+			// leaving the standings screen
 		case (END):
+			uiSys->clearAllScreens();
+			cleanupGame();
+			// only set up a new race if we're restarting the game
+			if (gameState.nextState == GAMEPLAY) {
+				initializeRace();
+				uiSys->addScreen("lapCounter");
+				uiSys->addScreen("placeCounter");
+				uiSys->addScreen("backwardsDisplay");
+				uiSys->addScreen("myHealthIsDeclining");
+				uiSys->addScreen("boostMeOffABridge");
+				uiSys->addScreen("countDown");
+			}
 			break;
 		}
 
@@ -544,11 +567,11 @@ void Game::update() {
 	gameState.uiActions = gameUIActions;
 
 	// controllerSys handles both vehicle controls AND UI navigation
-	// UI navigation modifies game.uiActions directly (confirm, goBack,
-	// menuControl, etc.) skip vehicle controls during countdown so the player
-	// can't move early
-	if (!raceCountdown.activeTimer())
-		controllerSys->update(gameState);
+	// UI navigation modifies game.uiActions directly (confirm, goBack, menuControl, etc.)
+	// always call update so UI navigation works even during countdown;
+	// vehicle controls are skipped during countdown so the player can't move early <-- now handled inside controllersys.cpp
+	gameState.countdownActive = raceCountdown.activeTimer();
+	controllerSys->update(gameState);
 
 	// --- State transition from menuControl ---
 	// Read back uiActions after controllerSys may have modified them
