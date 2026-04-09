@@ -235,7 +235,7 @@ void UISystem::updateSpeedometer(Entity& e) {
 	
 	textProg->use();
 	textPositions p1 = calculateTextContainer(u1);
-	RenderText(textProg->id, textVAO, textVBO, std::to_string((int)*playerSpeed)+" Hz", p1, u1.textScale, u1.textColor, textFont);
+	RenderText(textProg->id, textVAO, textVBO, std::to_string((int)*playerSpeed)+" HZ", p1, u1.textScale, u1.textColor, textFont);
 	
 }
 
@@ -595,7 +595,8 @@ void UISystem::initializeRenderingParams() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	textFont = initFont("assets/PixelifySans-VariableFont_wght.ttf");
+	//textFont = initFont("assets/PixelifySans-VariableFont_wght.ttf");
+	textFont = initFont("assets/charles.ttf");
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 		GL_FALSE, glm::value_ptr(uiMat));
@@ -749,8 +750,9 @@ void UISystem::createFPSCounter() {
 
 	UIElement counter1;
 	counter1.text = "FPS: " + *fps;
-	counter1.textScale = 1.0f;
+	counter1.textScale = 0.5f;
 	// default anchors are whole screen (0,0,1,1)
+	counter1.anchorOffsets = glm::vec4(0.0f, 15.0f, -15.0f, 0.0f);
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
 	counter1.textAlignmentY = TOP;
@@ -776,9 +778,10 @@ void UISystem::updateFPSCounter() {
 
 void UISystem::createPlaceCounter() {
 	UIElement counter1;
-	counter1.text = "Position: " + std::to_string(0);
-	counter1.textScale = 1.0f;
+	counter1.text = "POSITION: " + std::to_string(0);
+	counter1.textScale = 0.75f;
 	// default anchors are whole screen (0,0,1,1)
+	counter1.anchorOffsets = glm::vec4(0.0f, 0.0f, -15.0f, -15.0f);
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
 	counter1.textAlignmentY = BOTTOM;
@@ -810,7 +813,7 @@ void UISystem::updatePlaceCounter(Entity& p) {
 		}
 	}
 
-	u1.text = "Position: " + std::to_string(placement+1);
+	u1.text = "POSITION: " + std::to_string(placement+1);
 }
 
 void UISystem::createMainMenu() {
@@ -1072,7 +1075,7 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
 		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
 		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.standings[i];
-		firstPlace.textScale = 1.0f;
+		firstPlace.textScale = 0.75f;
 		firstPlace.textAlignmentY = CENTER;
 		firstPlace.textAlignmentX = LEFT;
 		firstPlace.textColor = glm::vec3(1.0f);
@@ -1136,9 +1139,10 @@ void UISystem::createRacingHUD() {
 
 void UISystem::createLapCounter() {
 	UIElement lapc1;
-	lapc1.text = "Lap: ";
-	lapc1.textScale = 1.0f;
+	lapc1.text = "LAP: 1";
+	lapc1.textScale = 0.75f;
 	// default anchors are whole screen (0,0,1,1)
+	lapc1.anchorOffsets = glm::vec4(15.0f, 0.0f, 0.0f, -15.0f);
 	lapc1.textColor = glm::vec3(1.0f);
 	lapc1.textAlignmentX = LEFT;
 	lapc1.textAlignmentY = BOTTOM;
@@ -1159,7 +1163,7 @@ void UISystem::updateLapCounter(int lapCount) {
 	// can assume it's only the first thing (we hard coded it above)
 	Entity& e1 = nameToScreen["lapCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
-	u1.text = "Lap: " + std::to_string(lapCount);
+	u1.text = "LAP: " + std::to_string(lapCount);
 }
 
 void UISystem::createCountdown() {
@@ -1297,10 +1301,10 @@ void UISystem::createSpeedometer() {
 	UIElement speedometer;
 	// default anchors are whole screen (0,0,1,1)
 	speedometer.anchors = glm::vec4(0.75, 0.5, 1.0, 1.0);
-	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -32.0);
+	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -64.0);
 	speedometer.hasBackgroundColor = false;
 	speedometer.text = "0";
-	speedometer.textScale = 1.0f;
+	speedometer.textScale = 0.75f;
 	speedometer.textColor = glm::vec3(1.0f);
 	speedometer.textAlignmentY = CENTER;
 	speedometer.textAlignmentX = CENTER;

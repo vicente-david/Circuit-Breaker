@@ -8,7 +8,7 @@ out vec4 col;
 
 uniform float currentAngle;
 
-float ringThickness = 0.01f;
+float ringThickness = 0.025f;
 float r = 0.9f;
 
 // sdf of a circle
