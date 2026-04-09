@@ -1,4 +1,5 @@
 #include "SparkSys.h"
+#include "GLFW/glfw3.h"
 #include "GameState.h"
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
@@ -6,7 +7,9 @@
 #include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
 #include "graphics/ParticleSystem.h"
+#include <cmath>
 #include <cstdio>
+#include <cstdlib>
 
 void SparkSys::updateSparks(double dt, GameState &game) {
 
@@ -605,13 +608,29 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 
 	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
+
+	auto side = sData.rBody->getGlobalPose().q.getBasisVector0();
+	glm::vec3 pside(side.x, side.y, side.z);
+	pside/=10;
+
 	PxVec3 fwd = sData.rBody->getLinearVelocity();
 	glm::vec3 pDir(fwd.x, fwd.y, fwd.z);
+
+	// add random amount to speed behind and speed to the side
+	float r = rand()/float(RAND_MAX);
+	pDir+=pside*(r-0.5f)*3.f;
+	pDir-=pPos*(r+1)*4.f;
+
 	pPos = pos + (-pPos / 2.6f);
 	pPos.y += 0.05f;
+
+
+
 	std::vector<unsigned char>& c = sData.colour;
-	Particle p = {pPos, glm::vec4(c[0]/255.f, c[1]/255.f, c[2]/255.f, 0.05f), 0.15f, 0.5f, pDir};
-	pHelper->notifyBST(p, 40);
+	// Particle pl = {pPos+pside, glm::vec4(c[0]/255.f, c[1]/255.f, c[2]/255.f, 0.05f), 0.15f, 0.3f, pDir};
+	Particle pr = {pPos, glm::vec4(c[0]/255.f, c[1]/255.f, c[2]/255.f, 0.05f), 0.15f, 0.3f, pDir};
+	// pHelper->notifyBST(pl, 40);
+	pHelper->notifyBST(pr, 40);
 
 	//glm::vec4(1.f, 0.663f, 0.071f, 0.2f)
 }
