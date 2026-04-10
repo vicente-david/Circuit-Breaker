@@ -52,7 +52,7 @@ class SparkSys : public System {
 	void updateMaxBoost(SparkData &sData);
 	void applyBoost(SparkData &sData, bool useHealth, bool boostStart, glm::vec3& pos, double dt);
 	void boost(SparkData &sData, SparkControls &sControls, Transform& sTransform, double dt);
-	void regenBoost(SparkData& sData, double dt);
+	void regenBoost(SparkData& sData, Transform& sTransform, double dt);
 	
 	void applyShimmy(SparkData& sData, bool dir);
 	void shimmy(SparkData& sData, SparkControls& sControls, double dt);
