@@ -187,6 +187,10 @@ public:
 	float currentAngle = 0.0;
 	float dTime;
 	float prevAngle = 0.0;
+	bool *isPlayerBoosting; // used for modifying the speedometer 
+	float isBoosting; // need this for passing to shader
+	float timeBoosting = 0.0;
+	float frameTime = 0.0; // time it takes for a frame to update
 
 	//
 	bool* playerBackwards;

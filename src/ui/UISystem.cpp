@@ -214,9 +214,29 @@ void UISystem::updateSpeedometer(Entity& e) {
 	currentAngle += *playerSpeed/5.0f * dTime;
 	currentAngle = fmod(currentAngle, glm::two_pi<float>()); // keep the angle between 0 and two pi 
 	prevAngle = currentAngle - *playerSpeed * dTime * 20.0;
+
+	// we want slight time based delay 
+
+	// if the player is not boosting
+	// if the player just start boosting
+	// if the player has boosted for more than x amount of time, ripple the ui (this prevents spam ripple)
+	if (*isPlayerBoosting) {
+		isBoosting = 1.0f;
+		timeBoosting += frameTime;
+	}
+	else {
+		isBoosting = 0.0f;
+		timeBoosting = 0.0;
+	}
+
 	glUniform1fv(glGetUniformLocation(speedShader->id, "currentAngle"), 1, &currentAngle);
 	glUniform1fv(glGetUniformLocation(speedShader->id, "prevAngle"), 1, &prevAngle);
-
+	
+	// pass as uniform only if it's 0, or > 0.5
+	if (timeBoosting == 0 || timeBoosting >= 0.25) {
+		glUniform1fv(glGetUniformLocation(speedShader->id, "isBoosting"), 1, &isBoosting);
+		glUniform1fv(glGetUniformLocation(speedShader->id, "timeBoosting"), 1, &timeBoosting);
+	}
 
 
 	// god awful for readibility, but we encode the texture coords as the xy comp of UIelement color

@@ -9,6 +9,9 @@ out vec4 col;
 uniform float currentAngle;
 uniform float prevAngle;
 
+uniform float isBoosting;
+uniform float timeBoosting;
+
 float ringThickness = 0.025f;
 float r = 0.9f;
 
@@ -17,6 +20,33 @@ vec3 bgColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
 vec3 pointColor = vec3(1.0, 1.0, 0.0);
 
 const float PI = 3.1415926535897932384626433832795;
+
+// wavy sdf of a circle
+float wavyCircleSDF(vec2 p, vec2 c, float r){
+    // translate point wrt circle center
+    vec2 P = p-c;
+    // define circle radius
+    float radius = r;
+    
+    // nab the angle (because the radius gets scaled based on angle)
+    float uvAngle = atan(P.y, P.x); 
+    
+    // amplitude of the ripples
+    float amplitude = sin(timeBoosting)*0.0125+0.025;
+
+    // ripple rotation speed
+    float rotSpeed = 1.0f*timeBoosting;
+    
+    // wave function (adds this much to the radius depending on the direction)
+    // it will have 8 ripples
+    // note the frequency mathematically can't be any real number, it must be an integer
+    float wave = sin(8.0*(uvAngle-rotSpeed))*amplitude;
+    
+    radius += wave;
+  
+    return length(P)-radius;
+}
+
 
 // sdf of a circle
 // p is test point, c is center of circle
@@ -27,6 +57,11 @@ float circleSDF(vec2 p, vec2 c, float r){
 
 float ringSDF(vec2 UV){
     float d = circleSDF(UV, vec2(0,0), r);
+
+    if (isBoosting >= 1.0f){
+        d = wavyCircleSDF(UV, vec2(0,0), r);
+    }
+
     float w = fwidth(d);
     float alpha = smoothstep(ringThickness+w, -w+ringThickness, abs(d));
     // alpha tells us if it's part of the ring or not

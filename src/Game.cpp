@@ -275,6 +275,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 	uiSys->maxPlayerHealth = &sparkData.maxHealth;
 	uiSys->playerBoost = &sparkData.boost;
 	uiSys->maxPlayerBoost = &sparkData.maxBoost;
+	uiSys->isPlayerBoosting = &sparkData.isBoosting;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve> &trackPaths,
@@ -698,6 +699,7 @@ void Game::updateFPS() {
 
 	uiSys->updateFPSCounter();
 	uiSys->dTime = frameTime;
+	uiSys->frameTime = frameTime;
 }
 
 void Game::updateRendering() {
