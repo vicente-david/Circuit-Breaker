@@ -318,9 +318,6 @@ void SparkSys::reloadSparkParams(GameState &game) {
 	}
 }
 
-// ================================ HELPER FUNCTIONS
-// ================================
-
 // ================================ HELPER FUNCTIONS ================================
 
 std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
@@ -368,7 +365,11 @@ void SparkSys::checkAirborne(SparkData &sData, double dt) {
 	else if (sData.offGroundTimer > 0)
 		sData.offGroundTimer -= dt;
 
-	if (!sData.isGrounded && grounded) // just touched ground
+	
+	if (sData.isGrounded && !grounded) // just became airborne
+		angularResistance(sData, 5.f, sData.offGroundLimit);
+
+	else if (!sData.isGrounded && grounded) // just touched ground
 		angularResistance(sData);	   // pre-maturely kill angResTimer
 
 	sData.isGrounded = grounded;
@@ -387,8 +388,8 @@ void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
 	// by 1000
 	sData.rBody->addTorque(torque * strength * 1000 * dt);
 }
-void SparkSys::angularResistance(SparkData &sData, PxReal val,
-								 double duration) {
+
+void SparkSys::angularResistance(SparkData &sData, PxReal val, double duration) {
 	sData.rBody->setAngularDamping(val);
 	sData.angResTimer = duration; // duration of zero means indefinitely
 }
