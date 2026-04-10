@@ -380,10 +380,10 @@ void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
 	// cross product with up axis gives vector to rotate along
 	auto torque = up.cross(PxVec3(0, 1, 0));
 	// square the size so that small angles aren't as effected
-	torque = torque * torque.magnitude();
+	// torque = torque * torque.magnitude();
 	// apply the torque. this always needs to be really big, so i just multiply
-	// by 1000
-	sData.rBody->addTorque(torque * strength * 1000 * dt);
+	// by 500
+	sData.rBody->addTorque(torque * strength * 500 * dt);
 }
 void SparkSys::angularResistance(SparkData &sData, PxReal val,
 								 double duration) {
@@ -632,11 +632,10 @@ void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart,
 	sData.rBody->addForce(forwardVector * sData.boostStrength,
 						  PxForceMode::eACCELERATION);
 
-	sData.rBody->addForce(forwardVector * sData.boostStrength,
-						  PxForceMode::eACCELERATION);
 
 	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
 
+	// do article effect
 	auto side = sData.rBody->getGlobalPose().q.getBasisVector0();
 	glm::vec3 pside(side.x, side.y, side.z);
 	pside /= 10;
@@ -842,6 +841,7 @@ void SparkSys::sparkHandling(SparkData &sData, SparkControls &sControls) {
 }
 void SparkSys::driftInit(SparkData &sData, SparkControls &sControls) {
 	changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
+	// apply a torque to spin you in the right direction
 	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
 	float strength = 220*sControls.steering;
 	sData.rBody->addTorque(up*strength, PxForceMode::eIMPULSE);
