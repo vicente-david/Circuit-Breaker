@@ -232,7 +232,7 @@ void Game::initializeTrack() {
 	// initialize players
 	initializePlayerSpark(trackPaths,
 						  pathStartPt + glm::vec3(-4.0f, 1.0f, -18.0f));
-	/*initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f),
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f),
 					  "TAM");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f),
 					  "Yellow Eagle");
@@ -245,7 +245,7 @@ void Game::initializeTrack() {
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f),
 					  "WorldEnder967");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f),
-					  "Sam");*/
+					  "Sam");
 
 	// Start countdown
 
