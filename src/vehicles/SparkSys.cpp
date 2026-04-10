@@ -39,6 +39,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		checkAngResistace(sData, dt);
 		checkAirborne(sData, dt);
 		correctRotation(sData, 200, dt);
+		checkGhost(game, sData, dt);
 
 		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, sTransform, dt);
@@ -318,9 +319,6 @@ void SparkSys::reloadSparkParams(GameState &game) {
 	}
 }
 
-// ================================ HELPER FUNCTIONS
-// ================================
-
 // ================================ HELPER FUNCTIONS ================================
 
 std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
@@ -368,15 +366,19 @@ void SparkSys::checkAirborne(SparkData &sData, double dt) {
 	else if (sData.offGroundTimer > 0)
 		sData.offGroundTimer -= dt;
 
-	if (!sData.isGrounded && grounded) // just touched ground
+	
+	if (sData.isGrounded && !grounded) // just became airborne
+		angularResistance(sData, 5.f, sData.offGroundLimit);
+
+	else if (!sData.isGrounded && grounded) // just touched ground
 		angularResistance(sData);	   // pre-maturely kill angResTimer
 
 	sData.isGrounded = grounded;
 }
 
-// this function will apply a torque straightening the car to face upwards
-// the close the angle is to 90 degrees the stronger the torque
 void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
+	// this function will apply a torque straightening the car to face upwards
+	// the close the angle is to 90 degrees the stronger the torque
 	// upwards direction of the car
 	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
 	// cross product with up axis gives vector to rotate along
@@ -387,8 +389,8 @@ void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
 	// by 1000
 	sData.rBody->addTorque(torque * strength * 1000 * dt);
 }
-void SparkSys::angularResistance(SparkData &sData, PxReal val,
-								 double duration) {
+
+void SparkSys::angularResistance(SparkData &sData, PxReal val, double duration) {
 	sData.rBody->setAngularDamping(val);
 	sData.angResTimer = duration; // duration of zero means indefinitely
 }
@@ -509,6 +511,31 @@ void SparkSys::healZoneCheck(GameState &game, double dt) {
 	}
 }
 
+void SparkSys::makeGhost(SparkData& sData, bool ghost, double duration) {
+	PxU32 shapes = sData.rBody->getNbShapes();
+	for (PxU32 i = 0; i < shapes; i++) {
+		PxShape* shape = NULL;
+		sData.rBody->getShapes(&shape, 1, i);
+
+		PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
+		if (shape->getSimulationFilterData() == chassisFilter)
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, !ghost);
+	}
+
+	sData.ghostTimer = duration; // duration of zero means indefinitely
+}
+
+void SparkSys::checkGhost(GameState& game, SparkData& sData, double dt) {
+	if (sData.ghostTimer <= 0)
+		return;
+	
+	sData.ghostTimer -= dt;
+
+	// restore collisions
+	if (sData.ghostTimer <= 0)
+		makeGhost(sData);
+}
+
 // COMMANDS
 void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, Transform& sTransform, double dt) {
 
@@ -542,7 +569,7 @@ void SparkSys::brake(SparkData &sData, SparkControls &sControls) {
 	}
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	float brakingForce = 100.f;
+	float brakingForce = 300.f;
 	sData.rBody->addForce(-linVel * brakingForce);
 }
 
@@ -577,13 +604,12 @@ void SparkSys::updateMaxBoost(SparkData &sData) {
 }
 
 void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm::vec3& pos, double dt) {
-	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	// use boost meter
 	sData.boost -= sData.boostUseRate * dt;
 
 	// use health to make up remainder
-	if (useHealth && sData.health > 1 && sData.boost < 0) {
+	if (useHealth && sData.boost < 0) {
 		sData.health += sData.boost * 0.7f;
 		// sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when
 		// using health
@@ -597,16 +623,13 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 	if (sData.boost < 0)
 		sData.boost = 0;
 
-	// apply an extra impulse if they just started boosting
-	if (boostStart) {
-		sData.rBody->addForce(forwardVector * sData.boostImpulse,
-							  PxForceMode::eIMPULSE);
-	}
-	sData.rBody->addForce(forwardVector * sData.boostStrength,
-						  PxForceMode::eACCELERATION);
-	
+	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
+
+	if (boostStart && !sData.inDrift) // apply an extra impulse if they just started boosting
+		sData.rBody->addForce(forwardVector * sData.boostImpulse, PxForceMode::eIMPULSE);
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 
+	// PFX stuff
 	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
 
 	auto side = sData.rBody->getGlobalPose().q.getBasisVector0();
@@ -643,9 +666,8 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTra
 	sData.isBoosting = false;
 	// MAYBE TODO: change to a small delay before applying bigger boost (leave
 	// alone for now) stop boosting if we've run out of normal boost
-	if (sData.boost <= dt * sData.boostUseRate && !sControls.boostWithHealth) {
+	if (sData.boost <= dt * sData.boostUseRate && !(sControls.boostWithHealth && sData.health > 1))
 		return;
-	}
 
 	if (sControls.boost) {
 		//dbug::log("GAME", -1, "boosting!");
@@ -662,10 +684,8 @@ void SparkSys::regenBoost(SparkData &sData, double dt) {
 		return;
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	const PxVec3 lateral =
-		sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-	const float lateralSpeed =
-		PxAbs(linVel.dot(lateral)); // don't want it to be negative
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
+	const float lateralSpeed = PxAbs(linVel.dot(lateral)); // don't want it to be negative
 
 	// this will be the drift angle at which you have increased boost
 	// regeneration rate. can calculate specified value as arccos(1 / threshold)
@@ -712,8 +732,7 @@ void SparkSys::shimmy(SparkData &sData, SparkControls &sControls, double dt) {
 }
 
 // HANDLING
-void SparkSys::changeWheelParams(SparkData &sData, PxReal friction,
-								 PxReal latFriction, PxReal maxSteerAngle) {
+void SparkSys::changeWheelParams(SparkData &sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle) {
 	for (int i = 0; i < 4; i++) {
 		sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] =
 			friction;
@@ -724,23 +743,20 @@ void SparkSys::changeWheelParams(SparkData &sData, PxReal friction,
 
 void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	const PxVec3 forward =
-		sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
-	const PxVec3 lateral =
-		sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
+	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
 	const float forwardSpeed = linVel.dot(forward);
 	const float lateralSpeed = linVel.dot(lateral);
 	const float rollVel = sData.rBody->getAngularVelocity().x;
 	const float yawVel = sData.rBody->getAngularVelocity().y;
 
 	int ccw = (yawVel >= 0.0f) ? 1 : -1; // rotating ccw = 1 and cw = -1
-	float slipAngle =
-		(PxAbs(forwardSpeed) > 0.f) ? PxAtan2(lateralSpeed, forwardSpeed) : 0.f;
-	float steering =
-		sControls.steering == 0.f ? 0.1f * -ccw : sControls.steering;
-	float countersteering =
-		ccw * steering; // negative = steering out of corner, positive =
-						// steering into corner
+	
+	// not steering -> automatically steer slightly opposite the direction rbody is rotating
+	float steering = sControls.steering == 0.f ? 0.1f * -ccw : sControls.steering;
+	
+	// negative = steering out of corner, positive = steering into corner
+	float countersteering = ccw * steering;
 
 	float driftCurve = 2.1f; //* steering;
 	float angleCurve = 1.4f * steering;
@@ -749,19 +765,10 @@ void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 	PxVec3 totalForce(PxIdentity);
 	PxVec3 totalTorque(PxIdentity);
 
-	// slow down when hitting a hard drift, ~60 deg
-	if (sData.speed > 40 && PxAbs(cosTheta) > 0.5f) {
-		float alpha = PxMin((sData.speed - 40.f) / 20, 1.f);
-		float speedDamp = PxLerp(1.f, 0.85f, alpha);
-		float mass = sData.rBody->getMass();
-		// totalForce += -linVel * speedDamp * cosTheta * cosTheta * mass;
+	if (!sData.isBoosting) {
+		float push = PxLerp(0.f, 3500.f, PxAbs(cosTheta)) * (countersteering > 0 ? 1 : 0.5f);
+		totalForce += forward * push;
 	}
-
-	// Opposite forces automatically apply due to opposite sign when
-	// counter-steering
-	PxVec3 driftDir = (forward * 0.5f + lateral * driftCurve);
-	float forceStrength = 200 * PxAbs(slipAngle);
-	// totalForce += driftDir * forceStrength;
 
 	float torqueStrength = countersteering > 0 ? -200.f : 600.f;
 	totalTorque += PxVec3(0.f, 1.f, 0.f) * angleCurve * torqueStrength;
@@ -769,7 +776,7 @@ void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 	float gripStrength = 240.f;
 	totalForce += lateral * gripStrength * countersteering * cosTheta;
 
-	float downforce = sData.speed * sData.speed * 0.2;
+	float downforce = sData.speed * sData.speed * 0.2f;
 	totalForce += PxVec3(0.f, -downforce, 0.f);
 
 	sData.rBody->addForce(totalForce);
@@ -785,12 +792,24 @@ void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 
 void SparkSys::yawStabilizer(SparkData &sData) {
 	const float yawVel = sData.rBody->getAngularVelocity().y;
-	const float alpha = PxMin(sData.speed / 20.f, 1.f);
-	const float dampForce = PxLerp(0.05f, 0.15f, alpha);
+	const float alpha = PxMin(sData.speed / 40.f, 1.f);
+	const float dampForce = PxLerp(0.f, 0.15f, alpha);
 	const float yawDamping = sData.speed * dampForce;
 	const PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
 
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
+
+	if (sData.shimmyTimer > sData.shimmyInvincible)
+		return;
+
+	const PxVec3 linVel = sData.rBody->getLinearVelocity();
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0();
+	const float lateralSpeed = linVel.dot(lateral);
+	const float correctionStrength = 15.f;
+	const PxVec3 lateralCorrection = lateral * -lateralSpeed * correctionStrength;
+
+	if (PxAbs(lateralSpeed) < 3.f)
+		sData.rBody->addForce(lateralCorrection, PxForceMode::eACCELERATION);
 }
 
 void SparkSys::sparkHandling(SparkData &sData, SparkControls &sControls) {
@@ -842,6 +861,8 @@ void SparkSys::respawn(SparkData &sData, SparkControls &sControls, double dt) {
 		sControls.reset = true;
 
 	// Respawn logic in RespawnSystem::update
-	if (sControls.reset)
+	if (sControls.reset) {
 		sData.respawnTimer = sData.respawnCooldown;
+		makeGhost(sData, true, sData.ghostCooldown);
+	}
 }

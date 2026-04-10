@@ -40,10 +40,10 @@
 		"RearWheelIds": [2, 3],
 		"CenterBias": 1.3,
 		"CenterTarget": 1.29,
-		"FrontBias": 1.3,
-		"FrontTarget": 1.29,
-		"RearBias": 1.3,
-		"RearTarget": 1.29,
+		"FrontBias": 1.5,
+		"FrontTarget": 1.49,
+		"RearBias": 1.5,
+		"RearTarget": 1.49,
 		"Rate": 10.0
 	},
 	"TankDifferentialParams":

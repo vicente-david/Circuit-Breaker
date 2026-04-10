@@ -40,6 +40,9 @@ class SparkSys : public System {
 	void wallCollision(GameState& game);
 	void healZoneCheck(GameState& game, double dt);
 
+	void makeGhost(SparkData& sData, bool ghost = false, double duration = 0);
+	void checkGhost(GameState& game, SparkData& sData, double dt);
+
 	// Commands
 	void sparkInputs(SparkData& sData, SparkControls& sControls, Transform& sTransform, double dt);
 	void brake(SparkData& sData, SparkControls& sControls);
