@@ -233,19 +233,19 @@ void Game::initializeTrack() {
 	initializePlayerSpark(trackPaths,
 						  pathStartPt + glm::vec3(-4.0f, 1.0f, -18.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f),
-					  "P2");
+					  "TAM");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f),
-					  "P3");
+					  "Yellow Eagle");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -9.0f),
-					  "P4");
+					  "Qbe");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 1.0f, -12.0f),
-					  "P5");
+					  "Perro");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -9.0f),
-					  "P6");
+					  "LateNyte");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f),
-					  "P7");
+					  "WorldEnder967");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f),
-					  "P8");
+					  "Sam");
 
 	// Start countdown
 
@@ -257,7 +257,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 								 glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "Player");
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "You");
 	raceEntities.push_back(sparkEntity);
 	coordinator->addComponent(sparkEntity, HumanController{0});
 	coordinator->addComponent(sparkEntity, CameraComp());
@@ -452,6 +452,7 @@ void Game::cleanupGame() {
 	uiSys->go = true; // re-initialize countdown UI
 	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
 	gameState.resetGameState();
+	leaderboardSys->reset();
 }
 
 void Game::stateTransition() {

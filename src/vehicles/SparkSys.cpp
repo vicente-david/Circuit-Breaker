@@ -249,31 +249,31 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 	game.coordinator->addComponent(sparkEntity, sData.rBody);
 	game.coordinator->addComponent(sparkEntity, SparkSounds(game.audio));
 
-	if (sData.mVehicleName == "P2") {
+	if (sData.mVehicleName == "TAM") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 		sData.colour = { 27, 209, 249 };
 	}
-	else if (sData.mVehicleName == "P3") {
+	else if (sData.mVehicleName == "Yellow Eagle") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark3.obj"));
 		sData.colour = {184, 249, 9};
 	}
-	else if (sData.mVehicleName == "P4") {
+	else if (sData.mVehicleName == "Qbe") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark4.obj"));
 		sData.colour = {215,81,254};
 	}
-	else if (sData.mVehicleName == "P5") {
+	else if (sData.mVehicleName == "Perro") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark5.obj"));
 		sData.colour = {53,71,255};
 	}
-	else if (sData.mVehicleName == "P6") {
+	else if (sData.mVehicleName == "LateNyte") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark6.obj"));
 		sData.colour = {255, 73,114};
 	}
-	else if (sData.mVehicleName == "P7") {
+	else if (sData.mVehicleName == "WorldEnder967") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark7.obj"));
 		sData.colour = {118,192,217};
 	}
-	else if (sData.mVehicleName == "P8") {
+	else if (sData.mVehicleName == "Sam") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark8.obj"));
 		sData.colour = {254,112,30};
 	}

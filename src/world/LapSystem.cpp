@@ -168,7 +168,18 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 				lapProg.closestTrackPoint = 0;
 				//if (lapProg.isPlayer && !game.gameEnded) game.uiText = game.uiSystem->raceUI(lapProg.currentLap);
 				dbug::log("LAP", 1, "on lap: %d", lapProg.currentLap);
-				if (lapProg.currentLap >= 2 && !game.gameEnded) game.endGame(entity);
+				if (lapProg.currentLap >= game.numLaps) {
+					// Record this player in the finish order
+					SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
+					bool alreadyFinished = false;
+					for (auto& name : game.finishOrder) {
+						if (name == spark.mVehicleName) { alreadyFinished = true; break; }
+					}
+					if (!alreadyFinished) {
+						game.finishOrder.push_back(spark.mVehicleName);
+					}
+					game.endGame(entity);
+				}
 			}
 
 			dbug::log("LAP", 0, "checkpoint %d reached", indexI);

@@ -1064,14 +1064,14 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 	
 
 	// --- POSITIONS FIELDS ---
-	for (int i = 0; i < lb.standings.size(); i++) {
+	for (int i = 0; i < lb.finalPositions.size(); i++) {
 		UIElement firstPlace;
 		firstPlace.hasBackgroundColor = false;
 		firstPlace.path = "assets/textures/ui/standings/standings_position.png";
 		firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
 		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
 		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
-		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.standings[i];
+		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.finalPositions[i];
 		firstPlace.textScale = 1.0f;
 		firstPlace.textAlignmentY = CENTER;
 		firstPlace.textAlignmentX = LEFT;
