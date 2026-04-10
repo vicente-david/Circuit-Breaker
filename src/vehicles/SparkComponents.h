@@ -64,6 +64,8 @@ struct SparkData {
 	double offGroundLimit = 2;
 	double offGroundTimer = offGroundLimit;
 	double angResTimer = 0;
+	double ghostCooldown = 2;
+	double ghostTimer = 0;
 
 	bool inReverse = false;
 	bool inDrift = false;

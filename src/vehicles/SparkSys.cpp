@@ -39,6 +39,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 		checkAngResistace(sData, dt);
 		checkAirborne(sData, dt);
 		correctRotation(sData, 200, dt);
+		checkGhost(game, sData, dt);
 
 		if (!sData.isDead) // cant do anything if your dead lol
 			sparkInputs(sData, sControls, sTransform, dt);
@@ -375,9 +376,9 @@ void SparkSys::checkAirborne(SparkData &sData, double dt) {
 	sData.isGrounded = grounded;
 }
 
-// this function will apply a torque straightening the car to face upwards
-// the close the angle is to 90 degrees the stronger the torque
 void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
+	// this function will apply a torque straightening the car to face upwards
+	// the close the angle is to 90 degrees the stronger the torque
 	// upwards direction of the car
 	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
 	// cross product with up axis gives vector to rotate along
@@ -508,6 +509,31 @@ void SparkSys::healZoneCheck(GameState &game, double dt) {
 				sData.health = sData.maxHealth;
 		}
 	}
+}
+
+void SparkSys::makeGhost(SparkData& sData, bool ghost, double duration) {
+	PxU32 shapes = sData.rBody->getNbShapes();
+	for (PxU32 i = 0; i < shapes; i++) {
+		PxShape* shape = NULL;
+		sData.rBody->getShapes(&shape, 1, i);
+
+		PxFilterData chassisFilter(COLLISION_FLAG_CHASSIS, COLLISION_FLAG_CHASSIS_AGAINST, 0, 0);
+		if (shape->getSimulationFilterData() == chassisFilter)
+			shape->setFlag(PxShapeFlag::eSIMULATION_SHAPE, !ghost);
+	}
+
+	sData.ghostTimer = duration; // duration of zero means indefinitely
+}
+
+void SparkSys::checkGhost(GameState& game, SparkData& sData, double dt) {
+	if (sData.ghostTimer <= 0)
+		return;
+	if(sData.isHuman && sData.isGrounded) dbug::log("GHOST", 0, "%f", sData.ghostTimer);
+	sData.ghostTimer -= dt;
+
+	// restore collisions
+	if (sData.ghostTimer <= 0)
+		makeGhost(sData);
 }
 
 // COMMANDS
@@ -837,6 +863,8 @@ void SparkSys::respawn(SparkData &sData, SparkControls &sControls, double dt) {
 		sControls.reset = true;
 
 	// Respawn logic in RespawnSystem::update
-	if (sControls.reset)
+	if (sControls.reset) {
 		sData.respawnTimer = sData.respawnCooldown;
+		makeGhost(sData, true, sData.ghostCooldown);
+	}
 }
