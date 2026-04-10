@@ -528,7 +528,7 @@ void SparkSys::makeGhost(SparkData& sData, bool ghost, double duration) {
 void SparkSys::checkGhost(GameState& game, SparkData& sData, double dt) {
 	if (sData.ghostTimer <= 0)
 		return;
-	if(sData.isHuman && sData.isGrounded) dbug::log("GHOST", 0, "%f", sData.ghostTimer);
+	
 	sData.ghostTimer -= dt;
 
 	// restore collisions
@@ -684,10 +684,8 @@ void SparkSys::regenBoost(SparkData &sData, double dt) {
 		return;
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	const PxVec3 lateral =
-		sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
-	const float lateralSpeed =
-		PxAbs(linVel.dot(lateral)); // don't want it to be negative
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0(); // already normalized
+	const float lateralSpeed = PxAbs(linVel.dot(lateral)); // don't want it to be negative
 
 	// this will be the drift angle at which you have increased boost
 	// regeneration rate. can calculate specified value as arccos(1 / threshold)
