@@ -59,6 +59,7 @@ class SparkSys : public System {
 	void driftStabilizer(SparkData& sData, SparkControls& sControls);
 	void yawStabilizer(SparkData& sData);
 	void sparkHandling(SparkData& sData, SparkControls& sControls);
+	void driftInit(SparkData& sData, SparkControls& sControls);
 
 	// Respawn
 	void sparkValuesReset(SparkData& sData);
