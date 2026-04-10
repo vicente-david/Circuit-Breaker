@@ -599,7 +599,7 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 
 	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
-	if (boostStart) // apply an extra impulse if they just started boosting
+	if (boostStart && !sData.inDrift) // apply an extra impulse if they just started boosting
 		sData.rBody->addForce(forwardVector * sData.boostImpulse, PxForceMode::eIMPULSE);
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 
