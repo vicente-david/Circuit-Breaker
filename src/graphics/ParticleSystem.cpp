@@ -22,6 +22,7 @@ void ParticleSystem::init() {
 	// init particle emitters
 	atkDmgEmitter = std::make_unique<ParticleEmitter>(1000);
 	boostEmitter = std::make_unique<ParticleEmitter>(10000);
+	driftEmitter = std::make_unique<ParticleEmitter>(1000);
 }
 
 void ParticleSystem::update(GameState& game, const double dt) {
@@ -44,6 +45,8 @@ void ParticleSystem::update(GameState& game, const double dt) {
 		atkDmgEmitter->Draw(*shader);
 		boostEmitter->update(dt, 1.0f, cameraPos);
 		boostEmitter->Draw(*shader);
+		driftEmitter->update(dt, 1.0f, cameraPos);
+		driftEmitter->Draw(*shader);
 		
 	}
 	
@@ -53,7 +56,7 @@ void ParticleSystem::update(GameState& game, const double dt) {
 // this is not a great way of doing this but its simple I guess
 // This function is called when there is damage dealt by a spark to another spark and adds particles to render
 // using the atkDmgEmitter
-void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) {
+void ParticleSystem::addDmgParticles(Particle particle, unsigned int spawnNum) {
 	
 	// Add specified number of the given particle to the particle list of the emitter
 	for (int i = 0; i < spawnNum; i++) {
@@ -74,7 +77,7 @@ void ParticleSystem::addParticleBurst(Particle particle, unsigned int spawnNum) 
 	}
 }
 
-void ParticleSystem::addParticles(Particle particle, unsigned int spawnNum) {
+void ParticleSystem::addBoostParticles(Particle particle, unsigned int spawnNum) {
 
 	// Add specified number of the given particle to the particle list of the emitter
 	for (int i = 0; i < spawnNum; i++) {
@@ -88,6 +91,29 @@ void ParticleSystem::addParticles(Particle particle, unsigned int spawnNum) {
 			glm::vec3 noise = glm::linearRand(glm::vec3(-.01f, -0.005f, -0.01f), glm::vec3(.01f, 0.005f, 0.01f)); 
 			particle.position += noise;
 			boostEmitter->particles.push_back(particle);
+		}
+		else {
+			dbug::log("PARTICLES", 2, "Adding particles failed, exceeded max particles in list");
+		}
+	}
+}
+
+void ParticleSystem::addDriftParticles(Particle particle, unsigned int spawnNum) {
+
+	// Add specified number of the given particle to the particle list of the emitter
+	for (int i = 0; i < spawnNum; i++) {
+
+		// check to ensure that we don't use too many particles at once
+		// for this emitter this shouldn't really be reached (this is more important for emitters that will constantly emit particles as 
+		// particles will re-use the same memory over and over)
+		if (driftEmitter->particles.size() < driftEmitter->maxNumParticles) {
+
+			// Vector perturbation on the spawn position of the particle
+			glm::vec3 noise = glm::linearRand(glm::vec3(-1.0f), glm::vec3(1.0f)); // random vector within the unit sphere
+			particle.dir += noise;
+			noise = glm::linearRand(glm::vec3(-.01f, -0.005f, -0.01f), glm::vec3(.01f, 0.005f, 0.01f));
+			particle.position += noise;
+			driftEmitter->particles.push_back(particle);
 		}
 		else {
 			dbug::log("PARTICLES", 2, "Adding particles failed, exceeded max particles in list");

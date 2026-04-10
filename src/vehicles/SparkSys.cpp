@@ -555,7 +555,7 @@ void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, Transform
 
 	sparkHandling(sData, sControls);
 
-	regenBoost(sData, dt); // boost regeneration
+	regenBoost(sData, sTransform, dt); // boost regeneration
 }
 
 void SparkSys::brake(SparkData &sData, SparkControls &sControls) {
@@ -676,7 +676,7 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTra
 	}
 }
 
-void SparkSys::regenBoost(SparkData &sData, double dt) {
+void SparkSys::regenBoost(SparkData &sData, Transform& sTransform, double dt) {
 	// Regenerate boost based on how 'hard' the drift is.
 	// Traveling parallel to your lateral direction (90 deg from the direction
 	// you're facing) grants the maximum boost regeneration rate.
@@ -698,7 +698,49 @@ void SparkSys::regenBoost(SparkData &sData, double dt) {
 	// aligned with travel speed. ensure you're traveling fast enough so to not
 	// divide by zero.
 	float cosTheta = threshold * lateralSpeed / sData.speed;
-	sData.boost += sData.boostRegenRate * dt * cosTheta * cosTheta;
+	float regen = sData.boostRegenRate * dt * cosTheta * cosTheta;
+	sData.boost += regen;
+
+	// particle stuff
+	if (regen >= 0.01f) {
+		// drift particles
+		glm::vec3 side(lateral.x, lateral.y, lateral.z);
+		PxVec3 fwd = sData.rBody->getLinearVelocity();		
+
+		// Half angle between backwards direction and (left/right) side.
+		// side * 1.5f just spaces the placement out nicer.
+		glm::vec3 halfL = (-sTransform.forwardD + (side * 1.5f)) * 0.5f; // Half angle between the 'backwards direction' and the side (left from player POV)
+		glm::vec3 halfR = (-sTransform.forwardD - (side * 1.5f)) * 0.5f; // right
+
+		glm::vec3 pPosL(sTransform.pos.x + halfL.x, sTransform.pos.y - 0.4f, sTransform.pos.z + halfL.z); // use the half angle to position the particle emitter
+		glm::vec3 pPosR(sTransform.pos.x + halfR.x, sTransform.pos.y - 0.4f, sTransform.pos.z + halfR.z);
+		
+		glm::vec3 pDir(fwd.x, fwd.y, fwd.z);
+		glm::vec3 pDirL = pDir + halfL; // diagonal movement (left-backward)
+		glm::vec3 pDirR = pDir + halfR; // diagonal movement (right-backward)
+
+		// Control left/right particle sizes based on direction of turn
+		// Check if the forward direction of spark is right/left of the forward velocity
+		float dot = linVel.dot(lateral);
+		float size = std::min(regen, 0.5f); // clamp the maximum particle size
+		float sizeL = size;
+		float sizeR = size;
+		if (dot < 0.0f) {
+			// left turn
+			sizeL *= 0.55f;
+		}
+		else {
+			// right turn
+			sizeR *= 0.55f;
+		}
+
+		glm::vec4 colour(0.8f, 0.8f, 0.8f, 0.3f);
+		
+		Particle pL = { pPosL, colour, sizeL, 0.3f, pDirL};
+		pHelper->notifyDRF(pL, 1);
+		Particle pR = { pPosR, colour, sizeR, 0.3f, pDirR };
+		pHelper->notifyDRF(pR, 1);
+	}
 }
 
 void SparkSys::applyShimmy(SparkData &sData, bool moveRight) {
