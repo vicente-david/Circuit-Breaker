@@ -28,11 +28,12 @@ void ParticleSystem::update(GameState& game, const double dt) {
 	for (auto& entity : entities) {
 		auto& camera = game.coordinator->getComponent<CameraComp>(entity);
 		glm::mat4 view = camera.GetViewMatrix();
+		glm::mat4 proj = glm::perspective(glm::radians(camera.fov), static_cast<float>(*SCR_WIDTH) / static_cast<float>(*SCR_HEIGHT), *nearPlane, *farPlane);
 		glm::vec3 cameraPos(glm::inverse(view)[3]);
 		// camera's up and right vectors in world space 
 		glm::vec3 camUp = { view[0][1], view[1][1], view[2][1] };
 		glm::vec3 camRight = { view[0][0], view[1][0], view[2][0] };
-		glm::mat4 VPMatrix = *proj * view;
+		glm::mat4 VPMatrix = proj * view;
 
 		shader->use();
 		glUniform3f(glGetUniformLocation(shader->id, "cameraUp"), camUp.x, camUp.y, camUp.z);

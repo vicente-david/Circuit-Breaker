@@ -108,7 +108,7 @@ void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shar
 	projection = glm::perspective(glm::radians(c1->fov), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
 
 	// setup uniform buffer object
-	const auto lightMatrices = getLightSpaceMatrices(view);
+	const auto lightMatrices = getLightSpaceMatrices(view, glm::radians(c1->fov));
 	glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
 	for (size_t i = 0; i < lightMatrices.size(); ++i)
 	{
@@ -161,13 +161,14 @@ void RenderingSystem::renderShadows(GameState& game, std::string& fps, std::shar
 
 }
 
-glm::mat4 RenderingSystem::lightViewProjMat(const float nearPlane, const float farPlane, glm::mat4 view) {
+glm::mat4 RenderingSystem::lightViewProjMat(const float nearPlane, const float farPlane, glm::mat4& view, float fov) {
 	// View matrix: 
 	// The direction of the light is known, we can pick a point in world space that it is looking at: the center of the frustum.
 	glm::vec3 center = glm::vec3(0.0f);
 	glm::vec3 lightDir = glm::vec3(0.0f, 1.0f, 0.1f);
 	// frustum corners in world space
-	std::vector<glm::vec4> corners = getFrustumCorners(projection, view);
+	glm::mat4 proj = glm::perspective(fov, static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), nearPlane, farPlane);
+	std::vector<glm::vec4> corners = getFrustumCorners(proj, view);
 
 	for (const auto& c : corners) {
 		// View: average the corners' coordinates
@@ -234,21 +235,21 @@ std::vector<glm::vec4> RenderingSystem::getFrustumCorners(const glm::mat4& proj,
 	return frustumCorners;
 }
 
-std::vector<glm::mat4> RenderingSystem::getLightSpaceMatrices(glm::mat4 view) {
+std::vector<glm::mat4> RenderingSystem::getLightSpaceMatrices(glm::mat4& view, float fov) {
 	std::vector<glm::mat4> ret;
 	for (size_t i = 0; i < shadowCascadeLevels.size() + 1; ++i)
 	{
 		if (i == 0)
 		{
-			ret.push_back(lightViewProjMat(nearPlane, shadowCascadeLevels[i], view));
+			ret.push_back(lightViewProjMat(nearPlane, shadowCascadeLevels[i], view, fov));
 		}
 		else if (i < shadowCascadeLevels.size())
 		{
-			ret.push_back(lightViewProjMat(shadowCascadeLevels[i - 1], shadowCascadeLevels[i], view));
+			ret.push_back(lightViewProjMat(shadowCascadeLevels[i - 1], shadowCascadeLevels[i], view, fov));
 		}
 		else
 		{
-			ret.push_back(lightViewProjMat(shadowCascadeLevels[i - 1], farPlane, view));
+			ret.push_back(lightViewProjMat(shadowCascadeLevels[i - 1], farPlane, view, fov));
 		}
 	}
 	return ret;

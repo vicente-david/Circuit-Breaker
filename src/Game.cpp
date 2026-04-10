@@ -383,7 +383,10 @@ void Game::initializeUI() {
 
 void Game::initializeParticles() {
 	particleSys->init();
-	particleSys->proj = &renderer->projection;
+	particleSys->SCR_WIDTH = &renderer->SCR_WIDTH;
+	particleSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
+	particleSys->nearPlane = &renderer->nearPlane;
+	particleSys->farPlane = &renderer->farPlane;
 
 	pHelper->connectSys(particleSys); // connect the particle system to the helper (gives a shared pointer to the helper)
 	sparkSys->pHelper = pHelper; // give a pointer to the helper to systems that want to communicate with the particle system
