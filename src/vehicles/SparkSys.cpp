@@ -708,8 +708,7 @@ void SparkSys::shimmy(SparkData &sData, SparkControls &sControls, double dt) {
 }
 
 // HANDLING
-void SparkSys::changeWheelParams(SparkData &sData, PxReal friction,
-								 PxReal latFriction, PxReal maxSteerAngle) {
+void SparkSys::changeWheelParams(SparkData &sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle) {
 	for (int i = 0; i < 4; i++) {
 		sData.mVehicle->mBaseParams.tireForceParams[i].frictionVsSlip[2][1] =
 			friction;
@@ -769,12 +768,24 @@ void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 
 void SparkSys::yawStabilizer(SparkData &sData) {
 	const float yawVel = sData.rBody->getAngularVelocity().y;
-	const float alpha = PxMin(sData.speed / 20.f, 1.f);
-	const float dampForce = PxLerp(0.05f, 0.15f, alpha);
+	const float alpha = PxMin(sData.speed / 40.f, 1.f);
+	const float dampForce = PxLerp(0.f, 0.15f, alpha);
 	const float yawDamping = sData.speed * dampForce;
 	const PxVec3 yawCorrection(0.f, -yawVel * yawDamping, 0.f);
 
 	sData.rBody->addTorque(yawCorrection, PxForceMode::eACCELERATION);
+
+	if (sData.shimmyTimer > sData.shimmyInvincible)
+		return;
+
+	const PxVec3 linVel = sData.rBody->getLinearVelocity();
+	const PxVec3 lateral = sData.rBody->getGlobalPose().q.getBasisVector0();
+	const float lateralSpeed = linVel.dot(lateral);
+	const float correctionStrength = 15.f;
+	const PxVec3 lateralCorrection = lateral * -lateralSpeed * correctionStrength;
+
+	if (PxAbs(lateralSpeed) < 3.f)
+		sData.rBody->addForce(lateralCorrection, PxForceMode::eACCELERATION);
 }
 
 void SparkSys::sparkHandling(SparkData &sData, SparkControls &sControls) {
