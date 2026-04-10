@@ -569,7 +569,7 @@ void SparkSys::brake(SparkData &sData, SparkControls &sControls) {
 	}
 
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
-	float brakingForce = 100.f;
+	float brakingForce = 300.f;
 	sData.rBody->addForce(-linVel * brakingForce);
 }
 
