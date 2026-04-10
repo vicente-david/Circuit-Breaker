@@ -40,9 +40,9 @@ void ParticleSystem::update(GameState& game, const double dt) {
 		glUniform3f(glGetUniformLocation(shader->id, "cameraRight"), camRight.x, camRight.y, camRight.z);
 		glUniformMatrix4fv(glGetUniformLocation(shader->id, "VP"), 1, GL_FALSE, glm::value_ptr(VPMatrix));
 
-		atkDmgEmitter->update(dt, cameraPos);
+		atkDmgEmitter->update(dt, 0.25f, cameraPos);
 		atkDmgEmitter->Draw(*shader);
-		boostEmitter->update(dt, cameraPos);
+		boostEmitter->update(dt, 1.0f, cameraPos);
 		boostEmitter->Draw(*shader);
 		
 	}
