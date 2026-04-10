@@ -582,7 +582,7 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 	sData.boost -= sData.boostUseRate * dt;
 
 	// use health to make up remainder
-	if (useHealth && sData.health > 1 && sData.boost < 0) {
+	if (useHealth && sData.boost < 0) {
 		sData.health += sData.boost * 0.7f;
 		// sData.health -= sData.boostUseRate * dt * 0.7f; // slower usage when
 		// using health
@@ -639,9 +639,8 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTra
 	sData.isBoosting = false;
 	// MAYBE TODO: change to a small delay before applying bigger boost (leave
 	// alone for now) stop boosting if we've run out of normal boost
-	if (sData.boost <= dt * sData.boostUseRate && !sControls.boostWithHealth) {
+	if (sData.boost <= dt * sData.boostUseRate && !(sControls.boostWithHealth && sData.health > 1))
 		return;
-	}
 
 	if (sControls.boost) {
 		//dbug::log("GAME", -1, "boosting!");
