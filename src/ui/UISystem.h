@@ -186,6 +186,7 @@ public:
 
 	float currentAngle = 0.0;
 	float dTime;
+	float prevAngle = 0.0;
 
 	//
 	bool* playerBackwards;

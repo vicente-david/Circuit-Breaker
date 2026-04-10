@@ -213,7 +213,9 @@ void UISystem::updateSpeedometer(Entity& e) {
 
 	currentAngle += *playerSpeed/5.0f * dTime;
 	currentAngle = fmod(currentAngle, glm::two_pi<float>()); // keep the angle between 0 and two pi 
+	prevAngle = currentAngle - *playerSpeed * dTime * 20.0;
 	glUniform1fv(glGetUniformLocation(speedShader->id, "currentAngle"), 1, &currentAngle);
+	glUniform1fv(glGetUniformLocation(speedShader->id, "prevAngle"), 1, &prevAngle);
 
 
 
@@ -231,6 +233,8 @@ void UISystem::updateSpeedometer(Entity& e) {
 	}
 	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
 	glDrawArrays(GL_TRIANGLES, 0, resData.size());
+
+	//prevAngle = currentAngle;
 
 	
 	textProg->use();
