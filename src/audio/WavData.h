@@ -18,7 +18,7 @@ class WavData {
 	unsigned int dataSize;
 
 	bool is3D;
-	bool loop;
+	bool loop = false;
 	ALenum format;
 	ALuint buffer;
 	int sampleRate;

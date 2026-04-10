@@ -31,6 +31,7 @@ class SparkSys : public System {
 	void checkDeath(SparkData& sData, double dt);
 	void checkAirborne(SparkData& sData, double dt);
 
+	void correctRotation(SparkData &sData, float strength ,double dt);
 	void angularResistance(SparkData& sData, PxReal val = 0.05f, double duration = 0);
 	void checkAngResistace(SparkData& sData, double dt);
 
@@ -39,6 +40,9 @@ class SparkSys : public System {
 	void wallCollision(GameState& game);
 	void healZoneCheck(GameState& game, double dt);
 
+	void makeGhost(SparkData& sData, bool ghost = false, double duration = 0);
+	void checkGhost(GameState& game, SparkData& sData, double dt);
+
 	// Commands
 	void sparkInputs(SparkData& sData, SparkControls& sControls, Transform& sTransform, double dt);
 	void brake(SparkData& sData, SparkControls& sControls);
@@ -46,7 +50,7 @@ class SparkSys : public System {
 
 	// Features
 	void updateMaxBoost(SparkData &sData);
-	void applyBoost(SparkData &sData, bool useHealth, glm::vec3& pos, double dt);
+	void applyBoost(SparkData &sData, bool useHealth, bool boostStart, glm::vec3& pos, double dt);
 	void boost(SparkData &sData, SparkControls &sControls, Transform& sTransform, double dt);
 	void regenBoost(SparkData& sData, double dt);
 	

@@ -27,4 +27,5 @@ class CameraSystem : public System {
 	registerSystem(std::shared_ptr<Coordinator> &coord);
 
 	void update(GameState &gamestate, float dt);
+	void camCollision(GameState&game, CameraComp& camdata, float dist);
 };

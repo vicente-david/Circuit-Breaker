@@ -1,11 +1,19 @@
 
 #include "CameraSystem.h"
 #include "GameState.h"
+#include "PxQueryFiltering.h"
+#include "PxQueryReport.h"
 #include "PxRigidBody.h"
 #include "debugUtils/Logger.h"
+#include "foundation/PxVec3.h"
+#include "geometry/PxGeometryHit.h"
+#include "geometry/PxGeometryQuery.h"
 #include "graphics/CameraComp.h"
+#include "vehicles/SparkComponents.h"
 #include <cstdio>
 #include <glm/ext/quaternion_common.hpp>
+#include <glm/ext/quaternion_geometric.hpp>
+#include <glm/fwd.hpp>
 #include <glm/geometric.hpp>
 
 std::shared_ptr<CameraSystem>
@@ -22,9 +30,14 @@ CameraSystem::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	return system;
 }
 
+float lerp(float val1, float val2, float factor) {
+	return val1 * factor + val2 * (1 - factor);
+}
+
 void CameraSystem::update(GameState &game, float dt) {
 
 	for (auto &entity : entities) {
+		auto &sData = game.coordinator->getComponent<SparkData>(entity);
 		auto &camData = game.coordinator->getComponent<CameraComp>(entity);
 		auto &rBody = game.coordinator->getComponent<PxRigidBody *>(entity);
 		auto &transform = game.coordinator->getComponent<Transform>(entity);
@@ -36,8 +49,7 @@ void CameraSystem::update(GameState &game, float dt) {
 
 		// lerp the yaw
 		float targetYaw = game.inputActions.camXRot * 75;
-		camData.yaw = (1 - camData.yawEasing) * camData.yaw +
-					  camData.yawEasing * targetYaw;
+		camData.yaw = lerp(targetYaw, camData.yaw, YAW_EASIING);
 
 		// this can be used to move linearly, but i don't think it looks as good
 		// if (std::abs(camData.yaw) < std::abs(targetYaw)) {
@@ -84,7 +96,15 @@ void CameraSystem::update(GameState &game, float dt) {
 				  camData.position.y, camData.position.z);
 
 		auto camVel = (camData.position - startLocation) * (1.0f / dt);
-		camData.fov = 45.f + glm::length(camVel) * 0.3;
+		float targetfov = 45.f + glm::length(camVel) * 0.3;
+		if (sData.isBoosting) {
+			targetfov += 10;
+			camData.posEasing = POS_EASIING_BOOST;
+		} else {
+			camData.posEasing = POS_EASIING;
+		}
+
+		camData.fov = lerp(targetfov, camData.fov, camData.fovEasing);
 		camData.fov = std::min(100.f, camData.fov);
 
 		// move the camera closer at faster speeds
@@ -94,8 +114,32 @@ void CameraSystem::update(GameState &game, float dt) {
 		camData.targetDist = std::max(0.f, camData.targetDist);
 		// printf("fov:%f dist:%f\n", camData.fov, camData.targetDist);
 
+		// camCollision(game, camData,
+		// 			 glm::length(camData.position - camData.lookPos));
+
 		// update the audio listner's frame and velocity for 3d audio
 		game.audio->updateListenerVel(camVel.x, camVel.y, camVel.z);
 		game.audio->updateListenerFrame(camData.GetViewMatrix());
+	}
+}
+// this doesnt work for no good reason
+void CameraSystem::camCollision(GameState &game, CameraComp &camdata,
+								float dist) {
+	const PxVec3 origin(camdata.position.x, camdata.position.y,
+						camdata.position.z);
+	glm::vec3 glmDir = camdata.lookPos - camdata.position;
+	glmDir = glm::normalize(glmDir);
+
+	const PxVec3 dir(glmDir.x, glmDir.y, glmDir.z);
+	PxRaycastBuffer hit;
+	PxQueryFilterData filter(PxQueryFlag::eSTATIC);
+	if (game.physics->gScene->raycast(origin, dir, dist, hit, PxHitFlag::eMTD,
+									  filter)) {
+		printf("blocking camera!!\n");
+		printf("d:%f/%f\n", hit.block.distance, dist);
+		printf("rom:[%f,%f,%f]\n", hit.block.normal.x, hit.block.normal.y,
+			   hit.block.normal.z);
+		printf("n:%d\n", hit.nbTouches);
+		// camdata.position += glmDir * hit.block.distance*0.2f;
 	}
 }

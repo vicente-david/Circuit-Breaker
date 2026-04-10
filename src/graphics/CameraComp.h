@@ -8,7 +8,14 @@
 #include <glm/trigonometric.hpp>
 
 // all the data that a camera should need
+
+const float POS_EASIING = 0.2;
+const float POS_EASIING_BOOST = 0.17;
+const float YAW_EASIING = 0.15;
+const float FOV_EASIING = 0.05;
+
 struct CameraComp {
+	constexpr  static float a = 5;
 
 	int camNumber = 0;
 	// values directly used to find view matrix
@@ -22,15 +29,15 @@ struct CameraComp {
 	// values for finding movement and stuff
 
 	// how far away from the car to be
-	float targetDist = 4.5;
+	float targetDist = 3.5;
 	// angle of the camera from the forward direction of the car (degrees)
-	float pitch = 45;
+	float pitch = 55;
 	float yaw = 0;
 	// how far ahead of the car to look
 	float lookAheadDist = 3;
 	// how fast to go to target position [0,1]
-	float posEasing = 0.2;
-	float yawEasing = posEasing;
+	float posEasing = POS_EASIING;
+	float fovEasing = FOV_EASIING;
 
 	// float angleSpeed = 90;
 

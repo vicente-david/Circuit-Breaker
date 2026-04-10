@@ -8,6 +8,7 @@
 #include "PxRigidStatic.h"
 #include "PxVisualizationParameter.h"
 #include "debugUtils/Logger.h"
+#include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "ecs/Coordinator.h"
 #include "ecs/EntityManager.h"
@@ -67,11 +68,6 @@ void PhysicsManager::initPhysX() {
 
 	PxInitVehicleExtension(*gFoundation); // Initialize vehicle extension
 
-	// debug info
-	// TODO: make this disabled by default, because it's bad for performance
-	gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1);
-	gScene->setVisualizationParameter(
-		PxVisualizationParameter::eCOLLISION_SHAPES, 1);
 }
 
 void PhysicsManager::initMaterialFrictionTable() {
@@ -201,4 +197,11 @@ void PhysicsManager::createTestObjs(Coordinator &coordinator) {
 void PhysicsManager::updatePhysics(double dt) {
 	gScene->simulate(dt);
 	gScene->fetchResults(true);
+
+	// enable debug info when dbug panel is activated
+	if(!debugEnabled && dbugPanel::enabled){
+		gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1);
+		gScene->setVisualizationParameter(
+			PxVisualizationParameter::eCOLLISION_SHAPES, 1);
+	}
 }

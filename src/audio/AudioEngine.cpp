@@ -20,8 +20,10 @@
 // https://ffainelli.github.io/openal-example/
 //
 
-AudioEngine::AudioEngine() {
+float AudioEngine::masterVol{0.5f};
+float AudioEngine::setVol{1.f};
 
+AudioEngine::AudioEngine() {
 	dbug::log("AUDIO", 0, "intializing audio");
 	// use the deafult audio device
 	device = alcOpenDevice(NULL);
@@ -45,7 +47,15 @@ AudioEngine::AudioEngine() {
 }
 
 void AudioEngine::loadSounds() {
-	sounds.emplace("muteCity", WavData("assets/sounds/muteCityMono.wav"));
+
+	sounds.emplace("muteCityIntro", WavData("assets/sounds/muteCityIntro.wav"));
+	sounds.emplace("muteCityLoop", WavData("assets/sounds/muteCityLoop.wav"));
+	sounds["muteCityLoop"].loop = true;
+	sounds.emplace("title", WavData("assets/sounds/title.wav"));
+	sounds["title"].loop = true;
+
+	sounds.emplace("silent", WavData("assets/sounds/silent.wav"));
+
 	sounds.emplace("engine", WavData("assets/sounds/engine.wav"));
 	sounds["engine"].loop = true;
 
@@ -67,7 +77,7 @@ void AudioEngine::update(double dt) {
 		channels.begin(), channels.end(), [](std::shared_ptr<Sound> sound) {
 			ALint state;
 			alGetSourcei(sound->source, AL_SOURCE_STATE, &state);
-			if (state == AL_STOPPED) {
+			if (sound->stopped || state == AL_STOPPED) {
 				alDeleteSources(1, &sound->source);
 				sound->freed = true;
 				return true;
@@ -90,8 +100,8 @@ void AudioEngine::update(double dt) {
 	dbug::log("AUDIO", -1, "%s]", str.c_str());
 
 	// volume control
-	if (dbugPanel::debug::updateVol) {
-		alListenerf(AL_GAIN, dbugPanel::debug::volume);
+	if (setVol != masterVol) {
+		alListenerf(AL_GAIN, masterVol);
 	}
 }
 

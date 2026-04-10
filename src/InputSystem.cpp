@@ -1,4 +1,6 @@
 #include "InputSystem.h"
+#include "GLFW/glfw3.h"
+#include "debugUtils/Panel.h"
 #include<iostream>
 #include<glm/glm.hpp>
 
@@ -91,6 +93,9 @@ class TestInput1 : public CallbackInterface {
 		}
 		else if (key == GLFW_KEY_X && action == GLFW_RELEASE) {
 			actions->keyboardLookBack = false;
+		}
+		if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
+			dbugPanel::enabled = !dbugPanel::enabled;
 		}
 
 

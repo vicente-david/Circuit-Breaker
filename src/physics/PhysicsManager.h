@@ -35,6 +35,7 @@ class PhysicsManager {
 	PxRigidStatic *gGroundPlane = NULL;
 	const PxVec3 gGravity = PxVec3(0.0f, -9.81f, 0.0f);
 
+	bool debugEnabled = false;
 	PhysicsManager(); // Constructor
 
 	void initPhysX();

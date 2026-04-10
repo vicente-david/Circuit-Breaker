@@ -1,4 +1,6 @@
 
+#include "debugUtils/Panel.h"
+#include "audio/AudioEngine.h"
 #include "debugUtils/Logger.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -19,6 +21,7 @@ struct SparkUI {
 namespace dbugPanel {
 // local variables
 std::vector<SparkUI> sparkData;
+bool enabled = false;
 
 // tuning values
 namespace tuning {
@@ -52,14 +55,9 @@ void createPanel(GLFWwindow *window) {
 	ImGui_ImplOpenGL3_Init();
 }
 void debugPanel() {
-	return; // REMOVE
 	ImGui::Begin("Debug");
 
-	float startV = debug::volume;
-	ImGui::SliderFloat("Volume", &debug::volume, 0, 1);
-	if (startV != debug::volume) {
-		debug::updateVol = true;
-	}
+	ImGui::SliderFloat("Volume", &AudioEngine::masterVol, 0, 1);
 	ImGui::InputInt("Log level", &dbug::minLogSeverity);
 	ImGui::Checkbox("Log whiteList", (bool *)&dbug::logListType);
 	std::string tags = "Logging tags [";
@@ -73,7 +71,6 @@ void debugPanel() {
 	ImGui::End();
 }
 void vehicleTuningPanel() {
-	return; // REMOVE
 	ImGui::Begin("Vehicle Tuning");
 	ImGui::InputText("Folder", &tuning::configFolder);
 	ImGui::InputText("Base Conf.", &tuning::basePath);
@@ -105,7 +102,6 @@ void clearSparkData() {
 	sparkData.clear();
 }
 void drawSparkInfo() {
-	return; // REMOVE
 	if (sparkData.empty())
 		return;
 
@@ -141,6 +137,9 @@ void drawSparkInfo() {
 }
 
 void render() {
+	if (!enabled){
+		return;
+	}
 	// Start the Dear ImGui frame
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplGlfw_NewFrame();

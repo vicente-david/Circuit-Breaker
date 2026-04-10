@@ -44,17 +44,18 @@ struct SparkData {
 
 	float boostUseRate = 20.f;
 	float boostStrength = 10.0f;
+	float boostImpulse = 1200.0f;
 	float boostRegenRate = 20.0f;
 	float maxBoost = 100.0f;
 	float boost = maxBoost;
 
-	float shimmyForce = 15.0f;
-	double shimmyCooldown = 2;
+	float shimmyForce = 18.0f;
+	double shimmyCooldown = 1;
 	double shimmyInvincible = shimmyCooldown - 0.5;
 	double shimmyTimer = 0;
 
 	float speed = 0.0f;
-	float minDriftSpeed = 10.f;
+	float minDriftSpeed = 20.f;
 
 	double respawnCooldown = 3;
 	double respawnTimer = 0;
@@ -63,6 +64,8 @@ struct SparkData {
 	double offGroundLimit = 2;
 	double offGroundTimer = offGroundLimit;
 	double angResTimer = 0;
+	double ghostCooldown = 2;
+	double ghostTimer = 0;
 
 	bool inReverse = false;
 	bool inDrift = false;

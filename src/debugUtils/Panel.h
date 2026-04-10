@@ -1,8 +1,10 @@
+#pragma once
 
 #include "GameState.h"
 #include <string>
 namespace dbugPanel {
 
+extern bool enabled;
 // tuning values
 namespace tuning {
 extern bool reloadSpark;
@@ -27,4 +29,5 @@ void render();
 void sparkInfo(int id, float health, float boost);
 void clearSparkData();
 void cleanup();
+void startDebug();
 } // namespace dbugPanel

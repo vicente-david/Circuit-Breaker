@@ -17,6 +17,7 @@
 #include <vector>
 #include "world/Clock.cpp"
 #include "graphics/ParticleHelper.h"
+#include "audio/MusicSys.h"
 
 class Game{
 
@@ -30,7 +31,7 @@ public:
 	std::shared_ptr<UISystem> uiSystem; // to-do: make a manager
 	std::shared_ptr<AudioEngine> audio;
 	std::shared_ptr<ParticleHelper> pHelper;
-	
+	MusicSys music;
 
 	// currently these are pretty disconnected
 	// so make it so we can call initializeGame()
@@ -92,8 +93,6 @@ public:
 
 	bool isInitialized;
 
-	//TODO: DELETE
-	Particle p;
 
 	// time stuff
 	double t = 0.0;
@@ -107,8 +106,6 @@ public:
 	int framesPassed = 0;
 	std::string fps = std::to_string(0);
 
-	// sound
-	std::shared_ptr<Sound> music;
 
 	Entity player; // player LOL
 	std::vector<Entity> raceEntities; // contains ALL entities that are created during initializeRace()
