@@ -38,6 +38,8 @@ public:
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
+	float nearPlane = 0.1f;
+	float farPlane = 200.0f;
 	unsigned int SHADOW_WIDTH = SCR_WIDTH, SHADOW_HEIGHT = SCR_HEIGHT;
 	glm::mat4 projection;
 
@@ -84,10 +86,8 @@ private:
 
 	// some shadow map stuff
 	std::vector<glm::vec4> getFrustumCorners(const glm::mat4& proj, const glm::mat4& view);
-	glm::mat4 lightViewProjMat(const float nearPlane, const float farPlane, glm::mat4 view);
-	std::vector<glm::mat4> getLightSpaceMatrices(glm::mat4 view);
-	float nearPlane = 0.1f;
-	float farPlane = 200.0f;
+	glm::mat4 lightViewProjMat(const float nearPlane, const float farPlane, glm::mat4& view, float fov);
+	std::vector<glm::mat4> getLightSpaceMatrices(glm::mat4& view, float fov);
 	std::vector<float> shadowCascadeLevels{ farPlane / 50.0f, farPlane / 25.0f, farPlane / 10.0f, farPlane / 2.0f };
 	
 };

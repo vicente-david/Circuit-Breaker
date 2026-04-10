@@ -19,8 +19,11 @@ public:
 	void addParticleBurst(Particle particle, unsigned int spawnNum);
 	void addParticles(Particle particle, unsigned int spawnNum);
 
-	glm::mat4* proj; //projection from rendering system
-
+	// vars from rendering system
+	int* SCR_WIDTH;
+	int* SCR_HEIGHT;
+	float* nearPlane;
+	float* farPlane;
 
 private:
 	std::unique_ptr<ParticleEmitter> atkDmgEmitter;

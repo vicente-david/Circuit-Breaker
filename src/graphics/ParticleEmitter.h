@@ -29,7 +29,7 @@ public:
 
 	ParticleEmitter(unsigned int maxNumParticles);
 
-	void update(const double dt, glm::vec3 cameraPos);
+	void update(const double dt, const float sizeFactor, glm::vec3 cameraPos);
 	void Draw(const ShaderProgram& shader);
 
 	std::vector<Particle> particles; // container of particles
