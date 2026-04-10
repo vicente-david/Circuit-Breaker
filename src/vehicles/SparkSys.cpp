@@ -577,7 +577,6 @@ void SparkSys::updateMaxBoost(SparkData &sData) {
 }
 
 void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm::vec3& pos, double dt) {
-	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	// use boost meter
 	sData.boost -= sData.boostUseRate * dt;
@@ -597,16 +596,13 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 	if (sData.boost < 0)
 		sData.boost = 0;
 
-	// apply an extra impulse if they just started boosting
-	if (boostStart) {
-		sData.rBody->addForce(forwardVector * sData.boostImpulse,
-							  PxForceMode::eIMPULSE);
-	}
-	sData.rBody->addForce(forwardVector * sData.boostStrength,
-						  PxForceMode::eACCELERATION);
-	
+	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
+
+	if (boostStart) // apply an extra impulse if they just started boosting
+		sData.rBody->addForce(forwardVector * sData.boostImpulse, PxForceMode::eIMPULSE);
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 
+	// PFX stuff
 	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
 
 	auto side = sData.rBody->getGlobalPose().q.getBasisVector0();
