@@ -709,7 +709,7 @@ void Game::updateRendering() {
 	
 	// update UI
 	uiSys->update();
-	particleSys->update(gameState, dt);
+	particleSys->update(gameState, frameTime);
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);
