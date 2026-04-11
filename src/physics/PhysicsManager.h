@@ -45,6 +45,7 @@ class PhysicsManager {
 	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform, PxMaterial *material, PxFilterData fitler, bool tireCollision = true);
 	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform, bool tireCollision = true);
 	PxRigidStatic* initHealZones(Mesh mesh, Transform transform);
+	PxRigidStatic* initWalls(Mesh mesh, Transform transform);
 
 	void updatePhysics(double dt);
 

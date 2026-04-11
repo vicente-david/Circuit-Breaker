@@ -190,9 +190,9 @@ void Game::initializeTrack() {
 		gameState.coordinator->addComponent(wall, CollisionData{WALL, wall});
 		auto &wallPhys =
 			gameState.coordinator->getComponent<CollisionData>(wall);
-
+		
 		for (auto &i : wallModel.GetMeshes()) {
-			auto actor = physics->initStaticMesh(i, none);
+			auto actor = physics->initWalls(i, none);
 			actor->userData = &wallPhys;
 		}
 
