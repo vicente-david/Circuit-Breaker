@@ -30,12 +30,12 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	if (d1->type == SPARK && d2->type == WALL) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
-		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
+		sparkWallCol.push_back(SparkWallColData{ d1->entity, imp});
 
 	} else if (d1->type == WALL && d2->type == SPARK) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
-		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
+		sparkWallCol.push_back(SparkWallColData{ d1->entity, imp });
 
 	} else if (d1->type == SPARK && d2->type == SPARK) {
 		// get collision velocity
@@ -137,7 +137,7 @@ float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 		int contCount = cp.extractContacts(contacts, cp.contactCount);
 		// printf("points:%d or %d\n", cp.contactCount, contCount);
 		for (int pointIdx = 0; pointIdx < contCount; pointIdx++) {
-			auto norm = contacts[pointIdx].normal;
+			PxVec3& norm = contacts[pointIdx].normal;
 			float dot = velocity.dot(norm);
 			if (dot < minDot) {
 				minDot = dot;
@@ -156,4 +156,22 @@ void PhysXCallbacks::resetLists() {
 	sparkWallCol.clear();
 	sparkSparkCol.clear();
 	killSparks.clear();
+}
+
+// Special callbacks that allow you to modify collision point data for a specific type of collision
+void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 nbPairs) {
+    // get collision data from each colliding actor
+    CollisionData* d1 = (CollisionData*)pairs->actor[0]->userData;
+    CollisionData* d2 = (CollisionData*)pairs->actor[1]->userData;
+
+    if (d1->type == SPARK && d2->type == WALL) {
+        PxContactSet& contact = pairs->contacts;
+        contact.setInvMassScale0(2.5f); // Set mass to be lighter (any value over 1.f here makes the mass behave lighter than it actually is for this specific collision response)
+		contact.setInvInertiaScale0(0.f); // Infinite inertia: prevents spinning out from hitting wings on the walls
+    }
+    else if (d1->type == WALL && d2->type == SPARK) {
+        PxContactSet& contact = pairs->contacts;
+        contact.setInvMassScale1(2.5f);
+		contact.setInvInertiaScale1(0.f);
+    }
 }

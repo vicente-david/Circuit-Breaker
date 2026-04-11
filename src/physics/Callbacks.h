@@ -1,6 +1,7 @@
 #pragma once
 
 #include "PxSimulationEventCallback.h"
+#include "PxContactModifyCallback.h"
 #include "ecs/EntityManager.h"
 #include "foundation/PxVec3.h"
 #include <set>
@@ -13,6 +14,7 @@ using namespace physx;
 struct SparkWallColData {
 	Entity sparkId;
 	float magnitude;
+	PxVec3 contactNorm;
 };
 struct SparkSparkColData {
 	Entity spark1Id;
@@ -52,8 +54,13 @@ class PhysXCallbacks : public PxSimulationEventCallback {
 				   const physx::PxTransform *poseBuffer,
 				   const physx::PxU32 count) {}
 
+
   private:
 	// PxVec3 getCollStrength(const PxContactPair *pairs, PxU32 nbPairs);
 	float getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
 						  PxVec3 velocity);
+};
+
+class ModifiedCallbacks : public PxContactModifyCallback {
+	void onContactModify(PxContactModifyPair* const pairs, PxU32 nbPairs);
 };

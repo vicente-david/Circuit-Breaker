@@ -54,6 +54,9 @@ void PhysicsManager::initPhysX() {
 	sceneDesc.simulationEventCallback =
 		callbacks.get(); // Assign callback to scene
 
+	modCallbacks = std::make_shared<ModifiedCallbacks>();
+	sceneDesc.contactModifyCallback = modCallbacks.get();
+
 	gScene = gPhysics->createScene(sceneDesc);
 
 	// Prep PVD
@@ -141,9 +144,9 @@ PxRigidStatic* PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
 	return initStaticMesh(mesh, transform, gMaterial, groundHealFilter);
 }
 PxRigidStatic* PhysicsManager::initWalls(Mesh mesh, Transform transform) {
-	PxFilterData groundFilter(COLLISION_FLAG_GROUND, COLLISION_FLAG_GROUND_AGAINST, 0, 0);
-	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.5f, 1.f); //make walls bouncier
-	return initStaticMesh(mesh, transform, wallMat, groundFilter);
+	PxFilterData filter(COLLISION_FLAG_WALL, COLLISION_FLAG_GROUND_AGAINST, 0, 0);
+	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.1f, 1.f); //make walls bouncier
+	return initStaticMesh(mesh, transform, wallMat, filter);
 }
 
 void PhysicsManager::createTestObjs(Coordinator &coordinator) {

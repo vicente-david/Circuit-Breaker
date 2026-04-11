@@ -26,6 +26,7 @@ class PhysicsManager {
 	PxMaterial *gMaterial = NULL;
 	PxPvd *gPvd = NULL;
 	std::shared_ptr<PhysXCallbacks> callbacks;
+	std::shared_ptr<ModifiedCallbacks> modCallbacks;
 
 	// The mapping between PxMaterial and friction.
 	PxVehiclePhysXMaterialFriction gPhysXMaterialFrictions[16];

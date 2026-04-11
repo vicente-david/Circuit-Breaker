@@ -490,7 +490,7 @@ void SparkSys::wallCollision(GameState &game) {
 		auto &trans =
 			game.coordinator->getComponent<Transform>(colData.sparkId);
 
-		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
+		sData.health -= colData.magnitude * 0.25;
 		if (sData.health < 0)
 			sData.health = 0;
 
