@@ -490,7 +490,7 @@ void SparkSys::wallCollision(GameState &game) {
 		auto &trans =
 			game.coordinator->getComponent<Transform>(colData.sparkId);
 
-		sData.health -= colData.magnitude * 0.25;
+		sData.health -= colData.magnitude * 0.10;
 		if (sData.health < 0)
 			sData.health = 0;
 
