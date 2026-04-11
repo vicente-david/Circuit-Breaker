@@ -608,10 +608,8 @@ void SparkSys::updateMaxBoost(SparkData &sData) {
 		sData.boost = sData.maxBoost;
 }
 
-void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart,
-						  glm::vec3 &pos, double dt) {
-	const PxVec3 forwardVector =
-		sData.rBody->getGlobalPose().q.getBasisVector2();
+void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart, glm::vec3 &pos, double dt) {
+	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	// use boost meter
 	sData.boost -= sData.boostUseRate * dt;
@@ -632,12 +630,10 @@ void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart,
 		sData.boost = 0;
 
 	// apply an extra impulse if they just started boosting
-	if (boostStart) {
-		sData.rBody->addForce(forwardVector * sData.boostImpulse,
-							  PxForceMode::eIMPULSE);
-	}
-	sData.rBody->addForce(forwardVector * sData.boostStrength,
-						  PxForceMode::eACCELERATION);
+	if (boostStart && !sData.inDrift)
+		sData.rBody->addForce(forwardVector * sData.boostImpulse, PxForceMode::eIMPULSE);
+
+	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
 
 
 	// PFX stuff
@@ -795,6 +791,13 @@ void SparkSys::changeWheelParams(SparkData &sData, PxReal friction, PxReal latFr
 	sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = maxSteerAngle;
 }
 
+void SparkSys::driftInit(SparkData& sData, SparkControls& sControls) {
+	// apply a torque to spin you in the right direction
+	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
+	float strength = 220 * sControls.steering;
+	sData.rBody->addTorque(up * strength, PxForceMode::eIMPULSE);
+}
+
 void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
@@ -868,8 +871,10 @@ void SparkSys::yawStabilizer(SparkData &sData) {
 
 void SparkSys::sparkHandling(SparkData &sData, SparkControls &sControls) {
 	if (sControls.driftMode) {
-		if (!sData.inDrift)
+		if (!sData.inDrift) {
+			changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
 			driftInit(sData, sControls);
+		}
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer
@@ -881,14 +886,6 @@ void SparkSys::sparkHandling(SparkData &sData, SparkControls &sControls) {
 		sData.inDrift = false;
 		yawStabilizer(sData); // Helps prevent oversteer when turning
 	}
-}
-void SparkSys::driftInit(SparkData &sData, SparkControls &sControls) {
-	changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
-	// apply a torque to spin you in the right direction
-	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
-	float strength = 220*sControls.steering;
-	sData.rBody->addTorque(up*strength, PxForceMode::eIMPULSE);
-	
 }
 
 // RESPAWN

@@ -59,10 +59,10 @@ class SparkSys : public System {
 
 	// Handling
 	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
+	void driftInit(SparkData& sData, SparkControls& sControls);
 	void driftStabilizer(SparkData& sData, SparkControls& sControls);
 	void yawStabilizer(SparkData& sData);
 	void sparkHandling(SparkData& sData, SparkControls& sControls);
-	void driftInit(SparkData& sData, SparkControls& sControls);
 
 	// Respawn
 	void sparkValuesReset(SparkData& sData);
