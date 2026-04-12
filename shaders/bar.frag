@@ -85,7 +85,6 @@ float boostPara(vec2 uvOg, vec3 borderParams, vec3 boostParams, float bW, float 
     vec2 c = vec2(borderParams.x-boostParams.x, 0.0); 
     // 0 y means vertically centered
     //half down and half to the right
-    c.x -= 0.5*padding;
     
     vec2 UV = vec2(uvOg.x - c.x, uvOg.y - c.y); // translate the test point into local space
 
