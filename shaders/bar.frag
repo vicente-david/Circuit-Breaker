@@ -117,7 +117,7 @@ float boostPara(vec2 uvOg, vec3 borderParams, vec3 boostParams, float bW, float 
     // right edge depends on the y
     // we want to map -height to 0, height to 1
     // naturally the slant is a line, so we just need a linear interpolation
-    float normY = (UV.y+boostParams.y)/(2.0*boostParams.y); // y [0, 1] now
+    float normY = (UV.y+paddedHeight)/(2.0*paddedHeight); // y [0, 1] now
     normY = clamp(normY, 0.0, 1.0); // [0,1] frfr
     
     // now we use the above to find which x value is allowable for this y value
@@ -127,9 +127,9 @@ float boostPara(vec2 uvOg, vec3 borderParams, vec3 boostParams, float bW, float 
     // this above is quite literally also a linear interpolation
     // if y = 0 (i.e -height, then map x to just x)
     // if y = 1 (i.e height, then map x to x+0.5*slant) the maximum possible x value
-    float rightX = mix(boostParams.x-boostParams.z, boostParams.x+boostParams.z, normY);
+    float rightX = mix(paddedWidth-paddedSkew, paddedWidth+paddedSkew, normY);
     // same thing for left
-    float leftX = mix(-boostParams.x-boostParams.z, -boostParams.x+boostParams.z, normY);
+    float leftX = mix(-paddedWidth-paddedSkew, -paddedWidth+paddedSkew, normY);
     
     
     // not a si
