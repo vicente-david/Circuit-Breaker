@@ -63,8 +63,18 @@ float healthPara(vec2 uvOg, vec3 borderParams, vec3 healthParams){
     vec2 c = vec2(-borderParams.x+healthParams.x, 0.0); //same y axis
     
     vec2 UV = vec2(uvOg.x - c.x, uvOg.y - c.y); // translate the test point into local space
+
+    float paddedWidth = healthParams.x-padding;
+    float paddedHeight = healthParams.y-padding;
+
+    // we want the skew to remain the same
+    // but because we changed our height, the skew is no longer what we had originally
+    // old skew/old height = new skew/new height   (this is basically the property of similar triangles)
+    // solve for new skew   old skew * new height/oldHeight
+    float paddedSkew = (healthParams.z * (healthParams.y-padding)/healthParams.y); 
+
     
-    float d = paragramSDF(UV, healthParams.x, healthParams.y, healthParams.z);
+    float d = paragramSDF(UV, paddedWidth, paddedHeight, paddedSkew);
     float w = fwidth(d);
     float alpha = smoothstep(w,-w,d);
     
@@ -79,10 +89,18 @@ float boostPara(vec2 uvOg, vec3 borderParams, vec3 boostParams, float bW, float 
     
     vec2 UV = vec2(uvOg.x - c.x, uvOg.y - c.y); // translate the test point into local space
 
+    float paddedWidth = boostParams.x-padding;
+    float paddedHeight = boostParams.y-padding;
+
+    // we want the skew to remain the same
+    // but because we changed our height, the skew is no longer what we had originally
+    // old skew/old height = new skew/new height   (this is basically the property of similar triangles)
+    // solve for new skew   old skew * new height/oldHeight
+    float paddedSkew = (boostParams.z * (boostParams.y-padding)/boostParams.y); 
     
 
 
-    float d = paragramSDF(UV, boostParams.x, boostParams.y, boostParams.z);
+    float d = paragramSDF(UV, paddedWidth, paddedHeight, paddedSkew);
     float w = fwidth(d);
     float alpha = smoothstep(w,-w,d);
     
@@ -139,6 +157,11 @@ void main(){
     vec3 col = backgroundColor;
     float hRatio = currentHealth/maxHealth;
     float bRatio = currentBoost/maxBoost;
+
+    // clamp hRatio to 0,1
+    hRatio = clamp(hRatio, 0.0, 1.0);
+    // clamp bRatio to 0,1
+    bRatio = clamp(bRatio, 0.0, 1.0);
     
     // outermost parallelogram parameters
     vec3 borderParams = vec3(1.45/2.0, 0.8, 0.2); // centered at 0,0
@@ -161,24 +184,6 @@ void main(){
     borderParams.z/1.25); // centered at approximately borderWidth/2
     // we scaled the height, this affects the slant, so we scale the slant as well
     // 1.25 means 80%  or well 0.8^-1
-
-    // adjust for padding
-    // note for skew:
-    // we want the skew to remain the same
-    // but because we changed our height, the skew is no longer what we had originally
-    // old skew/old height = new skew/new height   (this is basically the property of similar triangles)
-    // solve for new skew   old skew * new height/oldHeight
-
-    float pHealthW = healthParams.x-padding;
-    float pHealthH = healthParams.y-padding;
-    float pHealthS = (healthParams.z * (healthParams.y-padding)/healthParams.y);
-
-    float pBoostW = boostParams.x-padding;
-    float pBoostH = boostParams.y-padding;
-    float pBoostS = (boostParams.z * (boostParams.y-padding)/boostParams.y);
-   
-    healthParams = vec3(pHealthW, pHealthH, pHealthS);  
-    boostParams = vec3(pBoostW, pBoostH, pBoostS);  
 
 
     
