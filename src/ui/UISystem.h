@@ -100,7 +100,7 @@ public:
 	void updateUIElement(Entity& e); // renders UI using stored colors
 	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
 	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
-	void updateResBars(Entity& e, bool isHealth); 
+	void updateResBars(Entity& e); 
 	void updateSpeedometer(Entity& e);
 		
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
@@ -129,8 +129,7 @@ public:
 	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap
 
-	void createHealthBar();
-	void createBoostBar();
+	void createResourceBar();
 	void createSpeedometer();
 
 	// persistent ui elements (elements that change every frame)

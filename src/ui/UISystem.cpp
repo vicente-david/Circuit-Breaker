@@ -157,22 +157,19 @@ void UISystem::updateButtonUIElement(Entity& e) {
 
 }
 
-void UISystem::updateResBars(Entity& e, bool isHealth) {
+void UISystem::updateResBars(Entity& e) {
 	// quick and dirty way
 	resShader->use();
 
 	glm::vec3 col;
 	// update uniforms 
-	if (isHealth) {
-		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerHealth);
-		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerHealth);
-		col = glm::vec3(0.0f, 1.0f, 0.0f);
-	}
-	else {
-		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerBoost);
-		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerBoost);
-		col = glm::vec3(0.0f, 0.0f, 1.0f);
-	}
+	glUniform1fv(glGetUniformLocation(resShader->id, "currentBoost"), 1, playerBoost);
+	glUniform1fv(glGetUniformLocation(resShader->id, "maxBoost"), 1, maxPlayerBoost);
+	glUniform1fv(glGetUniformLocation(resShader->id, "currentHealth"), 1, playerHealth);
+	glUniform1fv(glGetUniformLocation(resShader->id, "maxHealth"), 1, maxPlayerHealth);
+	col = glm::vec3(0.0f, 0.0f, 0.0f); // whatever throaway it's unused as of rn
+
+
 	UIElement& u1 = coordinator->getComponent<UIElement>(e);
 	glBindVertexArray(resVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
@@ -276,8 +273,8 @@ void UISystem::updateAnimatedUIElement(Entity& e) {
 			updateButtonUIElement(e);
 		}
 		break;
-	case(ANIM_HEALTHBAR):
-		updateResBars(e, animComp.isHealth);
+	case(ANIM_BAR):
+		updateResBars(e);
 		break;
 	case(ANIM_SPEEDOMETER):
 		updateSpeedometer(e);
@@ -751,8 +748,7 @@ void UISystem::screenInitialization() {
 	createPlaceCounter();
 	createCountdown();
 	createBackwardsDisplay();
-	createBoostBar();
-	createHealthBar();
+	createResourceBar();
 	createSpeedometer();
 }
 
@@ -1275,19 +1271,19 @@ void UISystem::updateBackwardsDisplay(float time) {
 }
 
 
-void UISystem::createHealthBar() {
+void UISystem::createResourceBar() {
 	UIElement hBar;
 	// default anchors are whole screen (0,0,1,1)
-	hBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
-	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 50.0);
+	hBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.5);
+	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 0.0);
 	hBar.hasBackgroundColor = false;
 
-	hBar.aspectRatio = 10.0f / 1.0f; // for every 10 width, 1 height
+	//hBar.aspectRatio = 10.0f / 1.0f; // for every 10 width, 1 height
 	hBar.aRatioAlignX = LEFT; // left align it 
 
 	Entity e1 = coordinator->createEntity();
 
-	Animatable a = { true, false, true, ANIM_HEALTHBAR };
+	Animatable a = { true, false, ANIM_BAR};
 	coordinator->addComponent(e1, hBar);
 	coordinator->addComponent(e1, a);
 
@@ -1296,29 +1292,6 @@ void UISystem::createHealthBar() {
 	myHealthIsDeclining.UIElements.push_back(e1);
 
 	nameToScreen["myHealthIsDeclining"] = myHealthIsDeclining;
-}
-
-void UISystem::createBoostBar(){
-	UIElement bBar;
-	// default anchors are whole screen (0,0,1,1)
-	bBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
-	bBar.anchorOffsets = glm::vec4(10.0, 65.0, 0.0, 105.0);
-	bBar.hasBackgroundColor = false;
-
-	bBar.aspectRatio = 10.0f / 1.0f;  //for every 10 width, 1 height
-	bBar.aRatioAlignX = LEFT; // left align
-
-	Entity e1 = coordinator->createEntity();
-
-	Animatable a = { true, false, false, ANIM_HEALTHBAR };
-	coordinator->addComponent(e1, bBar);
-	coordinator->addComponent(e1, a);
-
-	UIScreen boostMeOffABridge;
-	boostMeOffABridge.name = "boostMeOffABridge";
-	boostMeOffABridge.UIElements.push_back(e1);
-
-	nameToScreen["boostMeOffABridge"] = boostMeOffABridge;
 }
 
 void UISystem::createSpeedometer() {
@@ -1340,7 +1313,7 @@ void UISystem::createSpeedometer() {
 
 	Entity e1 = coordinator->createEntity();
 
-	Animatable a = { true, false, false, ANIM_SPEEDOMETER };
+	Animatable a = { true, false, ANIM_SPEEDOMETER };
 	coordinator->addComponent(e1, speedometer);
 	coordinator->addComponent(e1, a);
 

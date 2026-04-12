@@ -473,7 +473,6 @@ void Game::stateTransition() {
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("boostMeOffABridge");
 			uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
 			break;
@@ -493,7 +492,6 @@ void Game::stateTransition() {
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("boostMeOffABridge");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -512,7 +510,6 @@ void Game::stateTransition() {
 				uiSys->addScreen("placeCounter");
 				uiSys->addScreen("backwardsDisplay");
 				uiSys->addScreen("myHealthIsDeclining");
-				uiSys->addScreen("boostMeOffABridge");
 				uiSys->addScreen("countDown");
 			}
 			break;
