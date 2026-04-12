@@ -1274,12 +1274,13 @@ void UISystem::updateBackwardsDisplay(float time) {
 void UISystem::createResourceBar() {
 	UIElement hBar;
 	// default anchors are whole screen (0,0,1,1)
-	hBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.5);
+	hBar.anchors = glm::vec4(0.0, 0.0, 0.35, 0.0);
 	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 0.0);
 	hBar.hasBackgroundColor = false;
 
-	//hBar.aspectRatio = 10.0f / 1.0f; // for every 10 width, 1 height
+	hBar.aspectRatio = 12.0f / 1.0f; // for every 10 width, 1 height
 	hBar.aRatioAlignX = LEFT; // left align it 
+	hBar.aRatioAlignY = TOP;
 
 	Entity e1 = coordinator->createEntity();
 

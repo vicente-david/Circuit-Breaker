@@ -13,7 +13,7 @@ vec3 healthColor = vec3(1.0f, 252.0/255.0, 89.0f/255.0);
 vec3 boostBGColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
 vec3 boostColor = vec3(176.0/255.0, 217.0/255.0, 51.0/255.0);
 vec3 lowHealthColor = vec3(1.0f, 0.0, 0.0);
-float padding = 0.1;
+float padding = 0.025;
 float sliverPercentage = 0.1;
 
 
@@ -173,7 +173,7 @@ void main(){
     bRatio = clamp(bRatio, 0.0, 1.0);
     
     // outermost parallelogram parameters
-    vec3 borderParams = vec3(1.45/2.0, 0.8, 0.2); // centered at 0,0
+    vec3 borderParams = vec3(1.45/2.0, 0.8, 0.1); // centered at 0,0
     
     // health initial width
     float hW = hRatio; 
