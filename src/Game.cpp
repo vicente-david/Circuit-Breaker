@@ -209,6 +209,12 @@ void Game::initializeTrack() {
 			auto actor = physics->initStaticMesh(i, none, false);
 			actor->userData = &killPhys;
 		}
+
+		// Decor (arrows, fans)
+		Model decorModel("assets/decor.obj");
+		Entity decor = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(decor, none);
+		gameState.coordinator->addComponent(decor, decorModel);
 	}
 
 	Track curve("assets/curve.obj");
