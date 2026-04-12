@@ -12,7 +12,9 @@ vec3 borderColor = vec3(36.0/255.0, 82.0/255.0, 59.0/255.0);
 vec3 healthColor = vec3(1.0f, 252.0/255.0, 89.0f/255.0);
 vec3 boostBGColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
 vec3 boostColor = vec3(176.0/255.0, 217.0/255.0, 51.0/255.0);
+vec3 lowHealthColor = vec3(1.0f, 0.0, 0.0);
 float padding = 0.05;
+float sliverPercentage = 0.1;
 
 
 // p is test point
@@ -135,9 +137,17 @@ float boostPara(vec2 uvOg, vec3 borderParams, vec3 boostParams, float bW, float 
     // not a si
     float healthX = mix(leftX, rightX, bRatio);
    
-    if (UV.x > healthX) return -alpha;
+    float edgeChange = fwidth(UV.x); // how much x changes across the pixels
+
+    float edgeCutoff = smoothstep(healthX + edgeChange, healthX - edgeChange, UV.x); 
+    // if the change of X is in between our cutoff, then we went to smoothly blend between them
+    // returns 0 if it's "closer" to the unfilled region
+    // returns 1 if it's "closer" to the colored region
+
+    edgeCutoff = edgeCutoff*2.0; // map from [0,2]
+    edgeCutoff -= 1.0; // map from [-1,1]
     
-    return alpha;
+    return alpha*edgeCutoff;
 }
 
 
@@ -155,7 +165,7 @@ void main(){
 
     vec3 col = backgroundColor;
     float hRatio = currentHealth/maxHealth;
-    float bRatio = currentBoost/maxBoost;
+    float bRatio = (maxBoost >= 1e-6 && currentBoost >= 1e-6) ? currentBoost/maxBoost : 0.0;
 
     // clamp hRatio to 0,1
     hRatio = clamp(hRatio, 0.0, 1.0);
@@ -166,9 +176,11 @@ void main(){
     vec3 borderParams = vec3(1.45/2.0, 0.8, 0.2); // centered at 0,0
     
     // health initial width
-    float hW = 0.8*hRatio; 
+    float hW = hRatio; 
+    hW = (currentHealth >= 1.0 ) ? clamp(hW, sliverPercentage, 1.0) : 0.0; // always show a sliver of health (unless you have 0 health)
     // boost initial width
     float bW = 1.0-hW;
+
     
     // healthbar parameters roughly hW times the width of the border
     vec3 healthParams = vec3(
@@ -194,9 +206,12 @@ void main(){
     if (hRatio != 0.0) boostAlpha = boostPara(UV, borderParams, boostParams, bW, bRatio);
 
     else boostAlpha = boostPara(UV, borderParams, boostParams, bW, 0.0); // visual glitch fix
+
+    float changeThreshold = smoothstep(0.2, 0.8, hRatio); // between 0.2 health and 0.8 health we gradient
+    vec3 hColor = mix(lowHealthColor, healthColor, changeThreshold); // 0.2 health it stays red, and 0.8 health it stays og health color
     
     col = mix(backgroundColor, borderColor, borderAlpha);
-    col = mix(col, healthColor, healthAlpha);
+    col = mix(col, hColor, healthAlpha);
     
     if (boostAlpha < 0.0){
         col = mix(col, boostBGColor, -boostAlpha);
@@ -204,9 +219,10 @@ void main(){
         col = mix(col, boostColor, boostAlpha);
     }
     
-    
+    float bgAlpha = max(borderAlpha, healthAlpha);
+    bgAlpha = max(bgAlpha, boostAlpha);
     
 
     // Output to screen
-    color = vec4(col,1.0);
+    color = vec4(col, bgAlpha);
 }
