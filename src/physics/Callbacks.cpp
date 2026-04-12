@@ -174,4 +174,5 @@ void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 
         contact.setInvMassScale1(1.1f);
 		contact.setInvInertiaScale1(0.f);
     }
+
 }

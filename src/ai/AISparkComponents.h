@@ -24,7 +24,7 @@ struct AIController {
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route
 	PathID routeID = pFAST;
 	float curveDriftThresh = 0.10f; // minimum angle of turn for spark to drift
-	float curveBrakeThresh = 0.45f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
+	float curveBrakeThresh = 0.50f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
 	float maxTargetSpeed = 50.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
 	float curveBoostThresh = 0.05f; // max angle for ai to consider boosting
 	float steeringSharpness = 4.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
@@ -39,7 +39,7 @@ struct AIController {
 	float respawnRecoverTimer = 0.0f;
 	int lastPosIdx = 0;
 	
-	Clock checkProgTimer{5.0, 5.0}; // counts while ai is not moving
-	Clock attackCooldown{ 6.0, 6.0 }; // only this long at the beginning of the race. Cooldown shorter after that
+	Clock checkProgTimer{3.0, 3.0}; // counts while ai is not moving
+	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that
 };
 
