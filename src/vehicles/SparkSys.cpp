@@ -425,7 +425,8 @@ void SparkSys::sparkCollision(GameState &game) {
 		glm::vec3 contactPt = { colData.contactPt.x, colData.contactPt.y, colData.contactPt.z };
 		
 		// calculate knockback for spark that takes damage
-		PxVec3 knockback = colData.contactNorm * colData.magnitude * 2.f;
+		float knockMag = glm::clamp(colData.magnitude, 1.0f, 5.0f);
+		PxVec3 knockback = colData.contactNorm * knockMag;
 		knockback.y = 0.0f; // zero out verticle component
 
 		PxVec3 linVel1(sData1.rBody->getLinearVelocity());
