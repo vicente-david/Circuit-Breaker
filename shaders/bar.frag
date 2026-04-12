@@ -13,7 +13,7 @@ vec3 healthColor = vec3(1.0f, 252.0/255.0, 89.0f/255.0);
 vec3 boostBGColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
 vec3 boostColor = vec3(176.0/255.0, 217.0/255.0, 51.0/255.0);
 vec3 lowHealthColor = vec3(1.0f, 0.0, 0.0);
-float padding = 0.05;
+float padding = 0.1;
 float sliverPercentage = 0.1;
 
 
@@ -67,13 +67,13 @@ float healthPara(vec2 uvOg, vec3 borderParams, vec3 healthParams){
     vec2 UV = vec2(uvOg.x - c.x, uvOg.y - c.y); // translate the test point into local space
 
     float paddedWidth = healthParams.x-padding;
-    float paddedHeight = healthParams.y-padding;
+    float paddedHeight = healthParams.y-2.5*padding; // lol kinda works
 
     // we want the skew to remain the same
     // but because we changed our height, the skew is no longer what we had originally
     // old skew/old height = new skew/new height   (this is basically the property of similar triangles)
     // solve for new skew   old skew * new height/oldHeight
-    float paddedSkew = (healthParams.z * (healthParams.y-padding)/healthParams.y); 
+    float paddedSkew = (healthParams.z * (paddedHeight)/healthParams.y); 
 
     
     float d = paragramSDF(UV, paddedWidth, paddedHeight, paddedSkew);
@@ -185,14 +185,14 @@ void main(){
     // healthbar parameters roughly hW times the width of the border
     vec3 healthParams = vec3(
     borderParams.x*hW,
-    borderParams.y, 
-    borderParams.z);
+    borderParams.y/1.0, 
+    borderParams.z/1.0);
     // centered at approximately -borderWidth/2
     // parameters of the boost bar 
     vec3 boostParams = vec3(
     borderParams.x*bW, 
-    borderParams.y/1.25, 
-    borderParams.z/1.25); // centered at approximately borderWidth/2
+    borderParams.y/1.30, 
+    borderParams.z/1.30); // centered at approximately borderWidth/2
     // we scaled the height, this affects the slant, so we scale the slant as well
     // 1.25 means 80%  or well 0.8^-1
 
