@@ -166,13 +166,21 @@ void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 
 
     if (d1->type == SPARK && d2->type == WALL) {
         PxContactSet& contact = pairs->contacts;
-        contact.setInvMassScale0(1.1f); // Set mass to be lighter (any value over 1.f here makes the mass behave lighter than it actually is for this specific collision response)
+        contact.setInvMassScale0(0.8f); // Set mass of spark for this collision (any value over 1.f here makes the mass behave lighter and <1.f heavier)
 		contact.setInvInertiaScale0(0.f); // Infinite inertia: prevents spinning out from hitting wings on the walls
+		
+		for (int i = 0; i < contact.size(); i++) {
+			contact.setMaxImpulse(i, 5.0);
+		}
+		
     }
     else if (d1->type == WALL && d2->type == SPARK) {
         PxContactSet& contact = pairs->contacts;
-        contact.setInvMassScale1(1.1f);
+        contact.setInvMassScale1(0.8f);
 		contact.setInvInertiaScale1(0.f);
+		for (int i = 0; i < contact.size(); i++) {
+			contact.setMaxImpulse(i, 5.0);
+		}
     }
 
 }
