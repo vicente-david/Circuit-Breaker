@@ -171,6 +171,13 @@ std::shared_ptr<Sound> AudioEngine::createSound(std::string name, bool do3d) {
 	return s;
 }
 
+void AudioEngine::stopAll() {
+	for (auto ch : channels) {
+		ch->stop();
+	}
+	// let update() clean up the stopped sources
+}
+
 void AudioEngine::close() {
 	for (auto ch : channels) {
 		ch->freed = true;

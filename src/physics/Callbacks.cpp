@@ -157,3 +157,8 @@ void PhysXCallbacks::resetLists() {
 	sparkSparkCol.clear();
 	killSparks.clear();
 }
+
+void PhysXCallbacks::resetAffectedSparks() {
+	groundedSparks.clear();
+	healingSparks.clear();
+}

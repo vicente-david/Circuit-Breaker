@@ -16,6 +16,7 @@ class AudioEngine {
 	AudioEngine();
 	void close();
 	void update(double dt);
+	void stopAll();
 
 	std::shared_ptr<Sound> createSound(std::string name, bool do3d = true);
 

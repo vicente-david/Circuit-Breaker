@@ -87,7 +87,10 @@ void Game::initializeRace() {
 		&RenderingSystem::renderShadows); // start rendering it lol
 	raceCountdown.start();
 	lastPrintedSecond = -1;
-	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state 
+	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state
+
+	// reset lap/place, case when game is restarted. this ensures UI stays up-to-date and doesnt show lap/place from previous race
+	uiSys->updateLapCounter(1);
 }
 
 void Game::initializeTrack() {
@@ -432,6 +435,7 @@ void Game::cleanupGame() {
 			SparkData &sData = coordinator->getComponent<SparkData>(e);
 			if (sData.rBody)
 				physics->gScene->removeActor(*sData.rBody);
+			sData.destroy();
 		}
 		coordinator->destroyEntity(e);
 	}
@@ -448,11 +452,15 @@ void Game::cleanupGame() {
 			physics->gScene->removeActor(*actor);
 	}
 
+	gameState.physics->callbacks->resetAffectedSparks();
 	renderer->renderPasses.clear();
 	uiSys->go = true; // re-initialize countdown UI
 	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
 	gameState.resetGameState();
 	leaderboardSys->reset();
+
+	// stop all active sounds so they don't overlap into the next race
+	audio->stopAll();
 }
 
 void Game::stateTransition() {
@@ -599,6 +607,11 @@ void Game::update() {
 
 		// race countdown (runs once per frame)
 		if (raceCountdown.activeTimer()) {
+			// keep leaderboard updated even during countdown so positions are correct on the grid
+			lapSys->update(gameState);
+			leaderboardSys->update(gameState);
+			uiSys->updatePlaceCounter(player);
+
 			raceCountdown.update(frameTime);
 			int secondsLeft = (int)std::ceil(
 				raceCountdown.remaining); // round up to nearest second for

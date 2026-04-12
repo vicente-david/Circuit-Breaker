@@ -38,6 +38,7 @@ class PhysXCallbacks : public PxSimulationEventCallback {
 	//... add arrays with the data for whatever collision you need to detect
 
 	void resetLists();
+	void resetAffectedSparks();
 
   protected:
 	void onContact(const PxContactPairHeader &pairHeader,
