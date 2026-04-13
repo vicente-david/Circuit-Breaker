@@ -171,6 +171,28 @@ std::shared_ptr<Sound> AudioEngine::createSound(std::string name, bool do3d) {
 	return s;
 }
 
+void AudioEngine::stopAll() {
+	for (auto ch : channels) {
+		ch->stop();
+	}
+	// let update() clean up the stopped sources
+}
+
+// this and resumeAll() are used for changing audio sources while in menus
+void AudioEngine::pauseAll() {
+	for (auto ch : channels) {
+		ch->pause();
+	}
+}
+
+void AudioEngine::resumeAll() {
+	for (auto ch : channels) {
+		if (!ch->freed && !ch->stopped) {
+			ch->start();
+		}
+	}
+}
+
 void AudioEngine::close() {
 	for (auto ch : channels) {
 		ch->freed = true;

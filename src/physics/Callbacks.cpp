@@ -190,3 +190,8 @@ void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 
     }
 
 }
+
+void PhysXCallbacks::resetAffectedSparks() {
+	groundedSparks.clear();
+	healingSparks.clear();
+}

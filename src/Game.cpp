@@ -87,7 +87,10 @@ void Game::initializeRace() {
 		&RenderingSystem::renderShadows); // start rendering it lol
 	raceCountdown.start();
 	lastPrintedSecond = -1;
-	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state 
+	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state
+
+	// reset lap/place, case when game is restarted. this ensures UI stays up-to-date and doesnt show lap/place from previous race
+	uiSys->updateLapCounter(1);
 }
 
 void Game::initializeTrack() {
@@ -438,6 +441,7 @@ void Game::cleanupGame() {
 			SparkData &sData = coordinator->getComponent<SparkData>(e);
 			if (sData.rBody)
 				physics->gScene->removeActor(*sData.rBody);
+			sData.destroy();
 		}
 		coordinator->destroyEntity(e);
 	}
@@ -454,11 +458,15 @@ void Game::cleanupGame() {
 			physics->gScene->removeActor(*actor);
 	}
 
+	gameState.physics->callbacks->resetAffectedSparks();
 	renderer->renderPasses.clear();
 	uiSys->go = true; // re-initialize countdown UI
 	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
 	gameState.resetGameState();
 	leaderboardSys->reset();
+
+	// stop all active sounds so they don't overlap into the next race
+	audio->stopAll();
 }
 
 void Game::stateTransition() {
@@ -503,6 +511,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
+			uiSys->addScreen("speeeeeed");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -531,7 +540,7 @@ void Game::stateTransition() {
 		// incoming transition
 		// entry
 		switch (gameState.nextState) {
-			// HOW DID WE GET HERE, this shouldn't run
+			// likely paused then quit to menu
 		case (MAINMENU):
 			cleanupGame();
 			uiSys->clearAllScreens();
@@ -541,10 +550,11 @@ void Game::stateTransition() {
 
 			// we are resuming gameplay
 		case (GAMEPLAY):
-			// uiSys->addScreen("racingHUD");
+			audio->resumeAll();
 			break;
 			// we will be in a pause menu
 		case (PAUSED):
+			audio->pauseAll();
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen(
@@ -555,6 +565,7 @@ void Game::stateTransition() {
 
 			// someone has finished the race
 		case (END):
+			audio->pauseAll();
 			uiSys->clearAllScreens();
 			uiSys->createStandingsScreen(
 				coordinator->getComponent<Leaderboard>(player));
@@ -605,6 +616,11 @@ void Game::update() {
 
 		// race countdown (runs once per frame)
 		if (raceCountdown.activeTimer()) {
+			// keep leaderboard updated even during countdown so positions are correct on the grid
+			lapSys->update(gameState);
+			leaderboardSys->update(gameState);
+			uiSys->updatePlaceCounter(player);
+
 			raceCountdown.update(frameTime);
 			int secondsLeft = (int)std::ceil(
 				raceCountdown.remaining); // round up to nearest second for

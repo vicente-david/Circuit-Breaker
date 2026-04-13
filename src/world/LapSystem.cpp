@@ -305,14 +305,14 @@ void LapSystem::update(GameState& game) {
 		if (spark.path == pFAST) {
 			// on main path
 			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].first;
-			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].first - eTransform.pos);
+			lapProg.distToCheckpoint = glm::length(checkPoints[followingCheckpoint].first - eTransform.pos);
 			dir = checkPoints[followingCheckpoint].first - checkPoints[lapProg.lastCheckpointID].first;
-			
+
 		}
 		else {
 			// on heal path
 			lapProg.lastCheckpointPos = checkPoints[lapProg.lastCheckpointID].second;
-			lapProg.distToCheckpoint = glm::length(checkPoints[lapProg.lastCheckpointID].second - eTransform.pos);
+			lapProg.distToCheckpoint = glm::length(checkPoints[followingCheckpoint].second - eTransform.pos);
 			dir = checkPoints[followingCheckpoint].second - checkPoints[lapProg.lastCheckpointID].second;
 		}
 		lapProg.lastCheckpointIdx = checkpointIdx[lapProg.lastCheckpointID]; //curve index of last checkpoint
