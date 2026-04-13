@@ -56,7 +56,7 @@ void PhysicsSystem::updateTransforms(GameState &state) {
 		transform.pos = glm::vec3(p.x, p.y + 0.1f, p.z);
 		transform.rot = roll * glm::quat(q.w, q.x, q.y, q.z);
 		// dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y, p.z);
-		if (entity == 32)
-		 dbug::log("RENDER", 1, "roll %f, yaw %f, lat %f", amount, -yawStr, lateral);
+		//if (entity == 32)
+		 //dbug::log("RENDER", 1, "roll %f, yaw %f, lat %f", amount, -yawStr, lateral);
 	}
 }
