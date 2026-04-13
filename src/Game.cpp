@@ -505,6 +505,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
+			uiSys->addScreen("speeeeeed");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -533,7 +534,7 @@ void Game::stateTransition() {
 		// incoming transition
 		// entry
 		switch (gameState.nextState) {
-			// HOW DID WE GET HERE, this shouldn't run
+			// likely paused then quit to menu
 		case (MAINMENU):
 			cleanupGame();
 			uiSys->clearAllScreens();
@@ -543,10 +544,11 @@ void Game::stateTransition() {
 
 			// we are resuming gameplay
 		case (GAMEPLAY):
-			// uiSys->addScreen("racingHUD");
+			audio->resumeAll();
 			break;
 			// we will be in a pause menu
 		case (PAUSED):
+			audio->pauseAll();
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen(
@@ -557,6 +559,7 @@ void Game::stateTransition() {
 
 			// someone has finished the race
 		case (END):
+			audio->pauseAll();
 			uiSys->clearAllScreens();
 			uiSys->createStandingsScreen(
 				coordinator->getComponent<Leaderboard>(player));

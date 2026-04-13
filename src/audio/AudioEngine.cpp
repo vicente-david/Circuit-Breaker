@@ -178,6 +178,21 @@ void AudioEngine::stopAll() {
 	// let update() clean up the stopped sources
 }
 
+// this and resumeAll() are used for changing audio sources while in menus
+void AudioEngine::pauseAll() {
+	for (auto ch : channels) {
+		ch->pause();
+	}
+}
+
+void AudioEngine::resumeAll() {
+	for (auto ch : channels) {
+		if (!ch->freed && !ch->stopped) {
+			ch->start();
+		}
+	}
+}
+
 void AudioEngine::close() {
 	for (auto ch : channels) {
 		ch->freed = true;
