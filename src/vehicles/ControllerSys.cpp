@@ -127,6 +127,11 @@ void ControllerSys::handleUINavigation(GameState& game) {
 				uiSys->resetSelection();
 			}
 			else if (btn == 2) {
+				uiSys->addScreen("controls");
+				uiSys->addScreen("tutorial");
+				uiSys->resetSelection();
+			}
+			else if (btn == 3) {
 				std::cout << "[UI] Exit game" << std::endl;
 				glfwSetWindowShouldClose(uiSys->window, true);
 			}
@@ -187,6 +192,11 @@ void ControllerSys::handleUINavigation(GameState& game) {
 				std::cout << "[UI] Restarting game" << std::endl;
 				ui.intializeGame = true;
 			}
+		}
+		else if (topScreen == "tutorial" || topScreen == "controls") {
+			// Buttons: 0=start game, 1=settings, 2=close game
+			uiSys->popScreen();
+			uiSys->resetSelection();
 		}
 	}
 }

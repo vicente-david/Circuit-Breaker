@@ -125,6 +125,8 @@ public:
 	// the return value will be the name of the string it maps the screen to
 	void createMainMenu(); // create the main menu and push it to the hash map
 	void createPauseMenu(); // create the pause menu and push it to hashmap
+	void createControlsMenu(); // create the settings menu and push it to hashmap
+	void createTutorialMenu(); // create the settings menu and push it to hashmap
 	void createSettingsMenu(); // create the settings menu and push it to hashmap
 	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap

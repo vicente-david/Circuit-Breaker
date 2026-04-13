@@ -14,7 +14,8 @@ enum GAMESTATE {
 	MAINMENU,
 	GAMEPLAY,
 	PAUSED,
-	END
+	END,
+	TUTORIAL,
 };
 
 

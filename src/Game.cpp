@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "AllSystem.h"
+#include "GameState.h"
 #include "PxActor.h"
 #include "debugUtils/Panel.h"
 #include "physics/CollisionData.h"
@@ -513,6 +514,10 @@ void Game::stateTransition() {
 				uiSys->addScreen("countDown");
 			}
 			break;
+		case (TUTORIAL):
+			// idk
+			uiSys->clearAllScreens();
+			break;
 		}
 
 		// this is the new state, do things that you want to update
@@ -547,6 +552,13 @@ void Game::stateTransition() {
 			uiSys->createStandingsScreen(
 				coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
+			break;
+
+		case (TUTORIAL):
+			// idk
+			uiSys->clearAllScreens();
+			uiSys->addScreen("controls");
+			uiSys->resetSelection();
 			break;
 		}
 

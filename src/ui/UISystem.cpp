@@ -750,6 +750,7 @@ void UISystem::screenInitialization() {
 	createBackwardsDisplay();
 	createResourceBar();
 	createSpeedometer();
+	createControlsMenu();
 }
 
 // Recall UIElement has the following fields
@@ -869,7 +870,7 @@ void UISystem::createMainMenu() {
 	exitButton.hasBackgroundColor = false;
 	exitButton.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
 	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
-	exitButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
+	exitButton.anchors = glm::vec4(0.3, 0.8525, 0.7, 0.9325);
 
 	// settings button
 	UIElement settingsButton;
@@ -879,6 +880,13 @@ void UISystem::createMainMenu() {
 
 	settingsButton.anchors = glm::vec4(0.3, 0.66539, 0.7, 0.74682);
 	settingsButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+
+	UIElement tutButton;
+	tutButton.hasBackgroundColor = false;
+	tutButton.path = "assets/textures/ui/mainMenu/startmenu_controls.png";
+	tutButton.textureID = GenerateTexture(tutButton.path.c_str(), false);
+
+	tutButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
 
 	// --- ---
 
@@ -890,6 +898,10 @@ void UISystem::createMainMenu() {
 	coordinator->addComponent(e3, settingsButton); // button 1
 	coordinator->addComponent(e3, Animatable());
 
+	Entity e5 = coordinator->createEntity();
+	coordinator->addComponent(e5, tutButton); // button 1
+	coordinator->addComponent(e5, Animatable());
+
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, exitButton); // button 2
 	coordinator->addComponent(e4, Animatable());
@@ -900,6 +912,7 @@ void UISystem::createMainMenu() {
 
 	mainMenu.UIElements.push_back(e2);
 	mainMenu.UIElements.push_back(e3);
+	mainMenu.UIElements.push_back(e5);
 	mainMenu.UIElements.push_back(e4);
 
 	nameToScreen["mainMenu"] = mainMenu;
@@ -966,6 +979,37 @@ void UISystem::createPauseMenu() {
 	pauseMenu.UIElements.push_back(e4);
 
 	nameToScreen["pauseMenu"] = pauseMenu;
+}
+void UISystem::createControlsMenu() {
+	UIElement tutMenu;
+	tutMenu.path = "assets/textures/ui/tutorial/tutorial.png";
+	tutMenu.hasBackgroundColor = false;
+	tutMenu.textureID = GenerateTexture(tutMenu.path.c_str(), false);
+
+	UIElement controlMenu;
+	controlMenu.path = "assets/textures/ui/tutorial/controls.png";
+	controlMenu.hasBackgroundColor = false;
+	controlMenu.textureID = GenerateTexture(controlMenu.path.c_str(), false);
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, tutMenu);
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, controlMenu);
+
+	UIElement button;
+	button.anchors = glm::vec4(1,1,0,0);
+
+	UIScreen menu1;
+	menu1.name = "tutorial";
+	menu1.UIElements.push_back(e1);
+
+	UIScreen menu2;
+	menu2.name = "controls";
+	menu2.UIElements.push_back(e2);
+
+	nameToScreen["tutorial"] = menu1;
+	nameToScreen["controls"] = menu2;
 }
 
 void UISystem::createSettingsMenu() {
