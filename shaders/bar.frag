@@ -11,8 +11,8 @@ vec3 backgroundColor = vec3(0.0f);
 vec3 borderColor = vec3(36.0/255.0, 82.0/255.0, 59.0/255.0);
 vec3 healthColor = vec3(1.0f, 252.0/255.0, 89.0f/255.0);
 vec3 boostBGColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
-vec3 boostColor = vec3(176.0/255.0, 217.0/255.0, 51.0/255.0);
-vec3 lowHealthColor = vec3(1.0f, 0.0, 0.0);
+vec3 boostColor = vec3(106.0/255.0, 176.0/255.0, 198.0/255.0);
+vec3 lowHealthColor = vec3(150.0/255.0, 55.0/255.0, 55.0/255.0);
 float padding = 0.025;
 float sliverPercentage = 0.1;
 
