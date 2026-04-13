@@ -14,11 +14,15 @@ public:
 	}
 
 	void notifyDMG(Particle& particle, unsigned int spawnNum) {
-		particleSys->addParticleBurst(particle, spawnNum);
+		particleSys->addDmgParticles(particle, spawnNum);
 	}
 
 	void notifyBST(Particle& particle, unsigned int spawnNum) {
-		particleSys->addParticles(particle, spawnNum);
+		particleSys->addBoostParticles(particle, spawnNum);
+	}
+
+	void notifyDRF(Particle& particle, unsigned int spawnNum) {
+		particleSys->addDriftParticles(particle, spawnNum);
 	}
 	
 

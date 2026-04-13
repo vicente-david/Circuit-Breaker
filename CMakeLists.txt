@@ -13,6 +13,7 @@ include_directories(${PROJECT_SOURCE_DIR}/src)
 
 # run this if using release
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
 file(GLOB_RECURSE SOURCES "src/*")
 file(GLOB_RECURSE SNIPPETS "snippets/*")
 
