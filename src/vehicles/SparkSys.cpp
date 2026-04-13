@@ -119,15 +119,15 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.1f, -0.2f),
 									 PxQuat(PxIdentity));
 
-		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.15f, 0.5f));
+		PxBoxGeometry sideBoxGeom(PxVec3(0.2f, 0.15f, 0.57f));
 		PxShape *leftSideBox = game.physics->gPhysics->createShape(
 			sideBoxGeom, *game.physics->gMaterial, true);
 		PxShape *rightSideBox = game.physics->gPhysics->createShape(
 			sideBoxGeom, *game.physics->gMaterial, true);
-		PxTransform leftSideBoxLocalPose(PxVec3(0.43f, 0.1f, 0.3f),
-										 PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
-		PxTransform rightSideBoxLocalPose(PxVec3(-0.43f, 0.1f, 0.3f),
-										  PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
+		PxTransform leftSideBoxLocalPose(PxVec3(0.34f, 0.1f, 0.33f),
+										 PxQuat(0.9458802f, 0.f, 0.324516f, 0.f));
+		PxTransform rightSideBoxLocalPose(PxVec3(-0.34f, 0.1f, 0.33f),
+										  PxQuat(0.9458802f, 0.f, -0.324516f, 0.f));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		sData.rBody->attachShape(*rearBox);
