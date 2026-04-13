@@ -28,7 +28,7 @@ class SparkSys : public System {
 
   private:
 	// === Helpers ===
-	void checkDeath(SparkData& sData, double dt);
+	void checkDeath(SparkData& sData, Transform& sTransform, double dt);
 	void checkAirborne(SparkData& sData, double dt);
 
 	void correctRotation(SparkData &sData, float strength ,double dt);

@@ -8,6 +8,9 @@ in vec3 FragPos;
 uniform sampler2D inTex;
 uniform sampler2DArray shadowMap;
 uniform bool hasTex; // if no texture bound, render with default color
+uniform float mixAmt; // for colouring effects, amount of color to add
+uniform vec4 mixColour; // mixing colour
+
 uniform float farPlane;
 uniform mat4 view;
 layout (std140) uniform LightSpaceMatrices
@@ -87,6 +90,8 @@ void main() {
 		objCol = texture(inTex, texCoord);
 	else
 		objCol = vec4(0.5, 0.5, 0.5, 1.0);
+
+	objCol = mix(objCol, mixColour, mixAmt);
 
 	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005); // For reducing shadow acne
 	

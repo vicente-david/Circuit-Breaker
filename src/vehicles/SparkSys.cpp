@@ -31,7 +31,7 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 
 		// state checks
 		bool playDeathSound = !sData.isDead; // only play sound the 1st time
-		checkDeath(sData, dt);
+		checkDeath(sData, sTransform, dt);
 
 		if (playDeathSound && sData.isDead) {
 			auto s = game.audio->createSound("death");
@@ -338,7 +338,7 @@ SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	return system;
 }
 
-void SparkSys::checkDeath(SparkData &sData, double dt) {
+void SparkSys::checkDeath(SparkData &sData, Transform& sTransform, double dt) {
 	if (sData.health > 0)
 		return;
 
@@ -352,6 +352,30 @@ void SparkSys::checkDeath(SparkData &sData, double dt) {
 		sData.health = 0;
 
 	sData.isDead = true;
+
+	// particles!
+	// using several directions to give more of a sphere shape while re-using the damage emitter
+	glm::vec3 dir1(2.f, 7.f, 2.f);
+	glm::vec3 dir2(-2.f, 7.f, -2.f);
+	glm::vec3 dir3(2.f, 7.f, -2.f);
+	glm::vec3 dir4(-2.f, 7.f, 2.f);
+
+	PxVec3 linvel = sData.rBody->getLinearVelocity();
+	glm::vec3 vel = { linvel.x, linvel.y, linvel.z };
+
+	Particle p1 = { sTransform.pos, glm::vec4(sData.colour[0] / 255.f, sData.colour[1] / 255.f, sData.colour[2] / 255.f, 0.8f), 0.12f, 0.20f, dir1 + vel};
+	Particle p2 = p1; // copy
+	Particle p3 = p1; // copy
+	Particle p4 = p1; // copy
+	p2.dir = dir2 + vel;
+	p3.dir = dir3 + vel;
+	p4.dir = dir4 + vel;
+	
+	// add particles
+	pHelper->notifyDMG(p1, 5);
+	pHelper->notifyDMG(p2, 5);
+	pHelper->notifyDMG(p3, 5);
+	pHelper->notifyDMG(p4, 5);
 }
 
 void SparkSys::checkAirborne(SparkData &sData, double dt) {
