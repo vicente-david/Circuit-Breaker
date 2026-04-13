@@ -2,6 +2,7 @@
 #include "AllSystem.h"
 #include "PxActor.h"
 #include "debugUtils/Panel.h"
+#include "ai/AIStateComponent.h"
 #include "physics/CollisionData.h"
 #include <cmath>
 
@@ -61,6 +62,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
 	coordinator->registerComponent<Animatable>();
+	coordinator->registerComponent<AIDriveStateP>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -298,6 +300,7 @@ void Game::initializeAISpark(std::vector<TrackCurve> &trackPaths,
 			trackPaths.at(0).curvePoints, // planned route
 			trackPaths.at(0).curvatures,  // angles at each point in route
 		});
+	coordinator->addComponent(testSpark2, AIDriveStateP{ std::make_shared<S_Driving>() });
 }
 
 void Game::initializeAISpark2(std::vector<TrackCurve> &trackPaths,

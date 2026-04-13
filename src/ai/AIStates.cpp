@@ -6,8 +6,8 @@ using namespace AIHelpers;
 * ===== DEFENSE STATE =============================================================================================================================================
 * prioritize dodging and recovering HP
 */
-void DefenseState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
+void DefenseState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI", 1, "\n********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
 	
 	// Check if a route/curve change is needed
 	checkRoute(ctx.ai, ctx.spark);
@@ -17,15 +17,15 @@ void DefenseState::run(AIDriveContext& ctx) {
 	if (sweepResult.first != NONE) {
 		auto next = std::make_unique<S_Dodging>();
 		next->sweepResult = sweepResult;
-		currentState = std::move(next);
+		state.currentState = std::move(next);
 	}
 	// run state update function
-	auto next = currentState->update(ctx);
+	auto next = state.currentState->update(ctx);
 	
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
-		currentState = std::move(next);
-		currentState->enter(ctx);
+		state.currentState = std::move(next);
+		state.currentState->enter(ctx);
 	}
 
 	
@@ -67,8 +67,8 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 * ===== OVERTAKE STATE =============================================================================================================================================
 * overtake other players: prioritize speed and attacking others
 */
-void OvertakeState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 0, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
+void OvertakeState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI", 0, "\n********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
 	// give ai the proper path
 	checkRoute(ctx.ai, ctx.spark);
@@ -78,17 +78,17 @@ void OvertakeState::run(AIDriveContext& ctx) {
 		if (sweepResult.first != NONE) {
 			auto next = std::make_unique<S_Attacking>();
 			next->sweepResult = sweepResult;
-			currentState = std::move(next);
+			state.currentState = std::move(next);
 		}
 	}
 
 	// run state update function
-	auto next = currentState->update(ctx);
+	auto next = state.currentState->update(ctx);
 
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
-		currentState = std::move(next);
-		currentState->enter(ctx);
+		state.currentState = std::move(next);
+		state.currentState->enter(ctx);
 	}
 
 }
@@ -143,18 +143,18 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 * ===== MAINTAIN STATE =============================================================================================================================================
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
-void MaintainState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 0, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
+void MaintainState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI", 0, "\n********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
 	checkRoute(ctx.ai, ctx.spark);
 
 	// run state update function
-	auto next = currentState->update(ctx);
+	auto next = state.currentState->update(ctx);
 
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
-		currentState = std::move(next);
-		currentState->enter(ctx);
+		state.currentState = std::move(next);
+		state.currentState->enter(ctx);
 	}
 	
 }

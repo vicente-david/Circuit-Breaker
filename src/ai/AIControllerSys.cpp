@@ -8,6 +8,7 @@
 #include <glm/geometric.hpp>
 #include <glm/glm.hpp>
 #include <glm/trigonometric.hpp>
+#include "AIStateComponent.h"
 
 std::shared_ptr<AIControllerSys> AIControllerSys::registerSystem(std::shared_ptr<Coordinator>& coord) {
 	auto system = coord->registerSystem<AIControllerSys>();
@@ -27,6 +28,7 @@ void AIControllerSys::update(GameState& game) {
 		auto& body = game.coordinator->getComponent<physx::PxRigidBody*>(entity);
 		auto& leaderboard = game.coordinator->getComponent<Leaderboard>(entity);
 		auto& lapProg = game.coordinator->getComponent<LapCounter>(entity);
+		auto& stateP = game.coordinator->getComponent<AIDriveStateP>(entity);
 		
 		// update current position index
 		int i = ai.currentPosIdx;
@@ -71,24 +73,23 @@ void AIControllerSys::update(GameState& game) {
 		else if (spark.speed < 42.f)
 			ai.lookAheadSteps = 6;
 		
+		AIDriveContext ctx{ ai, controls, transform, spark, body, 0.0f };
 		
-		
-		AIDriveContext ctx{ ai, controls, transform, spark, body, 0.0f};
 
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
 		}
 		else if (spark.health < 50.0f) {
 			ctx.healthBoostMin = 101.f; // do not use health for boost
-			defenseState->run(ctx);
+			defenseState->run(ctx, stateP);
 		}
 		else if (leaderboard.standings[0] == spark.mVehicleName) {
 			ctx.healthBoostMin = 95.0f; // allowed to use health to boost in this state
-			maintainState->run(ctx);
+			maintainState->run(ctx, stateP);
 		}
 		else { // Not in first and not low health
 			ctx.healthBoostMin = 85.f;
-			overtakeState->run(ctx);
+			overtakeState->run(ctx, stateP);
 		}
 
 		ai.lastPosIdx = i;

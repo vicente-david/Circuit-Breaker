@@ -43,3 +43,4 @@ struct AIController {
 	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that
 };
 
+
