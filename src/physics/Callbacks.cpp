@@ -22,7 +22,7 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	// get collision data from each colliding actor
 	CollisionData *d1 = (CollisionData *)pairHeader.actors[0]->userData;
 	CollisionData *d2 = (CollisionData *)pairHeader.actors[1]->userData;
-	
+
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
 
@@ -166,20 +166,29 @@ void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 
 
     if (d1->type == SPARK && d2->type == WALL) {
         PxContactSet& contact = pairs->contacts;
-        contact.setInvMassScale0(0.8f); // Set mass of spark for this collision (any value over 1.f here makes the mass behave lighter and <1.f heavier)
+        contact.setInvMassScale0(0.1f); // Set mass of spark for this collision (any value over 1.f here makes the mass behave lighter and <1.f heavier)
 		contact.setInvInertiaScale0(0.f); // Infinite inertia: prevents spinning out from hitting wings on the walls
 		
 		for (int i = 0; i < contact.size(); i++) {
-			contact.setMaxImpulse(i, 5.0);
+			PxVec3 pushDir = contact.getNormal(i); // getNormal is from contact 1 to 2
+			pushDir.x *= 7.f;
+			pushDir.z *= 7.f;
+			contact.setTargetVelocity(i, pushDir);
+			//contact.setMaxImpulse(i, 5.f);
 		}
 		
     }
     else if (d1->type == WALL && d2->type == SPARK) {
         PxContactSet& contact = pairs->contacts;
-        contact.setInvMassScale1(0.8f);
+        contact.setInvMassScale1(0.1f);
 		contact.setInvInertiaScale1(0.f);
+		
 		for (int i = 0; i < contact.size(); i++) {
-			contact.setMaxImpulse(i, 5.0);
+			PxVec3 pushDir = -contact.getNormal(i); // getNormal is from contact 1 to 2
+			pushDir.x *= 7.f;
+			pushDir.z *= 7.f;
+			contact.setTargetVelocity(i, pushDir);
+			//contact.setMaxImpulse(i, 5.f);
 		}
     }
 

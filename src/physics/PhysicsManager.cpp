@@ -145,7 +145,26 @@ PxRigidStatic* PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
 }
 PxRigidStatic* PhysicsManager::initWalls(Mesh mesh, Transform transform) {
 	PxFilterData filter(COLLISION_FLAG_WALL, COLLISION_FLAG_GROUND_AGAINST, 0, 0);
-	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.1f, 0.8f); //make walls bouncier
+	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.1f, 1.0f); //make walls bouncier
+
+
+	PxTriangleMesh* triangleMesh = cookTriangleMesh(mesh);
+
+	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
+	PxTriangleMeshGeometry triGeom(triangleMesh, scale,
+		PxMeshGeometryFlag::eTIGHT_BOUNDS);
+
+	PxShape* triMeshShape = gPhysics->createShape(triGeom, *wallMat);
+	triMeshShape->setSimulationFilterData(filter);
+	PxRigidStatic* actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
+	
+
+	triMeshShape->setContactOffset(0.2f);
+	actor->attachShape(*triMeshShape);
+
+	gScene->addActor(*actor);
+	triMeshShape->release();
+	return actor;
 
 	return initStaticMesh(mesh, transform, wallMat, filter);
 }

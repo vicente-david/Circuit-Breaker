@@ -38,7 +38,7 @@ public:
 	static std::shared_ptr<RenderingSystem> registerSystem(std::shared_ptr<Coordinator> &coord);
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
-	float nearPlane = 0.1f;
+	float nearPlane = 0.01f;
 	float farPlane = 200.0f;
 	unsigned int SHADOW_WIDTH = SCR_WIDTH, SHADOW_HEIGHT = SCR_HEIGHT;
 	glm::mat4 projection;
