@@ -54,8 +54,8 @@ void PhysicsManager::initPhysX() {
 	sceneDesc.simulationEventCallback =
 		callbacks.get(); // Assign callback to scene
 
-	//modCallbacks = std::make_shared<ModifiedCallbacks>();
-	//sceneDesc.contactModifyCallback = modCallbacks.get();
+	modCallbacks = std::make_shared<ModifiedCallbacks>();
+	sceneDesc.contactModifyCallback = modCallbacks.get();
 
 	gScene = gPhysics->createScene(sceneDesc);
 

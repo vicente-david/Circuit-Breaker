@@ -126,27 +126,26 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 // TODO: use the impulse here instead of just linear velocity.
 // stuff above should work, but the numbers don't seem right to me so idk
 float PhysXCallbacks::getCollStrength(const PxContactPair* pairs, PxU32 nbPairs, PxVec3 velocity) {
-	float totalImpulse = 0.f;
-	for (PxU32 pairIdx = 0; pairIdx < nbPairs; pairIdx++) {
-		const PxContactPair& cp = pairs[pairIdx];
+	// get collision data for every shape that intersects
+	// impuse doesnt want to work :(
+	float minDot = velocity.magnitude();
+	for (int pairIdx = 0; pairIdx < nbPairs; pairIdx++) {
+		PxContactPair cp = pairs[pairIdx];
 		PxContactPairPoint contacts[16];
 		if (cp.contactCount > 16)
-			dbug::log("PHYS", 1, "WARNING: contact overflow (%d)", cp.contactCount);
+			dbug::log("PHYS", 2, "WARNING: contact overflow (%d)", cp.contactCount);
 
-		PxU32 count = cp.extractContacts(contacts, 16);
+		int contCount = cp.extractContacts(contacts, 16);
 
-		for (PxU32 i = 0; i < count; i++) {
-			const PxVec3& norm = contacts[i].normal;
-			const PxVec3& impulse = contacts[i].impulse;
-			float normImpulse = impulse.dot(norm);
-
-			if (normImpulse > 0.f)
-				totalImpulse += normImpulse;
+		for (int pointIdx = 0; pointIdx < contCount; pointIdx++) {
+			PxVec3 norm = contacts[pointIdx].normal;
+			float dot = velocity.dot(norm);
+			if (dot < minDot)
+				minDot = dot;
 		}
 	}
-	float maxImpulse = velocity.magnitudeSquared() * 100;
-	dbug::log("PHYS", 0, "Impulse: %f, MaxImpulse %f", totalImpulse, maxImpulse);
-	return PxMin(totalImpulse / maxImpulse, 10.f);
+	dbug::log("PHYS", 0, "colStrength:%f (r:%f)", velocity.magnitude() - minDot, minDot / velocity.magnitude());
+	return velocity.magnitude() - minDot;
 }
 
 void PhysXCallbacks::resetLists() {
