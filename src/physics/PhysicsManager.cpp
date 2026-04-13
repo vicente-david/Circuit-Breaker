@@ -145,7 +145,7 @@ PxRigidStatic* PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
 }
 PxRigidStatic* PhysicsManager::initWalls(Mesh mesh, Transform transform) {
 	PxFilterData filter(COLLISION_FLAG_WALL, COLLISION_FLAG_GROUND_AGAINST, 0, 0);
-	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.1f, 1.0f); //make walls bouncier
+	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.1f, 0.5f); //make walls bouncier
 
 
 	PxTriangleMesh* triangleMesh = cookTriangleMesh(mesh);
