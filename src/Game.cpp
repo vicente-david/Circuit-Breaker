@@ -487,7 +487,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("speeeeeed");
+			if (uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
 			break;
 
@@ -501,7 +501,7 @@ void Game::stateTransition() {
 			// add back our gameplay uis (order matters)
 		case (PAUSED):
 			uiSys->clearAllScreens();
-			uiSys->addScreen("fpsCounter");
+			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
@@ -555,7 +555,7 @@ void Game::stateTransition() {
 		case (PAUSED):
 			audio->pauseAll();
 			uiSys->clearAllScreens();
-			uiSys->addScreen("fpsCounter");
+			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen(
 				"pauseMenu"); // ensure this menu is pushed last, so that it
 							  // goes on top, else UI input wont work

@@ -292,7 +292,7 @@ void UISystem::updateSlider(Entity& e) {
 
 	// currently unused so bandaid fix
 
-	Animatable& a1 = coordinator->getComponent < Animatable>(e);
+	Animatable& a1 = coordinator->getComponent <Animatable>(e);
 
 	if (a1.isEnabled) {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &masterMax);
@@ -1198,28 +1198,28 @@ void UISystem::createSettingsMenu() {
 	
 
 	// --- ---
+	// sliders
 
+	Entity e4 = coordinator->createEntity();
+	coordinator->addComponent(e4, s1); // btn 0
+	coordinator->addComponent(e4, Animatable{ true, false, ANIM_SLIDER });
+
+	Entity e5 = coordinator->createEntity();
+	coordinator->addComponent(e5, s2); // bnt 1
+	coordinator->addComponent(e5, Animatable{ false, false, ANIM_SLIDER });
+
+	// buttons
 	Entity e2 = coordinator->createEntity();
-	coordinator->addComponent(e2, b1); // button 0
+	coordinator->addComponent(e2, b1); // btn 2
 	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
-	coordinator->addComponent(e3, b2); // button 1
+	coordinator->addComponent(e3, b2); // btn 3
 	coordinator->addComponent(e3, Animatable());
 
 	Entity e6 = coordinator->createEntity();
-	coordinator->addComponent(e6, b3); // button 1
+	coordinator->addComponent(e6, b3); // btn 4
 	coordinator->addComponent(e6, Animatable());
-
-	// slider
-
-	Entity e4 = coordinator->createEntity();
-	coordinator->addComponent(e4, s1); // button 2
-	coordinator->addComponent(e4, Animatable{true, false, ANIM_SLIDER});
-
-	Entity e5 = coordinator->createEntity();
-	coordinator->addComponent(e5, s2); // button 3
-	coordinator->addComponent(e5, Animatable{false, false, ANIM_SLIDER });
 
 
 

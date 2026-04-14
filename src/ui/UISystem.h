@@ -189,7 +189,7 @@ public:
 	float masterMax = 1.0;
 	float* masterCur;
 	float musicMax = 1.0;
-	float musicCur = 0.75;
+	float musicCur = 1.0;
 	float isHighBool = 0.0;
 
 	// speedometer (we'll reuse the resVAO and VBO, and resData)
@@ -227,6 +227,9 @@ public:
 	void resetSelection();
 
 	// --- Button Selection End ---
+
+	bool showFPS = true;
+	bool showSpeedometer = true;
 
 private:
 
