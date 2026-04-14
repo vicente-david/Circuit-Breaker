@@ -187,7 +187,7 @@ public:
 	// res bar shaders
 	std::unique_ptr<ShaderProgram> slideShader;
 	float masterMax = 1.0;
-	float masterCur = 0.5;
+	float* masterCur;
 	float musicMax = 1.0;
 	float musicCur = 0.75;
 	float isHighBool = 0.0;

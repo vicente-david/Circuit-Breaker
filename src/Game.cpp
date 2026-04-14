@@ -372,6 +372,7 @@ void Game::initializeUI() {
 	uiSys->fps = &fps;
 	uiSys->playerBackwards = &gameState.playerBackwards;
 	uiSys->playerSpeed = &coordinator->getComponent<SparkData>(player).speed;
+	uiSys->masterCur = &AudioEngine::masterVol;
 
 	uiSys->screenInitialization();
 

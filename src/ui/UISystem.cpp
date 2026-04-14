@@ -296,7 +296,7 @@ void UISystem::updateSlider(Entity& e) {
 
 	if (a1.isEnabled) {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &masterMax);
-		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, &masterCur);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, masterCur);
 	}
 	else {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &musicMax);
