@@ -18,7 +18,8 @@ enum textAlign {
 enum animatedType {
 	ANIM_BUTTON,
 	ANIM_BAR,
-	ANIM_SPEEDOMETER
+	ANIM_SPEEDOMETER,
+	ANIM_SLIDER
 };
 
 // where to place the text in pixel space

@@ -102,6 +102,9 @@ public:
 	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
 	void updateResBars(Entity& e); 
 	void updateSpeedometer(Entity& e);
+	void updateSlider(Entity& e);
+
+
 		
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
@@ -180,6 +183,14 @@ public:
 	std::unique_ptr<ShaderProgram> resShader;
 	unsigned int resVAO, resVBO;
 	std::vector<UIResVertex> resData;
+
+	// res bar shaders
+	std::unique_ptr<ShaderProgram> slideShader;
+	float masterMax = 1.0;
+	float masterCur = 0.5;
+	float musicMax = 1.0;
+	float musicCur = 0.75;
+	float isHighBool = 0.0;
 
 	// speedometer (we'll reuse the resVAO and VBO, and resData)
 	std::unique_ptr<ShaderProgram> speedShader;

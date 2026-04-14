@@ -27,6 +27,8 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	speedShader->use();
 	glUniformMatrix4fv(glGetUniformLocation(speedShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	slideShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(slideShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 }
 
 
@@ -266,6 +268,58 @@ void UISystem::updateSpeedometer(Entity& e) {
 	
 }
 
+void UISystem::updateSlider(Entity& e) {
+	// not the same shader but same layout
+	slideShader->use();
+
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	resData.clear();
+	glBindVertexArray(resVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+
+	
+	// if it has a bacground color 
+	// then push the position, and the color
+	UIPositions positions = calculateAnchorPositions(u1);
+	// 6 points in a triangle based quad
+	for (int i = 0; i < 6; i++) {
+		UIResVertex v1;
+		v1.position = positions.points[i];
+		v1.uvCoord = glm::vec2(u1.colors[i].x, u1.colors[i].y);
+		//v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
+		resData.push_back(v1);
+	}
+
+	// currently unused so bandaid fix
+
+	Animatable& a1 = coordinator->getComponent < Animatable>(e);
+
+	if (a1.isEnabled) {
+		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &masterMax);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, &masterCur);
+	}
+	else {
+		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &musicMax);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, &musicCur);
+	}
+	
+	if (a1.isSelected) {
+		isHighBool = 1.0;
+		
+	}
+	else {
+		isHighBool = 0.0;
+	}
+
+	glUniform1fv(glGetUniformLocation(slideShader->id, "isHighlighted"), 1, &isHighBool);
+	
+
+	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_TRIANGLES, 0, resData.size());
+	
+
+}
+
 
 // assume everything is updated already
 void UISystem::updateAnimatedUIElement(Entity& e) {
@@ -284,6 +338,9 @@ void UISystem::updateAnimatedUIElement(Entity& e) {
 		break;
 	case(ANIM_SPEEDOMETER):
 		updateSpeedometer(e);
+		break;
+	case(ANIM_SLIDER):
+		updateSlider(e);
 		break;
 	}
 }
@@ -697,6 +754,14 @@ void UISystem::initializeRenderingParams() {
 
 	glUniformMatrix4fv(glGetUniformLocation(speedShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
+
+	// we will reuse res vao and vbo for speed
+	slideShader = std::make_unique<ShaderProgram>("shaders/slider.vert", "shaders/slider.frag");
+
+	slideShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(slideShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+
 }
 
 void UISystem::addScreen(std::string screenName) {
@@ -1093,90 +1158,69 @@ void UISystem::createSettingsMenu() {
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
+	// sliders
+	UIElement s1;
+	s1.hasBackgroundColor = false;
+	s1.anchors = glm::vec4(0.1, 0.3, 0.5, 0.35);
+	s1.aspectRatio = 414.0f / 8.0f;
+
+	UIElement s2;
+	s2.hasBackgroundColor = false;
+	s2.anchors = glm::vec4(0.5, 0.3, 0.9, 0.35);
+	s2.aspectRatio = 414.0f / 8.0f;
+
 	// --- BUTTONS ---
 
 	// easy button
-	UIElement easyButton;
-	easyButton.hasBackgroundColor = false;
-	easyButton.path = "assets/textures/ui/settings/diff_easy.png";
-	easyButton.textureID = GenerateTexture(easyButton.path.c_str(), false);
-	easyButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	UIElement b1;
+	b1.hasBackgroundColor = false;
+	b1.path = "assets/textures/ui/settings/settings_fps.png";
+	b1.textureID = GenerateTexture(b1.path.c_str(), false);
+	b1.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	b1.aspectRatio = 416.0f / 40.0f;
 
-	// medium button
-	UIElement mediumButton;
-	mediumButton.hasBackgroundColor = false;
-	mediumButton.path = "assets/textures/ui/settings/diff_medium.png";
-	mediumButton.textureID = GenerateTexture(mediumButton.path.c_str(), false);
-	mediumButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
-	mediumButton.anchorOffsets = glm::vec4(144, 0, 144, 0);
-
-	// hard button
-	UIElement hardButton;
-	hardButton.hasBackgroundColor = false;
-	hardButton.path = "assets/textures/ui/settings/diff_hard.png";
-	hardButton.textureID = GenerateTexture(hardButton.path.c_str(), false);
-	hardButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
-	hardButton.anchorOffsets = glm::vec4(288, 0, 288, 0);
-
-	// track decorations button
-	UIElement decorationsButton;
-	decorationsButton.hasBackgroundColor = false;
-	decorationsButton.path = "assets/textures/ui/settings/settings_trackdecorations.png";
-	decorationsButton.textureID = GenerateTexture(decorationsButton.path.c_str(), false);
-	decorationsButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
-
-	// vfx particles button
-	UIElement particlesButton;
-	particlesButton.hasBackgroundColor = false;
-	particlesButton.path = "assets/textures/ui/settings/settings_vfxparticles.png";
-	particlesButton.textureID = GenerateTexture(particlesButton.path.c_str(), false);
-	particlesButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
-	particlesButton.anchorOffsets = glm::vec4(465, 0, 465, 0);
-
-	// back to menu button
-	UIElement menuButton;
-	menuButton.hasBackgroundColor = false;
-	menuButton.path = "assets/textures/ui/settings/settings_backtomenu.png";
-	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
-	menuButton.anchors = glm::vec4(0.0935, 0.8206, 0.9073, 0.902);
+	UIElement b2;
+	b2.hasBackgroundColor = false;
+	b2.path = "assets/textures/ui/settings/settings_speedometer.png";
+	b2.textureID = GenerateTexture(b2.path.c_str(), false);
+	b2.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	b1.aspectRatio = 416.0f / 40.0f;
+	
 
 	// --- ---
 
 	Entity e2 = coordinator->createEntity();
-	coordinator->addComponent(e2, easyButton); // button 0
+	coordinator->addComponent(e2, b1); // button 0
 	coordinator->addComponent(e2, Animatable());
 
 	Entity e3 = coordinator->createEntity();
-	coordinator->addComponent(e3, mediumButton); // button 1
+	coordinator->addComponent(e3, b2); // button 1
 	coordinator->addComponent(e3, Animatable());
 
+	// slider
+
 	Entity e4 = coordinator->createEntity();
-	coordinator->addComponent(e4, hardButton); // button 2
-	coordinator->addComponent(e4, Animatable());
+	coordinator->addComponent(e4, s1); // button 2
+	coordinator->addComponent(e4, Animatable{true, false, ANIM_SLIDER});
 
 	Entity e5 = coordinator->createEntity();
-	coordinator->addComponent(e5, decorationsButton); // button 3
-	coordinator->addComponent(e5, Animatable());
+	coordinator->addComponent(e5, s2); // button 3
+	coordinator->addComponent(e5, Animatable{false, false, ANIM_SLIDER });
 
-	Entity e6 = coordinator->createEntity();
-	coordinator->addComponent(e6, particlesButton); // button 4
-	coordinator->addComponent(e6, Animatable());
-
-	Entity e7 = coordinator->createEntity();
-	coordinator->addComponent(e7, menuButton); // button 5
-	coordinator->addComponent(e7, Animatable());
 
 
 	UIScreen settingsMenu;
 	settingsMenu.name = "settingsMenu";
 	settingsMenu.UIElements.push_back(e1);
 
-	settingsMenu.UIElements.push_back(e2);
-	settingsMenu.UIElements.push_back(e3);
+	// slider
 	settingsMenu.UIElements.push_back(e4);
 	settingsMenu.UIElements.push_back(e5);
-	settingsMenu.UIElements.push_back(e6);
-	settingsMenu.UIElements.push_back(e7);
+
+	// buttons
+	settingsMenu.UIElements.push_back(e2);
+	settingsMenu.UIElements.push_back(e3);
+	
 
 	nameToScreen["settingsMenu"] = settingsMenu;
 }
