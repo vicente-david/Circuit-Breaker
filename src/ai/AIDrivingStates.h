@@ -10,6 +10,7 @@
 namespace AIHelpers {
 	void calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos);
 	std::pair<bool, glm::vec3> lookFwd(Transform& transform, PxRigidBody* body);
+	std::pair<bool, glm::vec3> lookBack(Transform& transform, PxRigidBody* body);
 	std::pair<bool, glm::vec3> lookSide(Transform& transform, PxRigidBody* body, Direction& dir);
 	float calcTargetSpeed(float maxSpeed, float curvature);
 }
@@ -31,6 +32,7 @@ public:
 		ctx.controls.boostWithHealth = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
+		ctx.spark.inReverse = false;
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 };
@@ -43,6 +45,7 @@ public:
 		ctx.controls.boostWithHealth = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
+		ctx.spark.inReverse = false;
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 };
@@ -57,6 +60,7 @@ public:
 		ctx.controls.boostWithHealth = false;
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
+		ctx.spark.inReverse = false;
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 };
@@ -70,6 +74,7 @@ public:
 		ctx.controls.shimmyL = false;
 		ctx.controls.shimmyR = false;
 		ctx.controls.driftMode = false;
+		ctx.spark.inReverse = false;
 		
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
@@ -81,6 +86,7 @@ class S_Attacking : public IDriveState {
 public:
 	void enter(AIDriveContext& ctx) override {
 		ctx.controls.throttle = 1.0f;
+		ctx.spark.inReverse = false;
 }
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };
@@ -94,6 +100,7 @@ class S_Dodging : public IDriveState {
 public:
 	void enter(AIDriveContext& ctx) override {
 		ctx.controls.throttle = 1.0f;
+		ctx.spark.inReverse = false;
 	}
 	std::unique_ptr<IDriveState> update(AIDriveContext& ctx) override;
 	std::pair<Direction, glm::vec3> sweepResult{ NONE, glm::vec3(0.f) };

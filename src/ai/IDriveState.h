@@ -14,13 +14,7 @@ struct AIDriveContext {
 	float healthBoostMin;
 };
 
-// Direction enum for labelling sweep/hit direction
-enum Direction {
-	FWD,
-	SIDE_L,
-	SIDE_R,
-	NONE // no hit
-};
+
 
 /*
 * Driving state (lower level of HFSM) interface.
@@ -31,7 +25,7 @@ enum Direction {
 */
 class IDriveState {
 public:
-	virtual void enter(AIDriveContext& ctx) {}
+	virtual void enter(AIDriveContext& ctx) = 0;
 	virtual std::unique_ptr<IDriveState> update(AIDriveContext& ctx) = 0;
 
 	std::pair<Direction, glm::vec3> sweepResult;

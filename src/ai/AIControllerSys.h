@@ -24,4 +24,5 @@ private:
 	std::unique_ptr<AIState> defenseState = std::make_unique<DefenseState>();
 	std::unique_ptr<AIState> overtakeState = std::make_unique<OvertakeState>();
 	std::unique_ptr<AIState> maintainState = std::make_unique<MaintainState>();
+	std::unique_ptr<AIState> recoverState = std::make_unique<RecoverState>();
 };

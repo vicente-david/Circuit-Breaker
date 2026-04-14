@@ -15,6 +15,14 @@ enum AIDriveState {
 	ATTACKING = 5,
 	DODGING = 6
 };
+// Direction enum for labelling sweep/hit direction
+enum Direction {
+	FWD,
+	SIDE_L,
+	SIDE_R,
+	BACK,
+	NONE // no hit
+};
 
 // this component tells the controller system that its AI controlled.
 struct AIController {
@@ -22,6 +30,9 @@ struct AIController {
 
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route
+
+	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that 
+
 	PathID routeID = pFAST;
 	float curveDriftThresh = 0.10f; // minimum angle of turn for spark to drift
 	float curveBrakeThresh = 0.50f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
@@ -39,7 +50,11 @@ struct AIController {
 	float respawnRecoverTimer = 0.0f;
 	int lastPosIdx = 0;
 	
+	bool recoverAttempt = false; // track if a stuck ai has made an attempt to recover yet
+	Direction recoverDir = NONE; // each recovery attempt has a recovery direction: FWD, BACK, or NONE if not found yet
 	Clock checkProgTimer{3.0, 3.0}; // counts while ai is not moving
-	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that
+	Clock recoverClock{ 1.0, 1.0 }; // amount of time to stay in recover state
+	
 };
+
 
