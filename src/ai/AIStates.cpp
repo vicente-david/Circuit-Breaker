@@ -159,6 +159,34 @@ void MaintainState::run(AIDriveContext& ctx, AIDriveStateP& state) {
 	
 }
 
+/*
+* ===== RECOVER STATE =============================================================================================================================================
+* Make an attempt to recover if flagged as stuck
+*/
+void RecoverState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI_RECOVER", 0, "\n * *********AI: % s Recover * **********", ctx.spark.mVehicleName.c_str());
+
+	// zero out controls
+	auto& c = ctx.controls;
+	c.boost = false;
+	c.boostWithHealth = false;
+	c.driftMode = false;
+	c.shimmyL = false;
+	c.shimmyR = false;
+	c.throttle = 0.f;
+
+	// reverse
+	c.reverse = 1.f;
+	c.brake = 1.f;
+	c.steering = 0.f;
+	ctx.spark.inReverse = true;
+	//AIHelpers::calcSteering(ctx.ai, c, ctx.transform, ctx.spark, ctx.ai.route.at(ctx.ai.targetIdx));
+
+
+}
+
+
+
 void AIState::checkRoute(AIController& ai, SparkData& spark) {
 
 	// Check if a route/curve change is needed

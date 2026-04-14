@@ -31,7 +31,7 @@ enum Direction {
 */
 class IDriveState {
 public:
-	virtual void enter(AIDriveContext& ctx) {}
+	virtual void enter(AIDriveContext& ctx) = 0;
 	virtual std::unique_ptr<IDriveState> update(AIDriveContext& ctx) = 0;
 
 	std::pair<Direction, glm::vec3> sweepResult;

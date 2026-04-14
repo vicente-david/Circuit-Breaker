@@ -41,13 +41,28 @@ void AIControllerSys::update(GameState& game) {
 
 		// check progress of the spark
 		ai.checkProgTimer.update(*game.frameTime);
-		if (ai.checkProgTimer.completedTimer()) {
+		if (ai.checkProgTimer.completedTimer() && !spark.isDead) {
 			if (ai.currentPosIdx == ai.logIdx) {
 				// no significant lap progress made since last check
-				dbug::log("AI", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
-				controls.reset = true;
-				ai.checkProgTimer.start(); //restart timer
-				continue;
+				dbug::log("AI_RECOVER", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
+
+				// check if an attempt to recover was made
+				if (!ai.recoverAttempt) {
+					// ai has not made a recovery attempt, try to get un-stuck
+					ai.recoverAttempt = true;
+				}
+				else {
+					// recovery attempt failed, respawn
+					controls.reset = true;
+					ai.recoverAttempt = false;
+					ai.checkProgTimer.start(); //restart timer
+					continue;
+				}
+
+			}
+			else {
+				ai.recoverAttempt = false;
+				spark.inReverse = false;
 			}
 			ai.logIdx = ai.currentPosIdx;
 			ai.checkProgTimer.start(); //restart timer
@@ -78,6 +93,9 @@ void AIControllerSys::update(GameState& game) {
 
 		if (ai.state == IDLE) {
 			AI_IDLE(ai, controls, game);
+		}
+		else if (ai.recoverAttempt) {
+			recoverState->run(ctx, stateP);
 		}
 		else if (spark.health < 50.0f) {
 			ctx.healthBoostMin = 101.f; // do not use health for boost

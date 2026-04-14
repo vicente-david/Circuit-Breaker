@@ -57,3 +57,8 @@ public:
 	std::unique_ptr<TrackCurve> path;
 };
 
+class RecoverState : public AIState {
+public:
+	void run(AIDriveContext& ctx, AIDriveStateP& state) override;
+};
+
