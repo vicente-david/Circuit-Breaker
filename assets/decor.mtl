@@ -1,0 +1,22 @@
+# Blender 5.0.1 MTL File: 'track.blend'
+# www.blender.org
+
+newmtl HealMaterial
+Ns 332.735352
+Ka 0.354610 0.354610 0.354610
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 2.300000
+d 1.000000
+illum 3
+map_Kd textures/heal.jpg
+
+newmtl dullmetal
+Ns 247.641479
+Ka 1.000000 1.000000 1.000000
+Ks 0.470588 0.470588 0.470588
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 3
+map_Kd textures/metal.jpg

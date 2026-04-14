@@ -54,6 +54,9 @@ void PhysicsManager::initPhysX() {
 	sceneDesc.simulationEventCallback =
 		callbacks.get(); // Assign callback to scene
 
+	modCallbacks = std::make_shared<ModifiedCallbacks>();
+	sceneDesc.contactModifyCallback = modCallbacks.get();
+
 	gScene = gPhysics->createScene(sceneDesc);
 
 	// Prep PVD
@@ -117,11 +120,9 @@ PxRigidStatic *PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, Px
 	PxShape *triMeshShape = gPhysics->createShape(triGeom, *material);
 		triMeshShape->setSimulationFilterData(filter);
 	PxRigidStatic *actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
-
 	if(!tireCollision){
 		triMeshShape->setFlag(PxShapeFlag::eSCENE_QUERY_SHAPE, false);
 	}
-
 	actor->attachShape(*triMeshShape);
 
 	// add ground collision filter to all the shapes on the ground mesh
@@ -141,6 +142,31 @@ PxRigidStatic* PhysicsManager::initStaticMesh(Mesh mesh, Transform transform, bo
 PxRigidStatic* PhysicsManager::initHealZones(Mesh mesh, Transform transform) {
 	PxFilterData groundHealFilter(COLLISION_FLAG_HEAL, COLLISION_FLAG_WHEEL, 0, 0);
 	return initStaticMesh(mesh, transform, gMaterial, groundHealFilter);
+}
+PxRigidStatic* PhysicsManager::initWalls(Mesh mesh, Transform transform) {
+	PxFilterData filter(COLLISION_FLAG_WALL, COLLISION_FLAG_GROUND_AGAINST, 0, 0);
+	PxMaterial* wallMat = gPhysics->createMaterial(0.1f, 0.1f, 0.5f); //make walls bouncier
+
+
+	PxTriangleMesh* triangleMesh = cookTriangleMesh(mesh);
+
+	PxMeshScale scale(PxVec3(1, 1, 1), PxQuat(PxIdentity));
+	PxTriangleMeshGeometry triGeom(triangleMesh, scale,
+		PxMeshGeometryFlag::eTIGHT_BOUNDS);
+
+	PxShape* triMeshShape = gPhysics->createShape(triGeom, *wallMat);
+	triMeshShape->setSimulationFilterData(filter);
+	PxRigidStatic* actor = gPhysics->createRigidStatic(PxTransform(PxVec3(0)));
+	
+
+	triMeshShape->setContactOffset(0.2f);
+	actor->attachShape(*triMeshShape);
+
+	gScene->addActor(*actor);
+	triMeshShape->release();
+	return actor;
+
+	return initStaticMesh(mesh, transform, wallMat, filter);
 }
 
 void PhysicsManager::createTestObjs(Coordinator &coordinator) {

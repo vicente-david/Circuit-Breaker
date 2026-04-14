@@ -5,6 +5,7 @@
 #include "debugUtils/Logger.h"
 #include "debugUtils/Panel.h"
 #include "graphics/Model.h"
+#include "vehicles/SparkComponents.h"
 #include <GL/gl.h>
 #include <glm/fwd.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -200,7 +201,7 @@ glm::mat4 RenderingSystem::lightViewProjMat(const float nearPlane, const float f
 	}
 	// increase space covered by near and far plane since geometry behind and in front of the frustum can cast shadows
 	// on stuff in the frustum
-	constexpr float zMult = 10.0f; // tune
+	constexpr float zMult = 15.0f; // tune
 	if (minZ < 0) minZ *= zMult;
 	else minZ /= zMult;
 
@@ -294,6 +295,35 @@ void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
 		unsigned int modelLoc = glGetUniformLocation(shaderID, "model");
 		glUniformMatrix4fv(modelLoc, 1, GL_FALSE,
 			glm::value_ptr(modelTransform));
+
+		// colour to mix with a models texture/colour
+		unsigned int mixAmtLoc = glGetUniformLocation(shaderID, "mixAmt");
+		unsigned int mixColourLoc = glGetUniformLocation(shaderID, "mixColour");
+		glUniform1f(mixAmtLoc, 0.f); // ensure this gets reset for every draw
+
+		// only do colour effects for spark entities
+		if (game.coordinator->hasComponent<SparkData>(entity)) {
+			SparkData& sData = game.coordinator->getComponent<SparkData>(entity);
+
+			// when the spark dies, darken the model
+			if (sData.isDead) {
+				glUniform1f(mixAmtLoc, 0.60f);
+				glUniform4f(mixColourLoc, 0.f, 0.f, 0.f, 1.f);
+			}
+			else glUniform1f(mixAmtLoc, 0.f);
+
+			// flashing effect while ghosted (just respawned)
+			if (sData.ghostTimer > 0) {
+				double normT = sData.ghostTimer / sData.ghostCooldown;
+				float phase = normT * 3.5f; // normalized time * number of cycles
+
+				float wave = 1.0f - fabsf(fmodf(phase, 1.0f) * 2.0f - 1.0f); // triangle wave
+				float mix = 0.8f * wave;
+
+				glUniform1f(mixAmtLoc, mix);
+				glUniform4f(mixColourLoc, 1.f, 1.f, 1.f, 0.2f);
+			}
+		}
 
 		model.Draw(shaderID);
 	}

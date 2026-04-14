@@ -39,7 +39,7 @@ public:
 
 	int SCR_WIDTH = 1200, SCR_HEIGHT = 800;
 	float nearPlane = 0.1f;
-	float farPlane = 200.0f;
+	float farPlane = 400.0f;
 	unsigned int SHADOW_WIDTH = SCR_WIDTH, SHADOW_HEIGHT = SCR_HEIGHT;
 	glm::mat4 projection;
 

@@ -27,6 +27,8 @@ void UISystem::recalcMat() {
 	glUniformMatrix4fv(glGetUniformLocation(resShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat));
 	speedShader->use();
 	glUniformMatrix4fv(glGetUniformLocation(speedShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+	slideShader->use();
+	glUniformMatrix4fv(glGetUniformLocation(slideShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 }
 
 
@@ -64,8 +66,18 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.interpretFlag = 1.0f;
 			uiData.push_back(v1);
 		}
+
+		unsigned int tID = u1.textureID;
+		if (e == fpsButton && !showFPS) {
+			tID = fpsTextureID2;
+		}
+
+		if (e == speedButton && !showSpeedometer) {
+			tID = speedTextureID2;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBindTexture(GL_TEXTURE_2D, tID);
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, uiData.size());
 
@@ -142,8 +154,17 @@ void UISystem::updateButtonUIElement(Entity& e) {
 			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
 			uiAnimData.push_back(v1);
 		}
+		unsigned int tID = u1.textureID;
+		if (e == fpsButton && !showFPS) {
+			tID = fpsTextureID2;
+		} 
+
+		if (e == speedButton && !showSpeedometer) {
+			tID = speedTextureID2;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBindTexture(GL_TEXTURE_2D, tID);
 		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
 
@@ -157,22 +178,19 @@ void UISystem::updateButtonUIElement(Entity& e) {
 
 }
 
-void UISystem::updateResBars(Entity& e, bool isHealth) {
+void UISystem::updateResBars(Entity& e) {
 	// quick and dirty way
 	resShader->use();
 
 	glm::vec3 col;
 	// update uniforms 
-	if (isHealth) {
-		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerHealth);
-		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerHealth);
-		col = glm::vec3(0.0f, 1.0f, 0.0f);
-	}
-	else {
-		glUniform1fv(glGetUniformLocation(resShader->id, "resource1"), 1, playerBoost);
-		glUniform1fv(glGetUniformLocation(resShader->id, "maxResource"), 1, maxPlayerBoost);
-		col = glm::vec3(0.0f, 0.0f, 1.0f);
-	}
+	glUniform1fv(glGetUniformLocation(resShader->id, "currentBoost"), 1, playerBoost);
+	glUniform1fv(glGetUniformLocation(resShader->id, "maxBoost"), 1, maxPlayerBoost);
+	glUniform1fv(glGetUniformLocation(resShader->id, "currentHealth"), 1, playerHealth);
+	glUniform1fv(glGetUniformLocation(resShader->id, "maxHealth"), 1, maxPlayerHealth);
+	col = glm::vec3(0.0f, 0.0f, 0.0f); // whatever throaway it's unused as of rn
+
+
 	UIElement& u1 = coordinator->getComponent<UIElement>(e);
 	glBindVertexArray(resVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
@@ -190,6 +208,12 @@ void UISystem::updateResBars(Entity& e, bool isHealth) {
 		v1.resourceColor = col;
 		resData.push_back(v1);
 	}
+
+	
+	glUniform1fv(glGetUniformLocation(resShader->id, "isBoosting"), 1, &isBoosting);
+		
+	
+
 	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
 	glDrawArrays(GL_TRIANGLES, 0, resData.size());
 
@@ -213,8 +237,30 @@ void UISystem::updateSpeedometer(Entity& e) {
 
 	currentAngle += *playerSpeed/5.0f * dTime;
 	currentAngle = fmod(currentAngle, glm::two_pi<float>()); // keep the angle between 0 and two pi 
-	glUniform1fv(glGetUniformLocation(speedShader->id, "currentAngle"), 1, &currentAngle);
+	prevAngle = currentAngle - *playerSpeed * dTime * 20.0;
 
+	// we want slight time based delay 
+
+	// if the player is not boosting
+	// if the player just start boosting
+	// if the player has boosted for more than x amount of time, ripple the ui (this prevents spam ripple)
+	if (*isPlayerBoosting) {
+		isBoosting = 1.0f;
+		timeBoosting += frameTime;
+	}
+	else {
+		isBoosting = 0.0f;
+		timeBoosting = 0.0;
+	}
+
+	glUniform1fv(glGetUniformLocation(speedShader->id, "currentAngle"), 1, &currentAngle);
+	glUniform1fv(glGetUniformLocation(speedShader->id, "prevAngle"), 1, &prevAngle);
+	
+	// pass as uniform only if it's 0, or > 0.5
+	if (timeBoosting == 0 || timeBoosting >= 0.25) {
+		glUniform1fv(glGetUniformLocation(speedShader->id, "isBoosting"), 1, &isBoosting);
+		glUniform1fv(glGetUniformLocation(speedShader->id, "timeBoosting"), 1, &timeBoosting);
+	}
 
 
 	// god awful for readibility, but we encode the texture coords as the xy comp of UIelement color
@@ -232,11 +278,65 @@ void UISystem::updateSpeedometer(Entity& e) {
 	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
 	glDrawArrays(GL_TRIANGLES, 0, resData.size());
 
+	//prevAngle = currentAngle;
+
 	
 	textProg->use();
 	textPositions p1 = calculateTextContainer(u1);
-	RenderText(textProg->id, textVAO, textVBO, std::to_string((int)*playerSpeed)+" Hz", p1, u1.textScale, u1.textColor, textFont);
+	RenderText(textProg->id, textVAO, textVBO, std::to_string((int)*playerSpeed)+" HZ", p1, u1.textScale, u1.textColor, textFont);
 	
+}
+
+void UISystem::updateSlider(Entity& e) {
+	// not the same shader but same layout
+	slideShader->use();
+
+	UIElement& u1 = coordinator->getComponent<UIElement>(e);
+	resData.clear();
+	glBindVertexArray(resVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, resVBO);
+
+	
+	// if it has a bacground color 
+	// then push the position, and the color
+	UIPositions positions = calculateAnchorPositions(u1);
+	// 6 points in a triangle based quad
+	for (int i = 0; i < 6; i++) {
+		UIResVertex v1;
+		v1.position = positions.points[i];
+		v1.uvCoord = glm::vec2(u1.colors[i].x, u1.colors[i].y);
+		//v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
+		resData.push_back(v1);
+	}
+
+	// currently unused so bandaid fix
+
+	Animatable& a1 = coordinator->getComponent <Animatable>(e);
+
+	if (a1.isEnabled) {
+		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &masterMax);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, masterCur);
+	}
+	else {
+		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &musicMax);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, musicCur);
+	}
+	
+	if (a1.isSelected) {
+		isHighBool = 1.0;
+		
+	}
+	else {
+		isHighBool = 0.0;
+	}
+
+	glUniform1fv(glGetUniformLocation(slideShader->id, "isHighlighted"), 1, &isHighBool);
+	
+
+	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
+	glDrawArrays(GL_TRIANGLES, 0, resData.size());
+	
+
 }
 
 
@@ -252,11 +352,14 @@ void UISystem::updateAnimatedUIElement(Entity& e) {
 			updateButtonUIElement(e);
 		}
 		break;
-	case(ANIM_HEALTHBAR):
-		updateResBars(e, animComp.isHealth);
+	case(ANIM_BAR):
+		updateResBars(e);
 		break;
 	case(ANIM_SPEEDOMETER):
 		updateSpeedometer(e);
+		break;
+	case(ANIM_SLIDER):
+		updateSlider(e);
 		break;
 	}
 }
@@ -595,7 +698,8 @@ void UISystem::initializeRenderingParams() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	textFont = initFont("assets/PixelifySans-VariableFont_wght.ttf");
+	//textFont = initFont("assets/PixelifySans-VariableFont_wght.ttf");
+	textFont = initFont("assets/charles.ttf");
 	textProg->use();
 	glUniformMatrix4fv(glGetUniformLocation(textProg->id, "projection"), 1,
 		GL_FALSE, glm::value_ptr(uiMat));
@@ -669,6 +773,14 @@ void UISystem::initializeRenderingParams() {
 
 	glUniformMatrix4fv(glGetUniformLocation(speedShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
 
+
+	// we will reuse res vao and vbo for speed
+	slideShader = std::make_unique<ShaderProgram>("shaders/slider.vert", "shaders/slider.frag");
+
+	slideShader->use();
+
+	glUniformMatrix4fv(glGetUniformLocation(slideShader->id, "projection"), 1, GL_FALSE, glm::value_ptr(uiMat)); // upload the uniform
+
 }
 
 void UISystem::addScreen(std::string screenName) {
@@ -726,9 +838,9 @@ void UISystem::screenInitialization() {
 	createPlaceCounter();
 	createCountdown();
 	createBackwardsDisplay();
-	createBoostBar();
-	createHealthBar();
+	createResourceBar();
 	createSpeedometer();
+	createControlsMenu();
 }
 
 // Recall UIElement has the following fields
@@ -749,8 +861,9 @@ void UISystem::createFPSCounter() {
 
 	UIElement counter1;
 	counter1.text = "FPS: " + *fps;
-	counter1.textScale = 1.0f;
+	counter1.textScale = 0.5f;
 	// default anchors are whole screen (0,0,1,1)
+	counter1.anchorOffsets = glm::vec4(0.0f, 15.0f, -15.0f, 0.0f);
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
 	counter1.textAlignmentY = TOP;
@@ -776,9 +889,10 @@ void UISystem::updateFPSCounter() {
 
 void UISystem::createPlaceCounter() {
 	UIElement counter1;
-	counter1.text = "Position: " + std::to_string(0);
-	counter1.textScale = 1.0f;
+	counter1.text = "POSITION: " + std::to_string(0);
+	counter1.textScale = 0.75f;
 	// default anchors are whole screen (0,0,1,1)
+	counter1.anchorOffsets = glm::vec4(0.0f, 0.0f, -15.0f, -15.0f);
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = RIGHT;
 	counter1.textAlignmentY = BOTTOM;
@@ -810,7 +924,7 @@ void UISystem::updatePlaceCounter(Entity& p) {
 		}
 	}
 
-	u1.text = "Position: " + std::to_string(placement+1);
+	u1.text = "POSITION: " + std::to_string(placement+1);
 }
 
 void UISystem::createMainMenu() {
@@ -822,13 +936,25 @@ void UISystem::createMainMenu() {
 	//menu1.textAlignmentX = CENTER;
 	//menu1.textAlignmentY = BOTTOM;
 
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(18.0f/255.0f, 28.0f/255.0f, 24.0f/255.0);
+	}
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
+	menu1.aspectRatio = 1101.0 / 786.0;
+
 	menu1.hasBackgroundColor = false;
 
 	menu1.path = "assets/textures/ui/mainMenu/startmenu_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+	
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
+	
 
 	// --- BUTTONS ---
 
@@ -841,12 +967,15 @@ void UISystem::createMainMenu() {
 	startGameButton.anchors = glm::vec4(0.3, 0.56298, 0.7, 0.6444);
 	startGameButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
 
+	startGameButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
+	
 	// exit button 
 	UIElement exitButton;
 	exitButton.hasBackgroundColor = false;
 	exitButton.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
 	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
-	exitButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
+	exitButton.anchors = glm::vec4(0.3, 0.8525, 0.7, 0.9325);
+	exitButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// settings button
 	UIElement settingsButton;
@@ -856,6 +985,15 @@ void UISystem::createMainMenu() {
 
 	settingsButton.anchors = glm::vec4(0.3, 0.66539, 0.7, 0.74682);
 	settingsButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+	settingsButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
+
+	UIElement tutButton;
+	tutButton.hasBackgroundColor = false;
+	tutButton.path = "assets/textures/ui/mainMenu/startmenu_controls.png";
+	tutButton.textureID = GenerateTexture(tutButton.path.c_str(), false);
+
+	tutButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
+	tutButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// --- ---
 
@@ -867,16 +1005,22 @@ void UISystem::createMainMenu() {
 	coordinator->addComponent(e3, settingsButton); // button 1
 	coordinator->addComponent(e3, Animatable());
 
+	Entity e5 = coordinator->createEntity();
+	coordinator->addComponent(e5, tutButton); // button 1
+	coordinator->addComponent(e5, Animatable());
+
 	Entity e4 = coordinator->createEntity();
 	coordinator->addComponent(e4, exitButton); // button 2
 	coordinator->addComponent(e4, Animatable());
 
 	UIScreen mainMenu;
+	mainMenu.UIElements.push_back(bgMenuColor);
 	mainMenu.name = "mainMenu";
 	mainMenu.UIElements.push_back(e1);
-
+	
 	mainMenu.UIElements.push_back(e2);
 	mainMenu.UIElements.push_back(e3);
+	mainMenu.UIElements.push_back(e5);
 	mainMenu.UIElements.push_back(e4);
 
 	nameToScreen["mainMenu"] = mainMenu;
@@ -890,6 +1034,17 @@ void UISystem::createPauseMenu() {
 
 	menu1.path = "assets/textures/ui/pauseMenu/pause_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+	
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(18.0f / 255.0f, 28.0f / 255.0f, 24.0f / 255.0);
+	}
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
+	menu1.aspectRatio = 1101.0 / 786.0;
+
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
@@ -901,23 +1056,26 @@ void UISystem::createPauseMenu() {
 	resumeButton.hasBackgroundColor = false;
 	resumeButton.path = "assets/textures/ui/pauseMenu/pause_resume.png";
 	resumeButton.textureID = GenerateTexture(resumeButton.path.c_str(), false);
-	resumeButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
-	resumeButton.anchorOffsets = glm::vec4(0, -168, 0, -168);
+	resumeButton.anchors = glm::vec4(0.3, 0.4528, 0.7, 0.5343);
+	resumeButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// settings button
 	UIElement settingsButton;
 	settingsButton.hasBackgroundColor = false;
 	settingsButton.path = "assets/textures/ui/pauseMenu/pause_settings.png";
 	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
-	settingsButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
-	settingsButton.anchorOffsets = glm::vec4(0, -84, 0, -84);
+	settingsButton.anchors = glm::vec4(0.3, 0.5343+0.06, 0.7, 0.6158+0.06); // 0.06 is just 48/800 (our default height and divided by the anchor offset calculated below)
+	//settingsButton.anchorOffsets = glm::vec4(0, 48, 0, 48);
+	settingsButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// exit button 
 	UIElement exitButton;
 	exitButton.hasBackgroundColor = false;
 	exitButton.path = "assets/textures/ui/pauseMenu/pause_quittomenu.png";
 	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
-	exitButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+	exitButton.anchors = glm::vec4(0.3, 0.6158+0.06*2, 0.7, 0.6973+0.06*2);
+	//exitButton.anchorOffsets = glm::vec4(0, 96, 0, 96);
+	exitButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// --- ---
 
@@ -936,6 +1094,7 @@ void UISystem::createPauseMenu() {
 
 	UIScreen pauseMenu;
 	pauseMenu.name = "pauseMenu";
+	pauseMenu.UIElements.push_back(bgMenuColor);
 	pauseMenu.UIElements.push_back(e1);
 
 	pauseMenu.UIElements.push_back(e2);
@@ -943,6 +1102,67 @@ void UISystem::createPauseMenu() {
 	pauseMenu.UIElements.push_back(e4);
 
 	nameToScreen["pauseMenu"] = pauseMenu;
+}
+void UISystem::createControlsMenu() {
+
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(19.0f / 255.0f, 38.0f / 255.0f, 30.0f / 255.0);
+	}
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
+
+	UIElement transitionText;
+	transitionText.text = "a NEXT";
+	transitionText.textAlignmentX = RIGHT;
+	transitionText.textAlignmentY = BOTTOM;
+	transitionText.textScale = 1.0f;
+	transitionText.textColor = glm::vec3(1.0f);
+	transitionText.hasBackgroundColor = false;
+	transitionText.aspectRatio = 3840.0 / 2160.0;
+	transitionText.anchors = glm::vec4(0.90, 0.90, 1.0, 1.0);
+	transitionText.anchorOffsets = glm::vec4(0.0, 0.0, -5.0, 0.0);
+
+	UIElement tutMenu;
+	tutMenu.path = "assets/textures/ui/tutorial/tutorial.png";
+	tutMenu.hasBackgroundColor = false;
+	tutMenu.textureID = GenerateTexture(tutMenu.path.c_str(), false);
+	tutMenu.aspectRatio = 3840.0 / 2160.0;
+
+	UIElement controlMenu;
+	controlMenu.path = "assets/textures/ui/tutorial/controls.png";
+	controlMenu.hasBackgroundColor = false;
+	controlMenu.textureID = GenerateTexture(controlMenu.path.c_str(), false);
+	controlMenu.aspectRatio = 3840.0 / 2160.0;
+
+	Entity e1 = coordinator->createEntity();
+	coordinator->addComponent(e1, tutMenu);
+
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, controlMenu);
+
+	Entity textTrans = coordinator->createEntity();
+	coordinator->addComponent(textTrans, transitionText);
+
+	UIElement button;
+	button.anchors = glm::vec4(1,1,0,0);
+
+	UIScreen menu1;
+	menu1.name = "tutorial";
+	menu1.UIElements.push_back(bgMenuColor);
+	menu1.UIElements.push_back(e1);
+	menu1.UIElements.push_back(textTrans);
+
+	UIScreen menu2;
+	menu2.name = "controls";
+	menu2.UIElements.push_back(bgMenuColor);
+	menu2.UIElements.push_back(e2);
+	menu2.UIElements.push_back(textTrans);
+
+	nameToScreen["tutorial"] = menu1;
+	nameToScreen["controls"] = menu2;
 }
 
 void UISystem::createSettingsMenu() {
@@ -957,90 +1177,86 @@ void UISystem::createSettingsMenu() {
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
+	// sliders
+	UIElement s1;
+	s1.hasBackgroundColor = false;
+	s1.anchors = glm::vec4(0.11625, 0.425, 0.5-0.01, 0.45);
+	s1.aspectRatio = 414.0f / 8.0f;
+
+	UIElement s2;
+	s2.hasBackgroundColor = false;
+	s2.anchors = glm::vec4(0.5+0.01, 0.425, 1.0-0.11625, 0.45);
+	s2.aspectRatio = 414.0f / 8.0f;
+
 	// --- BUTTONS ---
 
 	// easy button
-	UIElement easyButton;
-	easyButton.hasBackgroundColor = false;
-	easyButton.path = "assets/textures/ui/settings/diff_easy.png";
-	easyButton.textureID = GenerateTexture(easyButton.path.c_str(), false);
-	easyButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	UIElement b1;
+	b1.hasBackgroundColor = false;
+	b1.path = "assets/textures/ui/settings/settings_fps.png";
+	b1.textureID = GenerateTexture(b1.path.c_str(), false);
+	b1.anchors = glm::vec4(0.11625, 0.625, 0.5-0.01, 1.0);
+	b1.aspectRatio = 416.0f / 40.0f;
+	b1.aRatioAlignY = TOP;
 
-	// medium button
-	UIElement mediumButton;
-	mediumButton.hasBackgroundColor = false;
-	mediumButton.path = "assets/textures/ui/settings/diff_medium.png";
-	mediumButton.textureID = GenerateTexture(mediumButton.path.c_str(), false);
-	mediumButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
-	mediumButton.anchorOffsets = glm::vec4(144, 0, 144, 0);
+	UIElement b2;
+	b2.hasBackgroundColor = false;
+	b2.path = "assets/textures/ui/settings/settings_speedometer.png";
+	b2.textureID = GenerateTexture(b2.path.c_str(), false);
+	b2.anchors = glm::vec4(0.5+0.01, 0.625, 1.0 - 0.11625, 1.0);
+	b2.aspectRatio = 416.0f / 40.0f;
+	b2.aRatioAlignY = TOP;
 
-	// hard button
-	UIElement hardButton;
-	hardButton.hasBackgroundColor = false;
-	hardButton.path = "assets/textures/ui/settings/diff_hard.png";
-	hardButton.textureID = GenerateTexture(hardButton.path.c_str(), false);
-	hardButton.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
-	hardButton.anchorOffsets = glm::vec4(288, 0, 288, 0);
-
-	// track decorations button
-	UIElement decorationsButton;
-	decorationsButton.hasBackgroundColor = false;
-	decorationsButton.path = "assets/textures/ui/settings/settings_trackdecorations.png";
-	decorationsButton.textureID = GenerateTexture(decorationsButton.path.c_str(), false);
-	decorationsButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
-
-	// vfx particles button
-	UIElement particlesButton;
-	particlesButton.hasBackgroundColor = false;
-	particlesButton.path = "assets/textures/ui/settings/settings_vfxparticles.png";
-	particlesButton.textureID = GenerateTexture(particlesButton.path.c_str(), false);
-	particlesButton.anchors = glm::vec4(0.1172, 0.7163, 0.495, 0.7672);
-	particlesButton.anchorOffsets = glm::vec4(465, 0, 465, 0);
-
-	// back to menu button
-	UIElement menuButton;
-	menuButton.hasBackgroundColor = false;
-	menuButton.path = "assets/textures/ui/settings/settings_backtomenu.png";
-	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
-	menuButton.anchors = glm::vec4(0.0935, 0.8206, 0.9073, 0.902);
+	UIElement b3;
+	b3.hasBackgroundColor = false;
+	b3.path = "assets/textures/ui/settings/settings_backtomenu.png";
+	b3.textureID = GenerateTexture(b3.path.c_str(), false);
+	b3.anchors = glm::vec4(0.093, 0.75, 1.0-0.093, 1.0);
+	b3.aspectRatio = 896.0 / 64.0f;
+	b3.aRatioAlignY = TOP;
+	
 
 	// --- ---
-
-	Entity e2 = coordinator->createEntity();
-	coordinator->addComponent(e2, easyButton); // button 0
-	coordinator->addComponent(e2, Animatable());
-
-	Entity e3 = coordinator->createEntity();
-	coordinator->addComponent(e3, mediumButton); // button 1
-	coordinator->addComponent(e3, Animatable());
+	// sliders
 
 	Entity e4 = coordinator->createEntity();
-	coordinator->addComponent(e4, hardButton); // button 2
-	coordinator->addComponent(e4, Animatable());
+	coordinator->addComponent(e4, s1); // btn 0
+	coordinator->addComponent(e4, Animatable{ true, false, ANIM_SLIDER });
 
 	Entity e5 = coordinator->createEntity();
-	coordinator->addComponent(e5, decorationsButton); // button 3
-	coordinator->addComponent(e5, Animatable());
+	coordinator->addComponent(e5, s2); // bnt 1
+	coordinator->addComponent(e5, Animatable{ false, false, ANIM_SLIDER });
+
+	// buttons
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, b1); // btn 2
+	coordinator->addComponent(e2, Animatable());
+	fpsButton = e2;
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, b2); // btn 3
+	coordinator->addComponent(e3, Animatable());
+	speedButton = e3;
 
 	Entity e6 = coordinator->createEntity();
-	coordinator->addComponent(e6, particlesButton); // button 4
+	coordinator->addComponent(e6, b3); // btn 4
 	coordinator->addComponent(e6, Animatable());
 
-	Entity e7 = coordinator->createEntity();
-	coordinator->addComponent(e7, menuButton); // button 5
-	coordinator->addComponent(e7, Animatable());
 
 
 	UIScreen settingsMenu;
 	settingsMenu.name = "settingsMenu";
 	settingsMenu.UIElements.push_back(e1);
 
-	settingsMenu.UIElements.push_back(e2);
-	settingsMenu.UIElements.push_back(e3);
+	// slider
 	settingsMenu.UIElements.push_back(e4);
 	settingsMenu.UIElements.push_back(e5);
+
+	// buttons
+	settingsMenu.UIElements.push_back(e2);
+	settingsMenu.UIElements.push_back(e3);
 	settingsMenu.UIElements.push_back(e6);
-	settingsMenu.UIElements.push_back(e7);
+	
 
 	nameToScreen["settingsMenu"] = settingsMenu;
 }
@@ -1053,12 +1269,24 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 
 	menu1.path = "assets/textures/ui/standings/standings_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+	
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(18.0f / 255.0f, 28.0f / 255.0f, 24.0f / 255.0);
+	}
+	menu1.aspectRatio = 1101.0 / 786.0;
+
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
 	UIScreen standingsScreen;
 	standingsScreen.name = "standingsScreen";
+	standingsScreen.UIElements.push_back(bgMenuColor);
 	standingsScreen.UIElements.push_back(e1);
 
 	
@@ -1069,10 +1297,11 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 		firstPlace.hasBackgroundColor = false;
 		firstPlace.path = "assets/textures/ui/standings/standings_position.png";
 		firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
-		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
-		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.finalPositions[i];
-		firstPlace.textScale = 1.0f;
+		firstPlace.anchors = glm::vec4(0.3225, 0.145+0.0825*i, 0.6785, 0.2252+ 0.0825*i); // 0.0825 vertical offset of 66 pixels for 800 height
+		firstPlace.aspectRatio = 450.0 / 64.0;
+		//firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
+		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.standings[i];
+		firstPlace.textScale = 0.75f;
 		firstPlace.textAlignmentY = CENTER;
 		firstPlace.textAlignmentX = LEFT;
 		firstPlace.textColor = glm::vec3(1.0f);
@@ -1089,15 +1318,19 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 	menuButton.hasBackgroundColor = false;
 	menuButton.path = "assets/textures/ui/standings/standings_backtomenu.png";
 	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
-	menuButton.anchors = glm::vec4(0.3225, 0.833, 0.485, 0.9148);
+	menuButton.anchors = glm::vec4(0.3225-0.01, 0.833, 0.5-0.01, 0.9148);
+	menuButton.aspectRatio = 176 / 64.0;
+	menuButton.aRatioAlignX = RIGHT;
+	
 
 	// restart game button
 	UIElement restartButton;
 	restartButton.hasBackgroundColor = false;
 	restartButton.path = "assets/textures/ui/standings/standings_restartgame.png";
 	restartButton.textureID = GenerateTexture(restartButton.path.c_str(), false);
-	restartButton.anchors = glm::vec4(0.3225, 0.833, 0.485, 0.9148);
-	restartButton.anchorOffsets = glm::vec4(226, 0, 226, 0);
+	restartButton.anchors = glm::vec4(0.5+0.01, 0.833, 0.6785+0.01, 0.9148);
+	restartButton.aspectRatio = 176 / 64.0;
+	restartButton.aRatioAlignX = LEFT;
 	// --- ---
 
 	Entity e10 = coordinator->createEntity();
@@ -1136,9 +1369,10 @@ void UISystem::createRacingHUD() {
 
 void UISystem::createLapCounter() {
 	UIElement lapc1;
-	lapc1.text = "Lap: ";
-	lapc1.textScale = 1.0f;
+	lapc1.text = "LAP: 1";
+	lapc1.textScale = 0.75f;
 	// default anchors are whole screen (0,0,1,1)
+	lapc1.anchorOffsets = glm::vec4(15.0f, 0.0f, 0.0f, -15.0f);
 	lapc1.textColor = glm::vec3(1.0f);
 	lapc1.textAlignmentX = LEFT;
 	lapc1.textAlignmentY = BOTTOM;
@@ -1159,13 +1393,13 @@ void UISystem::updateLapCounter(int lapCount) {
 	// can assume it's only the first thing (we hard coded it above)
 	Entity& e1 = nameToScreen["lapCounter"].UIElements[0];
 	UIElement& u1 = coordinator->getComponent<UIElement>(e1);
-	u1.text = "Lap: " + std::to_string(lapCount);
+	u1.text = "LAP: " + std::to_string(lapCount);
 }
 
 void UISystem::createCountdown() {
 	UIElement counter1;
 	counter1.text = "";
-	counter1.textScale = 5.0f;
+	counter1.textScale = 2.5f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = CENTER;
@@ -1193,7 +1427,7 @@ void UISystem::updateCountdown(std::string second, float time) {
 void UISystem::createBackwardsDisplay() {
 	UIElement counter1;
 	counter1.text = "";
-	counter1.textScale = 3.0f;
+	counter1.textScale = 1.5f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = CENTER;
@@ -1247,19 +1481,20 @@ void UISystem::updateBackwardsDisplay(float time) {
 }
 
 
-void UISystem::createHealthBar() {
+void UISystem::createResourceBar() {
 	UIElement hBar;
 	// default anchors are whole screen (0,0,1,1)
-	hBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
-	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 50.0);
+	hBar.anchors = glm::vec4(0.0, 0.0, 0.35, 0.0);
+	hBar.anchorOffsets = glm::vec4(10.0, 10.0, 0.0, 0.0);
 	hBar.hasBackgroundColor = false;
 
-	hBar.aspectRatio = 10.0f / 1.0f; // for every 10 width, 1 height
+	hBar.aspectRatio = 12.0f / 1.0f; // for every 10 width, 1 height
 	hBar.aRatioAlignX = LEFT; // left align it 
+	hBar.aRatioAlignY = TOP;
 
 	Entity e1 = coordinator->createEntity();
 
-	Animatable a = { true, false, true, ANIM_HEALTHBAR };
+	Animatable a = { true, false, ANIM_BAR};
 	coordinator->addComponent(e1, hBar);
 	coordinator->addComponent(e1, a);
 
@@ -1270,37 +1505,14 @@ void UISystem::createHealthBar() {
 	nameToScreen["myHealthIsDeclining"] = myHealthIsDeclining;
 }
 
-void UISystem::createBoostBar(){
-	UIElement bBar;
-	// default anchors are whole screen (0,0,1,1)
-	bBar.anchors = glm::vec4(0.0, 0.01, 0.35, 0.01);
-	bBar.anchorOffsets = glm::vec4(10.0, 65.0, 0.0, 105.0);
-	bBar.hasBackgroundColor = false;
-
-	bBar.aspectRatio = 10.0f / 1.0f;  //for every 10 width, 1 height
-	bBar.aRatioAlignX = LEFT; // left align
-
-	Entity e1 = coordinator->createEntity();
-
-	Animatable a = { true, false, false, ANIM_HEALTHBAR };
-	coordinator->addComponent(e1, bBar);
-	coordinator->addComponent(e1, a);
-
-	UIScreen boostMeOffABridge;
-	boostMeOffABridge.name = "boostMeOffABridge";
-	boostMeOffABridge.UIElements.push_back(e1);
-
-	nameToScreen["boostMeOffABridge"] = boostMeOffABridge;
-}
-
 void UISystem::createSpeedometer() {
 	UIElement speedometer;
 	// default anchors are whole screen (0,0,1,1)
 	speedometer.anchors = glm::vec4(0.75, 0.5, 1.0, 1.0);
-	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -32.0);
+	speedometer.anchorOffsets = glm::vec4(0.0, 0.0, 0.0, -64.0);
 	speedometer.hasBackgroundColor = false;
 	speedometer.text = "0";
-	speedometer.textScale = 1.0f;
+	speedometer.textScale = 0.75f;
 	speedometer.textColor = glm::vec3(1.0f);
 	speedometer.textAlignmentY = CENTER;
 	speedometer.textAlignmentX = CENTER;
@@ -1312,7 +1524,7 @@ void UISystem::createSpeedometer() {
 
 	Entity e1 = coordinator->createEntity();
 
-	Animatable a = { true, false, false, ANIM_SPEEDOMETER };
+	Animatable a = { true, false, ANIM_SPEEDOMETER };
 	coordinator->addComponent(e1, speedometer);
 	coordinator->addComponent(e1, a);
 

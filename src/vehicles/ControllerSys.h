@@ -17,6 +17,8 @@ public:
 	static std::shared_ptr<ControllerSys>
 		registerSystem(std::shared_ptr<Coordinator>& coord);
 
+	float frameTime = 0.0f;
+
 private:
 	// helper function which handles menu navigation input: up/down selection, confirm, go back. called by update()
 	void handleUINavigation(GameState& game);

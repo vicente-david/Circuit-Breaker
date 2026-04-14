@@ -179,6 +179,13 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 						game.finishOrder.push_back(spark.mVehicleName);
 					}
 					game.endGame(entity);
+				}else if(lapProg.currentLap == game.numLaps-1){
+					SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
+					if(spark.isHuman){
+						auto sound = game.audio->createSound("finalLap");
+						sound->volume(2.0);
+						sound->start();
+					}
 				}
 			}
 
@@ -340,10 +347,10 @@ void LapSystem::determineBackwards(LapCounter& lapProg, Transform& eTransform, G
 	float orientation = glm::dot(nextSeg, eTransform.forwardD);
 
 	
-	if (playerDelta < 0.0 && orientation < 0.0f) {
+	if (playerDelta < 0.0 && orientation < -3.f) {
 		game.playerBackwards = true;
 	}
-	else if (orientation >= 0.0f){
+	else if (orientation >= -3.f){
 		game.playerBackwards = false;
 	}
 }

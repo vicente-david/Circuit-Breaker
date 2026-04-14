@@ -22,7 +22,7 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	// get collision data from each colliding actor
 	CollisionData *d1 = (CollisionData *)pairHeader.actors[0]->userData;
 	CollisionData *d2 = (CollisionData *)pairHeader.actors[1]->userData;
-	
+
 	dbug::log("PHYS", 0, "collision: [1] typ:%d id:%d [2] typ:%d id:%d ",
 			  d1->type, d1->entity, d2->type, d2->entity);
 
@@ -30,12 +30,12 @@ void PhysXCallbacks ::onContact(const PxContactPairHeader &pairHeader,
 	if (d1->type == SPARK && d2->type == WALL) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[0])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
-		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
+		sparkWallCol.push_back(SparkWallColData{ d1->entity, imp});
 
 	} else if (d1->type == WALL && d2->type == SPARK) {
 		auto vel = ((PxRigidBody *)pairHeader.actors[1])->getLinearVelocity();
 		auto imp = getCollStrength(pairs, nbPairs, vel);
-		sparkWallCol.push_back(SparkWallColData{d1->entity, imp});
+		sparkWallCol.push_back(SparkWallColData{ d1->entity, imp });
 
 	} else if (d1->type == SPARK && d2->type == SPARK) {
 		// get collision velocity
@@ -125,29 +125,26 @@ void PhysXCallbacks::onTrigger(physx::PxTriggerPair *pairs,
 
 // TODO: use the impulse here instead of just linear velocity.
 // stuff above should work, but the numbers don't seem right to me so idk
-float PhysXCallbacks::getCollStrength(const PxContactPair *pairs, PxU32 nbPairs,
-									  PxVec3 velocity) {
+float PhysXCallbacks::getCollStrength(const PxContactPair* pairs, PxU32 nbPairs, PxVec3 velocity) {
 	// get collision data for every shape that intersects
 	// impuse doesnt want to work :(
 	float minDot = velocity.magnitude();
-	// printf("strength:\nvel:%f pairs:%d\n", minDot, nbPairs);
 	for (int pairIdx = 0; pairIdx < nbPairs; pairIdx++) {
-		auto &cp = pairs[pairIdx];
+		PxContactPair cp = pairs[pairIdx];
 		PxContactPairPoint contacts[16];
-		int contCount = cp.extractContacts(contacts, cp.contactCount);
-		// printf("points:%d or %d\n", cp.contactCount, contCount);
+		if (cp.contactCount > 16)
+			dbug::log("PHYS", 2, "WARNING: contact overflow (%d)", cp.contactCount);
+
+		int contCount = cp.extractContacts(contacts, 16);
+
 		for (int pointIdx = 0; pointIdx < contCount; pointIdx++) {
-			auto norm = contacts[pointIdx].normal;
+			PxVec3 norm = contacts[pointIdx].normal;
 			float dot = velocity.dot(norm);
-			if (dot < minDot) {
+			if (dot < minDot)
 				minDot = dot;
-			}
-			dbug::log("PHYS", -1, "pair:%d point:%d dot:%f", pairIdx, pointIdx,
-					  dot);
 		}
 	}
-	dbug::log("PHYS", 0, "colStrength:%f (r:%f)", velocity.magnitude() - minDot,
-			  minDot / velocity.magnitude());
+	dbug::log("PHYS", 0, "colStrength:%f (r:%f)", velocity.magnitude() - minDot, minDot / velocity.magnitude());
 	return velocity.magnitude() - minDot;
 }
 
@@ -156,6 +153,45 @@ void PhysXCallbacks::resetLists() {
 	sparkWallCol.clear();
 	sparkSparkCol.clear();
 	killSparks.clear();
+}
+
+// Special callbacks that allow you to modify collision point data for a specific type of collision
+void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 nbPairs) {
+    // get collision data from each colliding actor
+    CollisionData* d1 = (CollisionData*)pairs->actor[0]->userData;
+    CollisionData* d2 = (CollisionData*)pairs->actor[1]->userData;
+
+    if (d1->type == SPARK && d2->type == WALL) {
+        PxContactSet& contact = pairs->contacts;
+        contact.setInvMassScale0(0.1f); // Set mass of spark for this collision (any value over 1.f here makes the mass behave lighter and <1.f heavier)
+		contact.setInvInertiaScale0(0.f); // Infinite inertia: prevents spinning out from hitting wings on the walls
+		
+		for (int i = 0; i < contact.size(); i++) {
+			PxVec3 pushDir = contact.getNormal(i); // getNormal is from contact 1 to 2
+			pushDir.x *= 7.f;
+			pushDir.z *= 7.f;
+			contact.setTargetVelocity(i, pushDir);
+		}
+		
+    }
+    else if (d1->type == WALL && d2->type == SPARK) {
+        PxContactSet& contact = pairs->contacts;
+        contact.setInvMassScale1(0.1f);
+		contact.setInvInertiaScale1(0.f);
+		
+		for (int i = 0; i < contact.size(); i++) {
+			PxVec3 pushDir = -contact.getNormal(i); // getNormal is from contact 1 to 2
+			pushDir.x *= 7.f;
+			pushDir.z *= 7.f;
+			contact.setTargetVelocity(i, pushDir);
+		}
+    }
+
+	else if (d1->type == SPARK && d2->type == SPARK) {
+		PxContactSet& contact = pairs->contacts;
+		contact.setInvInertiaScale1(0.f);
+	}
+
 }
 
 void PhysXCallbacks::resetAffectedSparks() {

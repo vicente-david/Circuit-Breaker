@@ -6,6 +6,7 @@
 #include "ecs/System.h"
 #include "world/CurveLoader.h"
 #include "AIDrivingStates.h"
+#include "AIStateComponent.h"
 
 
 
@@ -16,7 +17,7 @@ class AIState {
 
 public: 
 
-	virtual void run(AIDriveContext& ctx) {};
+	virtual void run(AIDriveContext& ctx, AIDriveStateP& state) {};
 	virtual std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) { return { NONE, glm::vec3(0.f) }; };
 	
 	void checkRoute(AIController& ai, SparkData& spark);
@@ -33,21 +34,17 @@ private:
 class DefenseState : public AIState {
 
 public:
-	void run(AIDriveContext& ctx) override;
+	void run(AIDriveContext& ctx, AIDriveStateP& state) override;
 	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
 	
-	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
-
 	std::unique_ptr<TrackCurve> path;
 };
 
 class OvertakeState : public AIState {
 
 public:
-	void run(AIDriveContext& ctx) override ;
+	void run(AIDriveContext& ctx, AIDriveStateP& state) override ;
 	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
-
-	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
 
 	std::unique_ptr<TrackCurve> path;
 };
@@ -55,10 +52,14 @@ public:
 class MaintainState : public AIState {
 
 public:
-	void run(AIDriveContext& ctx) override;
-
-	std::unique_ptr<IDriveState> currentState = std::make_unique<S_Driving>();
+	void run(AIDriveContext& ctx, AIDriveStateP& state) override;
 
 	std::unique_ptr<TrackCurve> path;
+};
+
+class RecoverState : public AIState {
+public:
+	void run(AIDriveContext& ctx, AIDriveStateP& state) override;
+	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
 };
 

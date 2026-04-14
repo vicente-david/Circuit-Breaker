@@ -365,13 +365,41 @@ std::pair<bool, glm::vec3> AIHelpers::lookSide(Transform& transform, PxRigidBody
 		return { false, glm::vec3(0.f) };
 }
 
+// small backwards sweep for detecting if reversing is not an option when stuck
+std::pair<bool, glm::vec3> AIHelpers::lookBack(Transform& transform, PxRigidBody* body) {
+	PxScene* scene = body->getScene();
+
+	PxSweepBuffer hitInfo;
+	PxVec3 forwardDir(transform.forwardD.x, transform.forwardD.y, transform.forwardD.z); // sweep in front facing direction
+	PxBoxGeometry sweepBox(0.2f, 0.2f, 0.2f); // geometry to sweep
+	PxTransform initPose = body->getGlobalPose();
+	initPose.p -= forwardDir.getNormalized() * 2.f; // set initial pose to be a bit in behind spark
+
+	const PxHitFlags outFlags = PxHitFlag::eDEFAULT;
+	PxQueryFilterData filter = PxQueryFilterData(PxQueryFlag::eSTATIC); // detect static actor (walls)
+	
+	bool status = scene->sweep(sweepBox, initPose, forwardDir.getNormalized(), 5.f, hitInfo, outFlags, filter);
+
+	// Check if hit returned true and if the hit was not itself
+	if (status && body->getInternalActorIndex() != hitInfo.block.actor->getInternalActorIndex()) {
+
+		PxVec3 t = hitInfo.block.position;
+		glm::vec3 target(t.x, t.y, t.z);
+
+		return { true, target };
+	}
+	else
+		return { false, glm::vec3(0.f) };
+
+}
+
 
 // Steering calculations used in many of the above
 void AIHelpers::calcSteering(AIController& ai, SparkControls& controls, Transform& transform, SparkData& spark, glm::vec3& targetPos) {
 	
-	if (ai.attackCooldown.activeTimer() && ai.attackCooldown.timerDuration == 6.0) {
+	if (ai.attackCooldown.activeTimer() && ai.attackCooldown.timerDuration > 3.0) {
 		// it's the start of the race
-		if (ai.attackCooldown.remaining > 3.0) {
+		if (ai.attackCooldown.remaining > 4.0) {
 			controls.steering = 0.0f;
 			return;
 		}

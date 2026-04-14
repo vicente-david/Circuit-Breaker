@@ -6,8 +6,8 @@ using namespace AIHelpers;
 * ===== DEFENSE STATE =============================================================================================================================================
 * prioritize dodging and recovering HP
 */
-void DefenseState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 1, "********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
+void DefenseState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI", 1, "\n********** AI: %s Defense ***********", ctx.spark.mVehicleName.c_str());
 	
 	// Check if a route/curve change is needed
 	checkRoute(ctx.ai, ctx.spark);
@@ -17,15 +17,15 @@ void DefenseState::run(AIDriveContext& ctx) {
 	if (sweepResult.first != NONE) {
 		auto next = std::make_unique<S_Dodging>();
 		next->sweepResult = sweepResult;
-		currentState = std::move(next);
+		state.currentState = std::move(next);
 	}
 	// run state update function
-	auto next = currentState->update(ctx);
+	auto next = state.currentState->update(ctx);
 	
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
-		currentState = std::move(next);
-		currentState->enter(ctx);
+		state.currentState = std::move(next);
+		state.currentState->enter(ctx);
 	}
 
 	
@@ -67,8 +67,8 @@ std::pair<Direction, glm::vec3> DefenseState::detect(AIDriveContext& ctx) {
 * ===== OVERTAKE STATE =============================================================================================================================================
 * overtake other players: prioritize speed and attacking others
 */
-void OvertakeState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 0, "********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
+void OvertakeState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI", 0, "\n********** AI: %s Overtake ***********", ctx.spark.mVehicleName.c_str());
 
 	// give ai the proper path
 	checkRoute(ctx.ai, ctx.spark);
@@ -78,17 +78,17 @@ void OvertakeState::run(AIDriveContext& ctx) {
 		if (sweepResult.first != NONE) {
 			auto next = std::make_unique<S_Attacking>();
 			next->sweepResult = sweepResult;
-			currentState = std::move(next);
+			state.currentState = std::move(next);
 		}
 	}
 
 	// run state update function
-	auto next = currentState->update(ctx);
+	auto next = state.currentState->update(ctx);
 
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
-		currentState = std::move(next);
-		currentState->enter(ctx);
+		state.currentState = std::move(next);
+		state.currentState->enter(ctx);
 	}
 
 }
@@ -143,21 +143,78 @@ std::pair<Direction, glm::vec3> OvertakeState::detect(AIDriveContext& ctx) {
 * ===== MAINTAIN STATE =============================================================================================================================================
 * Drive to maintain a lead: take less risks to maintain in the lead
 */
-void MaintainState::run(AIDriveContext& ctx) {
-	dbug::log("AI", 0, "********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
+void MaintainState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI", 0, "\n********** AI: %s Maintain ***********", ctx.spark.mVehicleName.c_str());
 
 	checkRoute(ctx.ai, ctx.spark);
 
 	// run state update function
-	auto next = currentState->update(ctx);
+	auto next = state.currentState->update(ctx);
 
 	if (next) {
 		// if the returned pointer was not nullptr (points to a new state), change states
-		currentState = std::move(next);
-		currentState->enter(ctx);
+		state.currentState = std::move(next);
+		state.currentState->enter(ctx);
 	}
 	
 }
+
+/*
+* ===== RECOVER STATE =============================================================================================================================================
+* Make an attempt to recover if flagged as stuck
+*/
+void RecoverState::run(AIDriveContext& ctx, AIDriveStateP& state) {
+	dbug::log("AI_RECOVER", 0, "\n * *********AI: % s Recover * **********", ctx.spark.mVehicleName.c_str());
+
+	// zero out controls
+	auto& c = ctx.controls;
+	c.boost = false;
+	c.boostWithHealth = false;
+	c.driftMode = false;
+	c.shimmyL = false;
+	c.shimmyR = false;
+	c.throttle = 0.f;
+
+	if (ctx.ai.recoverDir == NONE) {
+		// no recovery direction found yet
+		std::pair<Direction, glm::vec3> sweepResult = RecoverState::detect(ctx); // Look behind to see if there is a wall
+		ctx.ai.recoverDir = sweepResult.first;
+	}
+	
+	if (ctx.ai.recoverDir == BACK) {
+		// nothing blocking behind, reverse
+		c.reverse = 1.f;
+		c.brake = 1.f;
+		c.steering = 0.f;
+		ctx.spark.inReverse = true;
+		
+	}
+	else {
+		// try going forwards
+		c.reverse = 0.f;
+		c.brake = 0.f;
+		c.steering = 0.f;
+		ctx.spark.inReverse = false;
+		c.throttle = 0.5f;
+		AIHelpers::calcSteering(ctx.ai, c, ctx.transform, ctx.spark, ctx.ai.route.at(ctx.ai.targetIdx));
+	}
+	ctx.ai.recoverAttempt = false;
+
+
+
+}
+
+std::pair<Direction, glm::vec3> RecoverState::detect(AIDriveContext& ctx) {
+	std::pair<bool, glm::vec3> resultBack = lookBack(ctx.transform, ctx.body);
+	std::pair<Direction, glm::vec3> result{ BACK, glm::vec3(0.f) }; // if no sweep collision behind, reverse
+	
+	if (resultBack.first) {
+		result = { FWD, resultBack.second };
+	}
+	return result;
+}
+
+
 
 void AIState::checkRoute(AIController& ai, SparkData& spark) {
 

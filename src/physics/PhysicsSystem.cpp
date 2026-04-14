@@ -29,17 +29,38 @@ void PhysicsSystem::updatePhysics(double dt, GameState &game) {
 void PhysicsSystem::updateTransforms(GameState &state) {
 	// update the transform to match the state of the physics simulation
 	for (auto const &entity : entities) {
-		auto &body =
-			state.coordinator->getComponent<physx::PxRigidBody *>(entity);
+		auto &body = state.coordinator->getComponent<physx::PxRigidBody *>(entity);
 		auto &transform = state.coordinator->getComponent<Transform>(entity);
 
 		physx::PxVec3 p = body->getGlobalPose().p;
 		physx::PxQuat q = body->getGlobalPose().q;
+		physx::PxVec3 B1 = q.getBasisVector0();
 		physx::PxVec3 B3 = q.getBasisVector2();
-		transform.pos = glm::vec3(p.x, p.y, p.z);
-		transform.rot = glm::quat(q.w, q.x, q.y, q.z);
-		transform.forwardD = glm::vec3(B3.x, B3.y, B3.z);
-		// dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y,
-		// p.z);
+		physx::PxVec3 v = body->getLinearVelocity();
+
+		float speed = v.magnitude();
+		float lateral = abs(v.dot(B1));
+
+		float slip = speed > 1.f ? lateral / speed: 0.f;
+		float drift = glm::clamp(slip, 0.f, 1.f);
+		float grip = 1.f - drift;
+
+		float yawStr = glm::clamp(body->getAngularVelocity().y, -1.f, 1.f);
+
+		float angle = glm::mix(0.f, 25.f, (speed - lateral) / speed);
+		float amount = -yawStr * grip * glm::radians(angle);
+
+		amount = glm::mix(transform.oldTiltAngle, amount, 0.2f);
+		transform.oldTiltAngle = amount;
+
+		glm::vec3 fwd = glm::vec3(B3.x, B3.y, B3.z);
+		glm::quat roll = glm::angleAxis(amount, fwd);
+
+		transform.forwardD = fwd;
+		transform.pos = glm::vec3(p.x, p.y + 0.1f, p.z);
+		transform.rot = roll * glm::quat(q.w, q.x, q.y, q.z);
+		//dbug::log("PHYS", -1, "Entity %d at [%f, %f, %f]", entity, p.x, p.y, p.z);
+		//if (entity == 31)
+		//	dbug::log("RENDER", 1, "roll %f, yaw %f, lat %f", angle, -yawStr, lateral);
 	}
 }

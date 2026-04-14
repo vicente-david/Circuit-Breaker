@@ -100,8 +100,11 @@ public:
 	void updateUIElement(Entity& e); // renders UI using stored colors
 	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
 	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
-	void updateResBars(Entity& e, bool isHealth); 
+	void updateResBars(Entity& e); 
 	void updateSpeedometer(Entity& e);
+	void updateSlider(Entity& e);
+
+
 		
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
 
@@ -125,12 +128,13 @@ public:
 	// the return value will be the name of the string it maps the screen to
 	void createMainMenu(); // create the main menu and push it to the hash map
 	void createPauseMenu(); // create the pause menu and push it to hashmap
+	void createControlsMenu(); // create the settings menu and push it to hashmap
+	void createTutorialMenu(); // create the settings menu and push it to hashmap
 	void createSettingsMenu(); // create the settings menu and push it to hashmap
 	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap
 
-	void createHealthBar();
-	void createBoostBar();
+	void createResourceBar();
 	void createSpeedometer();
 
 	// persistent ui elements (elements that change every frame)
@@ -180,12 +184,25 @@ public:
 	unsigned int resVAO, resVBO;
 	std::vector<UIResVertex> resData;
 
+	// res bar shaders
+	std::unique_ptr<ShaderProgram> slideShader;
+	float masterMax = 1.0;
+	float* masterCur;
+	float musicMax = 1.0;
+	float* musicCur;
+	float isHighBool = 0.0;
+
 	// speedometer (we'll reuse the resVAO and VBO, and resData)
 	std::unique_ptr<ShaderProgram> speedShader;
 	float* playerSpeed;
 
 	float currentAngle = 0.0;
 	float dTime;
+	float prevAngle = 0.0;
+	bool *isPlayerBoosting; // used for modifying the speedometer 
+	float isBoosting; // need this for passing to shader
+	float timeBoosting = 0.0;
+	float frameTime = 0.0; // time it takes for a frame to update
 
 	//
 	bool* playerBackwards;
@@ -211,6 +228,9 @@ public:
 
 	// --- Button Selection End ---
 
+	bool showFPS = true;
+	bool showSpeedometer = true;
+
 private:
 
 	int prevSCR_WIDTH = 0;
@@ -219,6 +239,16 @@ private:
 	std::vector<UIScreen> screenStack; // pretend this is a stack
 	std::vector<UIVertex> uiData;
 	std::vector<UIAnimVertex> uiAnimData;
+
+	// F tier fix for swapping between two button textures
+	std::string speedPath2 = "assets/textures/ui/settings/settings_hidespeedometer.png";
+	unsigned int speedTextureID2 = GenerateTexture(speedPath2.c_str(), false);
+
+	std::string fpsPath2 = "assets/textures/ui/settings/settings_hidefps.png";
+	unsigned int fpsTextureID2 = GenerateTexture(fpsPath2.c_str(), false);
+
+	Entity fpsButton;
+	Entity speedButton;
 
 	// we iterate forwards since last element gets drawn on top
 

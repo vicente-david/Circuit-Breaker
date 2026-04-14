@@ -21,7 +21,7 @@ file(GLOB_RECURSE SNIPPETS "snippets/*")
 include_directories(${PROJECT_SOURCE_DIR}/dependencies/imgui)
 file(GLOB IMGUI "dependencies/imgui/*")
 
-add_executable(circuit-breaker ${SOURCES} ${SNIPPETS} ${IMGUI} )
+add_executable(circuit-breaker WIN32 ${SOURCES} ${SNIPPETS} ${IMGUI} )
 # add_executable(circuit-breaker ${SOURCES} ${SNIPPETS} ${IMGUI_H} ${IMGUI_CPP} 
 # 	${IMGUI_GL_H} ${IMGUI_GL_CPP} ${IMGUI_GLFW_H} ${IMGUI_GLFW_CPP})
 

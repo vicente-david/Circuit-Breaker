@@ -16,7 +16,8 @@ enum GAMESTATE {
 	MAINMENU,
 	GAMEPLAY,
 	PAUSED,
-	END
+	END,
+	TUTORIAL,
 };
 
 
@@ -67,6 +68,7 @@ public:
 
 	double* frameTime;
 
+
 	// temp UI
 	//RectUI activeUIRect; 
 	//TextUI uiText;
@@ -79,4 +81,6 @@ public:
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<AudioEngine> audio;
 
+	float masterVol = 0.35f;
+	float musicVol = 1.0f;
 };

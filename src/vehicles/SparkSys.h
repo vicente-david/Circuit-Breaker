@@ -28,7 +28,7 @@ class SparkSys : public System {
 
   private:
 	// === Helpers ===
-	void checkDeath(SparkData& sData, double dt);
+	void checkDeath(SparkData& sData, Transform& sTransform, double dt);
 	void checkAirborne(SparkData& sData, double dt);
 
 	void correctRotation(SparkData &sData, float strength ,double dt);
@@ -59,6 +59,7 @@ class SparkSys : public System {
 
 	// Handling
 	void changeWheelParams(SparkData& sData, PxReal friction, PxReal latFriction, PxReal maxSteerAngle);
+	void driftInit(SparkData& sData, SparkControls& sControls);
 	void driftStabilizer(SparkData& sData, SparkControls& sControls);
 	void yawStabilizer(SparkData& sData);
 	void sparkHandling(SparkData& sData, SparkControls& sControls);

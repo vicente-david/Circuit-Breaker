@@ -1,12 +1,13 @@
 #include "SparkSys.h"
 #include "GLFW/glfw3.h"
 #include "GameState.h"
+#include "PxForceMode.h"
 #include "debugUtils/Panel.h"
 #include "ecs/Component.h"
 #include "graphics/Model.h"
+#include "graphics/ParticleSystem.h"
 #include "vehicles/SparkComponents.h"
 #include "world/LapSystem.h"
-#include "graphics/ParticleSystem.h"
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -20,15 +21,17 @@ void SparkSys::updateSparks(double dt, GameState &game) {
 	bool reload = false;
 	for (const Entity &entity : entities) {
 		SparkData &sData = game.coordinator->getComponent<SparkData>(entity);
-		SparkControls &sControls = game.coordinator->getComponent<SparkControls>(entity);
-		Transform& sTransform = game.coordinator->getComponent<Transform>(entity);
+		SparkControls &sControls =
+			game.coordinator->getComponent<SparkControls>(entity);
+		Transform &sTransform =
+			game.coordinator->getComponent<Transform>(entity);
 
 		sData.speed = sData.rBody->getLinearVelocity().magnitude();
 		const PxU8 nbSubsteps = (sData.speed < 5.0f ? 3 : 1);
 
 		// state checks
 		bool playDeathSound = !sData.isDead; // only play sound the 1st time
-		checkDeath(sData, dt);
+		checkDeath(sData, sTransform, dt);
 
 		if (playDeathSound && sData.isDead) {
 			auto s = game.audio->createSound("death");
@@ -116,15 +119,15 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		PxTransform rearBoxLocalPose(PxVec3(0.0f, 0.1f, -0.2f),
 									 PxQuat(PxIdentity));
 
-		PxBoxGeometry sideBoxGeom(PxVec3(0.1f, 0.15f, 0.5f));
+		PxBoxGeometry sideBoxGeom(PxVec3(0.2f, 0.15f, 0.57f));
 		PxShape *leftSideBox = game.physics->gPhysics->createShape(
 			sideBoxGeom, *game.physics->gMaterial, true);
 		PxShape *rightSideBox = game.physics->gPhysics->createShape(
 			sideBoxGeom, *game.physics->gMaterial, true);
-		PxTransform leftSideBoxLocalPose(PxVec3(0.43f, 0.1f, 0.3f),
-										 PxQuat(0.924f, 0.0f, 0.383f, 0.0f));
-		PxTransform rightSideBoxLocalPose(PxVec3(-0.43f, 0.1f, 0.3f),
-										  PxQuat(0.924f, 0.0f, -0.383f, 0.0f));
+		PxTransform leftSideBoxLocalPose(PxVec3(0.34f, 0.1f, 0.33f),
+										 PxQuat(0.9458802f, 0.f, 0.324516f, 0.f));
+		PxTransform rightSideBoxLocalPose(PxVec3(-0.34f, 0.1f, 0.33f),
+										  PxQuat(0.9458802f, 0.f, -0.324516f, 0.f));
 
 		rearBox->setLocalPose(rearBoxLocalPose);
 		sData.rBody->attachShape(*rearBox);
@@ -254,33 +257,32 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark2.obj"));
 		sData.colour = { 27, 209, 249 };
 	}
-	else if (sData.mVehicleName == "Yellow Eagle") {
+	else if (sData.mVehicleName == "YELLOWEAGLE") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark3.obj"));
 		sData.colour = {184, 249, 9};
 	}
-	else if (sData.mVehicleName == "Qbe") {
+	else if (sData.mVehicleName == "QBE") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark4.obj"));
 		sData.colour = {215,81,254};
 	}
-	else if (sData.mVehicleName == "Perro") {
+	else if (sData.mVehicleName == "PERRO") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark5.obj"));
 		sData.colour = {53,71,255};
 	}
-	else if (sData.mVehicleName == "LateNyte") {
+	else if (sData.mVehicleName == "LATENYTE") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark6.obj"));
 		sData.colour = {255, 73,114};
 	}
-	else if (sData.mVehicleName == "WorldEnder967") {
+	else if (sData.mVehicleName == "ENDER96") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark7.obj"));
 		sData.colour = {118,192,217};
 	}
-	else if (sData.mVehicleName == "Sam") {
+	else if (sData.mVehicleName == "SAM") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark8.obj"));
-		sData.colour = {254,112,30};
-	}
-	else {
+		sData.colour = {254, 112, 30};
+	} else {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark.obj"));
-		sData.colour = {250,164,27};
+		sData.colour = {250, 164, 27};
 	}
 	dbug::log("GAME", 0, "Creating a new spark (ID:%d)", sparkEntity);
 
@@ -321,7 +323,8 @@ void SparkSys::reloadSparkParams(GameState &game) {
 
 // ================================ HELPER FUNCTIONS ================================
 
-std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
+std::shared_ptr<SparkSys>
+SparkSys::registerSystem(std::shared_ptr<Coordinator> &coord) {
 	// register system
 	auto system = coord->registerSystem<SparkSys>();
 	// create system signture (what components this system needs)
@@ -335,7 +338,7 @@ std::shared_ptr<SparkSys> SparkSys::registerSystem(std::shared_ptr<Coordinator> 
 	return system;
 }
 
-void SparkSys::checkDeath(SparkData &sData, double dt) {
+void SparkSys::checkDeath(SparkData &sData, Transform& sTransform, double dt) {
 	if (sData.health > 0)
 		return;
 
@@ -349,6 +352,30 @@ void SparkSys::checkDeath(SparkData &sData, double dt) {
 		sData.health = 0;
 
 	sData.isDead = true;
+
+	// particles!
+	// using several directions to give more of a sphere shape while re-using the damage emitter
+	glm::vec3 dir1(2.f, 7.f, 2.f);
+	glm::vec3 dir2(-2.f, 7.f, -2.f);
+	glm::vec3 dir3(2.f, 7.f, -2.f);
+	glm::vec3 dir4(-2.f, 7.f, 2.f);
+
+	PxVec3 linvel = sData.rBody->getLinearVelocity();
+	glm::vec3 vel = { linvel.x, linvel.y, linvel.z };
+
+	Particle p1 = { sTransform.pos, glm::vec4(sData.colour[0] / 255.f, sData.colour[1] / 255.f, sData.colour[2] / 255.f, 0.8f), 0.12f, 0.20f, dir1 + vel};
+	Particle p2 = p1; // copy
+	Particle p3 = p1; // copy
+	Particle p4 = p1; // copy
+	p2.dir = dir2 + vel;
+	p3.dir = dir3 + vel;
+	p4.dir = dir4 + vel;
+	
+	// add particles
+	pHelper->notifyDMG(p1, 5);
+	pHelper->notifyDMG(p2, 5);
+	pHelper->notifyDMG(p3, 5);
+	pHelper->notifyDMG(p4, 5);
 }
 
 void SparkSys::checkAirborne(SparkData &sData, double dt) {
@@ -384,10 +411,10 @@ void SparkSys::correctRotation(SparkData &sData, float strength, double dt) {
 	// cross product with up axis gives vector to rotate along
 	auto torque = up.cross(PxVec3(0, 1, 0));
 	// square the size so that small angles aren't as effected
-	torque = torque * torque.magnitude();
+	// torque = torque * torque.magnitude();
 	// apply the torque. this always needs to be really big, so i just multiply
-	// by 1000
-	sData.rBody->addTorque(torque * strength * 1000 * dt);
+	// by 500
+	sData.rBody->addTorque(torque * strength * 500 * dt);
 }
 
 void SparkSys::angularResistance(SparkData &sData, PxReal val, double duration) {
@@ -407,25 +434,30 @@ void SparkSys::checkAngResistace(SparkData &sData, double dt) {
 }
 
 // FLAG CHECKS
-void SparkSys::sparkCollision(GameState& game) {
-		for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
-		auto &sData1 = game.coordinator->getComponent<SparkData>(colData.spark1Id);
-		auto &sData2 = game.coordinator->getComponent<SparkData>(colData.spark2Id);
-		auto& trans1 =game.coordinator->getComponent<Transform>(colData.spark1Id);
-		auto& trans2 =game.coordinator->getComponent<Transform>(colData.spark2Id);
-		
+void SparkSys::sparkCollision(GameState &game) {
+	for (auto const &colData : game.physics->callbacks->sparkSparkCol) {
+		auto &sData1 =
+			game.coordinator->getComponent<SparkData>(colData.spark1Id);
+		auto &sData2 =
+			game.coordinator->getComponent<SparkData>(colData.spark2Id);
+		auto &trans1 =
+			game.coordinator->getComponent<Transform>(colData.spark1Id);
+		auto &trans2 =
+			game.coordinator->getComponent<Transform>(colData.spark2Id);
+
 		// convert contact pt from Px to glm
 		glm::vec3 contactPt = { colData.contactPt.x, colData.contactPt.y, colData.contactPt.z };
 		
 		// calculate knockback for spark that takes damage
-		PxVec3 knockback = colData.contactNorm * colData.magnitude * 2.f;
+		float knockMag = glm::clamp(colData.magnitude, 1.0f, 5.0f);
+		PxVec3 knockback = colData.contactNorm * knockMag;
 		knockback.y = 0.0f; // zero out verticle component
-		
+
 		PxVec3 linVel1(sData1.rBody->getLinearVelocity());
 		PxVec3 linVel2(sData2.rBody->getLinearVelocity());
 		glm::vec3 vel(linVel1.x + linVel2.x, linVel1.y + linVel2.y, linVel1.z + linVel2.z);
 		// don't do damage from hitting each other if sliding or boosting
-		
+
 		// Spark 1 logic
 		if (sData1.shimmyTimer < sData1.shimmyInvincible && !sData1.isBoosting) {
 
@@ -440,9 +472,8 @@ void SparkSys::sparkCollision(GameState& game) {
 
 				pHelper->notifyDMG(p, 30);
 			}
-			
 		}
-		
+
 		// Spark 2 logic
 		if (sData2.shimmyTimer < sData2.shimmyInvincible && !sData2.isBoosting) {
 
@@ -459,10 +490,8 @@ void SparkSys::sparkCollision(GameState& game) {
 
 				pHelper->notifyDMG(p, 30);
 			}
-			
-			
 		}
-		//else
+		// else
 		//	dbug::log("GAME", 0, "i:%d Block!", colData.spark2Id);
 
 		auto sound = game.audio->createSound("crash");
@@ -486,7 +515,7 @@ void SparkSys::wallCollision(GameState &game) {
 		auto &trans =
 			game.coordinator->getComponent<Transform>(colData.sparkId);
 
-		sData.health -= colData.magnitude * 0.75; // TODO: maybe dont hardcode damping value?
+		sData.health -= colData.magnitude * 0.10;
 		if (sData.health < 0)
 			sData.health = 0;
 
@@ -537,7 +566,8 @@ void SparkSys::checkGhost(GameState& game, SparkData& sData, double dt) {
 }
 
 // COMMANDS
-void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls, Transform& sTransform, double dt) {
+void SparkSys::sparkInputs(SparkData &sData, SparkControls &sControls,
+						   Transform &sTransform, double dt) {
 
 	sData.mVehicle->mCommandState.brakes[0] = sControls.brake;
 	sData.mVehicle->mCommandState.nbBrakes = 1;
@@ -603,7 +633,8 @@ void SparkSys::updateMaxBoost(SparkData &sData) {
 		sData.boost = sData.maxBoost;
 }
 
-void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm::vec3& pos, double dt) {
+void SparkSys::applyBoost(SparkData &sData, bool useHealth, bool boostStart, glm::vec3 &pos, double dt) {
+	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
 
 	// use boost meter
 	sData.boost -= sData.boostUseRate * dt;
@@ -623,11 +654,12 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 	if (sData.boost < 0)
 		sData.boost = 0;
 
-	const PxVec3 forwardVector = sData.rBody->getGlobalPose().q.getBasisVector2();
-
-	if (boostStart && !sData.inDrift) // apply an extra impulse if they just started boosting
+	// apply an extra impulse if they just started boosting
+	if (boostStart && !sData.inDrift)
 		sData.rBody->addForce(forwardVector * sData.boostImpulse, PxForceMode::eIMPULSE);
+
 	sData.rBody->addForce(forwardVector * sData.boostStrength, PxForceMode::eACCELERATION);
+
 
 	// PFX stuff
 	glm::vec3 pPos(forwardVector.x, forwardVector.y, forwardVector.z);
@@ -655,7 +687,7 @@ void SparkSys::applyBoost(SparkData& sData, bool useHealth, bool boostStart, glm
 	// pHelper->notifyBST(pl, 40);
 	pHelper->notifyBST(pr, 40);
 
-	//glm::vec4(1.f, 0.663f, 0.071f, 0.2f)
+	// glm::vec4(1.f, 0.663f, 0.071f, 0.2f)
 }
 
 void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTransform, double dt) {
@@ -670,8 +702,9 @@ void SparkSys::boost(SparkData& sData, SparkControls& sControls, Transform& sTra
 		return;
 
 	if (sControls.boost) {
-		//dbug::log("GAME", -1, "boosting!");
-		applyBoost(sData, sControls.boostWithHealth, boostStart, sTransform.pos, dt);
+		// dbug::log("GAME", -1, "boosting!");
+		applyBoost(sData, sControls.boostWithHealth, boostStart, sTransform.pos,
+				   dt);
 		sData.isBoosting = true;
 	}
 }
@@ -783,6 +816,13 @@ void SparkSys::changeWheelParams(SparkData &sData, PxReal friction, PxReal latFr
 	sData.mVehicle->mBaseParams.steerResponseParams.maxResponse = maxSteerAngle;
 }
 
+void SparkSys::driftInit(SparkData& sData, SparkControls& sControls) {
+	// apply a torque to spin you in the right direction
+	auto up = sData.rBody->getGlobalPose().q.getBasisVector1();
+	float strength = 220 * sControls.steering;
+	sData.rBody->addTorque(up * strength, PxForceMode::eIMPULSE);
+}
+
 void SparkSys::driftStabilizer(SparkData &sData, SparkControls &sControls) {
 	const PxVec3 linVel = sData.rBody->getLinearVelocity();
 	const PxVec3 forward = sData.rBody->getGlobalPose().q.getBasisVector2(); // already normalized
@@ -856,8 +896,10 @@ void SparkSys::yawStabilizer(SparkData &sData) {
 
 void SparkSys::sparkHandling(SparkData &sData, SparkControls &sControls) {
 	if (sControls.driftMode) {
-		if (!sData.inDrift)
+		if (!sData.inDrift) {
 			changeWheelParams(sData, 11.4f, 54600, PxDegToRad(30));
+			driftInit(sData, sControls);
+		}
 
 		sData.inDrift = true;
 		driftStabilizer(sData, sControls); // Helps control oversteer

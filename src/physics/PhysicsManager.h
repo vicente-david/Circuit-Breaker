@@ -26,6 +26,7 @@ class PhysicsManager {
 	PxMaterial *gMaterial = NULL;
 	PxPvd *gPvd = NULL;
 	std::shared_ptr<PhysXCallbacks> callbacks;
+	std::shared_ptr<ModifiedCallbacks> modCallbacks;
 
 	// The mapping between PxMaterial and friction.
 	PxVehiclePhysXMaterialFriction gPhysXMaterialFrictions[16];
@@ -45,6 +46,7 @@ class PhysicsManager {
 	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform, PxMaterial *material, PxFilterData fitler, bool tireCollision = true);
 	PxRigidStatic* initStaticMesh(Mesh mesh, Transform transform, bool tireCollision = true);
 	PxRigidStatic* initHealZones(Mesh mesh, Transform transform);
+	PxRigidStatic* initWalls(Mesh mesh, Transform transform);
 
 	void updatePhysics(double dt);
 

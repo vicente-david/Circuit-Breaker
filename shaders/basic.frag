@@ -8,6 +8,9 @@ in vec3 FragPos;
 uniform sampler2D inTex;
 uniform sampler2DArray shadowMap;
 uniform bool hasTex; // if no texture bound, render with default color
+uniform float mixAmt; // for colouring effects, amount of color to add
+uniform vec4 mixColour; // mixing colour
+
 uniform float farPlane;
 uniform mat4 view;
 layout (std140) uniform LightSpaceMatrices
@@ -55,13 +58,13 @@ float shadowCalc(vec3 fragPosWorld, float bias) {
 	// PCF
 	float shadow = 0.0;
 	vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0)); // size of a single texel of the texture map
-	for (int x = -1; x <= 1; ++x){
-		for (int y = -1; y <= 1; ++y){
+	for (int x = -2; x <= 2; ++x){
+		for (int y = -2; y <= 2; ++y){
 			float pcfDepth = texture(shadowMap, vec3(projCoords.xy + vec2(x, y) * texelSize, layer)).r; // use the texel as offset to sample at different depth values
 			shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0; // check if fragment in shadow
 		}
 	}
-	shadow /= 9.0; // average results
+	shadow /= 25.0; // average results
 	
 	//shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0; // check if fragment in shadow
 	if(projCoords.z > 1.0) {
@@ -79,7 +82,7 @@ void main() {
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * lightCol;
 
-	float ambientStr = 0.5;
+	float ambientStr = 0.55;
 	vec3 ambient = ambientStr * lightCol;
 
 	vec4 objCol;
@@ -87,6 +90,8 @@ void main() {
 		objCol = texture(inTex, texCoord);
 	else
 		objCol = vec4(0.5, 0.5, 0.5, 1.0);
+
+	objCol = mix(objCol, mixColour, mixAmt);
 
 	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005); // For reducing shadow acne
 	

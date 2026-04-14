@@ -1,15 +1,20 @@
 #include "Game.h"
 #include "AllSystem.h"
+#include "GameState.h"
 #include "PxActor.h"
 #include "debugUtils/Panel.h"
+#include "ai/AIStateComponent.h"
 #include "physics/CollisionData.h"
 #include <cmath>
+#include <cstdio>
+#include <ctime>
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
 	audio = std::make_shared<AudioEngine>();
 	pHelper = std::make_shared<ParticleHelper>();
 	gameState = GameState();
+	std::srand(std::time(nullptr));
 }
 
 // in theory this should initialize all internal systems
@@ -61,6 +66,7 @@ void Game::initializeECS() {
 	coordinator->registerComponent<UIElement>();
 	coordinator->registerComponent<Leaderboard>();
 	coordinator->registerComponent<Animatable>();
+	coordinator->registerComponent<AIDriveStateP>();
 
 	// register systems
 	physicsSys = PhysicsSystem::registerSystem(coordinator);
@@ -85,7 +91,9 @@ void Game::initializeRace() {
 	// initializeFinishLine();
 	renderer->renderPasses.push_back(
 		&RenderingSystem::renderShadows); // start rendering it lol
-	raceCountdown.start();
+	startRaceCountdown = true;
+	// raceCountdown.start();
+
 	lastPrintedSecond = -1;
 	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state
 
@@ -120,22 +128,6 @@ void Game::initializeTrack() {
 		auto trackActor =
 			physics->initStaticMesh(track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
-
-		//// add walls
-		// Model wallsModel("assets/walls.obj"); // loads model and paths
-		// Entity walls = coordinator->createEntity();
-		// coordinator->addComponent(walls, none);
-		// coordinator->addComponent(walls, wallsModel);
-		// coordinator->addComponent(track, CollisionData{GROUND, walls});
-		// CollisionData& planePhys =
-		// gameState.coordinator->getComponent<CollisionData>(walls);
-
-		// for (auto& i : wallsModel.GetMeshes()) {
-		//	auto actor = physics->initStaticMesh(i, none);
-		//	actor->userData = &planePhys;
-		// }
-
-		// dbug::log(0, "track entity id:%d", track);
 
 		// Ribbons
 		Model ribbonModel("assets/ribbons.obj"); // loads model and paths
@@ -193,9 +185,9 @@ void Game::initializeTrack() {
 		gameState.coordinator->addComponent(wall, CollisionData{WALL, wall});
 		auto &wallPhys =
 			gameState.coordinator->getComponent<CollisionData>(wall);
-
+		
 		for (auto &i : wallModel.GetMeshes()) {
-			auto actor = physics->initStaticMesh(i, none);
+			auto actor = physics->initWalls(i, none);
 			actor->userData = &wallPhys;
 		}
 
@@ -212,6 +204,12 @@ void Game::initializeTrack() {
 			auto actor = physics->initStaticMesh(i, none, false);
 			actor->userData = &killPhys;
 		}
+
+		// Decor (arrows, fans)
+		Model decorModel("assets/decor.obj");
+		Entity decor = gameState.coordinator->createEntity();
+		gameState.coordinator->addComponent(decor, none);
+		gameState.coordinator->addComponent(decor, decorModel);
 	}
 
 	Track curve("assets/curve.obj");
@@ -234,21 +232,21 @@ void Game::initializeTrack() {
 
 	// initialize players
 	initializePlayerSpark(trackPaths,
-						  pathStartPt + glm::vec3(-4.0f, 1.0f, -18.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f),
+						  pathStartPt + glm::vec3(-4.5f, 1.0f, -27.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.5f, 1.0f, -12.0f),
 					  "TAM");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f),
-					  "Yellow Eagle");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -9.0f),
-					  "Qbe");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 1.0f, -12.0f),
-					  "Perro");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -9.0f),
-					  "LateNyte");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f),
-					  "WorldEnder967");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f),
-					  "Sam");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.5f, 1.0f, -15.0f),
+					  "YELLOWEAGLE");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.5f, 1.0f, -18.0f),
+					  "QBE");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.5f, 1.0f, -21.0f),
+					  "PERRO");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.5f, 1.0f, -18.0f),
+					  "LATENYTE");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.5f, 1.0f, -21.0f),
+					  "ENDER96");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.5f, 1.0f, -24.0f),
+					  "SAM");
 
 	// Start countdown
 
@@ -260,7 +258,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 								 glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "You");
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "YOU");
 	raceEntities.push_back(sparkEntity);
 	coordinator->addComponent(sparkEntity, HumanController{0});
 	coordinator->addComponent(sparkEntity, CameraComp());
@@ -278,6 +276,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 	uiSys->maxPlayerHealth = &sparkData.maxHealth;
 	uiSys->playerBoost = &sparkData.boost;
 	uiSys->maxPlayerBoost = &sparkData.maxBoost;
+	uiSys->isPlayerBoosting = &sparkData.isBoosting;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve> &trackPaths,
@@ -288,13 +287,20 @@ void Game::initializeAISpark(std::vector<TrackCurve> &trackPaths,
 	coordinator->addComponent(testSpark2, LapCounter());
 	coordinator->addComponent(testSpark2, Respawnable());
 	coordinator->addComponent(testSpark2, Leaderboard());
+
+	// use the atkCooldown timer to help 'randomize' behaviour when the race starts
+	double rt =  7. + (static_cast<double>(rand()) / RAND_MAX) * (9.0 - 7.0);
+
+	Clock aiclock{ rt, rt };
 	coordinator->addComponent(
 		testSpark2,
 		AIController{
 			AIDriveState::IDLE,			  // start AI in idle state
 			trackPaths.at(0).curvePoints, // planned route
 			trackPaths.at(0).curvatures,  // angles at each point in route
+			aiclock
 		});
+	coordinator->addComponent(testSpark2, AIDriveStateP{ std::make_shared<S_Driving>() });
 }
 
 void Game::initializeAISpark2(std::vector<TrackCurve> &trackPaths,
@@ -373,6 +379,8 @@ void Game::initializeUI() {
 	uiSys->fps = &fps;
 	uiSys->playerBackwards = &gameState.playerBackwards;
 	uiSys->playerSpeed = &coordinator->getComponent<SparkData>(player).speed;
+	uiSys->masterCur = &AudioEngine::masterVol;
+	uiSys->musicCur = &gameState.musicVol;
 
 	uiSys->screenInitialization();
 
@@ -479,14 +487,18 @@ void Game::stateTransition() {
 			// initialize everything
 		case (MAINMENU):
 			uiSys->popScreen();
+			uiSys->addScreen( ( std::rand() % 2 == 0) ? "tutorial" : "controls");
+			updateRendering();
 			initializeRace();
+			uiSys->popScreen();
+			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("boostMeOffABridge");
-			uiSys->addScreen("speeeeeed");
+			if (uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
+			audio->masterVol = gameState.masterVol;
 			break;
 
 			// our likely next state is paused or game ended
@@ -499,13 +511,13 @@ void Game::stateTransition() {
 			// add back our gameplay uis (order matters)
 		case (PAUSED):
 			uiSys->clearAllScreens();
-			uiSys->addScreen("fpsCounter");
+			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
 			uiSys->addScreen("boostMeOffABridge");
-			uiSys->addScreen("speeeeeed");
+			if(uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -524,9 +536,12 @@ void Game::stateTransition() {
 				uiSys->addScreen("placeCounter");
 				uiSys->addScreen("backwardsDisplay");
 				uiSys->addScreen("myHealthIsDeclining");
-				uiSys->addScreen("boostMeOffABridge");
 				uiSys->addScreen("countDown");
 			}
+			break;
+		case (TUTORIAL):
+			// idk
+			uiSys->clearAllScreens();
 			break;
 		}
 
@@ -550,7 +565,6 @@ void Game::stateTransition() {
 		case (PAUSED):
 			audio->pauseAll();
 			uiSys->clearAllScreens();
-			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen(
 				"pauseMenu"); // ensure this menu is pushed last, so that it
 							  // goes on top, else UI input wont work
@@ -564,6 +578,14 @@ void Game::stateTransition() {
 			uiSys->createStandingsScreen(
 				coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
+
+			break;
+
+		case (TUTORIAL):
+			// idk
+			uiSys->clearAllScreens();
+			uiSys->addScreen("controls");
+			uiSys->resetSelection();
 			break;
 		}
 
@@ -609,13 +631,19 @@ void Game::update() {
 		updatePhysics();
 
 		// race countdown (runs once per frame)
-		if (raceCountdown.activeTimer()) {
+		if (raceCountdown.activeTimer() || startRaceCountdown) {
 			// keep leaderboard updated even during countdown so positions are correct on the grid
 			lapSys->update(gameState);
 			leaderboardSys->update(gameState);
 			uiSys->updatePlaceCounter(player);
 
 			raceCountdown.update(frameTime);
+			// start the race countdown after the 1st tick from loading the model
+			// this makes the timer actually accurate
+			if(startRaceCountdown){
+				raceCountdown.start();
+				startRaceCountdown = false;
+			}
 			int secondsLeft = (int)std::ceil(
 				raceCountdown.remaining); // round up to nearest second for
 										  // displayed countdown
@@ -625,6 +653,12 @@ void Game::update() {
 				lastPrintedSecond = secondsLeft;
 				uiSys->updateCountdown(std::to_string(secondsLeft), frameTime);
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
+				// kinda jank, but i tihnk it works
+				if(secondsLeft>2.1){
+					auto sound = audio->createSound("ready");
+					sound->volume(2.0);
+					sound->start();
+				}
 			}
 			if (raceCountdown.completedTimer()) {
 				raceCountdown.resetTimer();
@@ -632,6 +666,10 @@ void Game::update() {
 				uiSys->goTimer.timerDuration = 2.0;
 				uiSys->goTimer.start();
 				std::cout << "GO!\n";
+				auto sound = audio->createSound("go");
+				sound->volume(5.0);
+				sound->start();
+
 			}
 		} else {
 			if (uiSys->goTimer.activeTimer()) {
@@ -718,6 +756,8 @@ void Game::updateFPS() {
 
 	uiSys->updateFPSCounter();
 	uiSys->dTime = frameTime;
+	uiSys->frameTime = frameTime;
+	controllerSys->frameTime = frameTime;
 }
 
 void Game::updateRendering() {
