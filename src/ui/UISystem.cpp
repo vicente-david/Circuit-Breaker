@@ -1161,12 +1161,12 @@ void UISystem::createSettingsMenu() {
 	// sliders
 	UIElement s1;
 	s1.hasBackgroundColor = false;
-	s1.anchors = glm::vec4(0.1, 0.425, 0.5-0.01, 0.45);
+	s1.anchors = glm::vec4(0.11625, 0.425, 0.5-0.01, 0.45);
 	s1.aspectRatio = 414.0f / 8.0f;
 
 	UIElement s2;
 	s2.hasBackgroundColor = false;
-	s2.anchors = glm::vec4(0.5+0.01, 0.425, 0.9, 0.45);
+	s2.anchors = glm::vec4(0.5+0.01, 0.425, 1.0-0.11625, 0.45);
 	s2.aspectRatio = 414.0f / 8.0f;
 
 	// --- BUTTONS ---
@@ -1176,15 +1176,25 @@ void UISystem::createSettingsMenu() {
 	b1.hasBackgroundColor = false;
 	b1.path = "assets/textures/ui/settings/settings_fps.png";
 	b1.textureID = GenerateTexture(b1.path.c_str(), false);
-	b1.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
+	b1.anchors = glm::vec4(0.11625, 0.625, 0.5-0.01, 1.0);
 	b1.aspectRatio = 416.0f / 40.0f;
+	b1.aRatioAlignY = TOP;
 
 	UIElement b2;
 	b2.hasBackgroundColor = false;
 	b2.path = "assets/textures/ui/settings/settings_speedometer.png";
 	b2.textureID = GenerateTexture(b2.path.c_str(), false);
-	b2.anchors = glm::vec4(0.5313, 0.3473, 0.64396, 0.3982);
-	b1.aspectRatio = 416.0f / 40.0f;
+	b2.anchors = glm::vec4(0.5+0.01, 0.625, 1.0 - 0.11625, 1.0);
+	b2.aspectRatio = 416.0f / 40.0f;
+	b2.aRatioAlignY = TOP;
+
+	UIElement b3;
+	b3.hasBackgroundColor = false;
+	b3.path = "assets/textures/ui/settings/settings_backtomenu.png";
+	b3.textureID = GenerateTexture(b3.path.c_str(), false);
+	b3.anchors = glm::vec4(0.093, 0.75, 1.0-0.093, 1.0);
+	b3.aspectRatio = 896.0 / 64.0f;
+	b3.aRatioAlignY = TOP;
 	
 
 	// --- ---
@@ -1196,6 +1206,10 @@ void UISystem::createSettingsMenu() {
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, b2); // button 1
 	coordinator->addComponent(e3, Animatable());
+
+	Entity e6 = coordinator->createEntity();
+	coordinator->addComponent(e6, b3); // button 1
+	coordinator->addComponent(e6, Animatable());
 
 	// slider
 
@@ -1220,6 +1234,7 @@ void UISystem::createSettingsMenu() {
 	// buttons
 	settingsMenu.UIElements.push_back(e2);
 	settingsMenu.UIElements.push_back(e3);
+	settingsMenu.UIElements.push_back(e6);
 	
 
 	nameToScreen["settingsMenu"] = settingsMenu;
