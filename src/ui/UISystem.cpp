@@ -66,8 +66,18 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.interpretFlag = 1.0f;
 			uiData.push_back(v1);
 		}
+
+		unsigned int tID = u1.textureID;
+		if (e == fpsButton && !showFPS) {
+			tID = fpsTextureID2;
+		}
+
+		if (e == speedButton && !showSpeedometer) {
+			tID = speedTextureID2;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBindTexture(GL_TEXTURE_2D, tID);
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, uiData.size());
 
@@ -144,8 +154,17 @@ void UISystem::updateButtonUIElement(Entity& e) {
 			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
 			uiAnimData.push_back(v1);
 		}
+		unsigned int tID = u1.textureID;
+		if (e == fpsButton && !showFPS) {
+			tID = fpsTextureID2;
+		} 
+
+		if (e == speedButton && !showSpeedometer) {
+			tID = speedTextureID2;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBindTexture(GL_TEXTURE_2D, tID);
 		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
 
@@ -1212,10 +1231,12 @@ void UISystem::createSettingsMenu() {
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, b1); // btn 2
 	coordinator->addComponent(e2, Animatable());
+	fpsButton = e2;
 
 	Entity e3 = coordinator->createEntity();
 	coordinator->addComponent(e3, b2); // btn 3
 	coordinator->addComponent(e3, Animatable());
+	speedButton = e3;
 
 	Entity e6 = coordinator->createEntity();
 	coordinator->addComponent(e6, b3); // btn 4
