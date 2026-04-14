@@ -17,8 +17,9 @@ enum textAlign {
 // enum to switch between shaders
 enum animatedType {
 	ANIM_BUTTON,
-	ANIM_HEALTHBAR,
-	ANIM_SPEEDOMETER
+	ANIM_BAR,
+	ANIM_SPEEDOMETER,
+	ANIM_SLIDER
 };
 
 // where to place the text in pixel space
@@ -110,8 +111,6 @@ struct Animatable {
 	bool isEnabled = true; // enabled by default
 
 	bool isSelected = false; // false by default
-
-	bool isHealth = false; // temu version of identifying if health bar 
 
 	animatedType type = ANIM_BUTTON;  // edfault is a button
 

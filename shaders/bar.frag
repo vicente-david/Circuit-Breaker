@@ -4,53 +4,227 @@ in vec3 resCol; // color of resource
 
 // because of uv, we can assume the entire rectangle is the bar
 
-out vec4 col;
+out vec4 color;
 
-uniform float resource1;
-uniform float maxResource;
+// global variables
+vec3 backgroundColor = vec3(0.0f);
+vec3 borderColor = vec3(36.0/255.0, 82.0/255.0, 59.0/255.0);
+vec3 healthColor = vec3(1.0f, 252.0/255.0, 89.0f/255.0);
+vec3 boostBGColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
+vec3 boostColor = vec3(106.0/255.0, 176.0/255.0, 198.0/255.0);
+vec3 boostingColor = vec3(227.0/255.0, 240.0/255.0, 244.0/255.0);
+vec3 lowHealthColor = vec3(150.0/255.0, 55.0/255.0, 55.0/255.0);
+float padding = 0.025;
+float sliverPercentage = 0.1;
 
 
-vec2 delta = vec2(2*fwidth(uv.x), 2*fwidth(uv.y)); // derivative of pixel
+// p is test point
+// wi is the half width of the base rectangle
+// he is the half height of the base rectangle
+// skew is the length of the slant 
+// (so from the base rectangle + skew) is the length of that edge
+// -skew slants in the opposite direction
 
-
-// checks if a fragment is inside the border of the rectangle
-bool insideBorder(vec2 p){
+// important about skew
+// it shifts the bottom edge -skew units in x
+// and it shifts top edge +skew units in x
+float paragramSDF( in vec2 p, float wi, float he, float sk )
+{
+    // slanted edge 
+    vec2  e  = vec2(sk,he);
     
-    if (p.x < delta.x || p.x > 1.0 - delta.x) return false; 
-    
-    if (p.y > 1.0 - delta.y || p.y < delta.y) return false;
-    
-    return true;
+    // length of slanted edge
+    float e2 = sk*sk + he*he;
 
+    // always have a positive point (remember we only care about distance)
+    p = (p.y<0.0)?-p:p;
+    // horizontal edge
+    vec2  w = p - e; w.x -= clamp(w.x,-wi,wi);
+    vec2  d = vec2(dot(w,w), -w.y);
+    // vertical edge
+    float s = p.x*e.y - p.y*e.x;
+    p = (s<0.0)?-p:p;
+    vec2  v = p - vec2(wi,0); v -= e*clamp(dot(v,e)/e2,-1.0,1.0);
+    d = min( d, vec2(dot(v,v), wi*he-abs(s)));
+    return sqrt(d.x)*sign(-d.y);
 }
 
-// checks if a fragment is part of the health part of the bar or not
-bool insideHealth(vec2 p){
-    float ratio = resource1/maxResource; // how much of the inside of the border should be filled
-    
-    // map the ratio to delta distance
-    // left edge is delta
-    // right edge is 1-delta
-    // and we have a ratio, we'll just linearly interpolate here
-    // start at left edge (delta) + whatever the ratio is in between right edge (1-delta)
-    float fillHealth = (delta.x) + (1-delta.x)*ratio;
 
-    return p.x <= fillHealth;
+
+float borderPara(vec2 uvOg, vec3 borderParams){
+
+    float d = paragramSDF(uvOg, borderParams.x, borderParams.y, borderParams.z);
+    float w = fwidth(d);
+    float alpha = smoothstep(w,-w,d);
+    
+    return alpha;
 }
+
+// health is shifted half over from origin, so center is width of border/2 shifted left
+float healthPara(vec2 uvOg, vec3 borderParams, vec3 healthParams){
+
+    vec2 c = vec2(-borderParams.x+healthParams.x, 0.0); //same y axis
+    
+    vec2 UV = vec2(uvOg.x - c.x, uvOg.y - c.y); // translate the test point into local space
+
+    float paddedWidth = healthParams.x-padding;
+    float paddedHeight = healthParams.y-2.5*padding; // lol kinda works
+
+    // we want the skew to remain the same
+    // but because we changed our height, the skew is no longer what we had originally
+    // old skew/old height = new skew/new height   (this is basically the property of similar triangles)
+    // solve for new skew   old skew * new height/oldHeight
+    float paddedSkew = (healthParams.z * (paddedHeight)/healthParams.y); 
+
+    
+    float d = paragramSDF(UV, paddedWidth, paddedHeight, paddedSkew);
+    float w = fwidth(d);
+    float alpha = smoothstep(w,-w,d);
+    
+    return alpha;
+}
+
+float boostPara(vec2 uvOg, vec3 borderParams, vec3 boostParams, float bW, float bRatio){
+    vec2 c = vec2(borderParams.x-boostParams.x, 0.0); 
+    // 0 y means vertically centered
+    //half down and half to the right
+    
+    vec2 UV = vec2(uvOg.x - c.x, uvOg.y - c.y); // translate the test point into local space
+
+    float paddedWidth = boostParams.x-padding;
+    float paddedHeight = boostParams.y-padding;
+
+    // we want the skew to remain the same
+    // but because we changed our height, the skew is no longer what we had originally
+    // old skew/old height = new skew/new height   (this is basically the property of similar triangles)
+    // solve for new skew   old skew * new height/oldHeight
+    float paddedSkew = (boostParams.z * (boostParams.y-padding)/boostParams.y); 
+    
+
+
+    float d = paragramSDF(UV, paddedWidth, paddedHeight, paddedSkew);
+    float w = fwidth(d);
+    float alpha = smoothstep(w,-w,d);
+    
+    //I MADE AN OOPSIE and did this for health instead of boost (but it applies to boost)
+    
+    // health ratio from 0 to 1
+    // if 1, then all of para gram (full width)
+    // if 0, then none of paragram (0 width)
+    
+    // but we only want to decrease from one side
+    
+    // so instead of shrinking the width, we limit the width from right side
+    
+   
+    // right edge depends on the y
+    // we want to map -height to 0, height to 1
+    // naturally the slant is a line, so we just need a linear interpolation
+    float normY = (UV.y+paddedHeight)/(2.0*paddedHeight); // y [0, 1] now
+    normY = clamp(normY, 0.0, 1.0); // [0,1] frfr
+    
+    // now we use the above to find which x value is allowable for this y value
+    // essentially we get f(y) (a function of y in terms of x)
+    // f(-height) should be just x - 0.5*slant
+    // f(height) should be just x + 0.5*slant
+    // this above is quite literally also a linear interpolation
+    // if y = 0 (i.e -height, then map x to just x)
+    // if y = 1 (i.e height, then map x to x+0.5*slant) the maximum possible x value
+    float rightX = mix(paddedWidth-paddedSkew, paddedWidth+paddedSkew, normY);
+    // same thing for left
+    float leftX = mix(-paddedWidth-paddedSkew, -paddedWidth+paddedSkew, normY);
+    
+    
+    // not a si
+    float healthX = mix(leftX, rightX, bRatio);
+   
+    float edgeChange = fwidth(UV.x); // how much x changes across the pixels
+
+    float edgeCutoff = smoothstep(healthX + edgeChange, healthX - edgeChange, UV.x); 
+    // if the change of X is in between our cutoff, then we went to smoothly blend between them
+    // returns 0 if it's "closer" to the unfilled region
+    // returns 1 if it's "closer" to the colored region
+
+    edgeCutoff = edgeCutoff*2.0; // map from [0,2]
+    edgeCutoff -= 1.0; // map from [-1,1]
+    
+    return alpha*edgeCutoff;
+}
+
+
+// uniforms
+uniform float currentBoost; // current usable boost
+uniform float maxBoost; // current maxBoost (aka availableBoost)
+uniform float currentHealth;
+uniform float maxHealth; // current maxHealth 
+uniform float isBoosting; // float bool if boosting
+// we know that maxBoost is tied to health so no need to worry about the ratio
 
 
 void main(){
     
-    if (!insideBorder(uv)){
-        col = vec4(vec3(0.0f), 1.0f);
-        return;
+    vec2 UV = 2.0*uv - vec2(1.0, 1.0);
+
+    vec3 col = backgroundColor;
+    float hRatio = currentHealth/maxHealth;
+    float bRatio = (maxBoost >= 1e-6 && currentBoost >= 1e-6) ? currentBoost/maxBoost : 0.0;
+
+    // clamp hRatio to 0,1
+    hRatio = clamp(hRatio, 0.0, 1.0);
+    // clamp bRatio to 0,1
+    bRatio = clamp(bRatio, 0.0, 1.0);
+    
+    // outermost parallelogram parameters
+    vec3 borderParams = vec3(1.45/2.0, 0.8, 0.1); // centered at 0,0
+    
+    // health initial width
+    float hW = hRatio; 
+    hW = (currentHealth >= 1.0 ) ? clamp(hW, sliverPercentage, 1.0) : 0.0; // always show a sliver of health (unless you have 0 health)
+    // boost initial width
+    float bW = 1.0-hW;
+
+    
+    // healthbar parameters roughly hW times the width of the border
+    vec3 healthParams = vec3(
+    borderParams.x*hW,
+    borderParams.y/1.0, 
+    borderParams.z/1.0);
+    // centered at approximately -borderWidth/2
+    // parameters of the boost bar 
+    vec3 boostParams = vec3(
+    borderParams.x*bW, 
+    borderParams.y/1.30, 
+    borderParams.z/1.30); // centered at approximately borderWidth/2
+    // we scaled the height, this affects the slant, so we scale the slant as well
+    // 1.25 means 80%  or well 0.8^-1
+
+
+    
+    float borderAlpha = borderPara(UV, borderParams);
+    float healthAlpha = healthPara(UV, borderParams, healthParams);
+
+    float boostAlpha;
+
+    if (hRatio != 0.0) boostAlpha = boostPara(UV, borderParams, boostParams, bW, bRatio);
+
+    else boostAlpha = boostPara(UV, borderParams, boostParams, bW, 0.0); // visual glitch fix
+
+    float changeThreshold = smoothstep(0.2, 0.8, hRatio); // between 0.2 health and 0.8 health we gradient
+    vec3 hColor = mix(lowHealthColor, healthColor, changeThreshold); // 0.2 health it stays red, and 0.8 health it stays og health color
+    
+    col = mix(backgroundColor, borderColor, borderAlpha);
+    col = mix(col, hColor, healthAlpha);
+    
+    if (boostAlpha < 0.0){
+        col = mix(col, boostBGColor, -boostAlpha);
+    } else{
+        col = mix(col, (isBoosting >= 1.0) ? boostingColor : boostColor, boostAlpha);
     }
+    
+    float bgAlpha = max(borderAlpha, healthAlpha);
+    bgAlpha = max(bgAlpha, boostAlpha);
+    
 
-    if (!insideHealth(uv)){
-        col = vec4(vec3(0.5f), 1.0f);
-    } else {
-        col = vec4(resCol, 1.0f);
-    }
-
-
+    // Output to screen
+    color = vec4(col, bgAlpha);
 }
