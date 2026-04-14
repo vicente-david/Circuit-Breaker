@@ -41,6 +41,14 @@ void AIControllerSys::update(GameState& game) {
 
 		// check progress of the spark
 		ai.checkProgTimer.update(*game.frameTime);
+
+		if (ai.recoverClock.activeTimer()) ai.recoverClock.update(*game.frameTime);
+		if (ai.recoverClock.completedTimer()) {
+			ai.recoverAttempt = false;
+			spark.inReverse = false;
+			controls.throttle = 1.f;
+		}
+
 		if (ai.checkProgTimer.completedTimer() && !spark.isDead && spark.ghostTimer <= 1e-4) {
 			if (ai.currentPosIdx == ai.logIdx) {
 				// no significant lap progress made since last check
@@ -53,7 +61,7 @@ void AIControllerSys::update(GameState& game) {
 					dbug::log("AI_RECOVER", 0, "[%s]: attempt recover", spark.mVehicleName.c_str());
 					ai.checkProgTimer.start(2.0);
 					ai.recoverClock.start(1.0);
-					ai.logIdx = ai.currentPosIdx;
+					
 				}
 				else {
 					// recovery attempt failed, respawn
@@ -67,7 +75,7 @@ void AIControllerSys::update(GameState& game) {
 
 			}
 			else {
-				ai.recoverAttempt = false;
+				//ai.recoverAttempt = false;
 				ai.recoverDir = NONE;
 				spark.inReverse = false;
 				ai.checkProgTimer.start(2.0); //restart regular timer
@@ -75,11 +83,7 @@ void AIControllerSys::update(GameState& game) {
 			ai.logIdx = ai.currentPosIdx;
 			
 		}
-		if (ai.recoverClock.activeTimer()) ai.recoverClock.update(*game.frameTime);
-		if (ai.recoverClock.completedTimer()) {
-			ai.recoverAttempt = false;
-			spark.inReverse = false;
-		}
+		
 
 		// If active, update attack cooldown timer
 		if (ai.attackCooldown.activeTimer()) {
