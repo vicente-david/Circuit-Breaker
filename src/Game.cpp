@@ -5,6 +5,7 @@
 #include "ai/AIStateComponent.h"
 #include "physics/CollisionData.h"
 #include <cmath>
+#include <cstdio>
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
@@ -87,7 +88,9 @@ void Game::initializeRace() {
 	// initializeFinishLine();
 	renderer->renderPasses.push_back(
 		&RenderingSystem::renderShadows); // start rendering it lol
-	raceCountdown.start();
+	startRaceCountdown = true;
+	// raceCountdown.start();
+
 	lastPrintedSecond = -1;
 	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state 
 }
@@ -612,8 +615,17 @@ void Game::update() {
 		updatePhysics();
 
 		// race countdown (runs once per frame)
-		if (raceCountdown.activeTimer()) {
+		if (raceCountdown.activeTimer() || startRaceCountdown) {
 			raceCountdown.update(frameTime);
+			// start the race countdown after the 1st tick from loading the model
+			// this makes the timer actually accurate
+			if(startRaceCountdown){
+				raceCountdown.start();
+				auto sound = audio->createSound("ready");
+				sound->volume(2.0);
+				sound->start();
+				startRaceCountdown = false;
+			}
 			int secondsLeft = (int)std::ceil(
 				raceCountdown.remaining); // round up to nearest second for
 										  // displayed countdown
@@ -630,6 +642,10 @@ void Game::update() {
 				uiSys->goTimer.timerDuration = 2.0;
 				uiSys->goTimer.start();
 				std::cout << "GO!\n";
+				auto sound = audio->createSound("go");
+				sound->volume(5.0);
+				sound->start();
+
 			}
 		} else {
 			if (uiSys->goTimer.activeTimer()) {
