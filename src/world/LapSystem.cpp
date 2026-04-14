@@ -347,10 +347,10 @@ void LapSystem::determineBackwards(LapCounter& lapProg, Transform& eTransform, G
 	float orientation = glm::dot(nextSeg, eTransform.forwardD);
 
 	
-	if (playerDelta < 0.0 && orientation < 0.0f) {
+	if (playerDelta < 0.0 && orientation < -3.f) {
 		game.playerBackwards = true;
 	}
-	else if (orientation >= 0.0f){
+	else if (orientation >= -3.f){
 		game.playerBackwards = false;
 	}
 }
