@@ -1161,12 +1161,12 @@ void UISystem::createSettingsMenu() {
 	// sliders
 	UIElement s1;
 	s1.hasBackgroundColor = false;
-	s1.anchors = glm::vec4(0.1, 0.3, 0.5, 0.35);
+	s1.anchors = glm::vec4(0.1, 0.425, 0.5-0.01, 0.45);
 	s1.aspectRatio = 414.0f / 8.0f;
 
 	UIElement s2;
 	s2.hasBackgroundColor = false;
-	s2.anchors = glm::vec4(0.5, 0.3, 0.9, 0.35);
+	s2.anchors = glm::vec4(0.5+0.01, 0.425, 0.9, 0.45);
 	s2.aspectRatio = 414.0f / 8.0f;
 
 	// --- BUTTONS ---

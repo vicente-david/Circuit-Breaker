@@ -32,23 +32,32 @@ void main(){
     
     vec2 UV = 2.0*uv - vec2(1.0, 1.0);
     
-    vec3 col = (isHighlighted >= 1.0) ? mix(borderColor1, borderColor2, 0.2) : borderColor1;
+    vec3 col = borderColor1;
 
     float volRatio = currentVol/maxVol;
 
-    float d = boxSDF(UV, vec2(0.9, 0.9));
-    float w = fwidth(d);
-    float alpha = smoothstep(-w, w, d); 
+    float borderD = boxSDF(UV, vec2(1.0, 1.0));
+    float borderW = fwidth(borderD);
+    float borderAlpha = smoothstep(borderW, -borderW, borderD);
+
+    float barD = boxSDF(UV, vec2(1.0-2.0*fwidth(UV.x), 1.0-2.0*fwidth(UV.y)));
+    float barW = fwidth(barD);
+    float barAlpha = smoothstep(-barW, barW, barD); 
 
 
-    float normX = UV.x*0.5 + 0.5;
+    float normX = uv.x;
     float xChange = fwidth(normX);
     float cutoff = smoothstep(volRatio - xChange, volRatio + xChange, normX);
     
     vec3 insideColor = mix(selectedColor, unfilled, cutoff);
 
-    col = mix(col, insideColor, 1.0-alpha);
+    col = mix(col, insideColor, 1.0-barAlpha);
+
+    float alpha = max(0.0, borderAlpha);
+    alpha = max(alpha, 1.0-barAlpha);
+
+    col = (isHighlighted >= 1.0) ? mix(col, borderColor2, 0.2) : col;
 
     // Output to screen
-    color = vec4(col, 1.0);
+    color = vec4(col, alpha);
 }
