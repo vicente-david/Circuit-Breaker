@@ -150,6 +150,8 @@ void main(){
 
     color = mix(color, vec3(1.0, 1.0, 0.0), pointAlpha); // mix between (black or white or gray) with yellow
 
+    bgAlpha *= 0.9;
+
     col = vec4(color, max(bgAlpha, pointAlpha)); // take the max of alpha or pAlpha
     // so if alpha is 0 but pAlpha is higher, then it's likely yellow or somethin
 
