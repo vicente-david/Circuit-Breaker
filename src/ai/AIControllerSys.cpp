@@ -129,7 +129,7 @@ void AIControllerSys::update(GameState& game) {
 			maintainState->run(ctx, stateP);
 		}
 		else { // Not in first and not low health
-			ctx.healthBoostMin = 85.f;
+			ctx.healthBoostMin = 60.f;
 			overtakeState->run(ctx, stateP);
 		}
 

@@ -27,6 +27,7 @@ int main() {
 	dbug::logIgnore("REND");
 	dbug::logIgnore("LAP");
 	dbug::logIgnore("AIPATH");
+	dbug::logIgnore("AI_RECOVER");
 	dbug::loggerInit();
 	
 	Game game = Game();

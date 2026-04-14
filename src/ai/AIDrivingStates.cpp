@@ -399,10 +399,12 @@ void AIHelpers::calcSteering(AIController& ai, SparkControls& controls, Transfor
 	
 	if (ai.attackCooldown.activeTimer() && ai.attackCooldown.timerDuration > 3.0) {
 		// it's the start of the race
-		if (ai.attackCooldown.remaining > 3.0) {
+		if (ai.attackCooldown.remaining > 4.0) {
 			controls.steering = 0.0f;
+			std::cout << "no steer/atk" << std::endl;
 			return;
 		}
+		std::cout << "no atk" << std::endl;
 	}
 	
 	glm::vec3 vectorToTarget = targetPos - transform.pos; // vector from the spark to target location

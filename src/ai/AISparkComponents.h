@@ -35,7 +35,7 @@ struct AIController {
 
 	PathID routeID = pFAST;
 	float curveDriftThresh = 0.10f; // minimum angle of turn for spark to drift
-	float curveBrakeThresh = 0.50f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
+	float curveBrakeThresh = 0.60f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
 	float maxTargetSpeed = 50.0f; // Max speed for target speed calculated based on angle of turn (when angle of turn is above threshold)
 	float curveBoostThresh = 0.05f; // max angle for ai to consider boosting
 	float steeringSharpness = 4.0f; // how aggressively the AI turns. 1.0 = 90 degrees. higher = 'snappier' turns
