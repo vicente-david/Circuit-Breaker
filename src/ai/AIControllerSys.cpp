@@ -59,6 +59,7 @@ void AIControllerSys::update(GameState& game) {
 					if (ai.recoverClock.completedTimer()) {
 						// if the timer just completed, exit recovery state
 						ai.recoverAttempt = false;
+						spark.inReverse = false;
 						ai.checkProgTimer.start(3.0); // reset the progress timer
 
 					}
@@ -80,6 +81,8 @@ void AIControllerSys::update(GameState& game) {
 				//ai.recoverAttempt = false;
 				ai.recoverDir = NONE;
 				spark.inReverse = false;
+				controls.brake = 0.0;
+				controls.throttle = 1.0f;
 				ai.checkProgTimer.start(3.0); //restart regular timer
 				ai.recoverClock.start(1.0);
 			}
