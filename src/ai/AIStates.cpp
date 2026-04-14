@@ -198,6 +198,7 @@ void RecoverState::run(AIDriveContext& ctx, AIDriveStateP& state) {
 		c.throttle = 0.5f;
 		AIHelpers::calcSteering(ctx.ai, c, ctx.transform, ctx.spark, ctx.ai.route.at(ctx.ai.targetIdx));
 	}
+	ctx.ai.recoverAttempt = false;
 
 
 

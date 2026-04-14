@@ -295,7 +295,7 @@ void Game::initializeAISpark(std::vector<TrackCurve> &trackPaths,
 	coordinator->addComponent(testSpark2, Leaderboard());
 
 	// use the atkCooldown timer to help 'randomize' behaviour when the race starts
-	double rt =  6.0 + (static_cast<double>(rand()) / RAND_MAX) * (8.0 - 6.0);
+	double rt =  7.0 + (static_cast<double>(rand()) / RAND_MAX) * (8.0 - 6.0);
 	Clock aiclock{ rt, rt };
 	coordinator->addComponent(
 		testSpark2,

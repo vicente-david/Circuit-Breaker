@@ -171,7 +171,6 @@ void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 
 			pushDir.x *= 7.f;
 			pushDir.z *= 7.f;
 			contact.setTargetVelocity(i, pushDir);
-			//contact.setMaxImpulse(i, 5.f);
 		}
 		
     }
@@ -185,8 +184,12 @@ void ModifiedCallbacks::onContactModify(PxContactModifyPair* const pairs, PxU32 
 			pushDir.x *= 7.f;
 			pushDir.z *= 7.f;
 			contact.setTargetVelocity(i, pushDir);
-			//contact.setMaxImpulse(i, 5.f);
 		}
     }
+
+	else if (d1->type == SPARK && d2->type == SPARK) {
+		PxContactSet& contact = pairs->contacts;
+		contact.setInvInertiaScale1(0.f);
+	}
 
 }

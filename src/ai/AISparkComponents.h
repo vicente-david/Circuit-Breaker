@@ -52,7 +52,7 @@ struct AIController {
 	
 	bool recoverAttempt = false; // track if a stuck ai has made an attempt to recover yet
 	Direction recoverDir = NONE; // each recovery attempt has a recovery direction: FWD, BACK, or NONE if not found yet
-	Clock checkProgTimer{2.0, 2.0}; // counts while ai is not moving
+	Clock checkProgTimer{3.0, 3.0}; // counts while ai is not moving
 	Clock recoverClock{ 1.0, 1.0 }; // amount of time to stay in recover state
 	
 };
