@@ -88,7 +88,10 @@ void Game::initializeRace() {
 		&RenderingSystem::renderShadows); // start rendering it lol
 	raceCountdown.start();
 	lastPrintedSecond = -1;
-	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state 
+	uiSys->updateCountdown("", 0); // this line "resets" the countdown back to initial state
+
+	// reset lap/place, case when game is restarted. this ensures UI stays up-to-date and doesnt show lap/place from previous race
+	uiSys->updateLapCounter(1);
 }
 
 void Game::initializeTrack() {
@@ -234,19 +237,19 @@ void Game::initializeTrack() {
 	initializePlayerSpark(trackPaths,
 						  pathStartPt + glm::vec3(-4.0f, 1.0f, -18.0f));
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f),
-					  "P2");
+					  "TAM");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f),
-					  "P3");
+					  "Yellow Eagle");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -9.0f),
-					  "P4");
+					  "Qbe");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 1.0f, -12.0f),
-					  "P5");
+					  "Perro");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -9.0f),
-					  "P6");
+					  "LateNyte");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f),
-					  "P7");
+					  "WorldEnder967");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f),
-					  "P8");
+					  "Sam");
 
 	// Start countdown
 
@@ -258,7 +261,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 								 glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "PLAYER");
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "You");
 	raceEntities.push_back(sparkEntity);
 	coordinator->addComponent(sparkEntity, HumanController{0});
 	coordinator->addComponent(sparkEntity, CameraComp());
@@ -386,7 +389,10 @@ void Game::initializeUI() {
 
 void Game::initializeParticles() {
 	particleSys->init();
-	particleSys->proj = &renderer->projection;
+	particleSys->SCR_WIDTH = &renderer->SCR_WIDTH;
+	particleSys->SCR_HEIGHT = &renderer->SCR_HEIGHT;
+	particleSys->nearPlane = &renderer->nearPlane;
+	particleSys->farPlane = &renderer->farPlane;
 
 	pHelper->connectSys(particleSys); // connect the particle system to the helper (gives a shared pointer to the helper)
 	sparkSys->pHelper = pHelper; // give a pointer to the helper to systems that want to communicate with the particle system
@@ -432,6 +438,7 @@ void Game::cleanupGame() {
 			SparkData &sData = coordinator->getComponent<SparkData>(e);
 			if (sData.rBody)
 				physics->gScene->removeActor(*sData.rBody);
+			sData.destroy();
 		}
 		coordinator->destroyEntity(e);
 	}
@@ -448,10 +455,15 @@ void Game::cleanupGame() {
 			physics->gScene->removeActor(*actor);
 	}
 
+	gameState.physics->callbacks->resetAffectedSparks();
 	renderer->renderPasses.clear();
 	uiSys->go = true; // re-initialize countdown UI
 	dbugPanel::clearSparkData(); // WONT BE NEEDED WITH UI IMPLEMENTATION I ASSUME
 	gameState.resetGameState();
+	leaderboardSys->reset();
+
+	// stop all active sounds so they don't overlap into the next race
+	audio->stopAll();
 }
 
 void Game::stateTransition() {
@@ -494,6 +506,8 @@ void Game::stateTransition() {
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
+			uiSys->addScreen("boostMeOffABridge");
+			if(uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -525,7 +539,7 @@ void Game::stateTransition() {
 		// incoming transition
 		// entry
 		switch (gameState.nextState) {
-			// HOW DID WE GET HERE, this shouldn't run
+			// likely paused then quit to menu
 		case (MAINMENU):
 			cleanupGame();
 			uiSys->clearAllScreens();
@@ -535,10 +549,11 @@ void Game::stateTransition() {
 
 			// we are resuming gameplay
 		case (GAMEPLAY):
-			// uiSys->addScreen("racingHUD");
+			audio->resumeAll();
 			break;
 			// we will be in a pause menu
 		case (PAUSED):
+			audio->pauseAll();
 			uiSys->clearAllScreens();
 			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen(
@@ -549,6 +564,7 @@ void Game::stateTransition() {
 
 			// someone has finished the race
 		case (END):
+			audio->pauseAll();
 			uiSys->clearAllScreens();
 			uiSys->createStandingsScreen(
 				coordinator->getComponent<Leaderboard>(player));
@@ -606,6 +622,11 @@ void Game::update() {
 
 		// race countdown (runs once per frame)
 		if (raceCountdown.activeTimer()) {
+			// keep leaderboard updated even during countdown so positions are correct on the grid
+			lapSys->update(gameState);
+			leaderboardSys->update(gameState);
+			uiSys->updatePlaceCounter(player);
+
 			raceCountdown.update(frameTime);
 			int secondsLeft = (int)std::ceil(
 				raceCountdown.remaining); // round up to nearest second for
@@ -718,7 +739,7 @@ void Game::updateRendering() {
 	
 	// update UI
 	uiSys->update();
-	particleSys->update(gameState, dt);
+	particleSys->update(gameState, frameTime);
 
 	glfwPollEvents();
 	glfwSwapBuffers(renderer->window);

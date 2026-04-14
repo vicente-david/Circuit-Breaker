@@ -7,6 +7,8 @@
 
 #include <memory>
 #include <functional>
+#include <vector>
+#include <string>
 
 class UISystem; // forward declaration (UISystem.h includes GameState.h, so we can't include it here)
 
@@ -49,6 +51,9 @@ public:
 	*/
 
 	Entity winner = -1;
+
+	// finish order: names pushed in the order that players finished (i.e. finishOrder[0] = 1st place
+	std::vector<std::string> finishOrder;
 
 	// Flags
 	bool gameEnded = false;

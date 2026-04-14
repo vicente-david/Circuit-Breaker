@@ -1271,7 +1271,7 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 	
 
 	// --- POSITIONS FIELDS ---
-	for (int i = 0; i < lb.standings.size(); i++) {
+	for (int i = 0; i < lb.finalPositions.size(); i++) {
 		UIElement firstPlace;
 		firstPlace.hasBackgroundColor = false;
 		firstPlace.path = "assets/textures/ui/standings/standings_position.png";

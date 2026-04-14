@@ -11,25 +11,22 @@ GameState::GameState() {
 
 
 void GameState::endGame(Entity gameWinner) {
-	winner = gameWinner;		// assign the game winner
-								
-								// TODO: probably do some UI/game management stuff here to give endscreen, etc.
-	std::cout << "winner was found " << std::endl;
+	// Record the first finisher as the race winner
+	if (!gameEnded) {
+		winner = gameWinner;
+		gameEnded = true;
+		std::cout << "winner was found " << std::endl;
+	}
 
+	// Transition to END screen when the human player finishes
 	if (coordinator->getComponent<SparkData>(gameWinner).isHuman){
-		// win
 		nextState = END;
 	}
-	else {
-		// lose
-	}
-
-
 }
 
 
 void GameState::resetGameState() {
 	winner = -1;			// reset winner
 	gameEnded = false;			// reset game ended to false
-
+	finishOrder.clear();		// clear finish order for next race
 }

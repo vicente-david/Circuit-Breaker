@@ -46,7 +46,7 @@ void ParticleEmitter::init() {
 /*
 * Update particles in this system
 */
-void ParticleEmitter::update(const double dt, glm::vec3 cameraPos) {
+void ParticleEmitter::update(const double dt, const float sizeFactor, glm::vec3 cameraPos) {
 	int particleCount = 0;
 
 	if (particles.empty()) {
@@ -63,7 +63,8 @@ void ParticleEmitter::update(const double dt, glm::vec3 cameraPos) {
 
 			// update particle position based on collision 'direction'
 			p.position += p.dir * ((float)dt);
-			p.size *= 0.94f;
+			p.size -= sizeFactor*dt;
+			p.size = std::fmax(0, p.size);
 			p.cameraDist = glm::length(p.position - cameraPos);
 
 			// fill GPU buffer
