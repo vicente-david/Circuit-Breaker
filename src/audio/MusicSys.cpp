@@ -4,6 +4,7 @@
 
 void MusicSys::init(GameState& game){
 	auto intro = game.audio->createSound("titleIntro", false);
+	intro->volume(2.0);
 	auto loop = game.audio->createSound("title", false);
 	music = Music(intro, loop);
 	music.start();

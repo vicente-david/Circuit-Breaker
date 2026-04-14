@@ -51,6 +51,7 @@ void AudioEngine::loadSounds() {
 	sounds.emplace("ready", WavData("assets/sounds/ready.wav"));
 	sounds.emplace("go", WavData("assets/sounds/go.wav"));
 	sounds.emplace("finish", WavData("assets/sounds/finish.wav"));
+	sounds.emplace("finalLap", WavData("assets/sounds/finalLap.wav"));
 
 	sounds.emplace("titleIntro", WavData("assets/sounds/titleIntro.wav"));
 	sounds.emplace("title", WavData("assets/sounds/title.wav"));

@@ -622,9 +622,6 @@ void Game::update() {
 			// this makes the timer actually accurate
 			if(startRaceCountdown){
 				raceCountdown.start();
-				auto sound = audio->createSound("ready");
-				sound->volume(2.0);
-				sound->start();
 				startRaceCountdown = false;
 			}
 			int secondsLeft = (int)std::ceil(
@@ -636,6 +633,12 @@ void Game::update() {
 				lastPrintedSecond = secondsLeft;
 				uiSys->updateCountdown(std::to_string(secondsLeft), frameTime);
 				std::cout << "RACE START IN: " << secondsLeft << "\n";
+				// kinda jank, but i tihnk it works
+				if(secondsLeft>2.1){
+					auto sound = audio->createSound("ready");
+					sound->volume(2.0);
+					sound->start();
+				}
 			}
 			if (raceCountdown.completedTimer()) {
 				raceCountdown.resetTimer();
