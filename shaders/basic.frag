@@ -82,7 +82,7 @@ void main() {
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * lightCol;
 
-	float ambientStr = 0.6;
+	float ambientStr = 0.55;
 	vec3 ambient = ambientStr * lightCol;
 
 	vec4 objCol;
