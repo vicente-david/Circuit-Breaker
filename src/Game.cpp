@@ -256,7 +256,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 								 glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "PLAYER");
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "YOU");
 	raceEntities.push_back(sparkEntity);
 	coordinator->addComponent(sparkEntity, HumanController{0});
 	coordinator->addComponent(sparkEntity, CameraComp());
@@ -378,6 +378,7 @@ void Game::initializeUI() {
 	uiSys->playerBackwards = &gameState.playerBackwards;
 	uiSys->playerSpeed = &coordinator->getComponent<SparkData>(player).speed;
 	uiSys->masterCur = &AudioEngine::masterVol;
+	uiSys->musicCur = &gameState.musicVol;
 
 	uiSys->screenInitialization();
 
@@ -485,12 +486,14 @@ void Game::stateTransition() {
 		case (MAINMENU):
 			uiSys->popScreen();
 			initializeRace();
+			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("speeeeeed");
+			if (uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
+			audio->masterVol = gameState.masterVol;
 			break;
 
 			// our likely next state is paused or game ended
@@ -503,11 +506,13 @@ void Game::stateTransition() {
 			// add back our gameplay uis (order matters)
 		case (PAUSED):
 			uiSys->clearAllScreens();
-			uiSys->addScreen("fpsCounter");
+			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
+			uiSys->addScreen("boostMeOffABridge");
+			if(uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -555,7 +560,6 @@ void Game::stateTransition() {
 		case (PAUSED):
 			audio->pauseAll();
 			uiSys->clearAllScreens();
-			uiSys->addScreen("fpsCounter");
 			uiSys->addScreen(
 				"pauseMenu"); // ensure this menu is pushed last, so that it
 							  // goes on top, else UI input wont work
@@ -748,6 +752,7 @@ void Game::updateFPS() {
 	uiSys->updateFPSCounter();
 	uiSys->dTime = frameTime;
 	uiSys->frameTime = frameTime;
+	controllerSys->frameTime = frameTime;
 }
 
 void Game::updateRendering() {

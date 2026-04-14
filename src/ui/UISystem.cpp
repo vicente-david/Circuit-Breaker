@@ -66,8 +66,18 @@ void UISystem::updateUIElement(Entity& e) {
 			v1.interpretFlag = 1.0f;
 			uiData.push_back(v1);
 		}
+
+		unsigned int tID = u1.textureID;
+		if (e == fpsButton && !showFPS) {
+			tID = fpsTextureID2;
+		}
+
+		if (e == speedButton && !showSpeedometer) {
+			tID = speedTextureID2;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBindTexture(GL_TEXTURE_2D, tID);
 		glBufferData(GL_ARRAY_BUFFER, uiData.size() * 7 * sizeof(float), uiData.data(), GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, uiData.size());
 
@@ -144,8 +154,17 @@ void UISystem::updateButtonUIElement(Entity& e) {
 			v1.hLightColor = coordinator->getComponent<Animatable>(e).hLightColor;
 			uiAnimData.push_back(v1);
 		}
+		unsigned int tID = u1.textureID;
+		if (e == fpsButton && !showFPS) {
+			tID = fpsTextureID2;
+		} 
+
+		if (e == speedButton && !showSpeedometer) {
+			tID = speedTextureID2;
+		}
+
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, u1.textureID);
+		glBindTexture(GL_TEXTURE_2D, tID);
 		glBufferData(GL_ARRAY_BUFFER, uiAnimData.size() * 10 * sizeof(float), uiAnimData.data(), GL_DYNAMIC_DRAW);
 		glDrawArrays(GL_TRIANGLES, 0, uiAnimData.size());
 
@@ -292,7 +311,7 @@ void UISystem::updateSlider(Entity& e) {
 
 	// currently unused so bandaid fix
 
-	Animatable& a1 = coordinator->getComponent < Animatable>(e);
+	Animatable& a1 = coordinator->getComponent <Animatable>(e);
 
 	if (a1.isEnabled) {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &masterMax);
@@ -300,7 +319,7 @@ void UISystem::updateSlider(Entity& e) {
 	}
 	else {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &musicMax);
-		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, &musicCur);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, musicCur);
 	}
 	
 	if (a1.isSelected) {
@@ -1198,28 +1217,30 @@ void UISystem::createSettingsMenu() {
 	
 
 	// --- ---
-
-	Entity e2 = coordinator->createEntity();
-	coordinator->addComponent(e2, b1); // button 0
-	coordinator->addComponent(e2, Animatable());
-
-	Entity e3 = coordinator->createEntity();
-	coordinator->addComponent(e3, b2); // button 1
-	coordinator->addComponent(e3, Animatable());
-
-	Entity e6 = coordinator->createEntity();
-	coordinator->addComponent(e6, b3); // button 1
-	coordinator->addComponent(e6, Animatable());
-
-	// slider
+	// sliders
 
 	Entity e4 = coordinator->createEntity();
-	coordinator->addComponent(e4, s1); // button 2
-	coordinator->addComponent(e4, Animatable{true, false, ANIM_SLIDER});
+	coordinator->addComponent(e4, s1); // btn 0
+	coordinator->addComponent(e4, Animatable{ true, false, ANIM_SLIDER });
 
 	Entity e5 = coordinator->createEntity();
-	coordinator->addComponent(e5, s2); // button 3
-	coordinator->addComponent(e5, Animatable{false, false, ANIM_SLIDER });
+	coordinator->addComponent(e5, s2); // bnt 1
+	coordinator->addComponent(e5, Animatable{ false, false, ANIM_SLIDER });
+
+	// buttons
+	Entity e2 = coordinator->createEntity();
+	coordinator->addComponent(e2, b1); // btn 2
+	coordinator->addComponent(e2, Animatable());
+	fpsButton = e2;
+
+	Entity e3 = coordinator->createEntity();
+	coordinator->addComponent(e3, b2); // btn 3
+	coordinator->addComponent(e3, Animatable());
+	speedButton = e3;
+
+	Entity e6 = coordinator->createEntity();
+	coordinator->addComponent(e6, b3); // btn 4
+	coordinator->addComponent(e6, Animatable());
 
 
 
@@ -1378,7 +1399,7 @@ void UISystem::updateLapCounter(int lapCount) {
 void UISystem::createCountdown() {
 	UIElement counter1;
 	counter1.text = "";
-	counter1.textScale = 5.0f;
+	counter1.textScale = 2.5f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = CENTER;
@@ -1406,7 +1427,7 @@ void UISystem::updateCountdown(std::string second, float time) {
 void UISystem::createBackwardsDisplay() {
 	UIElement counter1;
 	counter1.text = "";
-	counter1.textScale = 3.0f;
+	counter1.textScale = 1.5f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = CENTER;

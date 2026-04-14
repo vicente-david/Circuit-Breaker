@@ -189,7 +189,7 @@ public:
 	float masterMax = 1.0;
 	float* masterCur;
 	float musicMax = 1.0;
-	float musicCur = 0.75;
+	float* musicCur;
 	float isHighBool = 0.0;
 
 	// speedometer (we'll reuse the resVAO and VBO, and resData)
@@ -228,6 +228,9 @@ public:
 
 	// --- Button Selection End ---
 
+	bool showFPS = true;
+	bool showSpeedometer = true;
+
 private:
 
 	int prevSCR_WIDTH = 0;
@@ -236,6 +239,16 @@ private:
 	std::vector<UIScreen> screenStack; // pretend this is a stack
 	std::vector<UIVertex> uiData;
 	std::vector<UIAnimVertex> uiAnimData;
+
+	// F tier fix for swapping between two button textures
+	std::string speedPath2 = "assets/textures/ui/settings/settings_hidespeedometer.png";
+	unsigned int speedTextureID2 = GenerateTexture(speedPath2.c_str(), false);
+
+	std::string fpsPath2 = "assets/textures/ui/settings/settings_hidefps.png";
+	unsigned int fpsTextureID2 = GenerateTexture(fpsPath2.c_str(), false);
+
+	Entity fpsButton;
+	Entity speedButton;
 
 	// we iterate forwards since last element gets drawn on top
 

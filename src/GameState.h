@@ -64,7 +64,7 @@ public:
 	int numPlayers = 1;
 	int numSparks = 8;
 	int numActivePlayers = 8;
-	int numLaps = 4;
+	int numLaps = 2;
 
 	double* frameTime;
 
@@ -82,4 +82,6 @@ public:
 	std::shared_ptr<PhysicsManager> physics;
 	std::shared_ptr<AudioEngine> audio;
 
+	float masterVol = 0.35f;
+	float musicVol = 1.0f;
 };

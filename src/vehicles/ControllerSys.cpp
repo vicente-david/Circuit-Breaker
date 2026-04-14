@@ -86,8 +86,57 @@ void ControllerSys::handleUINavigation(GameState& game) {
 				uiSys->selectedButton = 0; // wrap to top
 			}
 			uiSys->selectedEntities(); // tell the ui system to update what's currently selected
-			std::cout << "[UI] Selected button: " << uiSys->selectedButton
-				<< " on screen: " << uiSys->getTopScreenName() << std::endl;
+			std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
+		}
+	}
+
+	// --- handle left/right to change selections and adjust slider depending on screen ---
+	if (ui.navigateRight) {
+		ui.navigateRight = false;
+		int buttonCount = uiSys->getButtonCount();
+		if (buttonCount > 0) {
+			if (uiSys->getTopScreenName() == "settingsMenu") {
+				//audio
+				if (uiSys->selectedButton == 0) AudioEngine::masterVol += 0.1;
+				else if (uiSys->selectedButton == 1) game.musicVol += 0.1f;
+
+				// buttons
+				if (uiSys->selectedButton == 2) uiSys->selectedButton++;
+				else if (uiSys->selectedButton == 3) uiSys->selectedButton = 2;
+			}
+			else if (uiSys->getTopScreenName() == "standingsScreen") {
+				if (uiSys->selectedButton == 0)
+					uiSys->selectedButton = 1;
+				else if (uiSys->selectedButton == 1)
+					uiSys->selectedButton = 0; // wrap right to left
+				//std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
+			}
+			uiSys->selectedEntities();
+			//std::cout << "[UI] Master Level Up: " << AudioEngine::masterVol << "\n";
+		}
+	}
+	if (ui.navigateLeft) {
+		ui.navigateLeft = false;
+		int buttonCount = uiSys->getButtonCount();
+		if (buttonCount > 0) {
+			if (uiSys->getTopScreenName() == "settingsMenu") {
+				// audio
+				if (uiSys->selectedButton == 0) AudioEngine::masterVol -= 0.1;
+				else if (uiSys->selectedButton == 1) game.musicVol -= 0.1f;
+
+				// buttons
+				if (uiSys->selectedButton == 3) uiSys->selectedButton--;
+				else if (uiSys->selectedButton == 2) uiSys->selectedButton = 3;
+			}
+			else if (uiSys->getTopScreenName() == "standingsScreen") {
+				if (uiSys->selectedButton == 1)
+					uiSys->selectedButton = 0;
+				else if (uiSys->selectedButton == 0)
+					uiSys->selectedButton = 1; // wrap left to right
+				//std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
+			}
+			uiSys->selectedEntities();
+			//std::cout << "[UI] Master Level Down: " << AudioEngine::masterVol << "\n";
 		}
 	}
 
@@ -157,27 +206,23 @@ void ControllerSys::handleUINavigation(GameState& game) {
 			}
 		}
 		else if (topScreen == "settingsMenu") {
-			// Buttons: 0=easy, 1=medium, 2=hard, 3=decorations, 4=particles, 5=back
+			// Buttons: 0=master slider, 1=music slider, 2=fps toggle, 3=speedometer toggle, 4=back to menu
 			if (btn == 0) {
-				// function to set AI difficulty to easy
-				// TODO:
-				// will need to account for restarting the game if a player chooses to change difficulty
-				std::cout << "[UI] Difficulty: Easy" << std::endl;
+				std::cout << "[UI] Master Slider" << std::endl;
 			}
 			else if (btn == 1) {
-				std::cout << "[UI] Difficulty: Medium" << std::endl;
+				std::cout << "[UI] Music Slider" << std::endl;
 			}
 			else if (btn == 2) {
-				std::cout << "[UI] Difficulty: Hard" << std::endl;
+				std::cout << "[UI] Toggle FPS" << std::endl;
+				uiSys->showFPS = !uiSys->showFPS;
 			}
 			else if (btn == 3) {
-				std::cout << "[UI] Toggle track decorations" << std::endl;
+				std::cout << "[UI] Toggle Speedometer" << std::endl;
+				uiSys->showSpeedometer = !uiSys->showSpeedometer;
 			}
 			else if (btn == 4) {
-				std::cout << "[UI] Toggle VFX particles" << std::endl;
-			}
-			else if (btn == 5) {
-				std::cout << "[UI] Back to previous menu" << std::endl;
+				std::cout << "[UI] Back to main menu" << std::endl;
 				uiSys->popScreen();
 				uiSys->resetSelection();
 			}
