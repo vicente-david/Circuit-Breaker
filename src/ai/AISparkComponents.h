@@ -30,6 +30,9 @@ struct AIController {
 
 	std::vector<glm::vec3> route{}; // Current route plan for the ai
 	std::vector<float> angles{}; // Set of 'curvature' angles for each point in the route
+
+	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that 
+
 	PathID routeID = pFAST;
 	float curveDriftThresh = 0.10f; // minimum angle of turn for spark to drift
 	float curveBrakeThresh = 0.50f; // minimum angle of turn for spark to decrease speed. Allows spark to increase speed indefinitely on any path shallower than this.
@@ -51,7 +54,7 @@ struct AIController {
 	Direction recoverDir = NONE; // each recovery attempt has a recovery direction: FWD, BACK, or NONE if not found yet
 	Clock checkProgTimer{2.0, 2.0}; // counts while ai is not moving
 	Clock recoverClock{ 1.0, 1.0 }; // amount of time to stay in recover state
-	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that
+	
 };
 
 
