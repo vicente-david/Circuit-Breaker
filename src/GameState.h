@@ -64,11 +64,10 @@ public:
 	int numPlayers = 1;
 	int numSparks = 8;
 	int numActivePlayers = 8;
-	int numLaps = 2;
+	int numLaps = 4;
 
 	double* frameTime;
 
-	float musicVol = 1;
 
 	// temp UI
 	//RectUI activeUIRect; 

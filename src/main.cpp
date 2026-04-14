@@ -10,7 +10,7 @@
 #include <memory>
 #include "Game.h"
 
-int main() {
+int WinMain() {
 
 	// change to enable logging of different levels (0-> everything, 1->
 	// warnings, 3-> errors, -1-> things that get spamed every frame)
