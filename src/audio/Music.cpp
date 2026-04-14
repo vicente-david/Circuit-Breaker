@@ -15,13 +15,20 @@ Music::Music(std::shared_ptr<Sound> intro, std::shared_ptr<Sound> loop) {
 void Music::start() {
 	intro->start();
 }
-void Music::update(float dt){
-	if(intro->freed){
+void Music::update(float dt) {
+	if (intro->freed) {
 		loop->start();
 	}
 }
-void Music::stop(){
+void Music::volume(float vol) {
+	if (vol == currVol) {
+		return;
+	}
+	intro->volume(vol*introVol);
+	loop->volume(vol);
+	currVol = vol;
+}
+void Music::stop() {
 	intro->stop();
 	loop->stop();
 }
-

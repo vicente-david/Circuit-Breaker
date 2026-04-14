@@ -4,9 +4,10 @@
 
 void MusicSys::init(GameState& game){
 	auto intro = game.audio->createSound("titleIntro", false);
-	intro->volume(2.0);
 	auto loop = game.audio->createSound("title", false);
 	music = Music(intro, loop);
+	music.introVol = 2;
+	music.volume(1);
 	music.start();
 }
 void MusicSys::update(float dt, GameState &game) {
@@ -28,6 +29,7 @@ void MusicSys::update(float dt, GameState &game) {
 		}
 		lastState = game.currentState;
 	}
+	music.volume(game.musicVol);
 	music.update(dt);
 }
 void MusicSys::switchTrack(std::string introName, std::string loopName, GameState& game) {
