@@ -100,6 +100,8 @@ struct UIActions {
 	// UI navigation inputs (consumed each frame)
 	bool navigateUp = false;    // move selection up
 	bool navigateDown = false;  // move selection down
+	bool navigateLeft = false; // selections left
+	bool navigateRight = false; // selection right
 	bool confirm = false;       // confirm/activate selected button
 	bool goBack = false;        // go back to previous menu (when pressing backspace or B on controller)
 
@@ -133,11 +135,17 @@ private:
 	// previous frame controller button states for edge detection (menu navigation)
 	bool prevDpadUp = false;
 	bool prevDpadDown = false;
+	bool prevDpadRight = false;
+	bool prevDpadLeft = false;
+
 	bool prevButtonA = false;
 	bool prevButtonB = false;
 	bool prevButtonStart = false;
+
 	bool prevLeftStickUp = false;   // left stick pushed up past threshold
 	bool prevLeftStickDown = false; // left stick pushed down past threshold
+	bool prevLeftStickRight = false;
+	bool prevLeftStickLeft = false;
 
 	// necessary for glfw
 	static void keyMetaCallback(GLFWwindow* window, int key, int scancode, int action, int mods);

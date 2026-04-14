@@ -319,7 +319,7 @@ void UISystem::updateSlider(Entity& e) {
 	}
 	else {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &musicMax);
-		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, &musicCur);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, musicCur);
 	}
 	
 	if (a1.isSelected) {
@@ -1399,7 +1399,7 @@ void UISystem::updateLapCounter(int lapCount) {
 void UISystem::createCountdown() {
 	UIElement counter1;
 	counter1.text = "";
-	counter1.textScale = 5.0f;
+	counter1.textScale = 2.5f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = CENTER;
@@ -1427,7 +1427,7 @@ void UISystem::updateCountdown(std::string second, float time) {
 void UISystem::createBackwardsDisplay() {
 	UIElement counter1;
 	counter1.text = "";
-	counter1.textScale = 3.0f;
+	counter1.textScale = 1.5f;
 	// default anchors are whole screen (0,0,1,1)
 	counter1.textColor = glm::vec3(1.0f);
 	counter1.textAlignmentX = CENTER;

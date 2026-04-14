@@ -189,7 +189,7 @@ public:
 	float masterMax = 1.0;
 	float* masterCur;
 	float musicMax = 1.0;
-	float musicCur = 1.0;
+	float* musicCur;
 	float isHighBool = 0.0;
 
 	// speedometer (we'll reuse the resVAO and VBO, and resData)

@@ -117,6 +117,12 @@ class TestInput1 : public CallbackInterface {
 			if (key == GLFW_KEY_DOWN && action == GLFW_PRESS) {
 				uiActions->navigateDown = true;
 			}
+			if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+				uiActions->navigateRight = true;
+			}
+			if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+				uiActions->navigateLeft = true;
+			}
 			if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
 				uiActions->confirm = true;
 			}
@@ -216,6 +222,8 @@ UIActions InputSystem::getUIActions() {
 	UIActions currState = uiActions;
 	uiActions.navigateUp = false;
 	uiActions.navigateDown = false;
+	uiActions.navigateRight = false;
+	uiActions.navigateLeft = false;
 	uiActions.confirm = false;
 	uiActions.goBack = false;
 	return currState;
@@ -354,12 +362,16 @@ void InputSystem::updateGamepad() {
 	else
 		actions.reload = false;
 
-	// --- Controller Menu Navigation (edge-detected, only in menu states) ---
+	// --- Controller Menu Navigation only in UI ---
 	if (uiActions.menuControl != 1) { // not in gameplay
 		bool dpadUp = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
 		bool dpadDown = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
+		bool dpadRight = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_RIGHT];
+		bool dpadLeft = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
 		bool leftStickUp = (lefty < -0.5f);   // stick pushed up (GLFW Y axis is inverted)
 		bool leftStickDown = (lefty > 0.5f);   // stick pushed down
+		bool leftStickRight = (leftx > 0.5); // stick pushed right
+		bool leftStickLeft = (leftx < -0.5f); // stick pushed left
 
 		// navigate up: D-pad up or left stick up (edge: wasn't pressed last frame, pressed now)
 		if ((dpadUp && !prevDpadUp) || (leftStickUp && !prevLeftStickUp)) {
@@ -368,6 +380,14 @@ void InputSystem::updateGamepad() {
 		// navigate down: D-pad down or left stick down
 		if ((dpadDown && !prevDpadDown) || (leftStickDown && !prevLeftStickDown)) {
 			uiActions.navigateDown = true;
+		}
+		// navigate right: D-pad right or left stick right
+		if ((dpadRight && !prevDpadRight) || (leftStickRight && !prevLeftStickRight)) {
+			uiActions.navigateRight = true;
+		}
+		// navigate left: d-pad left or left stick left
+		if ((dpadLeft && !prevDpadLeft) || (leftStickLeft && !prevLeftStickLeft)) {
+			uiActions.navigateLeft = true;
 		}
 		// confirm: A button
 		if (button_A && !prevButtonA) {
@@ -380,8 +400,12 @@ void InputSystem::updateGamepad() {
 
 		prevDpadUp = dpadUp;
 		prevDpadDown = dpadDown;
+		prevDpadRight = dpadRight;
+		prevDpadLeft = dpadLeft;
 		prevLeftStickUp = leftStickUp;
 		prevLeftStickDown = leftStickDown;
+		prevLeftStickRight = leftStickRight;
+		prevLeftStickLeft = leftStickLeft;
 		prevButtonA = button_A;
 		prevButtonB = button_B;
 	}
