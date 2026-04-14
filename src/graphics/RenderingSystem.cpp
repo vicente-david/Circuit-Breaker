@@ -318,7 +318,7 @@ void RenderingSystem::renderScene(GameState& game, GLuint& shaderID) {
 				float phase = normT * 3.5f; // normalized time * number of cycles
 
 				float wave = 1.0f - fabsf(fmodf(phase, 1.0f) * 2.0f - 1.0f); // triangle wave
-				float mix = 0.6f * wave;
+				float mix = 0.8f * wave;
 
 				glUniform1f(mixAmtLoc, mix);
 				glUniform4f(mixColourLoc, 1.f, 1.f, 1.f, 0.2f);
