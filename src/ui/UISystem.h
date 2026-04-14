@@ -100,7 +100,7 @@ public:
 	void updateUIElement(Entity& e); // renders UI using stored colors
 	void updateAnimatedUIElement(Entity& e); // renders animated UI (will decide which shader to use for animated components)
 	void updateButtonUIElement(Entity& e); // uses the button highlight shader to render the button
-	void updateResBars(Entity& e, bool isHealth); 
+	void updateResBars(Entity& e); 
 	void updateSpeedometer(Entity& e);
 		
 	UIPositions calculateAnchorPositions(UIElement u1); // calculates the quad coordinates of a container
@@ -125,12 +125,13 @@ public:
 	// the return value will be the name of the string it maps the screen to
 	void createMainMenu(); // create the main menu and push it to the hash map
 	void createPauseMenu(); // create the pause menu and push it to hashmap
+	void createControlsMenu(); // create the settings menu and push it to hashmap
+	void createTutorialMenu(); // create the settings menu and push it to hashmap
 	void createSettingsMenu(); // create the settings menu and push it to hashmap
 	void createStandingsScreen(Leaderboard& lb); // create the standings menu and push it to hashmap (must be intialized separately)
 	void createRacingHUD(); // create the racing hud and push it to the hashmap
 
-	void createHealthBar();
-	void createBoostBar();
+	void createResourceBar();
 	void createSpeedometer();
 
 	// persistent ui elements (elements that change every frame)
@@ -186,6 +187,11 @@ public:
 
 	float currentAngle = 0.0;
 	float dTime;
+	float prevAngle = 0.0;
+	bool *isPlayerBoosting; // used for modifying the speedometer 
+	float isBoosting; // need this for passing to shader
+	float timeBoosting = 0.0;
+	float frameTime = 0.0; // time it takes for a frame to update
 
 	//
 	bool* playerBackwards;

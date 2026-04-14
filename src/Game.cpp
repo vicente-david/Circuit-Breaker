@@ -1,5 +1,6 @@
 #include "Game.h"
 #include "AllSystem.h"
+#include "GameState.h"
 #include "PxActor.h"
 #include "debugUtils/Panel.h"
 #include "ai/AIStateComponent.h"
@@ -268,7 +269,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 								 glm::vec3 pathStartPt) {
 	// create spark with new system
 	PxVec3 startLoc = PxVec3(pathStartPt.x, pathStartPt.y, pathStartPt.z);
-	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "You");
+	Entity sparkEntity = sparkSys->createSpark(gameState, startLoc, "PLAYER");
 	raceEntities.push_back(sparkEntity);
 	coordinator->addComponent(sparkEntity, HumanController{0});
 	coordinator->addComponent(sparkEntity, CameraComp());
@@ -286,6 +287,7 @@ void Game::initializePlayerSpark(std::vector<TrackCurve> &trackPaths,
 	uiSys->maxPlayerHealth = &sparkData.maxHealth;
 	uiSys->playerBoost = &sparkData.boost;
 	uiSys->maxPlayerBoost = &sparkData.maxBoost;
+	uiSys->isPlayerBoosting = &sparkData.isBoosting;
 }
 
 void Game::initializeAISpark(std::vector<TrackCurve> &trackPaths,
@@ -493,7 +495,6 @@ void Game::stateTransition() {
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("boostMeOffABridge");
 			uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
 			break;
@@ -513,7 +514,6 @@ void Game::stateTransition() {
 			uiSys->addScreen("placeCounter");
 			uiSys->addScreen("backwardsDisplay");
 			uiSys->addScreen("myHealthIsDeclining");
-			uiSys->addScreen("boostMeOffABridge");
 			// re add countdown if it's still active (case when we pause during countdown)
 			if (raceCountdown.activeTimer() || uiSys->go) {
 				uiSys->addScreen("countDown");
@@ -532,9 +532,12 @@ void Game::stateTransition() {
 				uiSys->addScreen("placeCounter");
 				uiSys->addScreen("backwardsDisplay");
 				uiSys->addScreen("myHealthIsDeclining");
-				uiSys->addScreen("boostMeOffABridge");
 				uiSys->addScreen("countDown");
 			}
+			break;
+		case (TUTORIAL):
+			// idk
+			uiSys->clearAllScreens();
 			break;
 		}
 
@@ -571,6 +574,13 @@ void Game::stateTransition() {
 				coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
 
+			break;
+
+		case (TUTORIAL):
+			// idk
+			uiSys->clearAllScreens();
+			uiSys->addScreen("controls");
+			uiSys->resetSelection();
 			break;
 		}
 
@@ -736,6 +746,7 @@ void Game::updateFPS() {
 
 	uiSys->updateFPSCounter();
 	uiSys->dTime = frameTime;
+	uiSys->frameTime = frameTime;
 }
 
 void Game::updateRendering() {
