@@ -17,4 +17,5 @@ class Transform {
 	glm::vec3 pos;
 	glm::quat rot;
 	glm::vec3 forwardD;
+	float oldTiltAngle = 0.f; // the only purpose of this is lerp the mesh render poses
 };
