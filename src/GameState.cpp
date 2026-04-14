@@ -21,6 +21,10 @@ void GameState::endGame(Entity gameWinner) {
 	// Transition to END screen when the human player finishes
 	if (coordinator->getComponent<SparkData>(gameWinner).isHuman){
 		nextState = END;
+		// finish sound effect
+		auto sound = audio->createSound("finish");
+		sound->volume(2.0);
+		sound->start();
 	}
 }
 

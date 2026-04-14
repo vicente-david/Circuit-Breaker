@@ -570,6 +570,7 @@ void Game::stateTransition() {
 			uiSys->createStandingsScreen(
 				coordinator->getComponent<Leaderboard>(player));
 			uiSys->addScreen("standingsScreen");
+
 			break;
 		}
 
