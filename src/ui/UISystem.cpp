@@ -852,13 +852,23 @@ void UISystem::createMainMenu() {
 	//menu1.textAlignmentX = CENTER;
 	//menu1.textAlignmentY = BOTTOM;
 
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(18.0f/255.0f, 28.0f/255.0f, 24.0f/255.0);
+	}
+
 	menu1.hasBackgroundColor = false;
 
 	menu1.path = "assets/textures/ui/mainMenu/startmenu_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+	menu1.aspectRatio = 1101.0 / 786.0;
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
 
 	// --- BUTTONS ---
 
@@ -871,12 +881,15 @@ void UISystem::createMainMenu() {
 	startGameButton.anchors = glm::vec4(0.3, 0.56298, 0.7, 0.6444);
 	startGameButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
 
+	startGameButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
+	
 	// exit button 
 	UIElement exitButton;
 	exitButton.hasBackgroundColor = false;
 	exitButton.path = "assets/textures/ui/mainMenu/startmenu_exitgame.png";
 	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
 	exitButton.anchors = glm::vec4(0.3, 0.8525, 0.7, 0.9325);
+	exitButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// settings button
 	UIElement settingsButton;
@@ -886,6 +899,7 @@ void UISystem::createMainMenu() {
 
 	settingsButton.anchors = glm::vec4(0.3, 0.66539, 0.7, 0.74682);
 	settingsButton.anchorOffsets = glm::vec4(0, -12, 0, -12);
+	settingsButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	UIElement tutButton;
 	tutButton.hasBackgroundColor = false;
@@ -893,6 +907,7 @@ void UISystem::createMainMenu() {
 	tutButton.textureID = GenerateTexture(tutButton.path.c_str(), false);
 
 	tutButton.anchors = glm::vec4(0.3, 0.7525, 0.7, 0.8325);
+	tutButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// --- ---
 
@@ -913,9 +928,10 @@ void UISystem::createMainMenu() {
 	coordinator->addComponent(e4, Animatable());
 
 	UIScreen mainMenu;
+	mainMenu.UIElements.push_back(bgMenuColor);
 	mainMenu.name = "mainMenu";
 	mainMenu.UIElements.push_back(e1);
-
+	
 	mainMenu.UIElements.push_back(e2);
 	mainMenu.UIElements.push_back(e3);
 	mainMenu.UIElements.push_back(e5);
