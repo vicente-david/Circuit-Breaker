@@ -1020,15 +1020,38 @@ void UISystem::createPauseMenu() {
 	nameToScreen["pauseMenu"] = pauseMenu;
 }
 void UISystem::createControlsMenu() {
+
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(19.0f / 255.0f, 38.0f / 255.0f, 30.0f / 255.0);
+	}
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
+
+	UIElement transitionText;
+	transitionText.text = "a NEXT";
+	transitionText.textAlignmentX = RIGHT;
+	transitionText.textAlignmentY = BOTTOM;
+	transitionText.textScale = 1.0f;
+	transitionText.textColor = glm::vec3(1.0f);
+	transitionText.hasBackgroundColor = false;
+	transitionText.aspectRatio = 3840.0 / 2160.0;
+	transitionText.anchors = glm::vec4(0.90, 0.90, 1.0, 1.0);
+	transitionText.anchorOffsets = glm::vec4(0.0, 0.0, -5.0, 0.0);
+
 	UIElement tutMenu;
 	tutMenu.path = "assets/textures/ui/tutorial/tutorial.png";
 	tutMenu.hasBackgroundColor = false;
 	tutMenu.textureID = GenerateTexture(tutMenu.path.c_str(), false);
+	tutMenu.aspectRatio = 3840.0 / 2160.0;
 
 	UIElement controlMenu;
 	controlMenu.path = "assets/textures/ui/tutorial/controls.png";
 	controlMenu.hasBackgroundColor = false;
 	controlMenu.textureID = GenerateTexture(controlMenu.path.c_str(), false);
+	controlMenu.aspectRatio = 3840.0 / 2160.0;
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, tutMenu);
@@ -1036,16 +1059,23 @@ void UISystem::createControlsMenu() {
 	Entity e2 = coordinator->createEntity();
 	coordinator->addComponent(e2, controlMenu);
 
+	Entity textTrans = coordinator->createEntity();
+	coordinator->addComponent(textTrans, transitionText);
+
 	UIElement button;
 	button.anchors = glm::vec4(1,1,0,0);
 
 	UIScreen menu1;
 	menu1.name = "tutorial";
+	menu1.UIElements.push_back(bgMenuColor);
 	menu1.UIElements.push_back(e1);
+	menu1.UIElements.push_back(textTrans);
 
 	UIScreen menu2;
 	menu2.name = "controls";
+	menu2.UIElements.push_back(bgMenuColor);
 	menu2.UIElements.push_back(e2);
+	menu2.UIElements.push_back(textTrans);
 
 	nameToScreen["tutorial"] = menu1;
 	nameToScreen["controls"] = menu2;
