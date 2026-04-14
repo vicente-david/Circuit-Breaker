@@ -64,7 +64,7 @@ public:
 	int numPlayers = 1;
 	int numSparks = 8;
 	int numActivePlayers = 8;
-	int numLaps = 4;
+	int numLaps = 2;
 
 	double* frameTime;
 

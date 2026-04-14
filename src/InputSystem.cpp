@@ -222,6 +222,8 @@ UIActions InputSystem::getUIActions() {
 	UIActions currState = uiActions;
 	uiActions.navigateUp = false;
 	uiActions.navigateDown = false;
+	uiActions.navigateRight = false;
+	uiActions.navigateLeft = false;
 	uiActions.confirm = false;
 	uiActions.goBack = false;
 	return currState;
@@ -360,7 +362,7 @@ void InputSystem::updateGamepad() {
 	else
 		actions.reload = false;
 
-	// --- Controller Menu Navigation (edge-detected, only in menu states) ---
+	// --- Controller Menu Navigation only in UI ---
 	if (uiActions.menuControl != 1) { // not in gameplay
 		bool dpadUp = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_UP];
 		bool dpadDown = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_DOWN];
@@ -368,8 +370,8 @@ void InputSystem::updateGamepad() {
 		bool dpadLeft = controllerState.buttons[GLFW_GAMEPAD_BUTTON_DPAD_LEFT];
 		bool leftStickUp = (lefty < -0.5f);   // stick pushed up (GLFW Y axis is inverted)
 		bool leftStickDown = (lefty > 0.5f);   // stick pushed down
-		bool leftStickRight = (leftx < -0.5f); // stick pushed right
-		bool leftStickLeft = (leftx > 0.5); // stick pushed left
+		bool leftStickRight = (leftx > 0.5); // stick pushed right
+		bool leftStickLeft = (leftx < -0.5f); // stick pushed left
 
 		// navigate up: D-pad up or left stick up (edge: wasn't pressed last frame, pressed now)
 		if ((dpadUp && !prevDpadUp) || (leftStickUp && !prevLeftStickUp)) {
@@ -403,6 +405,7 @@ void InputSystem::updateGamepad() {
 		prevLeftStickUp = leftStickUp;
 		prevLeftStickDown = leftStickDown;
 		prevLeftStickRight = leftStickRight;
+		prevLeftStickLeft = leftStickLeft;
 		prevButtonA = button_A;
 		prevButtonB = button_B;
 	}

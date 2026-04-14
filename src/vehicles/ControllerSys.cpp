@@ -97,8 +97,8 @@ void ControllerSys::handleUINavigation(GameState& game) {
 		if (buttonCount > 0) {
 			if (uiSys->getTopScreenName() == "settingsMenu") {
 				//audio
-				if (uiSys->selectedButton == 0) AudioEngine::masterVol += 0.05 * frameTime;
-				else if (uiSys->selectedButton == 1) game.musicVol += 0.05f * frameTime;
+				if (uiSys->selectedButton == 0) AudioEngine::masterVol += 0.1;
+				else if (uiSys->selectedButton == 1) game.musicVol += 0.1f;
 
 				// buttons
 				if (uiSys->selectedButton == 2) uiSys->selectedButton++;
@@ -106,13 +106,13 @@ void ControllerSys::handleUINavigation(GameState& game) {
 			}
 			else if (uiSys->getTopScreenName() == "standingsScreen") {
 				if (uiSys->selectedButton == 0)
-					uiSys->selectedButton++;
-				else
+					uiSys->selectedButton = 1;
+				else if (uiSys->selectedButton == 1)
 					uiSys->selectedButton = 0; // wrap right to left
-				uiSys->selectedEntities();
-				std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
+				//std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
 			}
-			std::cout << "[UI] Master Level Up: " << AudioEngine::masterVol << "\n";
+			uiSys->selectedEntities();
+			//std::cout << "[UI] Master Level Up: " << AudioEngine::masterVol << "\n";
 		}
 	}
 	if (ui.navigateLeft) {
@@ -121,23 +121,23 @@ void ControllerSys::handleUINavigation(GameState& game) {
 		if (buttonCount > 0) {
 			if (uiSys->getTopScreenName() == "settingsMenu") {
 				// audio
-				if (uiSys->selectedButton == 0) AudioEngine::masterVol -= 0.05 * frameTime;
-				else if (uiSys->selectedButton == 1) game.musicVol -= 0.05f * frameTime;
+				if (uiSys->selectedButton == 0) AudioEngine::masterVol -= 0.1;
+				else if (uiSys->selectedButton == 1) game.musicVol -= 0.1f;
 
 				// buttons
 				if (uiSys->selectedButton == 3) uiSys->selectedButton--;
 				else if (uiSys->selectedButton == 2) uiSys->selectedButton = 3;
 			}
-		}
-		else if (uiSys->getTopScreenName() == "standingsScreen") {
-			if (uiSys->selectedButton == 1)
-				uiSys->selectedButton--;
-			else
-				uiSys->selectedButton = 1; // wrap left to right
+			else if (uiSys->getTopScreenName() == "standingsScreen") {
+				if (uiSys->selectedButton == 1)
+					uiSys->selectedButton = 0;
+				else if (uiSys->selectedButton == 0)
+					uiSys->selectedButton = 1; // wrap left to right
+				//std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
+			}
 			uiSys->selectedEntities();
-			std::cout << "[UI] Selected button: " << uiSys->selectedButton << " on screen: " << uiSys->getTopScreenName() << std::endl;
+			//std::cout << "[UI] Master Level Down: " << AudioEngine::masterVol << "\n";
 		}
-		std::cout << "[UI] Master Level Down: " << AudioEngine::masterVol << "\n";
 	}
 
 	// --- Handle backspace/B � go back from current menu ---

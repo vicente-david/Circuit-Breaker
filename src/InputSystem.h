@@ -137,9 +137,11 @@ private:
 	bool prevDpadDown = false;
 	bool prevDpadRight = false;
 	bool prevDpadLeft = false;
+
 	bool prevButtonA = false;
 	bool prevButtonB = false;
 	bool prevButtonStart = false;
+
 	bool prevLeftStickUp = false;   // left stick pushed up past threshold
 	bool prevLeftStickDown = false; // left stick pushed down past threshold
 	bool prevLeftStickRight = false;
