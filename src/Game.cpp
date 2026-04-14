@@ -7,12 +7,14 @@
 #include "physics/CollisionData.h"
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 
 Game::Game() {
 	coordinator = std::make_shared<Coordinator>();
 	audio = std::make_shared<AudioEngine>();
 	pHelper = std::make_shared<ParticleHelper>();
 	gameState = GameState();
+	std::srand(std::time(nullptr));
 }
 
 // in theory this should initialize all internal systems
@@ -485,7 +487,10 @@ void Game::stateTransition() {
 			// initialize everything
 		case (MAINMENU):
 			uiSys->popScreen();
+			uiSys->addScreen( ( std::rand() % 2 == 0) ? "tutorial" : "controls");
+			updateRendering();
 			initializeRace();
+			uiSys->popScreen();
 			if (uiSys->showFPS) uiSys->addScreen("fpsCounter");
 			uiSys->addScreen("lapCounter");
 			uiSys->addScreen("placeCounter");
