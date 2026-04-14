@@ -227,21 +227,21 @@ void Game::initializeTrack() {
 
 	// initialize players
 	initializePlayerSpark(trackPaths,
-						  pathStartPt + glm::vec3(-4.0f, 1.0f, -18.0f));
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -3.0f),
+						  pathStartPt + glm::vec3(-4.5f, 1.0f, -27.0f));
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.5f, 1.0f, -12.0f),
 					  "TAM");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -6.0f),
-					  "Yellow Eagle");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -9.0f),
-					  "Qbe");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.0f, 1.0f, -12.0f),
-					  "Perro");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.0f, 1.0f, -9.0f),
-					  "LateNyte");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.0f, 1.0f, -12.0f),
-					  "WorldEnder967");
-	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.0f, 1.0f, -15.0f),
-					  "Sam");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.5f, 1.0f, -15.0f),
+					  "YELLOWEAGLE");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.5f, 1.0f, -18.0f),
+					  "QBE");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-4.5f, 1.0f, -21.0f),
+					  "PERRO");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.5f, 1.0f, -18.0f),
+					  "LATENYTE");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.5f, 1.0f, -21.0f),
+					  "WORLDENDER96");
+	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.5f, 1.0f, -24.0f),
+					  "SAM");
 
 	// Start countdown
 
