@@ -3,7 +3,7 @@
 #include "GameState.h"
 
 void MusicSys::init(GameState& game){
-	auto intro = game.audio->createSound("death", false);
+	auto intro = game.audio->createSound("titleIntro", false);
 	auto loop = game.audio->createSound("title", false);
 	music = Music(intro, loop);
 	music.start();

@@ -48,11 +48,16 @@ AudioEngine::AudioEngine() {
 
 void AudioEngine::loadSounds() {
 
+	sounds.emplace("ready", WavData("assets/sounds/ready.wav"));
+	sounds.emplace("go", WavData("assets/sounds/go.wav"));
+	sounds.emplace("finish", WavData("assets/sounds/finish.wav"));
+
+	sounds.emplace("titleIntro", WavData("assets/sounds/titleIntro.wav"));
+	sounds.emplace("title", WavData("assets/sounds/title.wav"));
+	sounds["title"].loop = true;
 	sounds.emplace("muteCityIntro", WavData("assets/sounds/muteCityIntro.wav"));
 	sounds.emplace("muteCityLoop", WavData("assets/sounds/muteCityLoop.wav"));
 	sounds["muteCityLoop"].loop = true;
-	sounds.emplace("title", WavData("assets/sounds/title.wav"));
-	sounds["title"].loop = true;
 
 	sounds.emplace("silent", WavData("assets/sounds/silent.wav"));
 
