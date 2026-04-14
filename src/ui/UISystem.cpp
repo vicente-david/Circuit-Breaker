@@ -1189,12 +1189,24 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 
 	menu1.path = "assets/textures/ui/standings/standings_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+	
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(18.0f / 255.0f, 28.0f / 255.0f, 24.0f / 255.0);
+	}
+	menu1.aspectRatio = 1101.0 / 786.0;
+
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
 
 	UIScreen standingsScreen;
 	standingsScreen.name = "standingsScreen";
+	standingsScreen.UIElements.push_back(bgMenuColor);
 	standingsScreen.UIElements.push_back(e1);
 
 	
@@ -1205,8 +1217,9 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 		firstPlace.hasBackgroundColor = false;
 		firstPlace.path = "assets/textures/ui/standings/standings_position.png";
 		firstPlace.textureID = GenerateTexture(firstPlace.path.c_str(), false);
-		firstPlace.anchors = glm::vec4(0.3225, 0.145, 0.6785, 0.2252);
-		firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
+		firstPlace.anchors = glm::vec4(0.3225, 0.145+0.0825*i, 0.6785, 0.2252+ 0.0825*i); // 0.0825 vertical offset of 66 pixels for 800 height
+		firstPlace.aspectRatio = 450.0 / 64.0;
+		//firstPlace.anchorOffsets = glm::vec4(0, 66*i, 0, 66*i);
 		firstPlace.text = " " + std::to_string(i+1) + ". "+lb.standings[i];
 		firstPlace.textScale = 0.75f;
 		firstPlace.textAlignmentY = CENTER;
@@ -1225,15 +1238,19 @@ void UISystem::createStandingsScreen(Leaderboard& lb) {
 	menuButton.hasBackgroundColor = false;
 	menuButton.path = "assets/textures/ui/standings/standings_backtomenu.png";
 	menuButton.textureID = GenerateTexture(menuButton.path.c_str(), false);
-	menuButton.anchors = glm::vec4(0.3225, 0.833, 0.485, 0.9148);
+	menuButton.anchors = glm::vec4(0.3225-0.01, 0.833, 0.5-0.01, 0.9148);
+	menuButton.aspectRatio = 176 / 64.0;
+	menuButton.aRatioAlignX = RIGHT;
+	
 
 	// restart game button
 	UIElement restartButton;
 	restartButton.hasBackgroundColor = false;
 	restartButton.path = "assets/textures/ui/standings/standings_restartgame.png";
 	restartButton.textureID = GenerateTexture(restartButton.path.c_str(), false);
-	restartButton.anchors = glm::vec4(0.3225, 0.833, 0.485, 0.9148);
-	restartButton.anchorOffsets = glm::vec4(226, 0, 226, 0);
+	restartButton.anchors = glm::vec4(0.5+0.01, 0.833, 0.6785+0.01, 0.9148);
+	restartButton.aspectRatio = 176 / 64.0;
+	restartButton.aRatioAlignX = LEFT;
 	// --- ---
 
 	Entity e10 = coordinator->createEntity();
