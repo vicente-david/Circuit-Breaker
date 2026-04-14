@@ -121,22 +121,6 @@ void Game::initializeTrack() {
 			physics->initStaticMesh(track.model.GetMesh("Track"), none);
 		trackActor->userData = &trackPhys;
 
-		//// add walls
-		// Model wallsModel("assets/walls.obj"); // loads model and paths
-		// Entity walls = coordinator->createEntity();
-		// coordinator->addComponent(walls, none);
-		// coordinator->addComponent(walls, wallsModel);
-		// coordinator->addComponent(track, CollisionData{GROUND, walls});
-		// CollisionData& planePhys =
-		// gameState.coordinator->getComponent<CollisionData>(walls);
-
-		// for (auto& i : wallsModel.GetMeshes()) {
-		//	auto actor = physics->initStaticMesh(i, none);
-		//	actor->userData = &planePhys;
-		// }
-
-		// dbug::log(0, "track entity id:%d", track);
-
 		// Ribbons
 		Model ribbonModel("assets/ribbons.obj"); // loads model and paths
 		Entity ribbon = gameState.coordinator->createEntity();
