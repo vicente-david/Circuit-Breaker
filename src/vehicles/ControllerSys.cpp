@@ -224,7 +224,6 @@ void ControllerSys::handleUINavigation(GameState& game) {
 			else if (btn == 4) {
 				std::cout << "[UI] Back to main menu" << std::endl;
 				uiSys->popScreen();
-				ui.menuControl = -1;
 				uiSys->resetSelection();
 			}
 		}
