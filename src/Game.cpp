@@ -242,7 +242,7 @@ void Game::initializeTrack() {
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(4.5f, 1.0f, -18.0f),
 					  "LATENYTE");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(1.5f, 1.0f, -21.0f),
-					  "WORLDENDER96");
+					  "ENDER96");
 	initializeAISpark(trackPaths, pathStartPt + glm::vec3(-1.5f, 1.0f, -24.0f),
 					  "SAM");
 

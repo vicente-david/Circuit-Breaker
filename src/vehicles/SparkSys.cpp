@@ -273,7 +273,7 @@ Entity SparkSys::createSpark(GameState &game, PxVec3 startP, std::string name) {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark6.obj"));
 		sData.colour = {255, 73,114};
 	}
-	else if (sData.mVehicleName == "WORLDENDER96") {
+	else if (sData.mVehicleName == "ENDER96") {
 		game.coordinator->addComponent(sparkEntity, Model("assets/spark7.obj"));
 		sData.colour = {118,192,217};
 	}
