@@ -41,31 +41,44 @@ void AIControllerSys::update(GameState& game) {
 
 		// check progress of the spark
 		ai.checkProgTimer.update(*game.frameTime);
-		if (ai.checkProgTimer.completedTimer() && !spark.isDead) {
+		if (ai.checkProgTimer.completedTimer() && !spark.isDead && spark.ghostTimer <= 1e-4) {
 			if (ai.currentPosIdx == ai.logIdx) {
 				// no significant lap progress made since last check
-				dbug::log("AI_RECOVER", 2, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
+				dbug::log("AI_RECOVER", 0, "[%s]: I'm stuck!!", spark.mVehicleName.c_str());
 
 				// check if an attempt to recover was made
 				if (!ai.recoverAttempt) {
 					// ai has not made a recovery attempt, try to get un-stuck
 					ai.recoverAttempt = true;
+					dbug::log("AI_RECOVER", 0, "[%s]: attempt recover", spark.mVehicleName.c_str());
+					ai.checkProgTimer.start(2.0);
+					ai.recoverClock.start(1.0);
+					ai.logIdx = ai.currentPosIdx;
 				}
 				else {
 					// recovery attempt failed, respawn
 					controls.reset = true;
 					ai.recoverAttempt = false;
-					ai.checkProgTimer.start(); //restart timer
-					continue;
+					ai.recoverDir = NONE;
+					spark.inReverse = false;
+					controls.throttle = 1.f;
+					ai.checkProgTimer.start(5.0); //restart timer (give a longer time)
 				}
 
 			}
 			else {
 				ai.recoverAttempt = false;
+				ai.recoverDir = NONE;
 				spark.inReverse = false;
+				ai.checkProgTimer.start(2.0); //restart regular timer
 			}
 			ai.logIdx = ai.currentPosIdx;
-			ai.checkProgTimer.start(); //restart timer
+			
+		}
+		if (ai.recoverClock.activeTimer()) ai.recoverClock.update(*game.frameTime);
+		if (ai.recoverClock.completedTimer()) {
+			ai.recoverAttempt = false;
+			spark.inReverse = false;
 		}
 
 		// If active, update attack cooldown timer

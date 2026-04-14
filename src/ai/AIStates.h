@@ -60,5 +60,6 @@ public:
 class RecoverState : public AIState {
 public:
 	void run(AIDriveContext& ctx, AIDriveStateP& state) override;
+	std::pair<Direction, glm::vec3> detect(AIDriveContext& ctx) override;
 };
 

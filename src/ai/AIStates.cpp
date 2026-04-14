@@ -175,14 +175,42 @@ void RecoverState::run(AIDriveContext& ctx, AIDriveStateP& state) {
 	c.shimmyR = false;
 	c.throttle = 0.f;
 
-	// reverse
-	c.reverse = 1.f;
-	c.brake = 1.f;
-	c.steering = 0.f;
-	ctx.spark.inReverse = true;
-	//AIHelpers::calcSteering(ctx.ai, c, ctx.transform, ctx.spark, ctx.ai.route.at(ctx.ai.targetIdx));
+	if (ctx.ai.recoverDir == NONE) {
+		// no recovery direction found yet
+		std::pair<Direction, glm::vec3> sweepResult = RecoverState::detect(ctx); // Look behind to see if there is a wall
+		ctx.ai.recoverDir = sweepResult.first;
+	}
+	
+	if (ctx.ai.recoverDir == BACK) {
+		// nothing blocking behind, reverse
+		c.reverse = 1.f;
+		c.brake = 1.f;
+		c.steering = 0.f;
+		ctx.spark.inReverse = true;
+		
+	}
+	else {
+		// try going forwards
+		c.reverse = 0.f;
+		c.brake = 0.f;
+		c.steering = 0.f;
+		ctx.spark.inReverse = false;
+		c.throttle = 0.5f;
+		AIHelpers::calcSteering(ctx.ai, c, ctx.transform, ctx.spark, ctx.ai.route.at(ctx.ai.targetIdx));
+	}
 
 
+
+}
+
+std::pair<Direction, glm::vec3> RecoverState::detect(AIDriveContext& ctx) {
+	std::pair<bool, glm::vec3> resultBack = lookBack(ctx.transform, ctx.body);
+	std::pair<Direction, glm::vec3> result{ BACK, glm::vec3(0.f) }; // if no sweep collision behind, reverse
+	
+	if (resultBack.first) {
+		result = { FWD, resultBack.second };
+	}
+	return result;
 }
 
 

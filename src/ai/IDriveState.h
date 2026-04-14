@@ -14,13 +14,7 @@ struct AIDriveContext {
 	float healthBoostMin;
 };
 
-// Direction enum for labelling sweep/hit direction
-enum Direction {
-	FWD,
-	SIDE_L,
-	SIDE_R,
-	NONE // no hit
-};
+
 
 /*
 * Driving state (lower level of HFSM) interface.

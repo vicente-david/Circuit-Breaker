@@ -15,6 +15,14 @@ enum AIDriveState {
 	ATTACKING = 5,
 	DODGING = 6
 };
+// Direction enum for labelling sweep/hit direction
+enum Direction {
+	FWD,
+	SIDE_L,
+	SIDE_R,
+	BACK,
+	NONE // no hit
+};
 
 // this component tells the controller system that its AI controlled.
 struct AIController {
@@ -40,7 +48,9 @@ struct AIController {
 	int lastPosIdx = 0;
 	
 	bool recoverAttempt = false; // track if a stuck ai has made an attempt to recover yet
+	Direction recoverDir = NONE; // each recovery attempt has a recovery direction: FWD, BACK, or NONE if not found yet
 	Clock checkProgTimer{2.0, 2.0}; // counts while ai is not moving
+	Clock recoverClock{ 1.0, 1.0 }; // amount of time to stay in recover state
 	Clock attackCooldown{ 7.0, 7.0 }; // only this long at the beginning of the race. Cooldown shorter after that
 };
 
