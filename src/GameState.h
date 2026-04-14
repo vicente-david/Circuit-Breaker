@@ -68,6 +68,8 @@ public:
 
 	double* frameTime;
 
+	float musicVol = 1;
+
 	// temp UI
 	//RectUI activeUIRect; 
 	//TextUI uiText;

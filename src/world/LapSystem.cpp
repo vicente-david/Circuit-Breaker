@@ -179,6 +179,13 @@ void LapSystem::updateCheckpoints(LapCounter& lapProg, Transform& eTransform, in
 						game.finishOrder.push_back(spark.mVehicleName);
 					}
 					game.endGame(entity);
+				}else if(lapProg.currentLap == game.numLaps-1){
+					SparkData& spark = game.coordinator->getComponent<SparkData>(entity);
+					if(spark.isHuman){
+						auto sound = game.audio->createSound("finalLap");
+						sound->volume(2.0);
+						sound->start();
+					}
 				}
 			}
 
