@@ -300,7 +300,7 @@ void UISystem::updateSlider(Entity& e) {
 	}
 	else {
 		glUniform1fv(glGetUniformLocation(slideShader->id, "maxVol"), 1, &musicMax);
-		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, &musicCur);
+		glUniform1fv(glGetUniformLocation(slideShader->id, "currentVol"), 1, musicCur);
 	}
 	
 	if (a1.isSelected) {

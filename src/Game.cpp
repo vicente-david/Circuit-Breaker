@@ -376,6 +376,7 @@ void Game::initializeUI() {
 	uiSys->playerBackwards = &gameState.playerBackwards;
 	uiSys->playerSpeed = &coordinator->getComponent<SparkData>(player).speed;
 	uiSys->masterCur = &AudioEngine::masterVol;
+	uiSys->musicCur = &gameState.musicVol;
 
 	uiSys->screenInitialization();
 
@@ -489,6 +490,7 @@ void Game::stateTransition() {
 			uiSys->addScreen("myHealthIsDeclining");
 			if (uiSys->showSpeedometer) uiSys->addScreen("speeeeeed");
 			uiSys->addScreen("countDown");
+			audio->masterVol = gameState.masterVol;
 			break;
 
 			// our likely next state is paused or game ended
@@ -731,6 +733,7 @@ void Game::updateFPS() {
 	uiSys->updateFPSCounter();
 	uiSys->dTime = frameTime;
 	uiSys->frameTime = frameTime;
+	controllerSys->frameTime = frameTime;
 }
 
 void Game::updateRendering() {
