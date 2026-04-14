@@ -858,17 +858,19 @@ void UISystem::createMainMenu() {
 	for (int i = 0; i < 6; i++) {
 		menuBorder.colors[i] = glm::vec3(18.0f/255.0f, 28.0f/255.0f, 24.0f/255.0);
 	}
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
+	menu1.aspectRatio = 1101.0 / 786.0;
 
 	menu1.hasBackgroundColor = false;
 
 	menu1.path = "assets/textures/ui/mainMenu/startmenu_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
-	menu1.aspectRatio = 1101.0 / 786.0;
+	
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
-	Entity bgMenuColor = coordinator->createEntity();
-	coordinator->addComponent(bgMenuColor, menuBorder);
+	
 
 	// --- BUTTONS ---
 
@@ -948,6 +950,17 @@ void UISystem::createPauseMenu() {
 
 	menu1.path = "assets/textures/ui/pauseMenu/pause_bg.png";
 	menu1.textureID = GenerateTexture(menu1.path.c_str(), false);
+	
+	UIElement menuBorder; // used for painting the background of the main menu (after aspect correction)
+	menuBorder.hasBackgroundColor = true; // enable bg color
+	// default anchors are full screen
+	for (int i = 0; i < 6; i++) {
+		menuBorder.colors[i] = glm::vec3(18.0f / 255.0f, 28.0f / 255.0f, 24.0f / 255.0);
+	}
+	Entity bgMenuColor = coordinator->createEntity();
+	coordinator->addComponent(bgMenuColor, menuBorder);
+	menu1.aspectRatio = 1101.0 / 786.0;
+
 
 	Entity e1 = coordinator->createEntity();
 	coordinator->addComponent(e1, menu1);
@@ -959,23 +972,26 @@ void UISystem::createPauseMenu() {
 	resumeButton.hasBackgroundColor = false;
 	resumeButton.path = "assets/textures/ui/pauseMenu/pause_resume.png";
 	resumeButton.textureID = GenerateTexture(resumeButton.path.c_str(), false);
-	resumeButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
-	resumeButton.anchorOffsets = glm::vec4(0, -168, 0, -168);
+	resumeButton.anchors = glm::vec4(0.3, 0.4528, 0.7, 0.5343);
+	resumeButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// settings button
 	UIElement settingsButton;
 	settingsButton.hasBackgroundColor = false;
 	settingsButton.path = "assets/textures/ui/pauseMenu/pause_settings.png";
 	settingsButton.textureID = GenerateTexture(settingsButton.path.c_str(), false);
-	settingsButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
-	settingsButton.anchorOffsets = glm::vec4(0, -84, 0, -84);
+	settingsButton.anchors = glm::vec4(0.3, 0.5343+0.06, 0.7, 0.6158+0.06); // 0.06 is just 48/800 (our default height and divided by the anchor offset calculated below)
+	//settingsButton.anchorOffsets = glm::vec4(0, 48, 0, 48);
+	settingsButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// exit button 
 	UIElement exitButton;
 	exitButton.hasBackgroundColor = false;
 	exitButton.path = "assets/textures/ui/pauseMenu/pause_quittomenu.png";
 	exitButton.textureID = GenerateTexture(exitButton.path.c_str(), false);
-	exitButton.anchors = glm::vec4(0.3, 0.6628, 0.7, 0.7443);
+	exitButton.anchors = glm::vec4(0.3, 0.6158+0.06*2, 0.7, 0.6973+0.06*2);
+	//exitButton.anchorOffsets = glm::vec4(0, 96, 0, 96);
+	exitButton.aspectRatio = 450.0f / 64.0f; // based on the figma design
 
 	// --- ---
 
@@ -994,6 +1010,7 @@ void UISystem::createPauseMenu() {
 
 	UIScreen pauseMenu;
 	pauseMenu.name = "pauseMenu";
+	pauseMenu.UIElements.push_back(bgMenuColor);
 	pauseMenu.UIElements.push_back(e1);
 
 	pauseMenu.UIElements.push_back(e2);
