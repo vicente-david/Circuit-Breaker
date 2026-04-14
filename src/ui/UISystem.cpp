@@ -187,6 +187,12 @@ void UISystem::updateResBars(Entity& e) {
 		v1.resourceColor = col;
 		resData.push_back(v1);
 	}
+
+	
+	glUniform1fv(glGetUniformLocation(resShader->id, "isBoosting"), 1, &isBoosting);
+		
+	
+
 	glBufferData(GL_ARRAY_BUFFER, resData.size() * 8 * sizeof(float), resData.data(), GL_DYNAMIC_DRAW);
 	glDrawArrays(GL_TRIANGLES, 0, resData.size());
 

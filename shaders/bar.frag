@@ -12,6 +12,7 @@ vec3 borderColor = vec3(36.0/255.0, 82.0/255.0, 59.0/255.0);
 vec3 healthColor = vec3(1.0f, 252.0/255.0, 89.0f/255.0);
 vec3 boostBGColor = vec3(19.0/255.0, 38.0/255.0, 30.0/255.0);
 vec3 boostColor = vec3(106.0/255.0, 176.0/255.0, 198.0/255.0);
+vec3 boostingColor = vec3(227.0/255.0, 240.0/255.0, 244.0/255.0);
 vec3 lowHealthColor = vec3(150.0/255.0, 55.0/255.0, 55.0/255.0);
 float padding = 0.025;
 float sliverPercentage = 0.1;
@@ -156,6 +157,7 @@ uniform float currentBoost; // current usable boost
 uniform float maxBoost; // current maxBoost (aka availableBoost)
 uniform float currentHealth;
 uniform float maxHealth; // current maxHealth 
+uniform float isBoosting; // float bool if boosting
 // we know that maxBoost is tied to health so no need to worry about the ratio
 
 
@@ -216,7 +218,7 @@ void main(){
     if (boostAlpha < 0.0){
         col = mix(col, boostBGColor, -boostAlpha);
     } else{
-        col = mix(col, boostColor, boostAlpha);
+        col = mix(col, (isBoosting >= 1.0) ? boostingColor : boostColor, boostAlpha);
     }
     
     float bgAlpha = max(borderAlpha, healthAlpha);
