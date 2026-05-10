@@ -1,7 +1,7 @@
 # Circuit Breaker
 
 ## Windows Binaries:
-Release builds for windows can be downloaded from [this drive link](https://drive.google.com/drive/folders/1yXyVN6x6JoO25Hn-unKxrLh_0AZRWiRO)
+Release builds for windows can be downloaded from [this drive link](https://drive.google.com/drive/folders/1yXyVN6x6JoO25Hn-unKxrLh_0AZRWiRO), or the [releases tab](https://github.com/vicente-david/Circuit-Breaker/releases).
 
 ## Windows Build Instructions:
 
